@@ -24,19 +24,23 @@ var (
 )
 
 func Bootstrap(target salt.Target, masterConfig salt.MasterConfig) {
-	err := salt.Apply(target, masterConfig, &salt.Pillar{
-		Bootstrap: &salt.Bootstrap{
-			salt.Kubeadm{
-				ConfigPath: "salt://kubeadm-init.conf",
-			},
-			salt.Cni{
-				ConfigPath: "salt://addons/cni/flannel.yaml",
+	err := salt.Apply(
+		target,
+		masterConfig,
+		&salt.Pillar{
+			Bootstrap: &salt.Bootstrap{
+				salt.Kubeadm{
+					ConfigPath: "salt://kubeadm-init.conf",
+				},
+				salt.Cni{
+					ConfigPath: "salt://addons/cni/flannel.yaml",
+				},
 			},
 		},
-	},
 		"kubelet.enable",
 		"kubeadm.init",
-		"cni.deploy")
+		"cni.deploy",
+	)
 
 	if err != nil {
 		log.Fatal(err)
