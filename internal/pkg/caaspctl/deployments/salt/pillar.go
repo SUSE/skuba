@@ -11,7 +11,7 @@ type Bootstrap struct {
 }
 
 type Join struct {
-	Kubeadm    Kubeadm `json:"kubeadm"`
+	Kubeadm    Kubeadm     `json:"kubeadm"`
 	Kubernetes *Kubernetes `json:"kubernetes,omitempty"`
 }
 

@@ -19,6 +19,10 @@ func newJoinCmd() *cobra.Command {
 		Use:   "join",
 		Short: "joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
+			saltPath, err := cmd.Flags().GetString("salt-path")
+			if err != nil {
+				log.Fatalf("Unable to parse salt flag: %v", err)
+			}
 			user, err := cmd.Flags().GetString("user")
 			if err != nil {
 				log.Fatalf("Unable to parse user flag: %v", err)
@@ -44,7 +48,13 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
-			join.Join(target, role)
+			join.Join(
+				target,
+				role,
+				salt.NewMasterConfig(
+					saltPath,
+				),
+			)
 		},
 		Args: cobra.ExactArgs(1),
 	}

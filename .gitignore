@@ -19,9 +19,6 @@
 # Binary folder
 /bin
 
-# Salt logs
-/deployments/salt/logs
-/deployments/salt/cache
-
-# Ignore pki directories inside samples
-/deployments/salt/states/samples/*/pki
+# Salt logs and deployment specific information
+/examples/deployments/*/.salt
+/examples/deployments/*/pki

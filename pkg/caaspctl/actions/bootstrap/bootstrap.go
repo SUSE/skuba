@@ -1,13 +1,11 @@
 package bootstrap
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/definitions"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
 
@@ -25,14 +23,14 @@ var (
 	}
 )
 
-func Bootstrap(target salt.Target) {
-	err := salt.Apply(target, &salt.Pillar{
+func Bootstrap(target salt.Target, masterConfig salt.MasterConfig) {
+	err := salt.Apply(target, masterConfig, &salt.Pillar{
 		Bootstrap: &salt.Bootstrap{
 			salt.Kubeadm{
-				ConfigPath: fmt.Sprintf("%s/%s", salt.CurrentDefinitionPrefix(), "kubeadm-init.conf"),
+				ConfigPath: "salt://kubeadm-init.conf",
 			},
 			salt.Cni{
-				ConfigPath: fmt.Sprintf("%s/%s", salt.CurrentDefinitionPrefix(), "addons/cni/flannel.yaml"),
+				ConfigPath: "salt://addons/cni/flannel.yaml",
 			},
 		},
 	},
@@ -44,21 +42,21 @@ func Bootstrap(target salt.Target) {
 		log.Fatal(err)
 	}
 
-	downloadSecrets(target)
+	downloadSecrets(target, masterConfig)
 }
 
-func downloadSecrets(target salt.Target) {
-	secretPrefix := definitions.PKIPath()
-	os.MkdirAll(path.Join(secretPrefix, "pki", "etcd"), 0755)
+func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {
+	os.MkdirAll(path.Join("pki", "etcd"), 0755)
 
 	for _, secretLocation := range secrets {
 		secretData, err := salt.DownloadFile(
 			target,
+			masterConfig,
 			path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := ioutil.WriteFile(path.Join(secretPrefix, secretLocation), []byte(secretData), 0644); err != nil {
+		if err := ioutil.WriteFile(path.Join("pki", secretLocation), []byte(secretData), 0644); err != nil {
 			log.Fatal(err)
 		}
 	}

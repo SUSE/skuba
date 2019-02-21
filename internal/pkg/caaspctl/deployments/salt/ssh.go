@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
-
-	"suse.com/caaspctl/internal/pkg/caaspctl/constants"
 )
 
 type Target struct {
@@ -15,15 +14,17 @@ type Target struct {
 	Sudo bool
 }
 
-func Ssh(target Target, command string, args ...string) (string, string, error) {
+func Ssh(target Target, masterConfig MasterConfig, command string, args ...string) (string, string, error) {
 	saltArgs := []string{
 		"-c",
-		".",
+		masterConfig.GetTempDir(),
 		"-i",
 		"--roster=scan",
 		"--key-deploy",
 		fmt.Sprintf("--user=%s", target.User),
 	}
+
+	defer os.RemoveAll(masterConfig.GetTempDir())
 
 	if target.Sudo {
 		saltArgs = append(saltArgs, "--sudo")
@@ -37,7 +38,6 @@ func Ssh(target Target, command string, args ...string) (string, string, error) 
 	saltArgs = append(saltArgs, args...)
 
 	cmd := exec.Command("salt-ssh", saltArgs...)
-	cmd.Dir = constants.DefinitionPath
 	fmt.Printf("Command is %v\n", cmd)
 	var stdOut, stdErr bytes.Buffer
 	cmd.Stdout = &stdOut
@@ -50,5 +50,6 @@ func Ssh(target Target, command string, args ...string) (string, string, error) 
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return stdout, stderr, nil
 }
