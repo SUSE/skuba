@@ -12,5 +12,3 @@ deploy cni:
 remove cni config file:
   file.absent:
     - name: /tmp/cni.conf
-    - require:
-        - write cni config file
