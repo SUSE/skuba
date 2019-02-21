@@ -49,8 +49,6 @@ func newJoinCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringP("user", "u", "root", "user identity used to connect to target")
-	cmd.Flags().Bool("sudo", false, "run remote command via sudo")
 	cmd.Flags().StringVarP(&joinOptions.Role, "role", "", "", "Role that this node will have in the cluster (master|worker)")
 
 	cmd.MarkFlagRequired("role")
