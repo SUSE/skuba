@@ -9,9 +9,33 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/constants"
 )
 
-func Ssh(target string, command string, args ...string) (string, string, error) {
-	saltArgs := []string{"-c", ".", "-i", "--roster=scan", "--key-deploy", "--user=vagrant", "--sudo", target, command}
+type Target struct {
+	Node string
+	User string
+	Sudo bool
+}
+
+func Ssh(target Target, command string, args ...string) (string, string, error) {
+	saltArgs := []string{
+		"-c",
+		".",
+		"-i",
+		"--roster=scan",
+		"--key-deploy",
+		fmt.Sprintf("--user=%s", target.User),
+	}
+
+	if target.Sudo {
+		saltArgs = append(saltArgs, "--sudo")
+	}
+
+	saltArgs = append(
+		saltArgs,
+		[]string{target.Node, command}...,
+	)
+
 	saltArgs = append(saltArgs, args...)
+
 	cmd := exec.Command("salt-ssh", saltArgs...)
 	cmd.Dir = constants.DefinitionPath
 	fmt.Printf("Command is %v\n", cmd)

@@ -11,11 +11,11 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
 
-func Join(target string) {
+func Join(target salt.Target) {
 	salt.Apply(target, &salt.Pillar{
 		Join: &salt.Join{
 			Kubeadm: salt.Kubeadm{
-				ConfigPath: configPath(target),
+				ConfigPath: configPath(target.Node),
 			},
 		},
 	},
@@ -24,7 +24,12 @@ func Join(target string) {
 }
 
 func configPath(target string) string {
-	targetPath := path.Join(fmt.Sprintf("samples/%s/kubeadm-join-conf.d", definitions.CurrentDefinition()), fmt.Sprintf("%s.conf", target))
+	targetPath := path.Join(
+		fmt.Sprintf(
+			"samples/%s/kubeadm-join-conf.d",
+			definitions.CurrentDefinition()),
+		fmt.Sprintf("%s.conf", target))
+
 	if _, err := os.Stat(path.Join(constants.DefinitionPath, "states", targetPath)); err == nil {
 		return fmt.Sprintf("salt://%s", targetPath)
 	} else {
