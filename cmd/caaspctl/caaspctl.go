@@ -11,11 +11,8 @@ func newRootCmd(args []string) *cobra.Command {
 		Use: "caaspctl",
 	}
 
-	cmd.PersistentFlags().StringP("salt-path", "s", "", "salt root path to the states folder")
 	cmd.PersistentFlags().StringP("user", "u", "root", "user identity used to connect to target")
 	cmd.PersistentFlags().Bool("sudo", false, "run remote command via sudo")
-
-	cmd.MarkPersistentFlagRequired("salt-path")
 
 	cmd.AddCommand(
 		newInitCmd(),

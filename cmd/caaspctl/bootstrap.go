@@ -42,6 +42,8 @@ func newBootstrapCmd() *cobra.Command {
 
 	cmd.Flags().StringP("user", "u", "root", "user identity used to connect to target")
 	cmd.Flags().Bool("sudo", false, "run remote command via sudo")
+	cmd.Flags().StringP("salt-path", "s", "", "salt root path to the states folder")
+	cmd.MarkFlagRequired("salt-path")
 
 	return &cmd
 }

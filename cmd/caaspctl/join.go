@@ -60,8 +60,10 @@ func newJoinCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&joinOptions.Role, "role", "", "", "Role that this node will have in the cluster (master|worker)")
-
 	cmd.MarkFlagRequired("role")
+
+	cmd.Flags().StringP("salt-path", "s", "", "salt root path to the states folder")
+	cmd.MarkFlagRequired("salt-path")
 
 	return cmd
 }
