@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-func Ssh(target string, command string, args ...string) error {
+func Ssh(target string, command string, args ...string) (string, string, error) {
 	saltArgs := []string{"-c", ".", "-i", "--roster=scan", "--key-deploy", "--user=vagrant", "--sudo", target, command}
 	saltArgs = append(saltArgs, args...)
 	cmd := exec.Command("salt-ssh", saltArgs...)
@@ -17,10 +17,12 @@ func Ssh(target string, command string, args ...string) error {
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
 	err := cmd.Run()
-	fmt.Printf("stdout is %s\n", stdOut.String())
-	fmt.Printf("stderr is %s\n", stdErr.String())
+	stdout := stdOut.String()
+	stderr := stdErr.String()
+	fmt.Printf("stdout is %s\n", stdout)
+	fmt.Printf("stderr is %s\n", stderr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil
+	return stdout, stderr, nil
 }

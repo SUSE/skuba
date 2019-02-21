@@ -16,5 +16,6 @@ func Apply(target string, pillar *Pillar, mods ...string) error {
 		}
 		args = append(args, fmt.Sprintf("pillar=%s", jsonPillar))
 	}
-	return Ssh(target, "state.sls", args...)
+	_, _, err := Ssh(target, "state.sls", args...)
+	return err
 }

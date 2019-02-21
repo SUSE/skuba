@@ -3,7 +3,7 @@ write kubeadm init config file:
     - name: /tmp/kubeadm.conf
     - source: {{ salt['pillar.get']('kubeadm:config_path') }}
 
-kubeadm init:
+run kubeadm init:
   cmd.run:
     - name: kubeadm init --config /tmp/kubeadm.conf
     - require:
@@ -12,5 +12,3 @@ kubeadm init:
 remove kubeadm init config file:
   file.absent:
     - name: /tmp/kubeadm.conf
-    - require:
-        - write kubeadm init config file
