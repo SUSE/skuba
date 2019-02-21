@@ -1,4 +1,4 @@
 upload control plane secrets:
   file.recurse:
-    - name: /etc/kubernetes/pki
+    - name: /etc/kubernetes
     - source: {{ salt['pillar.get']('join:kubernetes:secrets_path') }}

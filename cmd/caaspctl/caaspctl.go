@@ -10,11 +10,16 @@ func newRootCmd(args []string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "caaspctl",
 	}
+
+	cmd.PersistentFlags().StringP("user", "u", "root", "user identity used to connect to target")
+	cmd.PersistentFlags().Bool("sudo", false, "run remote command via sudo")
+
 	cmd.AddCommand(
 		newInitCmd(),
 		newBootstrapCmd(),
 		newJoinCmd(),
 	)
+
 	return cmd
 }
 

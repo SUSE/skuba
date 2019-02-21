@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/constants"
 	"suse.com/caaspctl/internal/pkg/caaspctl/definitions"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
@@ -17,7 +16,7 @@ var (
 		"pki/ca.crt",
 		"pki/ca.key",
 		"pki/sa.key",
-		"pki/sa.key",
+		"pki/sa.pub",
 		"pki/front-proxy-ca.crt",
 		"pki/front-proxy-ca.key",
 		"pki/etcd/ca.crt",
@@ -49,12 +48,7 @@ func Bootstrap(target salt.Target) {
 }
 
 func downloadSecrets(target salt.Target) {
-	secretPrefix := path.Join(
-		constants.DefinitionPath,
-		"states",
-		"samples",
-		definitions.CurrentDefinition(),
-		"pki")
+	secretPrefix := definitions.PKIPath()
 	os.MkdirAll(path.Join(secretPrefix, "pki", "etcd"), 0755)
 
 	for _, secretLocation := range secrets {
