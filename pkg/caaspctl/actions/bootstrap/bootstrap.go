@@ -2,9 +2,12 @@ package bootstrap
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"path"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/constants"
 	"suse.com/caaspctl/internal/pkg/caaspctl/definitions"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
@@ -46,11 +49,15 @@ func Bootstrap(target string) {
 }
 
 func downloadSecrets(target string) {
+	secretPrefix := path.Join(constants.DefinitionPath, "states", "samples", definitions.CurrentDefinition(), "pki")
+	os.MkdirAll(path.Join(secretPrefix, "pki", "etcd"), 0755)
 	for _, secretLocation := range secrets {
-		_, err := salt.DownloadFile(target, path.Join("/etc/kubernetes", secretLocation))
+		secretData, err := salt.DownloadFile(target, path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		if err := ioutil.WriteFile(path.Join(secretPrefix, secretLocation), []byte(secretData), 0644); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
