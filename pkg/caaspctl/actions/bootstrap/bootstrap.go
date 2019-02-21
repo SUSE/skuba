@@ -9,11 +9,13 @@ import (
 
 func Bootstrap(target string) {
 	err := salt.Apply(target, &salt.Pillar{
-		&salt.Kubeadm{
-			ConfigPath: "salt://samples/3-masters-3-workers-vagrant/kubeadm-init.conf",
-		},
-		&salt.Cni{
-			ConfigPath: "salt://samples/3-masters-3-workers-vagrant/addons/cni/flannel.yaml",
+		Bootstrap: &salt.Bootstrap{
+			salt.Kubeadm{
+				ConfigPath: "salt://samples/3-masters-3-workers-vagrant/kubeadm-init.conf",
+			},
+			salt.Cni{
+				ConfigPath: "salt://samples/3-masters-3-workers-vagrant/addons/cni/flannel.yaml",
+			},
 		},
 	},
 		"kubelet.enable",

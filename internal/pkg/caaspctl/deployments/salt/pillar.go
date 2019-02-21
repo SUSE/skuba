@@ -1,8 +1,17 @@
 package salt
 
 type Pillar struct {
-	Kubeadm *Kubeadm `json:"kubeadm,omitempty"`
-	Cni     *Cni     `json:"cni,omitempty"`
+	Bootstrap *Bootstrap `json:"bootstrap,omitempty"`
+	Join      *Join      `json:"join,omitempty"`
+}
+
+type Bootstrap struct {
+	Kubeadm Kubeadm `json:"kubeadm"`
+	Cni     Cni     `json:"cni"`
+}
+
+type Join struct {
+	Kubeadm Kubeadm `json:"kubeadm"`
 }
 
 type Kubeadm struct {
