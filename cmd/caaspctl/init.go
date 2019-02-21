@@ -9,7 +9,7 @@ import (
 func newInitCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "init",
-		Short: "initialize caaspctl structure for cluster deployment",
+		Short: "Initialize caaspctl structure for cluster deployment",
 		Run: func(*cobra.Command, []string) {
 			fmt.Println("Not yet implemented")
 		},

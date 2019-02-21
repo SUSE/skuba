@@ -11,7 +11,7 @@ import (
 func newBootstrapCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "bootstrap",
-		Short: "bootstraps the first master node of the cluster",
+		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
 			saltPath, err := cmd.Flags().GetString("salt-path")
 			if err != nil {
@@ -40,9 +40,10 @@ func newBootstrapCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringP("user", "u", "root", "user identity used to connect to target")
-	cmd.Flags().Bool("sudo", false, "run remote command via sudo")
-	cmd.Flags().StringP("salt-path", "s", "", "salt root path to the states folder")
+	cmd.Flags().StringP("user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().Bool("sudo", false, "Run remote command via sudo")
+
+	cmd.Flags().StringP("salt-path", "s", "", "Salt root path to the states folder")
 	cmd.MarkFlagRequired("salt-path")
 
 	return &cmd
