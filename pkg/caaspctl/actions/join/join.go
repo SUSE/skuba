@@ -30,7 +30,8 @@ func Join(target salt.Target, role Role, masterConfig salt.MasterConfig) {
 	if role == MasterRole {
 		statesToApply = append([]string{"kubernetes.upload-secrets"}, statesToApply...)
 		pillar.Join.Kubernetes = &salt.Kubernetes{
-			SecretsPath: "salt://pki",
+			AdminConfPath: "salt://admin.conf",
+			SecretsPath:   "salt://pki",
 		}
 	}
 
