@@ -50,7 +50,7 @@ func Bootstrap(target salt.Target, masterConfig salt.MasterConfig) {
 }
 
 func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {
-	os.MkdirAll(path.Join("pki", "etcd"), 0755)
+	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
 	for _, secretLocation := range secrets {
 		secretData, err := salt.DownloadFile(
@@ -60,7 +60,7 @@ func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if err := ioutil.WriteFile(path.Join("pki", secretLocation), []byte(secretData), 0644); err != nil {
+		if err := ioutil.WriteFile(secretLocation, []byte(secretData), 0600); err != nil {
 			log.Fatal(err)
 		}
 	}

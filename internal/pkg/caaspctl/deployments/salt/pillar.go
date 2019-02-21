@@ -24,5 +24,6 @@ type Cni struct {
 }
 
 type Kubernetes struct {
-	SecretsPath string `json:"secrets_path"`
+	AdminConfPath string `json:"admin_conf_path"`
+	SecretsPath   string `json:"secrets_path"`
 }
