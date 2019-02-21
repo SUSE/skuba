@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/constants"
+	"suse.com/caaspctl/internal/pkg/caaspctl/definitions"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
 
@@ -22,8 +24,8 @@ func Join(target string) {
 }
 
 func configPath(target string) string {
-	targetPath := path.Join("samples/3-masters-3-workers-vagrant/kubeadm-join-conf.d", fmt.Sprintf("%s.conf", target))
-	if _, err := os.Stat(path.Join("deployments/salt/states", targetPath)); err == nil {
+	targetPath := path.Join(fmt.Sprintf("samples/%s/kubeadm-join-conf.d", definitions.CurrentDefinition()), fmt.Sprintf("%s.conf", target))
+	if _, err := os.Stat(path.Join(constants.DefinitionPath, "states", targetPath)); err == nil {
 		return fmt.Sprintf("salt://%s", targetPath)
 	} else {
 		log.Fatal(err)
