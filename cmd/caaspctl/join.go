@@ -17,7 +17,7 @@ func newJoinCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "join",
-		Short: "joins a new node to the cluster",
+		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
 			saltPath, err := cmd.Flags().GetString("salt-path")
 			if err != nil {
@@ -62,7 +62,10 @@ func newJoinCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&joinOptions.Role, "role", "", "", "Role that this node will have in the cluster (master|worker)")
 	cmd.MarkFlagRequired("role")
 
-	cmd.Flags().StringP("salt-path", "s", "", "salt root path to the states folder")
+	cmd.Flags().StringP("user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().Bool("sudo", false, "Run remote command via sudo")
+
+	cmd.Flags().StringP("salt-path", "s", "", "Salt root path to the states folder")
 	cmd.MarkFlagRequired("salt-path")
 
 	return cmd
