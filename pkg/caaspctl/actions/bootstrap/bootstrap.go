@@ -30,10 +30,10 @@ func Bootstrap(target salt.Target) {
 	err := salt.Apply(target, &salt.Pillar{
 		Bootstrap: &salt.Bootstrap{
 			salt.Kubeadm{
-				ConfigPath: fmt.Sprintf("salt://samples/%s/kubeadm-init.conf", definitions.CurrentDefinition()),
+				ConfigPath: fmt.Sprintf("%s/%s", salt.CurrentDefinitionPrefix(), "kubeadm-init.conf"),
 			},
 			salt.Cni{
-				ConfigPath: fmt.Sprintf("salt://samples/%s/addons/cni/flannel.yaml", definitions.CurrentDefinition()),
+				ConfigPath: fmt.Sprintf("%s/%s", salt.CurrentDefinitionPrefix(), "addons/cni/flannel.yaml"),
 			},
 		},
 	},

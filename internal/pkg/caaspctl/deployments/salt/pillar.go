@@ -11,7 +11,8 @@ type Bootstrap struct {
 }
 
 type Join struct {
-	Kubeadm Kubeadm `json:"kubeadm"`
+	Kubeadm    Kubeadm `json:"kubeadm"`
+	Kubernetes *Kubernetes `json:"kubernetes,omitempty"`
 }
 
 type Kubeadm struct {
@@ -20,4 +21,8 @@ type Kubeadm struct {
 
 type Cni struct {
 	ConfigPath string `json:"config_path"`
+}
+
+type Kubernetes struct {
+	SecretsPath string `json:"secrets_path"`
 }
