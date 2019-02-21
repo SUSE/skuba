@@ -3,18 +3,34 @@ package bootstrap
 import (
 	"fmt"
 	"log"
+	"path"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/definitions"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+)
+
+var (
+	secrets = []string{
+		"pki/ca.crt",
+		"pki/ca.key",
+		"pki/sa.key",
+		"pki/sa.key",
+		"pki/front-proxy-ca.crt",
+		"pki/front-proxy-ca.key",
+	  "pki/etcd/ca.crt",
+		"pki/etcd/ca.key",
+		"admin.conf",
+	}
 )
 
 func Bootstrap(target string) {
 	err := salt.Apply(target, &salt.Pillar{
 		Bootstrap: &salt.Bootstrap{
 			salt.Kubeadm{
-				ConfigPath: "salt://samples/3-masters-3-workers-vagrant/kubeadm-init.conf",
+				ConfigPath: fmt.Sprintf("salt://samples/%s/kubeadm-init.conf", definitions.CurrentDefinition()),
 			},
 			salt.Cni{
-				ConfigPath: "salt://samples/3-masters-3-workers-vagrant/addons/cni/flannel.yaml",
+				ConfigPath: fmt.Sprintf("salt://samples/%s/addons/cni/flannel.yaml", definitions.CurrentDefinition()),
 			},
 		},
 	},
@@ -26,20 +42,15 @@ func Bootstrap(target string) {
 		log.Fatal(err)
 	}
 
-	caCrt, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/ca.crt")
-	caKey, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/ca.key")
-	saKey, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/sa.key")
-	saPubKey, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/sa.pub")
-	frontProxyCaCrt, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/front-proxy-ca.crt")
-	frontProxyCaKey, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/front-proxy-ca.key")
-	etcdCaCrt, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/etcd/ca.crt")
-	etcdCaKey, _ := salt.DownloadFile(target, "/etc/kubernetes/pki/etcd/ca.key")
-	adminConf, _ := salt.DownloadFile(target, "/etc/kubernetes/admin.conf")
+	downloadSecrets(target)
+}
 
-	secrets := []string{caCrt, caKey, saKey, saPubKey, frontProxyCaCrt,
-		frontProxyCaKey, etcdCaCrt, etcdCaKey, adminConf}
+func downloadSecrets(target string) {
+	for _, secretLocation := range secrets {
+		_, err := salt.DownloadFile(target, path.Join("/etc/kubernetes", secretLocation))
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	for _, secret := range secrets {
-		fmt.Printf("===\nSecret retrieved:\n%s\n", secret)
 	}
 }
