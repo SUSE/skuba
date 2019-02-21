@@ -13,6 +13,7 @@ func newRootCmd(args []string) *cobra.Command {
 	cmd.AddCommand(
 		newInitCmd(),
 		newBootstrapCmd(),
+		newJoinCmd(),
 	)
 	return cmd
 }
