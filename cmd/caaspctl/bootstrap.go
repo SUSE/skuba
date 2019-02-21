@@ -13,6 +13,10 @@ func newBootstrapCmd() *cobra.Command {
 		Use:   "bootstrap",
 		Short: "bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
+			saltPath, err := cmd.Flags().GetString("salt-path")
+			if err != nil {
+				log.Fatalf("Unable to parse salt flag: %v", err)
+			}
 			user, err := cmd.Flags().GetString("user")
 			if err != nil {
 				log.Fatalf("Unable to parse user flag: %v", err)
@@ -22,11 +26,16 @@ func newBootstrapCmd() *cobra.Command {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
 
-			bootstrap.Bootstrap(salt.Target{
-				Node: targets[0],
-				User: user,
-				Sudo: sudo,
-			})
+			bootstrap.Bootstrap(
+				salt.Target{
+					Node: targets[0],
+					User: user,
+					Sudo: sudo,
+				},
+				salt.NewMasterConfig(
+					saltPath,
+				),
+			)
 		},
 		Args: cobra.ExactArgs(1),
 	}

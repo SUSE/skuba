@@ -1,8 +1,0 @@
-log_level: info
-root_dir: .
-cachedir: cache
-ssh_log_file: logs/master
-pki_dir: pki
-file_roots:
-  base:
-  - states
