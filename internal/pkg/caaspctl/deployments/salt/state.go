@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Apply(target string, pillar *Pillar, mods ...string) error {
+func Apply(target Target, pillar *Pillar, mods ...string) error {
 	args := []string{strings.Join(mods, ",")}
 	if pillar != nil {
 		jsonPillar, err := json.Marshal(*pillar)

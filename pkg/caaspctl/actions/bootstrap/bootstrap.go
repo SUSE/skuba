@@ -20,13 +20,13 @@ var (
 		"pki/sa.key",
 		"pki/front-proxy-ca.crt",
 		"pki/front-proxy-ca.key",
-	  "pki/etcd/ca.crt",
+		"pki/etcd/ca.crt",
 		"pki/etcd/ca.key",
 		"admin.conf",
 	}
 )
 
-func Bootstrap(target string) {
+func Bootstrap(target salt.Target) {
 	err := salt.Apply(target, &salt.Pillar{
 		Bootstrap: &salt.Bootstrap{
 			salt.Kubeadm{
@@ -48,11 +48,19 @@ func Bootstrap(target string) {
 	downloadSecrets(target)
 }
 
-func downloadSecrets(target string) {
-	secretPrefix := path.Join(constants.DefinitionPath, "states", "samples", definitions.CurrentDefinition(), "pki")
+func downloadSecrets(target salt.Target) {
+	secretPrefix := path.Join(
+		constants.DefinitionPath,
+		"states",
+		"samples",
+		definitions.CurrentDefinition(),
+		"pki")
 	os.MkdirAll(path.Join(secretPrefix, "pki", "etcd"), 0755)
+
 	for _, secretLocation := range secrets {
-		secretData, err := salt.DownloadFile(target, path.Join("/etc/kubernetes", secretLocation))
+		secretData, err := salt.DownloadFile(
+			target,
+			path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			log.Fatal(err)
 		}
