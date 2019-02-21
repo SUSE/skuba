@@ -1,7 +1,7 @@
 write cni config file:
   file.managed:
     - name: /tmp/cni.conf
-    - source: {{ salt['pillar.get']('cni:config_path') }}
+    - source: {{ salt['pillar.get']('bootstrap:cni:config_path') }}
 
 deploy cni:
   cmd.run:

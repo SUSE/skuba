@@ -11,8 +11,10 @@ import (
 
 func Join(target string) {
 	salt.Apply(target, &salt.Pillar{
-		Kubeadm: &salt.Kubeadm{
-			ConfigPath: configPath(target),
+		Join: &salt.Join{
+			Kubeadm: salt.Kubeadm{
+				ConfigPath: configPath(target),
+			},
 		},
 	},
 		"kubelet.enable",
