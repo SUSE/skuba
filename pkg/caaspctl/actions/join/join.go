@@ -16,18 +16,23 @@ const (
 
 type Role int
 
-func Join(target salt.Target, role Role, masterConfig salt.MasterConfig) {
+type JoinConfiguration struct {
+	Target salt.Target
+	Role Role
+}
+
+func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 	statesToApply := []string{"kubelet.enable", "kubeadm.join"}
 
 	pillar := &salt.Pillar{
 		Join: &salt.Join{
 			Kubeadm: salt.Kubeadm{
-				ConfigPath: configPath(target.Node),
+				ConfigPath: configPath(joinConfiguration.Target.Node),
 			},
 		},
 	}
 
-	if role == MasterRole {
+	if joinConfiguration.Role == MasterRole {
 		statesToApply = append([]string{"kubernetes.upload-secrets"}, statesToApply...)
 		pillar.Join.Kubernetes = &salt.Kubernetes{
 			AdminConfPath: "salt://admin.conf",
@@ -35,7 +40,7 @@ func Join(target salt.Target, role Role, masterConfig salt.MasterConfig) {
 		}
 	}
 
-	salt.Apply(target, masterConfig, pillar, statesToApply...)
+	salt.Apply(joinConfiguration.Target, masterConfig, pillar, statesToApply...)
 }
 
 func configPath(target string) string {

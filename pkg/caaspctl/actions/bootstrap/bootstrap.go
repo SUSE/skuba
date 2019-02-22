@@ -23,9 +23,13 @@ var (
 	}
 )
 
-func Bootstrap(target salt.Target, masterConfig salt.MasterConfig) {
+type BootstrapConfiguration struct {
+	Target salt.Target
+}
+
+func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.MasterConfig) {
 	err := salt.Apply(
-		target,
+		bootstrapConfiguration.Target,
 		masterConfig,
 		&salt.Pillar{
 			Bootstrap: &salt.Bootstrap{
@@ -46,7 +50,7 @@ func Bootstrap(target salt.Target, masterConfig salt.MasterConfig) {
 		log.Fatal(err)
 	}
 
-	downloadSecrets(target, masterConfig)
+	downloadSecrets(bootstrapConfiguration.Target, masterConfig)
 }
 
 func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {

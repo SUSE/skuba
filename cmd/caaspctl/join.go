@@ -16,7 +16,7 @@ func newJoinCmd() *cobra.Command {
 	joinOptions := JoinOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "join",
+		Use:   "join <target>",
 		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
 			saltPath, err := cmd.Flags().GetString("salt-path")
@@ -32,25 +32,25 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
 
-			target := salt.Target{
-				Node: targets[0],
-				User: user,
-				Sudo: sudo,
+			joinConfiguration := join.JoinConfiguration{
+				Target: salt.Target{
+					Node: targets[0],
+					User: user,
+					Sudo: sudo,
+				},
 			}
 
-			var role join.Role
 			switch joinOptions.Role {
 			case "master":
-				role = join.MasterRole
+				joinConfiguration.Role = join.MasterRole
 			case "worker":
-				role = join.WorkerRole
+				joinConfiguration.Role = join.WorkerRole
 			default:
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
 			join.Join(
-				target,
-				role,
+				joinConfiguration,
 				salt.NewMasterConfig(
 					saltPath,
 				),
