@@ -1,8 +1,7 @@
 package init
 
 const (
-	kubeadmInitConf = `
-apiVersion: kubeadm.k8s.io/v1beta1
+	kubeadmInitConf = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 bootstrapTokens:
   - token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_BOOTSTRAP_
@@ -19,8 +18,7 @@ networking:
   serviceSubnet: 10.96.0.0/12
 `
 
-	masterConfTemplate = `
-apiVersion: kubeadm.k8s.io/v1beta1
+	masterConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
@@ -32,8 +30,7 @@ controlPlane:
     advertiseAddress: _CHANGE_PLACE_YOUR_IP_ADDRESS_HERE_
 `
 
-	workerConfTemplate = `
-apiVersion: kubeadm.k8s.io/v1beta1
+	workerConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
@@ -42,8 +39,7 @@ discovery:
     unsafeSkipCAVerification: true
 `
 
-	flannelManifests = `
----
+	flannelManifests = `---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
