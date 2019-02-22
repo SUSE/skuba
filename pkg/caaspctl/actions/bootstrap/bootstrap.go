@@ -1,8 +1,8 @@
 package bootstrap
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"path"
@@ -32,22 +32,22 @@ type BootstrapConfiguration struct {
 	Target salt.Target
 }
 
-func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.MasterConfig) {
+func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.MasterConfig) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig("kubeadm-init.conf")
 	if err != nil {
-		log.Fatal("could not parse kubeadm-init.conf file")
+		return fmt.Errorf("Could not parse kubeadm-init.conf file: %v", err)
 	}
 	addTargetInformationToInitConfiguration(bootstrapConfiguration.Target.Node, initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
-		Group: "kubeadm.k8s.io",
+		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
 	})
 	if err != nil {
-		log.Fatal("could not marshal configuration")
+		return fmt.Errorf("Could not marshal configuration: %v", err)
 	}
 
 	if err := ioutil.WriteFile("kubeadm-init.conf", finalInitConfigurationContents, 0600); err != nil {
-		log.Fatal("error writing init configuration")
+		return fmt.Errorf("Error writing init configuration: %v", err)
 	}
 
 	err = salt.Apply(
@@ -69,13 +69,13 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	downloadSecrets(bootstrapConfiguration.Target, masterConfig)
+	return downloadSecrets(bootstrapConfiguration.Target, masterConfig)
 }
 
-func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {
+func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
 	for _, secretLocation := range secrets {
@@ -84,12 +84,14 @@ func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) {
 			masterConfig,
 			path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		if err := ioutil.WriteFile(secretLocation, []byte(secretData), 0600); err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
+
+	return nil
 }
 
 func addTargetInformationToInitConfiguration(target string, initConfiguration *kubeadmapi.InitConfiguration) {

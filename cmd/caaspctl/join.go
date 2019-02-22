@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
@@ -49,11 +50,14 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
+			masterConfig := salt.NewMasterConfig(
+				saltPath,
+			)
+			defer os.RemoveAll(masterConfig.GetTempDir())
+
 			join.Join(
 				joinConfiguration,
-				salt.NewMasterConfig(
-					saltPath,
-				),
+				masterConfig,
 			)
 		},
 		Args: cobra.ExactArgs(1),
