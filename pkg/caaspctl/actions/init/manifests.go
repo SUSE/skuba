@@ -4,6 +4,8 @@ const (
 	kubeadmInitConf = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
 bootstrapTokens: []
+localAPIEndpoint:
+  advertiseAddress: ""
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
