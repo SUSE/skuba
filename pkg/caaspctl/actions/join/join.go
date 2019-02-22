@@ -1,10 +1,24 @@
 package join
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
+	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
+	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
@@ -27,7 +41,7 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 	pillar := &salt.Pillar{
 		Join: &salt.Join{
 			Kubeadm: salt.Kubeadm{
-				ConfigPath: configPath(joinConfiguration.Target.Node),
+				ConfigPath: configPath(joinConfiguration.Role, joinConfiguration.Target.Node),
 			},
 		},
 	}
@@ -43,15 +57,130 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 	salt.Apply(joinConfiguration.Target, masterConfig, pillar, statesToApply...)
 }
 
-func configPath(target string) string {
-	targetPath := path.Join(
+func specificPath(target string) string {
+	return path.Join(
 		"kubeadm-join-conf.d",
 		fmt.Sprintf("%s.conf", target),
 	)
-	if _, err := os.Stat(targetPath); err == nil {
-		return fmt.Sprintf("salt://%s", targetPath)
-	} else {
-		log.Fatal(err)
+}
+
+func templatePath(role Role) string {
+	switch role {
+	case MasterRole:
+		return path.Join("kubeadm-join-conf.d", "master.conf.template")
+	case WorkerRole:
+		return path.Join("kubeadm-join-conf.d", "worker.conf.template")
 	}
 	return ""
+}
+
+func configPath(role Role, target string) string {
+	configPath := specificPath(target)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = templatePath(role)
+	}
+
+	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
+	if err != nil {
+		log.Fatal("error parsing configuration: %v", err)
+	}
+	addFreshTokenToJoinConfiguration(target, joinConfiguration)
+	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
+	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
+	if err != nil {
+		log.Fatal("could not marshal configuration")
+	}
+
+	if err := ioutil.WriteFile(specificPath(target), finalJoinConfigurationContents, 0600); err != nil {
+		log.Fatal("error writing specific machine configuration")
+	}
+
+	return fmt.Sprintf("salt://%s", specificPath(target))
+}
+
+func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) {
+	if joinConfiguration.Discovery.BootstrapToken == nil {
+		joinConfiguration.Discovery.BootstrapToken = &kubeadmapi.BootstrapTokenDiscovery{}
+	}
+	joinConfiguration.Discovery.BootstrapToken.Token = createBootstrapToken(target)
+	joinConfiguration.Discovery.TLSBootstrapToken = ""
+}
+
+func addTargetInformationToJoinConfiguration(target string, role Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
+	if ip := net.ParseIP(target); ip != nil {
+		// Node registration information
+		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
+			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
+		}
+		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target
+		// If master, local API endpoint
+		if role == MasterRole {
+			if joinConfiguration.ControlPlane == nil {
+				joinConfiguration.ControlPlane = &kubeadmapi.JoinControlPlane{
+					LocalAPIEndpoint: kubeadmapi.APIEndpoint{
+						AdvertiseAddress: target,
+					},
+				}
+			} else {
+				if len(joinConfiguration.ControlPlane.LocalAPIEndpoint.AdvertiseAddress) == 0 {
+					joinConfiguration.ControlPlane.LocalAPIEndpoint.AdvertiseAddress = target
+				}
+			}
+		}
+	}
+}
+
+func createBootstrapToken(target string) string {
+	cmd := exec.Command(
+		"kubeadm", "token", "create", "--kubeconfig", "admin.conf",
+		"--description", fmt.Sprintf("Bootstrap token for machine %s'", target),
+		"--ttl", "15m",
+	)
+	var stdOut, stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+	err := cmd.Run()
+	stdout := stdOut.String()
+	stderr := stdErr.String()
+	if err != nil {
+		log.Fatalf("could not create token for joining a new node; stdout: %q, stderr: %q\n", stdout, stderr)
+	}
+	return strings.TrimSpace(stdout)
+}
+
+func joinConfigFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.JoinConfiguration, error) {
+	internalcfg := &kubeadmapi.JoinConfiguration{}
+
+	b, err := ioutil.ReadFile(cfgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := kubeadmconfigutil.DetectUnsupportedVersion(b); err != nil {
+		return nil, err
+	}
+
+	gvkmap, err := kubeadmutil.SplitYAMLDocuments(b)
+	if err != nil {
+		return nil, err
+	}
+
+	joinBytes := []byte{}
+	for gvk, bytes := range gvkmap {
+		if gvk.Kind == constants.JoinConfigurationKind {
+			joinBytes = bytes
+			// verify the validity of the YAML
+			strict.VerifyUnmarshalStrict(bytes, gvk)
+		}
+	}
+
+	if len(joinBytes) == 0 {
+		return nil, errors.New("invalid config")
+	}
+
+	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), joinBytes, internalcfg); err != nil {
+		return nil, err
+	}
+
+	return internalcfg, nil
 }

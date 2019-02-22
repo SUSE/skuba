@@ -5,7 +5,7 @@ write kubeadm init config file:
 
 run kubeadm init:
   cmd.run:
-    - name: kubeadm init --config /tmp/kubeadm.conf
+    - name: kubeadm init --config /tmp/kubeadm.conf --skip-token-print
     - require:
         - write kubeadm init config file
     - unless:

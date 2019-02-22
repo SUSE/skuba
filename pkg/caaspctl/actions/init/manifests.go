@@ -3,16 +3,15 @@ package init
 const (
 	kubeadmInitConf = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: InitConfiguration
-bootstrapTokens:
-  - token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_BOOTSTRAP_
+bootstrapTokens: []
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 kubernetesVersion: v1.13.3
 apiServer:
   certSANs:
-    - {{.ControlPlaneEndpoint}}
-controlPlaneEndpoint: {{.ControlPlaneEndpoint}}:6443
+    - {{.ControlPlane}}
+controlPlaneEndpoint: {{.ControlPlane}}:6443
 networking:
   podSubnet: 10.244.0.0/16
   serviceSubnet: 10.96.0.0/12
@@ -22,7 +21,7 @@ networking:
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: {{.ControlPlaneEndpoint}}:6443
+    apiServerEndpoint: {{.ControlPlane}}:6443
     token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_JOIN_
     unsafeSkipCAVerification: true
 controlPlane:
@@ -34,7 +33,7 @@ controlPlane:
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: {{.ControlPlaneEndpoint}}:6443
+    apiServerEndpoint: {{.ControlPlane}}:6443
     token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_JOIN_
     unsafeSkipCAVerification: true
 `
