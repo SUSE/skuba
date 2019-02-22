@@ -9,7 +9,7 @@ import (
 )
 
 type InitConfiguration struct {
-	ProjectName string
+	ProjectName          string
 	ControlPlaneEndpoint string
 }
 
@@ -27,7 +27,7 @@ func Init(initConfiguration InitConfiguration) {
 				log.Fatalf("Could not create directory %s\n", filePath)
 			}
 		}
-    f, err := os.Create(file.Location)
+		f, err := os.Create(file.Location)
 		if err != nil {
 			log.Fatalf("Could not create file %s\n", file.Location)
 		}

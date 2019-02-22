@@ -18,7 +18,7 @@ type Role int
 
 type JoinConfiguration struct {
 	Target salt.Target
-	Role Role
+	Role   Role
 }
 
 func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
