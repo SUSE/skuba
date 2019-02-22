@@ -9,8 +9,8 @@ import (
 )
 
 type InitConfiguration struct {
-	ProjectName          string
-	ControlPlaneEndpoint string
+	ProjectName  string
+	ControlPlane string
 }
 
 func Init(initConfiguration InitConfiguration) {
