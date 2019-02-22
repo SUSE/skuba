@@ -3,7 +3,6 @@ package salt
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -12,7 +11,7 @@ func Apply(target Target, masterConfig MasterConfig, pillar *Pillar, mods ...str
 	if pillar != nil {
 		jsonPillar, err := json.Marshal(*pillar)
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("Error applying state, cannot marshall pillars: %v", err)
 		}
 		args = append(args, fmt.Sprintf("pillar=%s", jsonPillar))
 	}

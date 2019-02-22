@@ -26,7 +26,7 @@ func newBootstrapCmd() *cobra.Command {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
 
-			bootstrap.Bootstrap(
+			err = bootstrap.Bootstrap(
 				bootstrap.BootstrapConfiguration{
 					Target: salt.Target{
 						Node: targets[0],
@@ -38,6 +38,9 @@ func newBootstrapCmd() *cobra.Command {
 					saltPath,
 				),
 			)
+			if err != nil {
+				log.Fatal(err)
+			}
 		},
 		Args: cobra.ExactArgs(1),
 	}

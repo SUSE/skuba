@@ -3,8 +3,6 @@ package salt
 import (
 	"bytes"
 	"fmt"
-	"log"
-	"os"
 	"os/exec"
 )
 
@@ -19,12 +17,9 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 		"-c",
 		masterConfig.GetTempDir(),
 		"-i",
-		"--roster=scan",
 		"--key-deploy",
 		fmt.Sprintf("--user=%s", target.User),
 	}
-
-	defer os.RemoveAll(masterConfig.GetTempDir())
 
 	if target.Sudo {
 		saltArgs = append(saltArgs, "--sudo")
@@ -32,6 +27,7 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 
 	saltArgs = append(
 		saltArgs,
+		"--roster=scan",
 		target.Node,
 		command,
 	)
@@ -39,18 +35,17 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 	saltArgs = append(saltArgs, args...)
 
 	cmd := exec.Command("salt-ssh", saltArgs...)
-	fmt.Printf("Command is %v\n", cmd)
+	fmt.Printf("Command is %+v\n", cmd)
+
 	var stdOut, stdErr bytes.Buffer
 	cmd.Stdout = &stdOut
 	cmd.Stderr = &stdErr
 	err := cmd.Run()
 	stdout := stdOut.String()
 	stderr := stdErr.String()
+	//TODO: print stdout only when in debug mode
 	fmt.Printf("stdout is %s\n", stdout)
 	fmt.Printf("stderr is %s\n", stderr)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	return stdout, stderr, nil
+	return stdout, stderr, err
 }
