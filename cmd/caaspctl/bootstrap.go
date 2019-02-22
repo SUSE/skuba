@@ -10,7 +10,7 @@ import (
 
 func newBootstrapCmd() *cobra.Command {
 	cmd := cobra.Command{
-		Use:   "bootstrap",
+		Use:   "bootstrap <target>",
 		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
 			saltPath, err := cmd.Flags().GetString("salt-path")
@@ -27,10 +27,12 @@ func newBootstrapCmd() *cobra.Command {
 			}
 
 			bootstrap.Bootstrap(
-				salt.Target{
-					Node: targets[0],
-					User: user,
-					Sudo: sudo,
+				bootstrap.BootstrapConfiguration{
+					Target: salt.Target{
+						Node: targets[0],
+						User: user,
+						Sudo: sudo,
+					},
 				},
 				salt.NewMasterConfig(
 					saltPath,
