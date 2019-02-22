@@ -101,7 +101,6 @@ func addTargetInformationToInitConfiguration(target string, initConfiguration *k
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
 		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target
-		initConfiguration.LocalAPIEndpoint.AdvertiseAddress = target
 	}
 }
 
