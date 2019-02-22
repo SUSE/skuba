@@ -1,7 +1,7 @@
 package init
 
 var (
-	ScaffoldFiles = []struct{
+	scaffoldFiles = []struct{
 		Location string
 		Content  string
 	}{
