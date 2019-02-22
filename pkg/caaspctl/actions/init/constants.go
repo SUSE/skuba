@@ -1,25 +1,25 @@
 package init
 
 var (
-	scaffoldFiles = []struct{
+	scaffoldFiles = []struct {
 		Location string
 		Content  string
 	}{
 		{
 			Location: "kubeadm-init.conf",
-			Content: kubeadmInitConf,
+			Content:  kubeadmInitConf,
 		},
 		{
 			Location: "kubeadm-join-conf.d/master.conf.template",
-			Content: masterConfTemplate,
+			Content:  masterConfTemplate,
 		},
 		{
 			Location: "kubeadm-join-conf.d/worker.conf.template",
-			Content: workerConfTemplate,
+			Content:  workerConfTemplate,
 		},
 		{
 			Location: "addons/cni/flannel.yaml",
-			Content: flannelManifests,
+			Content:  flannelManifests,
 		},
 	}
 )

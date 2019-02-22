@@ -7,7 +7,7 @@ import (
 )
 
 type InitOptions struct {
-	ProjectName string
+	ProjectName          string
 	ControlPlaneEndpoint string
 }
 
@@ -19,7 +19,7 @@ func newInitCmd() *cobra.Command {
 		Short: "Initialize caaspctl structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
 			doinit.Init(doinit.InitConfiguration{
-				ProjectName: args[0],
+				ProjectName:          args[0],
 				ControlPlaneEndpoint: initOptions.ControlPlaneEndpoint,
 			})
 		},
