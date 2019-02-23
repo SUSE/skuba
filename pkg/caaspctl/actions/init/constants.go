@@ -1,25 +1,29 @@
 package init
 
+import (
+	"suse.com/caaspctl/pkg/caaspctl"
+)
+
 var (
 	scaffoldFiles = []struct {
 		Location string
 		Content  string
 	}{
 		{
-			Location: "kubeadm-init.conf",
+			Location: caaspctl.KubeadmInitConfFile(),
 			Content:  kubeadmInitConf,
 		},
 		{
-			Location: "kubeadm-join.conf.d/master.conf.template",
+			Location: caaspctl.MasterConfTemplateFile(),
 			Content:  masterConfTemplate,
 		},
 		{
-			Location: "kubeadm-join.conf.d/worker.conf.template",
+			Location: caaspctl.WorkerConfTemplateFile(),
 			Content:  workerConfTemplate,
 		},
 		{
-			Location: "addons/cni/flannel.yaml",
-			Content:  flannelManifests,
+			Location: caaspctl.FlannelManifestFile(),
+			Content:  flannelManifest,
 		},
 	}
 )

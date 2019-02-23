@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/spf13/cobra"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
@@ -36,7 +35,6 @@ func newBootstrapCmd() *cobra.Command {
 			masterConfig := salt.NewMasterConfig(
 				saltPath,
 			)
-			defer os.RemoveAll(masterConfig.GetTempDir(target))
 
 			err = bootstrap.Bootstrap(
 				bootstrap.BootstrapConfiguration{

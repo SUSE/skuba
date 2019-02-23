@@ -3,6 +3,7 @@ package salt
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -18,12 +19,9 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 		masterConfig.GetTempDir(target),
 		"-i",
 		"--key-deploy",
-		fmt.Sprintf("--user=%s", target.User),
 	}
 
-	if target.Sudo {
-		saltArgs = append(saltArgs, "--sudo")
-	}
+	defer os.RemoveAll(masterConfig.GetTempDir(target))
 
 	saltArgs = append(
 		saltArgs,

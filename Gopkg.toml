@@ -50,6 +50,10 @@
   version = "kubernetes-1.13.3"
 
 [[override]]
+  name = "k8s.io/cluster-bootstrap"
+  version = "kubernetes-1.13.3"
+
+[[override]]
   name = "k8s.io/code-generator"
   version = "kubernetes-1.13.3"
 

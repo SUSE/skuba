@@ -21,6 +21,14 @@
   version = "v2.7.1"
 
 [[projects]]
+  digest = "1:f1f2bd73c025d24c3b93abf6364bccb802cf2fdedaa44360804c67800e8fab8d"
+  name = "github.com/evanphx/json-patch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "72bf35d0ff611848c1dc9df0f976c81192392fa5"
+  version = "v4.1.0"
+
+[[projects]]
   digest = "1:4d02824a56d268f74a6b6fdd944b20b58a77c3d70e81008b3ee0c4f1a6777340"
   name = "github.com/gogo/protobuf"
   packages = [
@@ -330,7 +338,7 @@
   version = "kubernetes-1.13.3"
 
 [[projects]]
-  digest = "1:7bc9dd3967559cb43860812ef4b4ffc5f44a6b628a18a084b794f58e8bf9db33"
+  digest = "1:e8ff2047a4074c153ca03ef97ce0c0dd5ee41c79d78d529ccb972aa466a7f65f"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -374,6 +382,7 @@
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/version",
+    "pkg/util/wait",
     "pkg/util/yaml",
     "pkg/version",
     "pkg/watch",
@@ -396,44 +405,79 @@
   version = "kubernetes-1.13.3"
 
 [[projects]]
-  digest = "1:8d5e51e119546ab831ba781660edf2806356ea39fb47d62c6c016e514b8c8a2b"
+  digest = "1:7cbe505bca752a3f07d72ca2723789bdb0f842eafc5baef26bbea4b45a3b4260"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
+    "discovery/fake",
+    "dynamic",
     "kubernetes",
+    "kubernetes/fake",
     "kubernetes/scheme",
     "kubernetes/typed/admissionregistration/v1alpha1",
+    "kubernetes/typed/admissionregistration/v1alpha1/fake",
     "kubernetes/typed/admissionregistration/v1beta1",
+    "kubernetes/typed/admissionregistration/v1beta1/fake",
     "kubernetes/typed/apps/v1",
+    "kubernetes/typed/apps/v1/fake",
     "kubernetes/typed/apps/v1beta1",
+    "kubernetes/typed/apps/v1beta1/fake",
     "kubernetes/typed/apps/v1beta2",
+    "kubernetes/typed/apps/v1beta2/fake",
     "kubernetes/typed/auditregistration/v1alpha1",
+    "kubernetes/typed/auditregistration/v1alpha1/fake",
     "kubernetes/typed/authentication/v1",
+    "kubernetes/typed/authentication/v1/fake",
     "kubernetes/typed/authentication/v1beta1",
+    "kubernetes/typed/authentication/v1beta1/fake",
     "kubernetes/typed/authorization/v1",
+    "kubernetes/typed/authorization/v1/fake",
     "kubernetes/typed/authorization/v1beta1",
+    "kubernetes/typed/authorization/v1beta1/fake",
     "kubernetes/typed/autoscaling/v1",
+    "kubernetes/typed/autoscaling/v1/fake",
     "kubernetes/typed/autoscaling/v2beta1",
+    "kubernetes/typed/autoscaling/v2beta1/fake",
     "kubernetes/typed/autoscaling/v2beta2",
+    "kubernetes/typed/autoscaling/v2beta2/fake",
     "kubernetes/typed/batch/v1",
+    "kubernetes/typed/batch/v1/fake",
     "kubernetes/typed/batch/v1beta1",
+    "kubernetes/typed/batch/v1beta1/fake",
     "kubernetes/typed/batch/v2alpha1",
+    "kubernetes/typed/batch/v2alpha1/fake",
     "kubernetes/typed/certificates/v1beta1",
+    "kubernetes/typed/certificates/v1beta1/fake",
     "kubernetes/typed/coordination/v1beta1",
+    "kubernetes/typed/coordination/v1beta1/fake",
     "kubernetes/typed/core/v1",
+    "kubernetes/typed/core/v1/fake",
     "kubernetes/typed/events/v1beta1",
+    "kubernetes/typed/events/v1beta1/fake",
     "kubernetes/typed/extensions/v1beta1",
+    "kubernetes/typed/extensions/v1beta1/fake",
     "kubernetes/typed/networking/v1",
+    "kubernetes/typed/networking/v1/fake",
     "kubernetes/typed/policy/v1beta1",
+    "kubernetes/typed/policy/v1beta1/fake",
     "kubernetes/typed/rbac/v1",
+    "kubernetes/typed/rbac/v1/fake",
     "kubernetes/typed/rbac/v1alpha1",
+    "kubernetes/typed/rbac/v1alpha1/fake",
     "kubernetes/typed/rbac/v1beta1",
+    "kubernetes/typed/rbac/v1beta1/fake",
     "kubernetes/typed/scheduling/v1alpha1",
+    "kubernetes/typed/scheduling/v1alpha1/fake",
     "kubernetes/typed/scheduling/v1beta1",
+    "kubernetes/typed/scheduling/v1beta1/fake",
     "kubernetes/typed/settings/v1alpha1",
+    "kubernetes/typed/settings/v1alpha1/fake",
     "kubernetes/typed/storage/v1",
+    "kubernetes/typed/storage/v1/fake",
     "kubernetes/typed/storage/v1alpha1",
+    "kubernetes/typed/storage/v1alpha1/fake",
     "kubernetes/typed/storage/v1beta1",
+    "kubernetes/typed/storage/v1beta1/fake",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
     "pkg/apis/clientauthentication/v1beta1",
@@ -441,6 +485,7 @@
     "plugin/pkg/client/auth/exec",
     "rest",
     "rest/watch",
+    "testing",
     "tools/auth",
     "tools/clientcmd",
     "tools/clientcmd/api",
@@ -460,7 +505,6 @@
   version = "kubernetes-1.13.3"
 
 [[projects]]
-  branch = "master"
   digest = "1:28fd6a61b5220aab30c6f7344676ff5aaea4a5f14407d95f33e238b13da2d2ef"
   name = "k8s.io/cluster-bootstrap"
   packages = [
@@ -468,7 +512,8 @@
     "token/util",
   ]
   pruneopts = "UT"
-  revision = "4f06c581c6d8fd832680b9614932657955ad8a05"
+  revision = "c9acc0c1bea2de07a6d31502c2fece9139c7f793"
+  version = "kubernetes-1.13.3"
 
 [[projects]]
   digest = "1:72fd56341405f53c745377e0ebc4abeff87f1a048e0eea6568a20212650f5a82"
@@ -503,7 +548,7 @@
   revision = "80add6525af10c696792916ee25d651c0f89ff20"
 
 [[projects]]
-  digest = "1:27e1c6899e821354d2faf871c700af7a1e56cc507a31aa7c6b111f7ccdae1290"
+  digest = "1:f62ad400f9b4bc767623ce3fafe778fba8d5290fc98b47919e226a8ab9b46ad1"
   name = "k8s.io/kubernetes"
   packages = [
     "cmd/kubeadm/app/apis/kubeadm",
@@ -515,9 +560,12 @@
     "cmd/kubeadm/app/constants",
     "cmd/kubeadm/app/features",
     "cmd/kubeadm/app/images",
+    "cmd/kubeadm/app/phases/bootstraptoken/node",
     "cmd/kubeadm/app/util",
+    "cmd/kubeadm/app/util/apiclient",
     "cmd/kubeadm/app/util/config",
     "cmd/kubeadm/app/util/config/strict",
+    "cmd/kubeadm/app/util/kubeconfig",
     "pkg/api/service",
     "pkg/apis/apps",
     "pkg/apis/autoscaling",
@@ -579,9 +627,17 @@
   analyzer-version = 1
   input-imports = [
     "github.com/spf13/cobra",
+    "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/cluster-bootstrap/token/util",
     "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm",
+    "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme",
+    "k8s.io/kubernetes/cmd/kubeadm/app/constants",
+    "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node",
+    "k8s.io/kubernetes/cmd/kubeadm/app/util",
     "k8s.io/kubernetes/cmd/kubeadm/app/util/config",
+    "k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict",
+    "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
