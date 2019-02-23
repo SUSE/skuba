@@ -10,11 +10,11 @@ var (
 			Content:  kubeadmInitConf,
 		},
 		{
-			Location: "kubeadm-join-conf.d/master.conf.template",
+			Location: "kubeadm-join.conf.d/master.conf.template",
 			Content:  masterConfTemplate,
 		},
 		{
-			Location: "kubeadm-join-conf.d/worker.conf.template",
+			Location: "kubeadm-join.conf.d/worker.conf.template",
 			Content:  workerConfTemplate,
 		},
 		{
