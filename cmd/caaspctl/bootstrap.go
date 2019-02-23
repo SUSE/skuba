@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
@@ -26,17 +27,22 @@ func newBootstrapCmd() *cobra.Command {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
 
+			target := salt.Target{
+				Node: targets[0],
+				User: user,
+				Sudo: sudo,
+			}
+
+			masterConfig := salt.NewMasterConfig(
+				saltPath,
+			)
+			defer os.RemoveAll(masterConfig.GetTempDir(target))
+
 			err = bootstrap.Bootstrap(
 				bootstrap.BootstrapConfiguration{
-					Target: salt.Target{
-						Node: targets[0],
-						User: user,
-						Sudo: sudo,
-					},
+					Target: target,
 				},
-				salt.NewMasterConfig(
-					saltPath,
-				),
+				masterConfig,
 			)
 			if err != nil {
 				log.Fatal(err)

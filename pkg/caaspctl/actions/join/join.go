@@ -13,12 +13,12 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
-	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
+	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
@@ -130,6 +130,7 @@ func addTargetInformationToJoinConfiguration(target string, role Role, joinConfi
 	}
 }
 
+// FIXME: do not shell out
 func createBootstrapToken(target string) string {
 	cmd := exec.Command(
 		"kubeadm", "token", "create", "--kubeconfig", "admin.conf",

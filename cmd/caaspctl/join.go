@@ -33,12 +33,14 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
 
+			target := salt.Target{
+				Node: targets[0],
+				User: user,
+				Sudo: sudo,
+			}
+
 			joinConfiguration := join.JoinConfiguration{
-				Target: salt.Target{
-					Node: targets[0],
-					User: user,
-					Sudo: sudo,
-				},
+				Target: target,
 			}
 
 			switch joinOptions.Role {
@@ -53,7 +55,7 @@ func newJoinCmd() *cobra.Command {
 			masterConfig := salt.NewMasterConfig(
 				saltPath,
 			)
-			defer os.RemoveAll(masterConfig.GetTempDir())
+			defer os.RemoveAll(masterConfig.GetTempDir(target))
 
 			join.Join(
 				joinConfiguration,
