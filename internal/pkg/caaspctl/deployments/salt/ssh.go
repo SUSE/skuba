@@ -27,7 +27,7 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 
 	saltArgs = append(
 		saltArgs,
-		target.Node,
+		"target",
 		command,
 	)
 

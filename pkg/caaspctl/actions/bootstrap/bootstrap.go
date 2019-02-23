@@ -96,7 +96,6 @@ func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) error {
 
 func addTargetInformationToInitConfiguration(target string, initConfiguration *kubeadmapi.InitConfiguration) {
 	if ip := net.ParseIP(target); ip != nil {
-		// Node registration information
 		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}

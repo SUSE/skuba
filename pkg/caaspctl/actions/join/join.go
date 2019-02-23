@@ -108,7 +108,6 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 
 func addTargetInformationToJoinConfiguration(target string, role Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
 	if ip := net.ParseIP(target); ip != nil {
-		// Node registration information
 		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}

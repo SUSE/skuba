@@ -21,7 +21,7 @@ file_roots:
     - {{.WorkDir}}
 `
 
-	RosterTemplate = `{{.Target.Node}}:
+	RosterTemplate = `target:
   host: {{.Target.Node}}
   user: {{.Target.User}}
   sudo: {{.Target.Sudo}}
