@@ -59,7 +59,7 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 
 func specificPath(target string) string {
 	return path.Join(
-		"kubeadm-join-conf.d",
+		"kubeadm-join.conf.d",
 		fmt.Sprintf("%s.conf", target),
 	)
 }
@@ -67,9 +67,9 @@ func specificPath(target string) string {
 func templatePath(role Role) string {
 	switch role {
 	case MasterRole:
-		return path.Join("kubeadm-join-conf.d", "master.conf.template")
+		return path.Join("kubeadm-join.conf.d", "master.conf.template")
 	case WorkerRole:
-		return path.Join("kubeadm-join-conf.d", "worker.conf.template")
+		return path.Join("kubeadm-join.conf.d", "worker.conf.template")
 	}
 	return ""
 }
