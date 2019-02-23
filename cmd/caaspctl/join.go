@@ -2,9 +2,10 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/spf13/cobra"
+
+	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 	"suse.com/caaspctl/pkg/caaspctl/actions/join"
 )
@@ -45,9 +46,9 @@ func newJoinCmd() *cobra.Command {
 
 			switch joinOptions.Role {
 			case "master":
-				joinConfiguration.Role = join.MasterRole
+				joinConfiguration.Role = caaspctl.MasterRole
 			case "worker":
-				joinConfiguration.Role = join.WorkerRole
+				joinConfiguration.Role = caaspctl.WorkerRole
 			default:
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
@@ -55,7 +56,6 @@ func newJoinCmd() *cobra.Command {
 			masterConfig := salt.NewMasterConfig(
 				saltPath,
 			)
-			defer os.RemoveAll(masterConfig.GetTempDir(target))
 
 			join.Join(
 				joinConfiguration,

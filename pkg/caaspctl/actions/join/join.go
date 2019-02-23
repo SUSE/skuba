@@ -1,38 +1,30 @@
 package join
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
-	"os/exec"
-	"path"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
+	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
+	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
+	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
 
-const (
-	MasterRole = iota
-	WorkerRole = iota
-)
-
-type Role int
-
 type JoinConfiguration struct {
 	Target salt.Target
-	Role   Role
+	Role   caaspctl.Role
 }
 
 func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
@@ -46,38 +38,21 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 		},
 	}
 
-	if joinConfiguration.Role == MasterRole {
+	if joinConfiguration.Role == caaspctl.MasterRole {
 		statesToApply = append([]string{"kubernetes.upload-secrets"}, statesToApply...)
 		pillar.Join.Kubernetes = &salt.Kubernetes{
-			AdminConfPath: "salt://admin.conf",
-			SecretsPath:   "salt://pki",
+			AdminConfPath: salt.SaltPath(caaspctl.KubeConfigAdminFile()),
+			SecretsPath:   salt.SaltPath(caaspctl.PkiDir()),
 		}
 	}
 
 	salt.Apply(joinConfiguration.Target, masterConfig, pillar, statesToApply...)
 }
 
-func specificPath(target string) string {
-	return path.Join(
-		"kubeadm-join.conf.d",
-		fmt.Sprintf("%s.conf", target),
-	)
-}
-
-func templatePath(role Role) string {
-	switch role {
-	case MasterRole:
-		return path.Join("kubeadm-join.conf.d", "master.conf.template")
-	case WorkerRole:
-		return path.Join("kubeadm-join.conf.d", "worker.conf.template")
-	}
-	return ""
-}
-
-func configPath(role Role, target string) string {
-	configPath := specificPath(target)
+func configPath(role caaspctl.Role, target string) string {
+	configPath := caaspctl.MachineConfFile(target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		configPath = templatePath(role)
+		configPath = caaspctl.TemplatePathForRole(role)
 	}
 
 	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
@@ -91,11 +66,11 @@ func configPath(role Role, target string) string {
 		log.Fatal("could not marshal configuration")
 	}
 
-	if err := ioutil.WriteFile(specificPath(target), finalJoinConfigurationContents, 0600); err != nil {
+	if err := ioutil.WriteFile(caaspctl.MachineConfFile(target), finalJoinConfigurationContents, 0600); err != nil {
 		log.Fatal("error writing specific machine configuration")
 	}
 
-	return fmt.Sprintf("salt://%s", specificPath(target))
+	return salt.SaltPath(caaspctl.MachineConfFile(target))
 }
 
 func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) {
@@ -106,7 +81,7 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 }
 
-func addTargetInformationToJoinConfiguration(target string, role Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
+func addTargetInformationToJoinConfiguration(target string, role caaspctl.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
 	if ip := net.ParseIP(target); ip != nil {
 		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
@@ -115,23 +90,38 @@ func addTargetInformationToJoinConfiguration(target string, role Role, joinConfi
 	}
 }
 
-// FIXME: do not shell out
 func createBootstrapToken(target string) string {
-	cmd := exec.Command(
-		"kubeadm", "token", "create", "--kubeconfig", "admin.conf",
-		"--description", fmt.Sprintf("Bootstrap token for machine %s'", target),
-		"--ttl", "15m",
-	)
-	var stdOut, stdErr bytes.Buffer
-	cmd.Stdout = &stdOut
-	cmd.Stderr = &stdErr
-	err := cmd.Run()
-	stdout := stdOut.String()
-	stderr := stdErr.String()
+	client, err := kubeconfigutil.ClientSetFromFile(caaspctl.KubeConfigAdminFile())
 	if err != nil {
-		log.Fatalf("could not create token for joining a new node; stdout: %q, stderr: %q\n", stdout, stderr)
+		log.Fatal("could not load admin kubeconfig file")
 	}
-	return strings.TrimSpace(stdout)
+
+	internalCfg, err := kubeadmconfigutil.ConfigFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile(), nil)
+	if err != nil {
+		log.Fatal("could not load init configuration")
+	}
+
+	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
+	if err != nil {
+		log.Fatal("could not generate a new boostrap token")
+	}
+
+	bootstrapToken, err := kubeadmapi.NewBootstrapTokenString(bootstrapTokenRaw)
+	if err != nil {
+		log.Fatal("could not generate a new boostrap token")
+	}
+
+	internalCfg.BootstrapTokens = []kubeadmapi.BootstrapToken{
+		kubeadmapi.BootstrapToken{
+			Token: bootstrapToken,
+		},
+	}
+
+	if err := kubeadmtokenphase.CreateNewTokens(client, internalCfg.BootstrapTokens); err != nil {
+		log.Fatal("could not create new bootstrap token")
+	}
+
+	return bootstrapTokenRaw
 }
 
 func joinConfigFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.JoinConfiguration, error) {

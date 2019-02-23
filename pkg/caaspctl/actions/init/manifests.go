@@ -40,7 +40,7 @@ discovery:
     unsafeSkipCAVerification: true
 `
 
-	flannelManifests = `---
+	flannelManifest = `---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:

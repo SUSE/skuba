@@ -11,6 +11,7 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
+	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 )
 
@@ -33,9 +34,9 @@ type BootstrapConfiguration struct {
 }
 
 func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.MasterConfig) error {
-	initConfiguration, err := configFileAndDefaultsToInternalConfig("kubeadm-init.conf")
+	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {
-		return fmt.Errorf("Could not parse kubeadm-init.conf file: %v", err)
+		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
 	}
 	addTargetInformationToInitConfiguration(bootstrapConfiguration.Target.Node, initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
@@ -46,7 +47,7 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 		return fmt.Errorf("Could not marshal configuration: %v", err)
 	}
 
-	if err := ioutil.WriteFile("kubeadm-init.conf", finalInitConfigurationContents, 0600); err != nil {
+	if err := ioutil.WriteFile(caaspctl.KubeadmInitConfFile(), finalInitConfigurationContents, 0600); err != nil {
 		return fmt.Errorf("Error writing init configuration: %v", err)
 	}
 
@@ -56,10 +57,10 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 		&salt.Pillar{
 			Bootstrap: &salt.Bootstrap{
 				salt.Kubeadm{
-					ConfigPath: "salt://kubeadm-init.conf",
+					ConfigPath: fmt.Sprintf("salt://%s", caaspctl.KubeadmInitConfFile()),
 				},
 				salt.Cni{
-					ConfigPath: "salt://addons/cni/flannel.yaml",
+					ConfigPath: fmt.Sprintf("salt://%s", caaspctl.FlannelManifestFile()),
 				},
 			},
 		},
