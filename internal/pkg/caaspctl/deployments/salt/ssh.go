@@ -15,7 +15,7 @@ type Target struct {
 func Ssh(target Target, masterConfig MasterConfig, command string, args ...string) (string, string, error) {
 	saltArgs := []string{
 		"-c",
-		masterConfig.GetTempDir(),
+		masterConfig.GetTempDir(target),
 		"-i",
 		"--key-deploy",
 		fmt.Sprintf("--user=%s", target.User),
@@ -27,7 +27,6 @@ func Ssh(target Target, masterConfig MasterConfig, command string, args ...strin
 
 	saltArgs = append(
 		saltArgs,
-		"--roster=scan",
 		target.Node,
 		command,
 	)
