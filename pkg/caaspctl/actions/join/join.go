@@ -57,7 +57,7 @@ func configPath(role caaspctl.Role, target string) string {
 
 	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
 	if err != nil {
-		log.Fatal("error parsing configuration: %v", err)
+		log.Fatalf("error parsing configuration: %v", err)
 	}
 	addFreshTokenToJoinConfiguration(target, joinConfiguration)
 	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
