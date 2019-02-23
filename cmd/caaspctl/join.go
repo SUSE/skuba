@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/pkg/caaspctl/actions/join"
 )
 

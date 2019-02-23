@@ -11,8 +11,8 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
-	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+	"suse.com/caaspctl/pkg/caaspctl"
 )
 
 var (

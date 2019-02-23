@@ -2,24 +2,27 @@ package join
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
-	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
-	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+	"suse.com/caaspctl/pkg/caaspctl"
 )
 
 type JoinConfiguration struct {
@@ -113,7 +116,13 @@ func createBootstrapToken(target string) string {
 
 	internalCfg.BootstrapTokens = []kubeadmapi.BootstrapToken{
 		kubeadmapi.BootstrapToken{
-			Token: bootstrapToken,
+			Token:       bootstrapToken,
+			Description: fmt.Sprintf("Bootstrap token for %s machine join", target),
+			TTL: &metav1.Duration{
+				Duration: 15 * time.Minute,
+			},
+			Usages: []string{"signing", "authentication"},
+			Groups: []string{"system:bootstrappers:kubeadm:default-node-token"},
 		},
 	}
 
