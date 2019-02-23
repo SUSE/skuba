@@ -113,20 +113,6 @@ func addTargetInformationToJoinConfiguration(target string, role Role, joinConfi
 			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
 		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target
-		// If master, local API endpoint
-		if role == MasterRole {
-			if joinConfiguration.ControlPlane == nil {
-				joinConfiguration.ControlPlane = &kubeadmapi.JoinControlPlane{
-					LocalAPIEndpoint: kubeadmapi.APIEndpoint{
-						AdvertiseAddress: target,
-					},
-				}
-			} else {
-				if len(joinConfiguration.ControlPlane.LocalAPIEndpoint.AdvertiseAddress) == 0 {
-					joinConfiguration.ControlPlane.LocalAPIEndpoint.AdvertiseAddress = target
-				}
-			}
-		}
 	}
 }
 
