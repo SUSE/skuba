@@ -2,7 +2,6 @@ package salt
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
