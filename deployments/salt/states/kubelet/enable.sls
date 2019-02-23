@@ -1,3 +1,2 @@
 kubelet:
-  service.running:
-    - enable: True
+  service.enabled: []
