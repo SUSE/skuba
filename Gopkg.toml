@@ -62,6 +62,10 @@
   version = "kubernetes-1.13.3"
 
 [[override]]
+  name = "k8s.io/cli-runtime"
+  version = "kubernetes-1.13.3"
+
+[[override]]
   name = "k8s.io/component-base"
   version = "kubernetes-1.13.3-alpha.3"
 
