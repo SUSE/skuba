@@ -40,9 +40,7 @@ func newJoinCmd() *cobra.Command {
 				Sudo: sudo,
 			}
 
-			joinConfiguration := join.JoinConfiguration{
-				Target: target,
-			}
+			joinConfiguration := join.JoinConfiguration{}
 
 			switch joinOptions.Role {
 			case "master":
@@ -53,10 +51,7 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
-			masterConfig := salt.NewMasterConfig(
-				saltPath,
-			)
-
+			masterConfig := salt.NewMasterConfig(target, saltPath)
 			join.Join(
 				joinConfiguration,
 				masterConfig,

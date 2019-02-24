@@ -4,14 +4,15 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
-	"suse.com/caaspctl/pkg/caaspctl/actions/bootstrap"
+	"suse.com/caaspctl/pkg/caaspctl/actions/deletenode"
 )
 
-func newBootstrapCmd() *cobra.Command {
-	cmd := cobra.Command{
-		Use:   "bootstrap <target>",
-		Short: "Bootstraps the first master node of the cluster",
+func newDeleteNodeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete-node <target>",
+		Short: "Delete a node from the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
 			saltPath, err := cmd.Flags().GetString("salt-path")
 			if err != nil {
@@ -32,10 +33,12 @@ func newBootstrapCmd() *cobra.Command {
 				Sudo: sudo,
 			}
 
-			err = bootstrap.Bootstrap(salt.NewMasterConfig(target, saltPath))
-			if err != nil {
-				log.Fatal(err)
-			}
+			masterConfig := salt.NewMasterConfig(
+				target,
+				saltPath,
+			)
+
+			deletenode.DeleteNode(masterConfig)
 		},
 		Args: cobra.ExactArgs(1),
 	}
@@ -46,5 +49,5 @@ func newBootstrapCmd() *cobra.Command {
 	cmd.Flags().StringP("salt-path", "s", "", "Salt root path to the states folder")
 	cmd.MarkFlagRequired("salt-path")
 
-	return &cmd
+	return cmd
 }

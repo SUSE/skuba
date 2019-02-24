@@ -29,16 +29,12 @@ var (
 	}
 )
 
-type BootstrapConfiguration struct {
-	Target salt.Target
-}
-
-func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.MasterConfig) error {
+func Bootstrap(masterConfig salt.MasterConfig) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
 	}
-	addTargetInformationToInitConfiguration(bootstrapConfiguration.Target.Node, initConfiguration)
+	addTargetInformationToInitConfiguration(masterConfig.Target.Node, initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -52,7 +48,6 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 	}
 
 	err = salt.Apply(
-		bootstrapConfiguration.Target,
 		masterConfig,
 		&salt.Pillar{
 			Bootstrap: &salt.Bootstrap{
@@ -74,15 +69,14 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 		return err
 	}
 
-	return downloadSecrets(bootstrapConfiguration.Target, masterConfig)
+	return downloadSecrets(masterConfig)
 }
 
-func downloadSecrets(target salt.Target, masterConfig salt.MasterConfig) error {
+func downloadSecrets(masterConfig salt.MasterConfig) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
 	for _, secretLocation := range secrets {
 		secretData, err := salt.DownloadFile(
-			target,
 			masterConfig,
 			path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {

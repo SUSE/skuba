@@ -19,15 +19,14 @@ import (
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
-	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
 type JoinConfiguration struct {
-	Target salt.Target
-	Role   caaspctl.Role
+	Role caaspctl.Role
 }
 
 func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
@@ -36,7 +35,7 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 	pillar := &salt.Pillar{
 		Join: &salt.Join{
 			Kubeadm: salt.Kubeadm{
-				ConfigPath: configPath(joinConfiguration.Role, joinConfiguration.Target.Node),
+				ConfigPath: configPath(joinConfiguration.Role, masterConfig.Target.Node),
 			},
 		},
 	}
@@ -49,7 +48,7 @@ func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
 		}
 	}
 
-	salt.Apply(joinConfiguration.Target, masterConfig, pillar, statesToApply...)
+	salt.Apply(masterConfig, pillar, statesToApply...)
 }
 
 func configPath(role caaspctl.Role, target string) string {
@@ -94,10 +93,7 @@ func addTargetInformationToJoinConfiguration(target string, role caaspctl.Role, 
 }
 
 func createBootstrapToken(target string) string {
-	client, err := kubeconfigutil.ClientSetFromFile(caaspctl.KubeConfigAdminFile())
-	if err != nil {
-		log.Fatal("could not load admin kubeconfig file")
-	}
+	client := kubernetes.GetAdminClientSet()
 
 	internalCfg, err := kubeadmconfigutil.ConfigFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile(), nil)
 	if err != nil {

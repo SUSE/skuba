@@ -13,15 +13,15 @@ type Target struct {
 	Sudo bool
 }
 
-func Ssh(target Target, masterConfig MasterConfig, command string, args ...string) (string, string, error) {
+func Ssh(masterConfig MasterConfig, command string, args ...string) (string, string, error) {
 	saltArgs := []string{
 		"-c",
-		masterConfig.GetTempDir(target),
+		masterConfig.GetTempDir(),
 		"-i",
 		"--key-deploy",
 	}
 
-	defer os.RemoveAll(masterConfig.GetTempDir(target))
+	defer os.RemoveAll(masterConfig.GetTempDir())
 
 	saltArgs = append(
 		saltArgs,
