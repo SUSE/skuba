@@ -31,7 +31,7 @@ type JoinConfiguration struct {
 }
 
 func Join(joinConfiguration JoinConfiguration, masterConfig salt.MasterConfig) {
-	statesToApply := []string{"kubelet.enable", "kubeadm.join"}
+	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
 
 	pillar := &salt.Pillar{
 		Join: &salt.Join{

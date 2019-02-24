@@ -64,6 +64,7 @@ func Bootstrap(bootstrapConfiguration BootstrapConfiguration, masterConfig salt.
 				},
 			},
 		},
+		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
 		"cni.deploy",
