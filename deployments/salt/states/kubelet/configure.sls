@@ -7,3 +7,9 @@ configure kubelet systemd unit file:
 {% endif %}
     - source: salt://kubelet/kubelet.conf
     - makedirs: True
+
+reload systemd daemon:
+  cmd.run:
+    - name: systemctl daemon-reload
+    - onchanges:
+        - configure kubelet systemd unit file

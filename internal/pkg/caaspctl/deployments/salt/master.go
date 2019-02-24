@@ -36,7 +36,7 @@ type MasterConfig struct {
 	Target   Target
 }
 
-func NewMasterConfig(saltPath string) MasterConfig {
+func NewMasterConfig(target Target, saltPath string) MasterConfig {
 	currDir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -45,15 +45,14 @@ func NewMasterConfig(saltPath string) MasterConfig {
 	return MasterConfig{
 		SaltPath: saltPath,
 		WorkDir:  currDir,
+		Target:   target,
 	}
 }
 
-func (c *MasterConfig) GetTempDir(target Target) string {
-	if len(c.TempDir) > 0 && c.Target == target {
+func (c *MasterConfig) GetTempDir() string {
+	if len(c.TempDir) > 0 {
 		return c.TempDir
 	}
-
-	c.Target = target
 
 	masterConfigTemplate, err := template.New("masterConfig").Parse(MasterConfigTemplate)
 	if err != nil {

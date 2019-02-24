@@ -15,6 +15,7 @@ func newRootCmd(args []string) *cobra.Command {
 		newInitCmd(),
 		newBootstrapCmd(),
 		newJoinCmd(),
+		newDeleteNodeCmd(),
 	)
 
 	return cmd
