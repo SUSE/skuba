@@ -15,10 +15,11 @@ type Target struct {
 
 func Ssh(masterConfig MasterConfig, command string, args ...string) (string, string, error) {
 	saltArgs := []string{
+		"-v",
 		"-c",
 		masterConfig.GetTempDir(),
 		"-i",
-		"--key-deploy",
+		"--state-verbose=true",
 	}
 
 	defer os.RemoveAll(masterConfig.GetTempDir())
