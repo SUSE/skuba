@@ -20,7 +20,7 @@ type Kubeadm struct {
 }
 
 type Cni struct {
-	ConfigPath string `json:"config_path"`
+	ConfigDir string `json:"config_dir"`
 }
 
 type Kubernetes struct {

@@ -1,14 +1,14 @@
-write cni config file:
-  file.managed:
-    - name: /tmp/cni.conf
-    - source: {{ salt['pillar.get']('bootstrap:cni:config_path') }}
+write cni config dir:
+  file.recurse:
+    - name: /tmp/cni.conf.d
+    - source: {{ salt['pillar.get']('bootstrap:cni:config_dir') }}
 
 deploy cni:
   cmd.run:
-    - name: kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.conf
+    - name: kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.conf.d
     - require:
-        - write cni config file
+        - write cni config dir
 
-remove cni config file:
+remove cni config dir:
   file.absent:
-    - name: /tmp/cni.conf
+    - name: /tmp/cni.conf.d

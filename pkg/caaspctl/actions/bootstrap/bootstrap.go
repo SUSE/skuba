@@ -52,10 +52,10 @@ func Bootstrap(masterConfig salt.MasterConfig) error {
 		&salt.Pillar{
 			Bootstrap: &salt.Bootstrap{
 				salt.Kubeadm{
-					ConfigPath: fmt.Sprintf("salt://%s", caaspctl.KubeadmInitConfFile()),
+					ConfigPath: salt.SaltPath(caaspctl.KubeadmInitConfFile()),
 				},
 				salt.Cni{
-					ConfigPath: fmt.Sprintf("salt://%s", caaspctl.FlannelManifestFile()),
+					ConfigDir: salt.SaltPath(caaspctl.CniDir()),
 				},
 			},
 		},
