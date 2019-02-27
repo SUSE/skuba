@@ -13,6 +13,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/etcd"
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"suse.com/caaspctl/pkg/caaspctl"
 )
@@ -22,7 +23,7 @@ func DeleteNode(target string) {
 
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
 	if err != nil {
-		log.Fatalf("could not get node %s: %v\n", target)
+		log.Fatalf("could not get node %s: %v\n", target, err)
 	}
 
 	targetName := node.ObjectMeta.Name
@@ -93,7 +94,7 @@ func DeleteNode(target string) {
 		log.Println("removing etcd member from the etcd cluster")
 		for _, masterNode := range masterNodes.Items {
 			log.Printf("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
-			if err := kubernetes.RemoveEtcdMember(node, &masterNode); err == nil {
+			if err := etcd.RemoveMember(node, &masterNode); err == nil {
 				log.Printf("etcd member removed from master node %s\n", masterNode.ObjectMeta.Name)
 				break
 			} else {
