@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"fmt"
+	"log"
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -9,25 +10,46 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
-func RemoveMember(node, executorNode *v1.Node) error {
-	return kubernetes.CreateAndWaitForJob(removeMember(node, executorNode))
+func RemoveMember(node *v1.Node) error {
+	masterNodes, err := kubernetes.GetMasterNodes()
+	if err != nil {
+		log.Fatalf("could not get the list of master nodes, aborting\n")
+		return err
+	}
+
+	// Remove etcd member if target is a master
+	log.Println("removing etcd member from the etcd cluster")
+	for _, masterNode := range masterNodes.Items {
+		log.Printf("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+		if err := RemoveMemberFrom(node, &masterNode); err == nil {
+			log.Printf("etcd member for node %s removed from master node %s\n", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
+			break
+		} else {
+			log.Printf("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+		}
+	}
+
+	return nil
 }
 
-func removeMember(node, executorNode *v1.Node) (string, batchv1.JobSpec) {
-	return removeMemberJobName(node, executorNode), removeMemberJobSpec(node, executorNode)
+func RemoveMemberFrom(node, executorNode *v1.Node) error {
+	return kubernetes.CreateAndWaitForJob(
+		removeMemberFromJobName(node, executorNode),
+		removeMemberFromJobSpec(node, executorNode),
+	)
 }
 
-func removeMemberJobName(node, executorNode *v1.Node) string {
+func removeMemberFromJobName(node, executorNode *v1.Node) string {
 	return fmt.Sprintf("caasp-remove-etcd-member-%s-from-%s", node.ObjectMeta.Name, executorNode.ObjectMeta.Name)
 }
 
-func removeMemberJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
+func removeMemberFromJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
 	return batchv1.JobSpec{
 		Template: v1.PodTemplateSpec{
 			Spec: v1.PodSpec{
 				Containers: []v1.Container{
 					{
-						Name: removeMemberJobName(node, executorNode),
+						Name: removeMemberFromJobName(node, executorNode),
 						// FIXME: fetch etcd image repo and tag from the clusterconfiguration in kubeadm-config configmap
 						// FIXME: check that etcd member is part of the member list already
 						Image: "k8s.gcr.io/etcd:3.3.10",
@@ -42,14 +64,14 @@ func removeMemberJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
 							},
 						},
 						VolumeMounts: []v1.VolumeMount{
-							kubernetes.VolumeMount("etc-kubernetes-pki", "/etc/kubernetes/pki"),
+							kubernetes.VolumeMount("etc-kubernetes-pki-etcd", "/etc/kubernetes/pki/etcd", kubernetes.VolumeMountReadOnly),
 						},
 					},
 				},
 				HostNetwork:   true,
 				RestartPolicy: v1.RestartPolicyNever,
 				Volumes: []v1.Volume{
-					kubernetes.HostMount("etc-kubernetes-pki", "/etc/kubernetes/pki"),
+					kubernetes.HostMount("etc-kubernetes-pki-etcd", "/etc/kubernetes/pki/etcd"),
 				},
 				NodeSelector: map[string]string{
 					"kubernetes.io/hostname": executorNode.ObjectMeta.Name,

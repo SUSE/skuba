@@ -13,7 +13,7 @@ type Target struct {
 	Sudo bool
 }
 
-func Ssh(masterConfig MasterConfig, command string, args ...string) (string, string, error) {
+func ssh(masterConfig MasterConfig, command string, args ...string) (string, string, error) {
 	saltArgs := []string{
 		"-v",
 		"-c",
