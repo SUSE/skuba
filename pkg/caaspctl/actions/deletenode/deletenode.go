@@ -41,17 +41,12 @@ func DeleteNode(target string) {
 		"drain", "--delete-local-data=true", "--force=true", "--ignore-daemonsets=true", targetName)
 
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("could not drain node %s\n, aborting (use --force if you want to ignore this error)\n", targetName)
+		log.Fatalf("could not drain node %s, aborting (use --force if you want to ignore this error)\n", targetName)
 		return
 	} else {
 		log.Printf("node %s correctly drained\n", targetName)
 	}
 
-	if err := kubernetes.DisarmKubelet(node); err != nil {
-		log.Printf("error disarming kubelet: %v; node could be down, continuing with node removal...", err)
-	}
-
-	// Perform certain actions if this node was a master
 	if isMaster {
 		masterNodes, err := kubernetes.GetMasterNodes()
 		if err != nil {
@@ -59,6 +54,24 @@ func DeleteNode(target string) {
 			return
 		}
 
+		// Remove etcd member if target is a master
+		log.Println("removing etcd member from the etcd cluster")
+		for _, masterNode := range masterNodes.Items {
+			log.Printf("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+			if err := etcd.RemoveMember(node, &masterNode); err == nil {
+				log.Printf("etcd member for node %s removed from master node %s\n", targetName, masterNode.ObjectMeta.Name)
+				break
+			} else {
+				log.Printf("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+			}
+		}
+	}
+
+	if err := kubernetes.DisarmKubelet(node); err != nil {
+		log.Printf("error disarming kubelet: %v; node could be down, continuing with node removal...", err)
+	}
+
+	if isMaster {
 		// Remove master from kubeadm-config configmap ClusterStatus apiEndpoints
 		kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 		if err != nil {
@@ -88,18 +101,6 @@ func DeleteNode(target string) {
 		if err != nil {
 			log.Fatalf("could not update kubeadm-config configmap\n")
 			return
-		}
-
-		// Remove etcd member if target is a master
-		log.Println("removing etcd member from the etcd cluster")
-		for _, masterNode := range masterNodes.Items {
-			log.Printf("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
-			if err := etcd.RemoveMember(node, &masterNode); err == nil {
-				log.Printf("etcd member removed from master node %s\n", masterNode.ObjectMeta.Name)
-				break
-			} else {
-				log.Printf("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
-			}
 		}
 	}
 
