@@ -9,11 +9,10 @@ import (
 )
 
 func DisarmKubelet(node *v1.Node) error {
-	return CreateAndWaitForJob(disarmKubelet(node))
-}
-
-func disarmKubelet(node *v1.Node) (string, batchv1.JobSpec) {
-	return disarmKubeletJobName(node), disarmKubeletJobSpec(node)
+	return CreateAndWaitForJob(
+		disarmKubeletJobName(node),
+		disarmKubeletJobSpec(node),
+	)
 }
 
 func disarmKubeletJobName(node *v1.Node) string {
@@ -42,8 +41,8 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 							),
 						},
 						VolumeMounts: []v1.VolumeMount{
-							VolumeMount("etc-kubernetes", "/etc/kubernetes"),
-							VolumeMount("var-run-dbus", "/var/run/dbus"),
+							VolumeMount("etc-kubernetes", "/etc/kubernetes", VolumeMountReadWrite),
+							VolumeMount("var-run-dbus", "/var/run/dbus", VolumeMountReadWrite),
 						},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &privilegedJob,

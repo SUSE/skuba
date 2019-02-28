@@ -6,7 +6,7 @@ import (
 )
 
 func DownloadFile(masterConfig MasterConfig, file string) (string, error) {
-	stdout, stderr, err := Ssh(masterConfig, "--no-color", "cmd.run", fmt.Sprintf("'cat %s'", file))
+	stdout, stderr, err := ssh(masterConfig, "--no-color", "cmd.run", fmt.Sprintf("'cat %s'", file))
 	if err != nil {
 		return "",
 			fmt.Errorf(

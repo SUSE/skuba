@@ -15,6 +15,6 @@ func Apply(masterConfig MasterConfig, pillar *Pillar, mods ...string) error {
 		}
 		args = append(args, fmt.Sprintf("pillar=%s", jsonPillar))
 	}
-	_, _, err := Ssh(masterConfig, "state.sls", args...)
+	_, _, err := ssh(masterConfig, "state.sls", args...)
 	return err
 }
