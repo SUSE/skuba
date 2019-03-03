@@ -11,7 +11,7 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
@@ -29,12 +29,12 @@ var (
 	}
 )
 
-func Bootstrap(masterConfig salt.MasterConfig) error {
+func Bootstrap(target deployments.Target) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
 	}
-	addTargetInformationToInitConfiguration(masterConfig.Target.Node, initConfiguration)
+	addTargetInformationToInitConfiguration(target, initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -47,18 +47,7 @@ func Bootstrap(masterConfig salt.MasterConfig) error {
 		return fmt.Errorf("Error writing init configuration: %v", err)
 	}
 
-	err = salt.Apply(
-		masterConfig,
-		&salt.Pillar{
-			Bootstrap: &salt.Bootstrap{
-				salt.Kubeadm{
-					ConfigPath: salt.SaltPath(caaspctl.KubeadmInitConfFile()),
-				},
-				salt.Cni{
-					ConfigDir: salt.SaltPath(caaspctl.CniDir()),
-				},
-			},
-		},
+	err = target.Apply(
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
@@ -69,16 +58,14 @@ func Bootstrap(masterConfig salt.MasterConfig) error {
 		return err
 	}
 
-	return downloadSecrets(masterConfig)
+	return downloadSecrets(target)
 }
 
-func downloadSecrets(masterConfig salt.MasterConfig) error {
+func downloadSecrets(target deployments.Target) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
 	for _, secretLocation := range secrets {
-		secretData, err := salt.DownloadFile(
-			masterConfig,
-			path.Join("/etc/kubernetes", secretLocation))
+		secretData, err := target.DownloadFileContents(path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			return err
 		}
@@ -90,12 +77,12 @@ func downloadSecrets(masterConfig salt.MasterConfig) error {
 	return nil
 }
 
-func addTargetInformationToInitConfiguration(target string, initConfiguration *kubeadmapi.InitConfiguration) {
-	if ip := net.ParseIP(target); ip != nil {
+func addTargetInformationToInitConfiguration(target deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
+	if ip := net.ParseIP(target.Target()); ip != nil {
 		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
-		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target
+		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target()
 	}
 }
 
