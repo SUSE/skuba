@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/salt"
 	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/pkg/caaspctl/actions/join"
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
 )
 
 type JoinOptions struct {
@@ -21,10 +21,6 @@ func newJoinCmd() *cobra.Command {
 		Use:   "join <target>",
 		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, targets []string) {
-			saltPath, err := cmd.Flags().GetString("salt-path")
-			if err != nil {
-				log.Fatalf("Unable to parse salt flag: %v", err)
-			}
 			user, err := cmd.Flags().GetString("user")
 			if err != nil {
 				log.Fatalf("Unable to parse user flag: %v", err)
@@ -32,12 +28,6 @@ func newJoinCmd() *cobra.Command {
 			sudo, err := cmd.Flags().GetBool("sudo")
 			if err != nil {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
-			}
-
-			target := salt.Target{
-				Node: targets[0],
-				User: user,
-				Sudo: sudo,
 			}
 
 			joinConfiguration := join.JoinConfiguration{}
@@ -51,10 +41,9 @@ func newJoinCmd() *cobra.Command {
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
-			masterConfig := salt.NewMasterConfig(target, saltPath)
 			join.Join(
 				joinConfiguration,
-				masterConfig,
+				ssh.NewTarget(targets[0], user, sudo),
 			)
 		},
 		Args: cobra.ExactArgs(1),
@@ -65,9 +54,6 @@ func newJoinCmd() *cobra.Command {
 
 	cmd.Flags().StringP("user", "u", "root", "User identity used to connect to target")
 	cmd.Flags().Bool("sudo", false, "Run remote command via sudo")
-
-	cmd.Flags().StringP("salt-path", "s", "", "Salt root path to the states folder")
-	cmd.MarkFlagRequired("salt-path")
 
 	return cmd
 }
