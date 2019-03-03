@@ -41,7 +41,7 @@ func addTargetInformationToJoinConfiguration(target string, role caaspctl.Role, 
 	}
 }
 
-func configPath(role caaspctl.Role, target string) string {
+func ConfigPath(role caaspctl.Role, target string) string {
 	configPath := caaspctl.MachineConfFile(target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = caaspctl.TemplatePathForRole(role)

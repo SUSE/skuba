@@ -203,7 +203,8 @@ func kubeadmInit() deployments.Runner {
 func kubeadmJoin() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
-		t.UploadFileContents("/tmp/kubeadm.conf", "")
+		// FIXME: ereslibre
+		t.UploadFile(ConfigPath(caaspctl.MasterRole, t.Target()), "/tmp/kubeadm.conf")
 		if target := sshTarget(t); target != nil {
 			target.ssh("systemctl", "enable", "--now", "docker")
 			target.ssh("systemctl", "stop", "kubelet")
