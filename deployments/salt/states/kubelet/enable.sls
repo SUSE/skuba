@@ -1,2 +1,0 @@
-kubelet:
-  service.enabled: []

@@ -3,26 +3,33 @@ package ssh
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
+	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh/assets"
 )
 
 var (
-	States = map[string]deployments.Runner{
+	stateMap = map[string]deployments.Runner{
+		"cni.deploy": cniDeploy(),
+		"kubeadm.init": kubeadmInit(),
+		"kubeadm.join": kubeadmJoin(),
 		"kubelet.configure": kubeletConfigure(),
 		"kubelet.enable": kubeletEnable(),
-		"kubeadm.init": kubeadmInit(),
-		"cni.deploy": cniDeploy(),
+		"kubernetes.upload-secrets": kubernetesUploadSecrets(),
 	}
 )
 
@@ -43,7 +50,7 @@ func NewTarget(target, user string, sudo bool) deployments.Target {
 
 func (t *Target) Apply(states ...string) error {
 	for _, state := range states {
-		if state, stateExists := States[state]; stateExists {
+		if state, stateExists := stateMap[state]; stateExists {
 			state.Run(t)
 		} else {
 			log.Fatalf("State does not exist: %s", state)
@@ -56,19 +63,43 @@ func (t *Target) Target() string {
 	return t.Node
 }
 
-func (t *Target) UploadFileContents(contents, target string) error {
+func (t *Target) UploadFile(sourcePath, targetPath string) error {
+	if contents, err := ioutil.ReadFile(sourcePath); err == nil {
+		return t.UploadFileContents(targetPath, string(contents))
+	}
 	return nil
 }
 
-func (t *Target) DownloadFileContents(source string) (string, error) {
-	return "", nil
+func (t *Target) UploadFileContents(targetPath, contents string) error {
+	if target := sshTarget(t); target != nil {
+		dir, _ := path.Split(targetPath)
+		encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
+		target.ssh("mkdir", "-p", dir)
+		target.sshWithStdin(encodedContents, "base64", "-d", "-w0", fmt.Sprintf("> %s", targetPath))
+	}
+	return errors.New("cannot access SSH target")
 }
 
-func (t *Target) ssh(command string, args []string) (stdout string, stderr string, error error) {
-	return t.sshWithStdin(command, args, "")
+func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
+	if target := sshTarget(t); target != nil {
+		if stdout, _, err := target.ssh("base64", "-w0", sourcePath); err == nil {
+			decodedStdout, err := base64.StdEncoding.DecodeString(stdout)
+			if err != nil {
+				return "", err
+			}
+			return string(decodedStdout), nil
+		} else {
+			return "", err
+		}
+	}
+	return "", errors.New("cannot access SSH target")
 }
 
-func (t *Target) sshWithStdin(command string, args []string, stdin string) (stdout string, stderr string, error error) {
+func (t *Target) ssh(command string, args ...string) (stdout string, stderr string, error error) {
+	return t.sshWithStdin("", command, args...)
+}
+
+func (t *Target) sshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
 	if t.Client == nil {
 		t.initClient()
 	}
@@ -145,14 +176,53 @@ func sshTarget(target deployments.Target) *Target {
 	return nil
 }
 
+func cniDeploy() deployments.Runner {
+	runner := struct{ deployments.State }{}
+	runner.DoRun = func(t deployments.Target) error {
+		// Deploy locally
+		return nil
+	}
+	return runner
+}
+
+func kubeadmInit() deployments.Runner {
+	runner := struct{ deployments.State }{}
+	runner.DoRun = func(t deployments.Target) error {
+		t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
+		if target := sshTarget(t); target != nil {
+			target.ssh("systemctl", "enable", "--now", "docker")
+			target.ssh("systemctl", "stop", "kubelet")
+			target.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print")
+			target.ssh("rm", "/tmp/kubeadm.conf")
+		}
+		return nil
+	}
+	return runner
+}
+
+func kubeadmJoin() deployments.Runner {
+	runner := struct{ deployments.State }{}
+	runner.DoRun = func(t deployments.Target) error {
+		t.UploadFileContents("/tmp/kubeadm.conf", "")
+		if target := sshTarget(t); target != nil {
+			target.ssh("systemctl", "enable", "--now", "docker")
+			target.ssh("systemctl", "stop", "kubelet")
+			target.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf")
+			target.ssh("rm", "/tmp/kubeadm.conf")
+		}
+		return nil
+	}
+	return runner
+}
+
 func kubeletConfigure() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
+		t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService)
+		t.UploadFileContents("/etc/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService)
+		t.UploadFileContents("/etc/sysconfig/kubelet", assets.KubeletSysconfig)
 		if target := sshTarget(t); target != nil {
-			target.sshWithStdin("cat", []string{"> /lib/systemd/system/kubelet.service"}, assets.KubeletService)
-			target.sshWithStdin("cat", []string{"> /etc/systemd/system/kubelet.service.d/10-kubeadm.conf"}, assets.KubeadmService)
-			target.sshWithStdin("cat", []string{"> /etc/sysconfig/kubelet"}, assets.KubeletSysconfig)
-			target.ssh("systemctl", []string{"daemon-reload"})
+			target.ssh("systemctl", "daemon-reload")
 		}
 		return nil
 	}
@@ -163,32 +233,19 @@ func kubeletEnable() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
 		if target := sshTarget(t); target != nil {
-			target.ssh("systemctl", []string{"enable", "kubelet"})
+			target.ssh("systemctl", "enable", "kubelet")
 		}
 		return nil
 	}
 	return runner
 }
 
-func kubeadmInit() deployments.Runner {
+func kubernetesUploadSecrets() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
-		if target := sshTarget(t); target != nil {
-			target.sshWithStdin("cat > /tmp/kubeadm.conf", []string{}, "")
-			target.ssh("systemctl", []string{"enable", "--now", "docker"})
-			target.ssh("systemctl", []string{"stop", "kubelet"})
-			target.ssh("kubeadm", []string{"init", "--config", "/tmp/kubeadm.conf", "--skip-token-print"})
-			target.ssh("rm", []string{"/tmp/kubeadm.conf"})
+		for _, file := range deployments.Secrets {
+			t.UploadFile(file, path.Join("/etc/kubernetes", file))
 		}
-		return nil
-	}
-	return runner
-}
-
-func cniDeploy() deployments.Runner {
-	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
-		// Deploy locally
 		return nil
 	}
 	return runner

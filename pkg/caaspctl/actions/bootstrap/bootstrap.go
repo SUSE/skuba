@@ -15,20 +15,6 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
-var (
-	secrets = []string{
-		"pki/ca.crt",
-		"pki/ca.key",
-		"pki/sa.key",
-		"pki/sa.pub",
-		"pki/front-proxy-ca.crt",
-		"pki/front-proxy-ca.key",
-		"pki/etcd/ca.crt",
-		"pki/etcd/ca.key",
-		"admin.conf",
-	}
-)
-
 func Bootstrap(target deployments.Target) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {
@@ -64,7 +50,7 @@ func Bootstrap(target deployments.Target) error {
 func downloadSecrets(target deployments.Target) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
-	for _, secretLocation := range secrets {
+	for _, secretLocation := range deployments.Secrets {
 		secretData, err := target.DownloadFileContents(path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			return err
