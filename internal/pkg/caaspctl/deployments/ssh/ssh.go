@@ -1,8 +1,10 @@
 package ssh
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -63,7 +65,11 @@ func (t *Target) DownloadFileContents(source string) (string, error) {
 	return "", nil
 }
 
-func (t *Target) ssh(command string, args []string, stdin string) (stdout string, stderr string, error error) {
+func (t *Target) ssh(command string, args []string) (stdout string, stderr string, error error) {
+	return t.sshWithStdin(command, args, "")
+}
+
+func (t *Target) sshWithStdin(command string, args []string, stdin string) (stdout string, stderr string, error error) {
 	if t.Client == nil {
 		t.initClient()
 	}
@@ -86,7 +92,13 @@ func (t *Target) ssh(command string, args []string, stdin string) (stdout string
 	if t.Sudo {
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
-	if err := session.Run(finalCommand); err != nil {
+	log.Printf("running command: %s", finalCommand)
+	if err := session.Start(finalCommand); err != nil {
+		return "", "", err
+	}
+	go readerStreamer(stdoutReader, "stdout")
+	go readerStreamer(stderrReader, "stderr")
+	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
 	stdoutBytes, error := ioutil.ReadAll(stdoutReader)
@@ -94,6 +106,13 @@ func (t *Target) ssh(command string, args []string, stdin string) (stdout string
 	stderrBytes, error := ioutil.ReadAll(stderrReader)
 	stderr = string(stderrBytes)
 	return
+}
+
+func readerStreamer(reader io.Reader, description string) {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+    fmt.Printf("%s: %s\n", description, scanner.Text())
+	}
 }
 
 func (t *Target) initClient() {
@@ -128,10 +147,10 @@ func kubeletConfigure() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
 		if target := sshTarget(t); target != nil {
-			target.ssh("cat > /lib/systemd/system/kubelet.service", []string{}, assets.KubeletService)
-			target.ssh("cat > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf", []string{}, assets.KubeadmService)
-			target.ssh("cat > /etc/sysconfig/kubelet", []string{}, assets.KubeletSysconfig)
-			target.ssh("systemctl", []string{"daemon-reload"}, "")
+			target.sshWithStdin("cat", []string{"> /lib/systemd/system/kubelet.service"}, assets.KubeletService)
+			target.sshWithStdin("cat", []string{"> /etc/systemd/system/kubelet.service.d/10-kubeadm.conf"}, assets.KubeadmService)
+			target.sshWithStdin("cat", []string{"> /etc/sysconfig/kubelet"}, assets.KubeletSysconfig)
+			target.ssh("systemctl", []string{"daemon-reload"})
 		}
 		return nil
 	}
@@ -141,6 +160,9 @@ func kubeletConfigure() deployments.Runner {
 func kubeletEnable() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
+		if target := sshTarget(t); target != nil {
+			target.ssh("systemctl", []string{"enable", "kubelet"})
+		}
 		return nil
 	}
 	return runner
@@ -149,6 +171,13 @@ func kubeletEnable() deployments.Runner {
 func kubeadmInit() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
+		if target := sshTarget(t); target != nil {
+			target.sshWithStdin("cat > /tmp/kubeadm.conf", []string{}, "")
+			target.ssh("systemctl", []string{"enable", "--now", "docker"})
+			target.ssh("systemctl", []string{"stop", "kubelet"})
+			target.ssh("kubeadm", []string{"init", "--config", "/tmp/kubeadm.conf", "--skip-token-print"})
+			target.ssh("rm", []string{"/tmp/kubeadm.conf"})
+		}
 		return nil
 	}
 	return runner
@@ -157,6 +186,7 @@ func kubeadmInit() deployments.Runner {
 func cniDeploy() deployments.Runner {
 	runner := struct{ deployments.State }{}
 	runner.DoRun = func(t deployments.Target) error {
+		// Deploy locally
 		return nil
 	}
 	return runner
