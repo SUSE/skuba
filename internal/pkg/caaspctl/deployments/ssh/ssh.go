@@ -99,6 +99,9 @@ func (t *Target) sshWithStdin(command string, args []string, stdin string) (stdo
 	stderrChan := make(chan string)
 	go readerStreamer(stdoutReader, stdoutChan, "stdout")
 	go readerStreamer(stderrReader, stderrChan, "stderr")
+	if err := session.Wait(); err != nil {
+		return "", "", err
+	}
 	stdout = <-stdoutChan
 	stderr = <-stderrChan
 	return
