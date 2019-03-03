@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -96,23 +95,23 @@ func (t *Target) sshWithStdin(command string, args []string, stdin string) (stdo
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
 	}
-	go readerStreamer(stdoutReader, "stdout")
-	go readerStreamer(stderrReader, "stderr")
-	if err := session.Wait(); err != nil {
-		return "", "", err
-	}
-	stdoutBytes, error := ioutil.ReadAll(stdoutReader)
-	stdout = string(stdoutBytes)
-	stderrBytes, error := ioutil.ReadAll(stderrReader)
-	stderr = string(stderrBytes)
+	stdoutChan := make(chan string)
+	stderrChan := make(chan string)
+	go readerStreamer(stdoutReader, stdoutChan, "stdout")
+	go readerStreamer(stderrReader, stderrChan, "stderr")
+	stdout = <-stdoutChan
+	stderr = <-stderrChan
 	return
 }
 
-func readerStreamer(reader io.Reader, description string) {
+func readerStreamer(reader io.Reader, outputChan chan<- string, description string) {
+	result := bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
-    fmt.Printf("%s: %s\n", description, scanner.Text())
+		result.Write([]byte(scanner.Text()))
+		fmt.Printf("%s: %s\n", description, scanner.Text())
 	}
+	outputChan <- result.String()
 }
 
 func (t *Target) initClient() {
