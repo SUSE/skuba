@@ -1,16 +1,5 @@
 package deployments
 
-const (
-	MasterRole = iota
-	WorkerRole = iota
-)
-
-type Role int
-
-type JoinConfiguration struct {
-	Role Role
-}
-
 type Target interface {
 	Target() string
 	Apply(data interface{}, states ...string) error

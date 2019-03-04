@@ -70,8 +70,8 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	}
 	stdoutChan := make(chan string)
 	stderrChan := make(chan string)
-	go readerStreamer(stdoutReader, stdoutChan, "stdout")
-	go readerStreamer(stderrReader, stderrChan, "stderr")
+	go readerStreamer(stdoutReader, stdoutChan, os.Stdout)
+	go readerStreamer(stderrReader, stderrChan, os.Stderr)
 	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
@@ -80,12 +80,12 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	return
 }
 
-func readerStreamer(reader io.Reader, outputChan chan<- string, description string) {
+func readerStreamer(reader io.Reader, outputChan chan<- string, descriptor *os.File) {
 	result := bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		fmt.Printf("%s: %s\n", description, scanner.Text())
+		fmt.Fprintf(descriptor, fmt.Sprintf("%s\n", scanner.Text()))
 	}
 	outputChan <- result.String()
 }
