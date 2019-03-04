@@ -17,22 +17,22 @@ import (
 )
 
 type Target struct {
-	Target *deployments.Target
-	User   string
-	Sudo   bool
-	Port   int
-	Client *ssh.Client
+	*deployments.Target
+	user   string
+	sudo   bool
+	port   int
+	client *ssh.Client
 }
 
 func NewTarget(target, user string, sudo bool, port int) deployments.Target {
 	res := deployments.Target{
-		Node: target,
+		Target: target,
 	}
 	res.Actionable = &Target{
 		Target: &res,
-		User: user,
-		Sudo: sudo,
-		Port: port,
+		user: user,
+		sudo: sudo,
+		port: port,
 	}
 	return res
 }
@@ -42,10 +42,10 @@ func (t *Target) ssh(command string, args ...string) (stdout string, stderr stri
 }
 
 func (t *Target) sshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
-	if t.Client == nil {
+	if t.client == nil {
 		t.initClient()
 	}
-	session, err := t.Client.NewSession()
+	session, err := t.client.NewSession()
 	if err != nil {
 		return "", "", err
 	}
@@ -61,7 +61,7 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 		return "", "", err
 	}
 	finalCommand := strings.Join(append([]string{command}, args...), " ")
-	if t.Sudo {
+	if t.sudo {
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
 	log.Printf("running command: %s", finalCommand)
@@ -98,13 +98,13 @@ func (t *Target) initClient() {
 	}
 	agentClient := agent.NewClient(conn)
 	config := &ssh.ClientConfig{
-		User: t.User,
+		User: t.user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeysCallback(agentClient.Signers),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.Client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Target.Target(), t.Port), config)
+	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Node(), t.port), config)
 	if err != nil {
 		log.Fatalf("dial: %v", err)
 	}

@@ -10,7 +10,7 @@ var (
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, state := range states {
-		log.Printf("target %v: about to apply state %v\n", t.Target.Target(), state)
+		log.Printf("target %v: about to apply state %v\n", t.Node(), state)
 		if state, stateExists := stateMap[state]; stateExists {
 			state.Run(t, data)
 		} else {

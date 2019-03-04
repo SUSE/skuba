@@ -12,7 +12,7 @@ func init() {
 func kubeletConfigure() Runner {
 	runner := struct{ State }{}
 	runner.DoRun = func(t *Target, data interface{}) error {
-		osRelease, _ := t.Target.OSRelease()
+		osRelease, _ := t.OSRelease()
 		if osRelease["ID_LIKE"] == "debian" {
 			t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService)
 			t.UploadFileContents("/etc/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService)
