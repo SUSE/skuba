@@ -10,8 +10,7 @@ func init() {
 }
 
 func kubeletConfigure() Runner {
-	runner := struct{ State }{}
-	runner.DoRun = func(t *Target, data interface{}) error {
+	return func(t *Target, data interface{}) error {
 		osRelease, _ := t.OSRelease()
 		if osRelease["ID_LIKE"] == "debian" {
 			t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService)
@@ -24,14 +23,11 @@ func kubeletConfigure() Runner {
 		t.ssh("systemctl", "daemon-reload")
 		return nil
 	}
-	return runner
 }
 
 func kubeletEnable() Runner {
-	runner := struct{ State }{}
-	runner.DoRun = func(t *Target, data interface{}) error {
+	return func(t *Target, data interface{}) error {
 		t.ssh("systemctl", "enable", "kubelet")
 		return nil
 	}
-	return runner
 }
