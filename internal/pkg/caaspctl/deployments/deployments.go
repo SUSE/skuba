@@ -14,12 +14,12 @@ type Actionable interface {
 }
 
 type Target struct {
-	Node       string
+	Target     string
 	Actionable Actionable
 }
 
-func (t *Target) Target() string {
-	return t.Node
+func (t *Target) Node() string {
+	return t.Target
 }
 
 func (t *Target) OSRelease() (map[string]string, error) {

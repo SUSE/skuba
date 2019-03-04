@@ -14,7 +14,7 @@ func kubernetesUploadSecrets() Runner {
 	runner := struct{ State }{}
 	runner.DoRun = func(t *Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
-			t.Target.UploadFile(file, path.Join("/etc/kubernetes", file))
+			t.UploadFile(file, path.Join("/etc/kubernetes", file))
 		}
 		return nil
 	}

@@ -64,11 +64,11 @@ func downloadSecrets(target deployments.Target) error {
 }
 
 func addTargetInformationToInitConfiguration(target deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
-	if ip := net.ParseIP(target.Target()); ip != nil {
+	if ip := net.ParseIP(target.Node()); ip != nil {
 		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
-		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target()
+		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Node()
 	}
 }
 

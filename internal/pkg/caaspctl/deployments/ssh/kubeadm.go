@@ -15,7 +15,7 @@ func init() {
 func kubeadmInit() Runner {
 	runner := struct{ State }{}
 	runner.DoRun = func(t *Target, data interface{}) error {
-		t.Target.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
+		t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
 		t.ssh("systemctl", "enable", "--now", "docker")
 		t.ssh("systemctl", "stop", "kubelet")
 		t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print")
@@ -32,7 +32,7 @@ func kubeadmJoin() Runner {
 		if !ok {
 			return errors.New("couldn't access join configuration")
 		}
-		t.Target.UploadFile(configPath(joinConfiguration.Role, t.Target.Target()), "/tmp/kubeadm.conf")
+		t.UploadFile(configPath(joinConfiguration.Role, t.Node()), "/tmp/kubeadm.conf")
 		t.ssh("systemctl", "enable", "--now", "docker")
 		t.ssh("systemctl", "stop", "kubelet")
 		t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf")
