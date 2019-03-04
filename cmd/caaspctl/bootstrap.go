@@ -21,8 +21,12 @@ func newBootstrapCmd() *cobra.Command {
 			if err != nil {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
+			port, err := cmd.Flags().GetInt("port")
+			if err != nil {
+				port = 22
+			}
 
-			err = bootstrap.Bootstrap(ssh.NewTarget(targets[0], user, sudo))
+			err = bootstrap.Bootstrap(ssh.NewTarget(targets[0], user, sudo, port))
 			if err != nil {
 				log.Fatal(err)
 			}
