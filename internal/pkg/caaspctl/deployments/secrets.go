@@ -1,7 +1,6 @@
 package deployments
 
 var (
-
 	Secrets = []string{
 		"pki/ca.crt",
 		"pki/ca.key",
@@ -13,5 +12,4 @@ var (
 		"pki/etcd/ca.key",
 		"admin.conf",
 	}
-
 )

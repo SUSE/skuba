@@ -447,9 +447,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fde12c4da6237363bf36b81b59aa36a43d28061167ec4acb0d41fc49464e28b9"
+  digest = "1:08b4fc6f40d1c93a95d09436227c72a8889e86feb6bb3eb265027cfbe6a75cb4"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = [
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
+    "poly1305",
+    "ssh",
+    "ssh/agent",
+    "ssh/terminal",
+  ]
   pruneopts = "UT"
   revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
 
@@ -1096,8 +1106,11 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
+    "golang.org/x/crypto/ssh",
+    "golang.org/x/crypto/ssh/agent",
     "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",

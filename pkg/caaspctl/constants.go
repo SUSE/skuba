@@ -3,14 +3,9 @@ package caaspctl
 import (
 	"fmt"
 	"path"
-)
 
-const (
-	MasterRole = iota
-	WorkerRole = iota
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 )
-
-type Role int
 
 func KubeadmInitConfFile() string {
 	return "kubeadm-init.conf"
@@ -32,11 +27,11 @@ func MachineConfFile(target string) string {
 	return path.Join(JoinConfDir(), fmt.Sprintf("%s.conf", target))
 }
 
-func TemplatePathForRole(role Role) string {
+func TemplatePathForRole(role deployments.Role) string {
 	switch role {
-	case MasterRole:
+	case deployments.MasterRole:
 		return MasterConfTemplateFile()
-	case WorkerRole:
+	case deployments.WorkerRole:
 		return WorkerConfTemplateFile()
 	}
 	return ""

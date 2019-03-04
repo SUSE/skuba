@@ -34,12 +34,12 @@ func Bootstrap(target deployments.Target) error {
 	}
 
 	err = target.Apply(
+		nil,
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
 		"cni.deploy",
 	)
-
 	if err != nil {
 		return err
 	}

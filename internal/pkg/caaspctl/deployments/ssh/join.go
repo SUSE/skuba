@@ -22,6 +22,7 @@ import (
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"suse.com/caaspctl/pkg/caaspctl"
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
 func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) {
@@ -32,7 +33,7 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 }
 
-func addTargetInformationToJoinConfiguration(target string, role caaspctl.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
+func addTargetInformationToJoinConfiguration(target string, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
 	if ip := net.ParseIP(target); ip != nil {
 		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
@@ -41,7 +42,7 @@ func addTargetInformationToJoinConfiguration(target string, role caaspctl.Role, 
 	}
 }
 
-func ConfigPath(role caaspctl.Role, target string) string {
+func configPath(role deployments.Role, target string) string {
 	configPath := caaspctl.MachineConfFile(target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = caaspctl.TemplatePathForRole(role)

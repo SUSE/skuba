@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/pkg/caaspctl/actions/join"
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
 )
 
@@ -29,21 +29,25 @@ func newJoinCmd() *cobra.Command {
 			if err != nil {
 				log.Fatalf("Unable to parse sudo flag: %v", err)
 			}
+			port, err := cmd.Flags().GetInt("port")
+			if err != nil {
+				port = 22
+			}
 
-			joinConfiguration := join.JoinConfiguration{}
+			joinConfiguration := deployments.JoinConfiguration{}
 
 			switch joinOptions.Role {
 			case "master":
-				joinConfiguration.Role = caaspctl.MasterRole
+				joinConfiguration.Role = deployments.MasterRole
 			case "worker":
-				joinConfiguration.Role = caaspctl.WorkerRole
+				joinConfiguration.Role = deployments.WorkerRole
 			default:
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
 			join.Join(
 				joinConfiguration,
-				ssh.NewTarget(targets[0], user, sudo),
+				ssh.NewTarget(targets[0], user, sudo, port),
 			)
 		},
 		Args: cobra.ExactArgs(1),

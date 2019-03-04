@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +13,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
@@ -37,21 +37,23 @@ type Target struct {
 	Node   string
 	User   string
 	Sudo   bool
+	Port   int
 	Client *ssh.Client
 }
 
-func NewTarget(target, user string, sudo bool) deployments.Target {
+func NewTarget(target, user string, sudo bool, port int) deployments.Target {
 	return &Target{
 		Node: target,
 		User: user,
 		Sudo: sudo,
+		Port: port,
 	}
 }
 
-func (t *Target) Apply(states ...string) error {
+func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, state := range states {
 		if state, stateExists := stateMap[state]; stateExists {
-			state.Run(t)
+			state.Run(t, data)
 		} else {
 			log.Fatalf("State does not exist: %s", state)
 		}
@@ -152,7 +154,7 @@ func (t *Target) initClient() {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		log.Fatalf("net.Dial: %v", err)
+		log.Fatalf("dial: %v", err)
 	}
 	agentClient := agent.NewClient(conn)
 	config := &ssh.ClientConfig{
@@ -162,9 +164,9 @@ func (t *Target) initClient() {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.Client, err = ssh.Dial("tcp", t.Node, config)
+	t.Client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Node, t.Port), config)
 	if err != nil {
-		log.Fatalf("Dial: %v", err)
+		log.Fatalf("dial: %v", err)
 	}
 }
 
@@ -178,8 +180,18 @@ func sshTarget(target deployments.Target) *Target {
 
 func cniDeploy() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
-		// Deploy locally
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
+		cniFiles, err := ioutil.ReadDir(caaspctl.CniDir())
+		if err != nil {
+			return errors.Wrap(err, "could not read local cni directory")
+		}
+		for _, f := range cniFiles {
+			t.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name()))
+		}
+		if target := sshTarget(t); target != nil {
+			target.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.d")
+			target.ssh("rm -rf /tmp/cni.d")
+		}
 		return nil
 	}
 	return runner
@@ -187,7 +199,7 @@ func cniDeploy() deployments.Runner {
 
 func kubeadmInit() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
 		t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
 		if target := sshTarget(t); target != nil {
 			target.ssh("systemctl", "enable", "--now", "docker")
@@ -202,9 +214,12 @@ func kubeadmInit() deployments.Runner {
 
 func kubeadmJoin() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
-		// FIXME: ereslibre
-		t.UploadFile(ConfigPath(caaspctl.MasterRole, t.Target()), "/tmp/kubeadm.conf")
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
+		joinConfiguration, ok := data.(deployments.JoinConfiguration)
+		if !ok {
+			return errors.New("couldn't access join configuration")
+		}
+		t.UploadFile(configPath(joinConfiguration.Role, t.Target()), "/tmp/kubeadm.conf")
 		if target := sshTarget(t); target != nil {
 			target.ssh("systemctl", "enable", "--now", "docker")
 			target.ssh("systemctl", "stop", "kubelet")
@@ -218,7 +233,7 @@ func kubeadmJoin() deployments.Runner {
 
 func kubeletConfigure() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
 		t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService)
 		t.UploadFileContents("/etc/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService)
 		t.UploadFileContents("/etc/sysconfig/kubelet", assets.KubeletSysconfig)
@@ -232,7 +247,7 @@ func kubeletConfigure() deployments.Runner {
 
 func kubeletEnable() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
 		if target := sshTarget(t); target != nil {
 			target.ssh("systemctl", "enable", "kubelet")
 		}
@@ -243,7 +258,7 @@ func kubeletEnable() deployments.Runner {
 
 func kubernetesUploadSecrets() deployments.Runner {
 	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target) error {
+	runner.DoRun = func(t deployments.Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
 			t.UploadFile(file, path.Join("/etc/kubernetes", file))
 		}
