@@ -10,11 +10,11 @@ func init() {
 	stateMap["kubernetes.upload-secrets"] = kubernetesUploadSecrets()
 }
 
-func kubernetesUploadSecrets() deployments.Runner {
-	runner := struct{ deployments.State }{}
-	runner.DoRun = func(t deployments.Target, data interface{}) error {
+func kubernetesUploadSecrets() Runner {
+	runner := struct{ State }{}
+	runner.DoRun = func(t *Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
-			t.UploadFile(file, path.Join("/etc/kubernetes", file))
+			t.Target.UploadFile(file, path.Join("/etc/kubernetes", file))
 		}
 		return nil
 	}

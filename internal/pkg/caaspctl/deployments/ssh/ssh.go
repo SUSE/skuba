@@ -17,7 +17,7 @@ import (
 )
 
 type Target struct {
-	Node   string
+	Target *deployments.Target
 	User   string
 	Sudo   bool
 	Port   int
@@ -25,16 +25,16 @@ type Target struct {
 }
 
 func NewTarget(target, user string, sudo bool, port int) deployments.Target {
-	return &Target{
+	res := deployments.Target{
 		Node: target,
+	}
+	res.Actionable = &Target{
+		Target: &res,
 		User: user,
 		Sudo: sudo,
 		Port: port,
 	}
-}
-
-func (t *Target) Target() string {
-	return t.Node
+	return res
 }
 
 func (t *Target) ssh(command string, args ...string) (stdout string, stderr string, error error) {
@@ -70,8 +70,8 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	}
 	stdoutChan := make(chan string)
 	stderrChan := make(chan string)
-	go readerStreamer(stdoutReader, stdoutChan, os.Stdout)
-	go readerStreamer(stderrReader, stderrChan, os.Stderr)
+	go readerStreamer(stdoutReader, stdoutChan, "stdout")
+	go readerStreamer(stderrReader, stderrChan, "stderr")
 	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
@@ -80,12 +80,12 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	return
 }
 
-func readerStreamer(reader io.Reader, outputChan chan<- string, descriptor *os.File) {
+func readerStreamer(reader io.Reader, outputChan chan<- string, description string) {
 	result := bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		fmt.Fprintf(descriptor, fmt.Sprintf("%s\n", scanner.Text()))
+		log.Printf("%s: %s\n", description, scanner.Text())
 	}
 	outputChan <- result.String()
 }
@@ -104,16 +104,8 @@ func (t *Target) initClient() {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.Client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Node, t.Port), config)
+	t.Client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Target.Target(), t.Port), config)
 	if err != nil {
 		log.Fatalf("dial: %v", err)
 	}
-}
-
-func sshTarget(target deployments.Target) *Target {
-	if target, ok := target.(*Target); ok {
-		return target
-	}
-	log.Fatal("Target is of the wrong type")
-	return nil
 }

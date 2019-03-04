@@ -2,20 +2,19 @@ package ssh
 
 import (
 	"log"
-
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
 var (
-	stateMap = map[string]deployments.Runner{}
+	stateMap = map[string]Runner{}
 )
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, state := range states {
+		log.Printf("target %v: about to apply state %v\n", t.Target.Target(), state)
 		if state, stateExists := stateMap[state]; stateExists {
 			state.Run(t, data)
 		} else {
-			log.Fatalf("State does not exist: %s", state)
+			log.Fatalf("state does not exist: %s", state)
 		}
 	}
 	return nil
