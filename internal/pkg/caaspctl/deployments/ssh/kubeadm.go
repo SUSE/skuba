@@ -13,8 +13,7 @@ func init() {
 }
 
 func kubeadmInit() Runner {
-	runner := struct{ State }{}
-	runner.DoRun = func(t *Target, data interface{}) error {
+	return func(t *Target, data interface{}) error {
 		t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
 		t.ssh("systemctl", "enable", "--now", "docker")
 		t.ssh("systemctl", "stop", "kubelet")
@@ -22,12 +21,10 @@ func kubeadmInit() Runner {
 		t.ssh("rm", "/tmp/kubeadm.conf")
 		return nil
 	}
-	return runner
 }
 
 func kubeadmJoin() Runner {
-	runner := struct{ State }{}
-	runner.DoRun = func(t *Target, data interface{}) error {
+	return func(t *Target, data interface{}) error {
 		joinConfiguration, ok := data.(deployments.JoinConfiguration)
 		if !ok {
 			return errors.New("couldn't access join configuration")
@@ -39,5 +36,4 @@ func kubeadmJoin() Runner {
 		t.ssh("rm", "/tmp/kubeadm.conf")
 		return nil
 	}
-	return runner
 }

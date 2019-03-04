@@ -14,8 +14,7 @@ func init() {
 }
 
 func cniDeploy() Runner {
-	runner := struct{ State }{}
-	runner.DoRun = func(t *Target, data interface{}) error {
+	return func(t *Target, data interface{}) error {
 		cniFiles, err := ioutil.ReadDir(caaspctl.CniDir())
 		if err != nil {
 			return errors.Wrap(err, "could not read local cni directory")
@@ -27,5 +26,4 @@ func cniDeploy() Runner {
 		t.ssh("rm -rf /tmp/cni.d")
 		return nil
 	}
-	return runner
 }
