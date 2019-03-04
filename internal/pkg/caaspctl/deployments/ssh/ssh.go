@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -37,8 +38,20 @@ func NewTarget(target, user string, sudo bool, port int) deployments.Target {
 	return res
 }
 
+func (t *Target) silentSsh(command string, args ...string) (stdout string, stderr string, error error) {
+	log.SetOutput(ioutil.Discard)
+	defer func() { log.SetOutput(os.Stderr) }()
+	return t.ssh(command, args...)
+}
+
 func (t *Target) ssh(command string, args ...string) (stdout string, stderr string, error error) {
 	return t.sshWithStdin("", command, args...)
+}
+
+func (t *Target) silentSshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
+	log.SetOutput(ioutil.Discard)
+	defer func() { log.SetOutput(os.Stderr) }()
+	return t.sshWithStdin(stdin, command, args...)
 }
 
 func (t *Target) sshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
@@ -64,14 +77,14 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	if t.sudo {
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
-	log.Printf("running command: %s", finalCommand)
+	log.Printf("running command: %q", finalCommand)
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
 	}
 	stdoutChan := make(chan string)
 	stderrChan := make(chan string)
-	go readerStreamer(stdoutReader, stdoutChan, "stdout")
-	go readerStreamer(stderrReader, stderrChan, "stderr")
+	go readerStreamer(stdoutReader, stdoutChan, "stdout | ")
+	go readerStreamer(stderrReader, stderrChan, "stderr | ")
 	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
@@ -85,7 +98,7 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		log.Printf("%s: %s\n", description, scanner.Text())
+		log.Printf("%s%s\n", description, scanner.Text())
 	}
 	outputChan <- result.String()
 }
