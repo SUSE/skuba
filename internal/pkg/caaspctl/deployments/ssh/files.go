@@ -9,7 +9,9 @@ import (
 func (t *Target) UploadFileContents(targetPath, contents string) error {
 	dir, _ := path.Split(targetPath)
 	encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
-	t.ssh("mkdir", "-p", dir)
+	if _, _, err := t.ssh("mkdir", "-p", dir); err != nil {
+		return err
+	}
 	_, _, err := t.sshWithStdin(encodedContents, "base64", "-d", "-w0", fmt.Sprintf("> %s", targetPath))
 	return err
 }

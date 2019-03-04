@@ -14,11 +14,21 @@ func init() {
 
 func kubeadmInit() Runner {
 	return func(t *Target, data interface{}) error {
-		t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf")
-		t.ssh("systemctl", "enable", "--now", "docker")
-		t.ssh("systemctl", "stop", "kubelet")
-		t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print")
-		t.ssh("rm", "/tmp/kubeadm.conf")
+		if err := t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("rm", "/tmp/kubeadm.conf"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -29,11 +39,21 @@ func kubeadmJoin() Runner {
 		if !ok {
 			return errors.New("couldn't access join configuration")
 		}
-		t.UploadFile(configPath(joinConfiguration.Role, t.Node()), "/tmp/kubeadm.conf")
-		t.ssh("systemctl", "enable", "--now", "docker")
-		t.ssh("systemctl", "stop", "kubelet")
-		t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf")
-		t.ssh("rm", "/tmp/kubeadm.conf")
+		if err := t.UploadFile(configPath(joinConfiguration.Role, t.Node()), "/tmp/kubeadm.conf"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("rm", "/tmp/kubeadm.conf"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
