@@ -20,10 +20,16 @@ func cniDeploy() Runner {
 			return errors.Wrap(err, "could not read local cni directory")
 		}
 		for _, f := range cniFiles {
-			t.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name()))
+			if err := t.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name())); err != nil {
+				return err
+			}
 		}
-		t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.d")
-		t.ssh("rm -rf /tmp/cni.d")
+		if _, _, err := t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.d"); err != nil {
+			return err
+		}
+		if _, _, err := t.ssh("rm -rf /tmp/cni.d"); err != nil {
+			return err
+		}
 		return nil
 	}
 }
