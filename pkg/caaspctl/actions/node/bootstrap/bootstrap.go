@@ -1,4 +1,4 @@
-package bootstrap
+package node
 
 import (
 	"fmt"
@@ -64,12 +64,14 @@ func downloadSecrets(target deployments.Target) error {
 }
 
 func addTargetInformationToInitConfiguration(target deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
-	if ip := net.ParseIP(target.Node()); ip != nil {
+	if ip := net.ParseIP(target.Target); ip != nil {
 		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
-		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Node()
+		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
+	initConfiguration.NodeRegistration.Name = target.Nodename
+	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 }
 
 func configFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.InitConfiguration, error) {

@@ -33,7 +33,7 @@ func DrainNode(node *v1.Node) error {
 		log.Printf("could not drain node %s, aborting (use --force if you want to ignore this error)\n", node.ObjectMeta.Name)
 		return err
 	} else {
-		log.Printf("node %s correctly drained\n", node.ObjectMeta)
+		log.Printf("node %s correctly drained\n", node.ObjectMeta.Name)
 	}
 
 	return nil

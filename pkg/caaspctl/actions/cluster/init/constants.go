@@ -1,4 +1,4 @@
-package init
+package cluster
 
 import (
 	"suse.com/caaspctl/pkg/caaspctl"

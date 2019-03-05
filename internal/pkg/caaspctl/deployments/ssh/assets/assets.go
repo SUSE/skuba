@@ -1,7 +1,6 @@
 package assets
 
 const (
-
 	KubeletService = `[Unit]
 Description=kubelet: The Kubernetes Node Agent
 Documentation=http://kubernetes.io/docs/
@@ -28,5 +27,4 @@ ExecStart=
 ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS`
 
 	KubeletSysconfig = "KUBELET_EXTRA_ARGS="
-
 )

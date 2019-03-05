@@ -1,8 +1,8 @@
 package ssh
 
 import (
-	"path"
 	"io/ioutil"
+	"path"
 
 	"github.com/pkg/errors"
 

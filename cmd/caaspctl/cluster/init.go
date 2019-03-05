@@ -1,9 +1,9 @@
-package main
+package cluster
 
 import (
 	"github.com/spf13/cobra"
 
-	doinit "suse.com/caaspctl/pkg/caaspctl/actions/init"
+	"suse.com/caaspctl/pkg/caaspctl/actions/cluster/init"
 )
 
 type InitOptions struct {
@@ -11,14 +11,14 @@ type InitOptions struct {
 	ControlPlane string
 }
 
-func newInitCmd() *cobra.Command {
+func NewInitCmd() *cobra.Command {
 	initOptions := InitOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "init <cluster-name>",
 		Short: "Initialize caaspctl structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
-			doinit.Init(doinit.InitConfiguration{
+			cluster.Init(cluster.InitConfiguration{
 				ProjectName:  args[0],
 				ControlPlane: initOptions.ControlPlane,
 			})

@@ -1,4 +1,4 @@
-package ssh
+package node
 
 import (
 	"errors"
@@ -20,10 +20,44 @@ import (
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"suse.com/caaspctl/pkg/caaspctl"
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 )
+
+func Join(joinConfiguration deployments.JoinConfiguration, target deployments.Target) {
+	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
+
+	if joinConfiguration.Role == deployments.MasterRole {
+		statesToApply = append([]string{"kubernetes.upload-secrets"}, statesToApply...)
+	}
+
+	target.Apply(joinConfiguration, statesToApply...)
+}
+
+func ConfigPath(role deployments.Role, target *deployments.Target) string {
+	configPath := caaspctl.MachineConfFile(target.Target)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		configPath = caaspctl.TemplatePathForRole(role)
+	}
+
+	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
+	if err != nil {
+		log.Fatalf("error parsing configuration: %v", err)
+	}
+	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
+	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
+	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
+	if err != nil {
+		log.Fatal("could not marshal configuration")
+	}
+
+	if err := ioutil.WriteFile(caaspctl.MachineConfFile(target.Target), finalJoinConfigurationContents, 0600); err != nil {
+		log.Fatal("error writing specific machine configuration")
+	}
+
+	return caaspctl.MachineConfFile(target.Target)
+}
 
 func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) {
 	if joinConfiguration.Discovery.BootstrapToken == nil {
@@ -33,37 +67,15 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 }
 
-func addTargetInformationToJoinConfiguration(target string, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
-	if ip := net.ParseIP(target); ip != nil {
+func addTargetInformationToJoinConfiguration(target *deployments.Target, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
+	if ip := net.ParseIP(target.Target); ip != nil {
 		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 		}
-		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target
+		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
-}
-
-func configPath(role deployments.Role, target string) string {
-	configPath := caaspctl.MachineConfFile(target)
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		configPath = caaspctl.TemplatePathForRole(role)
-	}
-
-	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
-	if err != nil {
-		log.Fatalf("error parsing configuration: %v", err)
-	}
-	addFreshTokenToJoinConfiguration(target, joinConfiguration)
-	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
-	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
-	if err != nil {
-		log.Fatal("could not marshal configuration")
-	}
-
-	if err := ioutil.WriteFile(caaspctl.MachineConfFile(target), finalJoinConfigurationContents, 0600); err != nil {
-		log.Fatal("error writing specific machine configuration")
-	}
-
-	return caaspctl.MachineConfFile(target)
+	joinConfiguration.NodeRegistration.Name = target.Nodename
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 }
 
 func createBootstrapToken(target string) string {

@@ -1,4 +1,4 @@
-package init
+package cluster
 
 const (
 	kubeadmInitConf = `apiVersion: kubeadm.k8s.io/v1beta1

@@ -3,8 +3,9 @@ package ssh
 import (
 	"github.com/pkg/errors"
 
-	"suse.com/caaspctl/pkg/caaspctl"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
+	"suse.com/caaspctl/pkg/caaspctl"
+	"suse.com/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func kubeadmJoin() Runner {
 
 		defer t.ssh("rm", "/tmp/kubeadm.conf")
 
-		if err := t.UploadFile(configPath(joinConfiguration.Role, t.Node()), "/tmp/kubeadm.conf"); err != nil {
+		if err := t.UploadFile(node.ConfigPath(joinConfiguration.Role, t.Target), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
 		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {

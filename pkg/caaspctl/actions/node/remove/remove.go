@@ -1,4 +1,4 @@
-package deletenode
+package node
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
-func DeleteNode(target string) {
+func Remove(target string) {
 	client := kubernetes.GetAdminClientSet()
 
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
@@ -44,7 +44,7 @@ func DeleteNode(target string) {
 	}
 
 	if err := client.CoreV1().Nodes().Delete(targetName, &metav1.DeleteOptions{}); err == nil {
-		log.Printf("node %s deleted successfully from the cluster\n", targetName)
+		log.Printf("node %s successfully removed from the cluster\n", targetName)
 	} else {
 		log.Printf("could not remove node %s\n", targetName)
 	}

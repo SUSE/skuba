@@ -25,15 +25,16 @@ type Target struct {
 	client *ssh.Client
 }
 
-func NewTarget(target, user string, sudo bool, port int) deployments.Target {
+func NewTarget(nodename, target, user string, sudo bool, port int) deployments.Target {
 	res := deployments.Target{
-		Target: target,
+		Target:   target,
+		Nodename: nodename,
 	}
 	res.Actionable = &Target{
 		Target: &res,
-		user: user,
-		sudo: sudo,
-		port: port,
+		user:   user,
+		sudo:   sudo,
+		port:   port,
 	}
 	return res
 }
@@ -117,7 +118,7 @@ func (t *Target) initClient() {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Node(), t.port), config)
+	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Target.Target, t.port), config)
 	if err != nil {
 		log.Fatalf("dial: %v", err)
 	}

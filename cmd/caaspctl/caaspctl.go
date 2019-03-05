@@ -12,10 +12,8 @@ func newRootCmd(args []string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		newInitCmd(),
-		newBootstrapCmd(),
-		newJoinCmd(),
-		newDeleteNodeCmd(),
+		newClusterCmd(),
+		newNodeCmd(),
 	)
 
 	return cmd
