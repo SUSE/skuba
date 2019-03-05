@@ -15,11 +15,8 @@ type Actionable interface {
 
 type Target struct {
 	Target     string
+	Nodename   string
 	Actionable Actionable
-}
-
-func (t *Target) Node() string {
-	return t.Target
 }
 
 func (t *Target) OSRelease() (map[string]string, error) {

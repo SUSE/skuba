@@ -8,7 +8,7 @@ var (
 	stateMap = map[string]Runner{}
 )
 
-type Runner func(t *Target, data interface{}) (error)
+type Runner func(t *Target, data interface{}) error
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, stateName := range states {
