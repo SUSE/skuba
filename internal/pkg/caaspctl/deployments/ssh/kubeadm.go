@@ -14,6 +14,8 @@ func init() {
 
 func kubeadmInit() Runner {
 	return func(t *Target, data interface{}) error {
+		defer t.ssh("rm", "/tmp/kubeadm.conf")
+
 		if err := t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
@@ -23,13 +25,8 @@ func kubeadmInit() Runner {
 		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
 			return err
 		}
-		if _, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print"); err != nil {
-			return err
-		}
-		if _, _, err := t.ssh("rm", "/tmp/kubeadm.conf"); err != nil {
-			return err
-		}
-		return nil
+		_, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print")
+		return err
 	}
 }
 
@@ -39,6 +36,9 @@ func kubeadmJoin() Runner {
 		if !ok {
 			return errors.New("couldn't access join configuration")
 		}
+
+		defer t.ssh("rm", "/tmp/kubeadm.conf")
+
 		if err := t.UploadFile(configPath(joinConfiguration.Role, t.Node()), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
@@ -48,12 +48,7 @@ func kubeadmJoin() Runner {
 		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
 			return err
 		}
-		if _, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf"); err != nil {
-			return err
-		}
-		if _, _, err := t.ssh("rm", "/tmp/kubeadm.conf"); err != nil {
-			return err
-		}
-		return nil
+		_, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf")
+		return err
 	}
 }
