@@ -15,7 +15,7 @@ func newNodeCmd() *cobra.Command {
 	cmd.AddCommand(
 		node.NewBootstrapCmd(),
 		node.NewJoinCmd(),
-		node.NewRemoveNodeCmd(),
+		node.NewRemoveCmd(),
 	)
 
 	return cmd
