@@ -6,7 +6,7 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl/actions/node/remove"
 )
 
-func NewRemoveNodeCmd() *cobra.Command {
+func NewRemoveCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
