@@ -40,7 +40,7 @@ func NewTarget(target, user string, sudo bool, port int) deployments.Target {
 
 func (t *Target) silentSsh(command string, args ...string) (stdout string, stderr string, error error) {
 	log.SetOutput(ioutil.Discard)
-	defer func() { log.SetOutput(os.Stderr) }()
+	defer log.SetOutput(os.Stderr)
 	return t.ssh(command, args...)
 }
 
@@ -50,7 +50,7 @@ func (t *Target) ssh(command string, args ...string) (stdout string, stderr stri
 
 func (t *Target) silentSshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
 	log.SetOutput(ioutil.Discard)
-	defer func() { log.SetOutput(os.Stderr) }()
+	defer log.SetOutput(os.Stderr)
 	return t.sshWithStdin(stdin, command, args...)
 }
 

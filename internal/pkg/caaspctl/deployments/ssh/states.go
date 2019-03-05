@@ -12,7 +12,7 @@ type Runner func(t *Target, data interface{}) (error)
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, stateName := range states {
-		log.Printf("=== about to apply state %s ===\n", stateName)
+		log.Printf("=== applying state %s ===\n", stateName)
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
 				log.Printf("=== failed to apply state %s: %v ===\n", stateName, err)
