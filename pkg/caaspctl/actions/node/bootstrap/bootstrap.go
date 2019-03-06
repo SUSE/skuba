@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
@@ -72,6 +73,10 @@ func addTargetInformationToInitConfiguration(target deployments.Target, initConf
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
+	osRelease, _ := target.OSRelease()
+	if strings.Contains(osRelease["ID_LIKE"], "suse") {
+		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
+	}
 }
 
 func configFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.InitConfiguration, error) {

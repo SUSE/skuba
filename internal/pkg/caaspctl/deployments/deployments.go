@@ -13,27 +13,35 @@ type Actionable interface {
 	DownloadFileContents(sourcePath string) (string, error)
 }
 
+type TargetCache struct {
+	OsRelease map[string]string
+}
+
 type Target struct {
 	Target     string
 	Nodename   string
 	Actionable Actionable
+	Cache      TargetCache
 }
 
 func (t *Target) OSRelease() (map[string]string, error) {
-	result := map[string]string{}
+	if len(t.Cache.OsRelease) > 0 {
+		return t.Cache.OsRelease, nil
+	}
+	t.Cache.OsRelease = map[string]string{}
 	contents, err := t.DownloadFileContents("/etc/os-release")
 	if err != nil {
-		return result, err
+		return t.Cache.OsRelease, err
 	}
 	scanner := bufio.NewScanner(strings.NewReader(contents))
 	matcher := regexp.MustCompile(`([^=]+)="?([^"]*)`)
 	for scanner.Scan() {
 		matches := matcher.FindAllStringSubmatch(scanner.Text(), -1)
 		for _, match := range matches {
-			result[match[1]] = match[2]
+			t.Cache.OsRelease[match[1]] = match[2]
 		}
 	}
-	return result, nil
+	return t.Cache.OsRelease, nil
 }
 
 func (t *Target) Apply(data interface{}, states ...string) error {
