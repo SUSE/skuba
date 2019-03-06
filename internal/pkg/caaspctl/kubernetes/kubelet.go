@@ -34,6 +34,7 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 							strings.Join(
 								[]string{
 									"rm -rf /etc/kubernetes/*",
+									"rm -rf /var/lib/etcd/*",
 									"dbus-send --system --print-reply --dest=org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager.DisableUnitFiles array:string:'kubelet.service' boolean:false",
 									"dbus-send --system --print-reply --dest=org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager.MaskUnitFiles array:string:'kubelet.service' boolean:false boolean:true",
 								},
@@ -42,6 +43,7 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 						},
 						VolumeMounts: []v1.VolumeMount{
 							VolumeMount("etc-kubernetes", "/etc/kubernetes", VolumeMountReadWrite),
+							VolumeMount("var-lib-etcd", "/var/lib/etcd", VolumeMountReadWrite),
 							VolumeMount("var-run-dbus", "/var/run/dbus", VolumeMountReadWrite),
 						},
 						SecurityContext: &v1.SecurityContext{
@@ -52,6 +54,7 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 				RestartPolicy: v1.RestartPolicyNever,
 				Volumes: []v1.Volume{
 					HostMount("etc-kubernetes", "/etc/kubernetes"),
+					HostMount("var-lib-etcd", "/var/lib/etcd"),
 					HostMount("var-run-dbus", "/var/run/dbus"),
 				},
 				NodeSelector: map[string]string{
