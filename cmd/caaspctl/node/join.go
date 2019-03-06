@@ -7,7 +7,7 @@ import (
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
-	"suse.com/caaspctl/pkg/caaspctl/actions/node/join"
+	node "suse.com/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
 type JoinOptions struct {
@@ -49,10 +49,7 @@ func NewJoinCmd() *cobra.Command {
 				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
 			}
 
-			node.Join(
-				joinConfiguration,
-				ssh.NewTarget(nodenames[0], target, user, sudo, port),
-			)
+			node.Join(joinConfiguration, ssh.NewTarget(nodenames[0], target, user, sudo, port))
 		},
 		Args: cobra.ExactArgs(1),
 	}

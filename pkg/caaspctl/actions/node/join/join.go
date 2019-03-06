@@ -26,7 +26,7 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
-func Join(joinConfiguration deployments.JoinConfiguration, target deployments.Target) {
+func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) {
 	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
 
 	if joinConfiguration.Role == deployments.MasterRole {
