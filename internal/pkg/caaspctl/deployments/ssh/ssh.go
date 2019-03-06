@@ -18,25 +18,25 @@ import (
 )
 
 type Target struct {
-	*deployments.Target
+	target *deployments.Target
 	user   string
 	sudo   bool
 	port   int
 	client *ssh.Client
 }
 
-func NewTarget(nodename, target, user string, sudo bool, port int) deployments.Target {
+func NewTarget(nodename, target, user string, sudo bool, port int) *deployments.Target {
 	res := deployments.Target{
 		Target:   target,
 		Nodename: nodename,
 	}
 	res.Actionable = &Target{
-		Target: &res,
+		target: &res,
 		user:   user,
 		sudo:   sudo,
 		port:   port,
 	}
-	return res
+	return &res
 }
 
 func (t *Target) silentSsh(command string, args ...string) (stdout string, stderr string, error error) {
@@ -118,7 +118,7 @@ func (t *Target) initClient() {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.Target.Target, t.port), config)
+	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
 	if err != nil {
 		log.Fatalf("dial: %v", err)
 	}

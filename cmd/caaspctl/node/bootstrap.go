@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
-	"suse.com/caaspctl/pkg/caaspctl/actions/node/bootstrap"
+	node "suse.com/caaspctl/pkg/caaspctl/actions/node/bootstrap"
 )
 
 func NewBootstrapCmd() *cobra.Command {

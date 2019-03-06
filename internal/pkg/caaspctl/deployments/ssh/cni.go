@@ -23,7 +23,7 @@ func cniDeploy() Runner {
 		defer t.ssh("rm -rf /tmp/cni.d")
 
 		for _, f := range cniFiles {
-			if err := t.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name())); err != nil {
+			if err := t.target.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name())); err != nil {
 				return err
 			}
 		}

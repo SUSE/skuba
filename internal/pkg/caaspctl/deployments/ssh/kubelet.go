@@ -13,7 +13,7 @@ func init() {
 
 func kubeletConfigure() Runner {
 	return func(t *Target, data interface{}) error {
-		osRelease, _ := t.OSRelease()
+		osRelease, _ := t.target.OSRelease()
 		if strings.Contains(osRelease["ID_LIKE"], "suse") {
 			if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
 				return err

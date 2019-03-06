@@ -5,7 +5,7 @@ import (
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 	"suse.com/caaspctl/pkg/caaspctl"
-	"suse.com/caaspctl/pkg/caaspctl/actions/node/join"
+	node "suse.com/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func kubeadmInit() Runner {
 	return func(t *Target, data interface{}) error {
 		defer t.ssh("rm", "/tmp/kubeadm.conf")
 
-		if err := t.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
+		if err := t.target.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
 		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {
@@ -40,7 +40,7 @@ func kubeadmJoin() Runner {
 
 		defer t.ssh("rm", "/tmp/kubeadm.conf")
 
-		if err := t.UploadFile(node.ConfigPath(joinConfiguration.Role, t.Target), "/tmp/kubeadm.conf"); err != nil {
+		if err := t.target.UploadFile(node.ConfigPath(joinConfiguration.Role, t.target), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
 		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {

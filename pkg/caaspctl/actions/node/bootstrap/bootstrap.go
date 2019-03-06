@@ -16,7 +16,7 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
-func Bootstrap(target deployments.Target) error {
+func Bootstrap(target *deployments.Target) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
@@ -48,7 +48,7 @@ func Bootstrap(target deployments.Target) error {
 	return downloadSecrets(target)
 }
 
-func downloadSecrets(target deployments.Target) error {
+func downloadSecrets(target *deployments.Target) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
 	for _, secretLocation := range deployments.Secrets {
@@ -64,7 +64,7 @@ func downloadSecrets(target deployments.Target) error {
 	return nil
 }
 
-func addTargetInformationToInitConfiguration(target deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
+func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
 	if ip := net.ParseIP(target.Target); ip != nil {
 		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
