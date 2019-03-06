@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,6 +77,10 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
+	osRelease, _ := target.OSRelease()
+	if strings.Contains(osRelease["ID_LIKE"], "suse") {
+		joinConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
+	}
 }
 
 func createBootstrapToken(target string) string {
