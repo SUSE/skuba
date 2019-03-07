@@ -15,21 +15,21 @@ type InitConfiguration struct {
 
 func Init(initConfiguration InitConfiguration) {
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
-		log.Fatalf("Could not create directory %s\n", initConfiguration.ClusterName)
+		log.Fatalf("could not create directory %s\n", initConfiguration.ClusterName)
 	}
 	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
-		log.Fatalf("Could not change to directory %s\n", initConfiguration.ClusterName)
+		log.Fatalf("could not change to directory %s\n", initConfiguration.ClusterName)
 	}
 	for _, file := range scaffoldFiles {
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {
-				log.Fatalf("Could not create directory %s\n", filePath)
+				log.Fatalf("could not create directory %s\n", filePath)
 			}
 		}
 		f, err := os.Create(file.Location)
 		if err != nil {
-			log.Fatalf("Could not create file %s\n", file.Location)
+			log.Fatalf("could not create file %s\n", file.Location)
 		}
 		f.WriteString(renderTemplate(file.Content, initConfiguration))
 		f.Close()

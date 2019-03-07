@@ -29,7 +29,7 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 }
 
 func (t *Target) UploadFile(sourcePath, targetPath string) error {
-	log.Printf("uploading file %q to %q", sourcePath, targetPath)
+	log.Printf("uploading local file %q to remote file %q", sourcePath, targetPath)
 	if contents, err := ioutil.ReadFile(sourcePath); err == nil {
 		return t.UploadFileContents(targetPath, string(contents))
 	}
