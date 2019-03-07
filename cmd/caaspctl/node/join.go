@@ -10,58 +10,53 @@ import (
 	node "suse.com/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
-type JoinOptions struct {
-	Role string
+type joinOptions struct {
+	target string
+	user   string
+	sudo   bool
+	port   int
+	role   string
 }
 
 func NewJoinCmd() *cobra.Command {
-	joinOptions := JoinOptions{}
+	joinOptions := joinOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "join <node-name>",
 		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			target, err := cmd.Flags().GetString("target")
-			if err != nil {
-				log.Fatalf("Unable to parse target flag: %v", err)
-			}
-			user, err := cmd.Flags().GetString("user")
-			if err != nil {
-				log.Fatalf("Unable to parse user flag: %v", err)
-			}
-			sudo, err := cmd.Flags().GetBool("sudo")
-			if err != nil {
-				log.Fatalf("Unable to parse sudo flag: %v", err)
-			}
-			port, err := cmd.Flags().GetInt("port")
-			if err != nil {
-				port = 22
-			}
-
 			joinConfiguration := deployments.JoinConfiguration{}
 
-			switch joinOptions.Role {
+			switch joinOptions.role {
 			case "master":
 				joinConfiguration.Role = deployments.MasterRole
 			case "worker":
 				joinConfiguration.Role = deployments.WorkerRole
 			default:
-				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.Role)
+				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
 			}
 
-			node.Join(joinConfiguration, ssh.NewTarget(nodenames[0], target, user, sudo, port))
+			node.Join(joinConfiguration,
+				ssh.NewTarget(
+					nodenames[0],
+					joinOptions.target,
+					joinOptions.user,
+					joinOptions.sudo,
+					joinOptions.port,
+				),
+			)
 		},
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringVarP(&joinOptions.Role, "role", "", "", "Role that this node will have in the cluster (master|worker)")
-	cmd.MarkFlagRequired("role")
+	cmd.Flags().StringVarP(&joinOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
+	cmd.Flags().StringVarP(&joinOptions.user, "user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().BoolVarP(&joinOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
+	cmd.Flags().IntVarP(&joinOptions.port, "port", "p", 22, "Port to connect to using SSH")
+	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")
 
-	cmd.Flags().StringP("target", "t", "", "IP or FQDN of the node to connect to using SSH")
 	cmd.MarkFlagRequired("target")
-
-	cmd.Flags().StringP("user", "u", "root", "User identity used to connect to target")
-	cmd.Flags().Bool("sudo", false, "Run remote command via sudo")
+	cmd.MarkFlagRequired("role")
 
 	return cmd
 }

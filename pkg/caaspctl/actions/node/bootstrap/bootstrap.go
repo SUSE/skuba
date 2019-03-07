@@ -36,6 +36,7 @@ func Bootstrap(target *deployments.Target) error {
 
 	err = target.Apply(
 		nil,
+		"kubernetes.bootstrap.upload-secrets",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
@@ -65,10 +66,10 @@ func downloadSecrets(target *deployments.Target) error {
 }
 
 func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
+	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
+		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
+	}
 	if ip := net.ParseIP(target.Target); ip != nil {
-		if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
-			initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-		}
 		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename

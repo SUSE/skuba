@@ -9,16 +9,16 @@ import (
 )
 
 type InitConfiguration struct {
-	ProjectName  string
+	ClusterName  string
 	ControlPlane string
 }
 
 func Init(initConfiguration InitConfiguration) {
-	if err := os.MkdirAll(initConfiguration.ProjectName, 0700); err != nil {
-		log.Fatalf("Could not create directory %s\n", initConfiguration.ProjectName)
+	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
+		log.Fatalf("Could not create directory %s\n", initConfiguration.ClusterName)
 	}
-	if err := os.Chdir(initConfiguration.ProjectName); err != nil {
-		log.Fatalf("Could not change to directory %s\n", initConfiguration.ProjectName)
+	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
+		log.Fatalf("Could not change to directory %s\n", initConfiguration.ClusterName)
 	}
 	for _, file := range scaffoldFiles {
 		filePath, _ := filepath.Split(file.Location)

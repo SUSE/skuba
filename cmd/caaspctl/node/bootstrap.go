@@ -8,29 +8,29 @@ import (
 	node "suse.com/caaspctl/pkg/caaspctl/actions/node/bootstrap"
 )
 
+type bootstrapOptions struct {
+	target string
+	user   string
+	sudo   bool
+	port   int
+}
+
 func NewBootstrapCmd() *cobra.Command {
+	bootstrapOptions := bootstrapOptions{}
+
 	cmd := cobra.Command{
 		Use:   "bootstrap <node-name>",
 		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			target, err := cmd.Flags().GetString("target")
-			if err != nil {
-				log.Fatalf("Unable to parse target flag: %v", err)
-			}
-			user, err := cmd.Flags().GetString("user")
-			if err != nil {
-				log.Fatalf("Unable to parse user flag: %v", err)
-			}
-			sudo, err := cmd.Flags().GetBool("sudo")
-			if err != nil {
-				log.Fatalf("Unable to parse sudo flag: %v", err)
-			}
-			port, err := cmd.Flags().GetInt("port")
-			if err != nil {
-				port = 22
-			}
-
-			err = node.Bootstrap(ssh.NewTarget(nodenames[0], target, user, sudo, port))
+			err := node.Bootstrap(
+				ssh.NewTarget(
+					nodenames[0],
+					bootstrapOptions.target,
+					bootstrapOptions.user,
+					bootstrapOptions.sudo,
+					bootstrapOptions.port,
+				),
+			)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -38,11 +38,12 @@ func NewBootstrapCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringP("target", "t", "", "IP or FQDN of the node to connect to using SSH")
-	cmd.MarkFlagRequired("target")
+	cmd.Flags().StringVarP(&bootstrapOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
+	cmd.Flags().StringVarP(&bootstrapOptions.user, "user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().IntVarP(&bootstrapOptions.port, "port", "p", 22, "Port to connect to using SSH")
+	cmd.Flags().BoolVarP(&bootstrapOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 
-	cmd.Flags().StringP("user", "u", "root", "User identity used to connect to target")
-	cmd.Flags().Bool("sudo", false, "Run remote command via sudo")
+	cmd.MarkFlagRequired("target")
 
 	return &cmd
 }

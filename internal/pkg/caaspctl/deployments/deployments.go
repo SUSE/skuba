@@ -1,10 +1,10 @@
 package deployments
 
 import (
-	"bufio"
+	"errors"
+	"fmt"
 	"io/ioutil"
-	"regexp"
-	"strings"
+	"log"
 )
 
 type Actionable interface {
@@ -24,35 +24,16 @@ type Target struct {
 	Cache      TargetCache
 }
 
-func (t *Target) OSRelease() (map[string]string, error) {
-	if len(t.Cache.OsRelease) > 0 {
-		return t.Cache.OsRelease, nil
-	}
-	t.Cache.OsRelease = map[string]string{}
-	contents, err := t.DownloadFileContents("/etc/os-release")
-	if err != nil {
-		return t.Cache.OsRelease, err
-	}
-	scanner := bufio.NewScanner(strings.NewReader(contents))
-	matcher := regexp.MustCompile(`([^=]+)="?([^"]*)`)
-	for scanner.Scan() {
-		matches := matcher.FindAllStringSubmatch(scanner.Text(), -1)
-		for _, match := range matches {
-			t.Cache.OsRelease[match[1]] = match[2]
-		}
-	}
-	return t.Cache.OsRelease, nil
-}
-
 func (t *Target) Apply(data interface{}, states ...string) error {
 	return t.Actionable.Apply(data, states...)
 }
 
 func (t *Target) UploadFile(sourcePath, targetPath string) error {
+	log.Printf("uploading file %q to %q", sourcePath, targetPath)
 	if contents, err := ioutil.ReadFile(sourcePath); err == nil {
 		return t.UploadFileContents(targetPath, string(contents))
 	}
-	return nil
+	return errors.New(fmt.Sprintf("could not find file %s", sourcePath))
 }
 
 func (t *Target) UploadFileContents(targetPath, contents string) error {
