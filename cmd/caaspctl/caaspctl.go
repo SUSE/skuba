@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"suse.com/caaspctl/internal/app/caaspctl"
 )
 
 func newRootCmd(args []string) *cobra.Command {
@@ -12,8 +14,8 @@ func newRootCmd(args []string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		newClusterCmd(),
-		newNodeCmd(),
+		caaspctl.NewClusterCmd(),
+		caaspctl.NewNodeCmd(),
 	)
 
 	return cmd

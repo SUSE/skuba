@@ -1,12 +1,12 @@
-package main
+package caaspctl
 
 import (
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/cmd/caaspctl/cluster"
+	"suse.com/caaspctl/internal/app/caaspctl/cluster"
 )
 
-func newClusterCmd() *cobra.Command {
+func NewClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cluster",
 		Short: "Commands to handle a cluster",
@@ -14,6 +14,7 @@ func newClusterCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		cluster.NewInitCmd(),
+		cluster.NewStatusCmd(),
 	)
 
 	return cmd

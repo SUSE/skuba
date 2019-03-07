@@ -1,12 +1,12 @@
-package main
+package caaspctl
 
 import (
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/cmd/caaspctl/node"
+	"suse.com/caaspctl/internal/app/caaspctl/node"
 )
 
-func newNodeCmd() *cobra.Command {
+func NewNodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node",
 		Short: "Commands to handle a specific node",

@@ -7,7 +7,7 @@ import (
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
-	kubectlcaasp "suse.com/caaspctl/pkg/kubectl-caasp"
+	kubectlcaasp "suse.com/caaspctl/internal/app/kubectl-caasp"
 )
 
 func main() {

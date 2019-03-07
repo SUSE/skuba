@@ -6,6 +6,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	"suse.com/caaspctl/internal/app/caaspctl"
 )
 
 type CaaspOptions struct {
@@ -35,7 +37,9 @@ func NewCmdCaasp(streams genericclioptions.IOStreams) *cobra.Command {
 	o.configFlags.AddFlags(cmd.Flags())
 
 	cmd.AddCommand(
-		newCmdCaaspNodes(streams),
+		newCmdCaaspNodes(streams), // FIXME (ereslibre): refactor
+		caaspctl.NewClusterCmd(),
+		caaspctl.NewNodeCmd(),
 	)
 
 	return cmd
