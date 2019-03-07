@@ -8,7 +8,7 @@ import (
 )
 
 func (t *Target) UploadFileContents(targetPath, contents string) error {
-	log.Printf("uploading file %s with contents", targetPath)
+	log.Printf("uploading local file %q with contents", targetPath)
 	dir, _ := path.Split(targetPath)
 	encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
 	if _, _, err := t.silentSsh("mkdir", "-p", dir); err != nil {
@@ -19,7 +19,7 @@ func (t *Target) UploadFileContents(targetPath, contents string) error {
 }
 
 func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
-	log.Printf("downloading file %s contents", sourcePath)
+	log.Printf("downloading remote file %q contents", sourcePath)
 	if stdout, _, err := t.silentSsh("base64", "-w0", sourcePath); err == nil {
 		decodedStdout, err := base64.StdEncoding.DecodeString(stdout)
 		if err != nil {

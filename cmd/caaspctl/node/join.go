@@ -33,7 +33,7 @@ func NewJoinCmd() *cobra.Command {
 			case "worker":
 				joinConfiguration.Role = deployments.WorkerRole
 			default:
-				log.Fatalf("Invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
+				log.Fatalf("invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
 			}
 
 			node.Join(joinConfiguration,
