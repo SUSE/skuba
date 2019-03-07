@@ -30,7 +30,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
 
 	if joinConfiguration.Role == deployments.MasterRole {
-		statesToApply = append([]string{"kubernetes.upload-secrets"}, statesToApply...)
+		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
 	}
 
 	target.Apply(joinConfiguration, statesToApply...)
@@ -69,10 +69,10 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 }
 
 func addTargetInformationToJoinConfiguration(target *deployments.Target, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
+	if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
+		joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
+	}
 	if ip := net.ParseIP(target.Target); ip != nil {
-		if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
-			joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-		}
 		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename

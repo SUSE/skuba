@@ -13,6 +13,7 @@ kubernetesVersion: v1.13.3
 apiServer:
   certSANs:
     - {{.ControlPlane}}
+clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlane}}:6443
 networking:
   podSubnet: 10.244.0.0/16
