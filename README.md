@@ -1,1 +1,131 @@
 # caaspctl
+
+Tool to manage the full lifecycle of a cluster.
+
+## Prerequisites
+
+The required infrastructure for deploying CaaSP needs to exist beforehand, it's
+required for you to have SSH access to these machines from the machine that you
+are running `caaspctl` from. `caaspctl` requires you to have added your SSH
+keys to the SSH agent on this machine.
+
+If you want to perform an HA deployment you also need to set up a load balancer,
+depending on your needs this setup can be as advanced as required. Please, refer
+to our Deployment Guide to find out.
+
+## Creating a cluster
+
+Go to any directory in your machine, e.g. `~/clusters`. From there, execute:
+
+### cluster init
+
+The `init` process creates the definition of your cluster. Ideally there's
+nothing to tweak in the general case, but you can go through the generated
+configurations and check if everything is fine for your taste.
+
+```
+caaspctl cluster init --control-plane load-balancer.example.com company-cluster
+```
+
+This command will have generated a basic project scaffold in the `company-cluster`
+folder. You need to change the directory to this new folder in order to run the rest
+of the commands in this README.
+
+### node bootstrap
+
+You need to bootstrap your first master node of the cluster. For this purpose
+you have to be inside the `company-cluster` folder.
+
+```
+caaspctl node bootstrap --user opensuse --sudo --target <IP/fqdn> my-master
+```
+
+You can check `caaspctl node bootstrap --help` for further options, but the
+previous command means:
+
+* Bootstrap node using a SSH connection to target `<IP/fqdn>`
+  * Use `opensuse` user when opening the SSH session
+  * Use `sudo` when executing commands inside the machine
+* Name the node `my-master`: this is what Kubernetes will use to refer to your node
+
+When this command has finished, some secrets will have been copied to your
+`company-cluster` folder. Namely:
+
+* Generated secrets will be copied inside the `pki` folder
+* The administrative `admin.conf` file of the cluster has been copied in
+  root of the `company-cluster` folder
+
+## Growing a cluster
+
+### node join
+
+Joining a node allows you to grow your Kubernetes cluster. You can join master nodes as
+well as worker nodes to your existing cluster. For this purpose you have to be inside the
+`company-cluster` folder.
+
+This task will automatically create a new bootstrap token on the existing cluster that will
+be used for the kubelet TLS bootstrap to happen on the new node. The token will be fed
+automatically to the configuration used to join the new node.
+
+This task will create the configuration file inside the `kubeadm-join.conf.d` folder as well
+with a file named `<IP/fqdn>.conf` that will contain the join configuration used. If this file
+existed before it will be honored, only overriding a small subset of settings automatically:
+
+* Bootstrap token to the one generated on demand
+* Kubelet extra args
+  * `node-ip` if the `--target` is an IP address
+  * `hostname-override` to the `node-name` provided as an argument
+  * `cni-bin-dir` directory location if required
+* Node registration name to `node-name` provided as an argument
+
+#### master node join
+
+This command will join a new master node to the cluster. This will also increase the etcd
+member count by one.
+
+```
+caaspctl node join --role master --user opensuse --sudo --target <IP/fqdn> second-master
+```
+
+#### worker node join
+
+This command will join a new worker node to the cluster.
+
+```
+caaspctl node join --role worker --user opensuse --sudo --target <IP/fqdn> my-worker
+```
+
+## Shrinking a cluster
+
+### node remove
+
+It's possible to remove master and worker nodes from the cluster. All the required tasks to remove
+the target node will be performed automatically:
+
+* Drain the node (also cordoning it)
+* Mask and disable the kubelet service
+* If it's a master node:
+  * Remove persisted information
+    * etcd store
+    * PKI secrets
+  * Remove etcd member from the etcd cluster
+  * Remove the endpoint from the `kubeadm-config` config map
+* Remove node from the cluster
+
+For removing a node you only need to provide the name of the node known to Kubernetes:
+
+```
+caaspctl node remove my-worker
+```
+
+Or, if you want to remove a master node:
+
+```
+caaspctl node remove second-master
+```
+
+## kubectl-caasp
+
+This project also comes with a kubectl plugin that has the same layout as `caaspctl`. You can
+call to the same commands presented in `caaspctl` as `kubectl caasp` when installing the
+`kubectl-caasp` binary in your path.
