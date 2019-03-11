@@ -1,4 +1,4 @@
-GO        ?= go
+GO ?= go
 
 .PHONY: all
 all: build
