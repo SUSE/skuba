@@ -20,19 +20,26 @@ package main
 import (
 	"os"
 
-	"github.com/spf13/pflag"
-
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-
-	kubectlcaasp "suse.com/caaspctl/internal/app/kubectl-caasp"
+	"github.com/spf13/cobra"
+	"suse.com/caaspctl/internal/app/caaspctl"
 )
 
-func main() {
-	flags := pflag.NewFlagSet("kubectl-caasp", pflag.ExitOnError)
-	pflag.CommandLine = flags
+func newRootCmd(args []string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "kubectl-caasp",
+	}
 
-	root := kubectlcaasp.NewCmdCaasp(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
-	if err := root.Execute(); err != nil {
+	cmd.AddCommand(
+		caaspctl.NewClusterCmd(),
+		caaspctl.NewNodeCmd(),
+	)
+
+	return cmd
+}
+
+func main() {
+	cmd := newRootCmd(os.Args[1:])
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
