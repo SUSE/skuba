@@ -26,6 +26,12 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
+// Status prints the status of the cluster on the standard output by reading the
+// admin configuration file from the current folder
+//
+// FIXME: being this a part of the go API accept a io.Writer parameter instead of
+//        using os.Stdout
+// FIXME: error handling with `github.com/pkg/errors`; return errors
 func Status() {
 	client := kubernetes.GetAdminClientSet()
 
