@@ -18,8 +18,3 @@
 
 # Binary folder
 /bin
-
-# Salt logs and deployment specific information
-/examples/deployments/*/.salt
-/examples/deployments/*/pki
-/examples/deployments/*/admin.conf
