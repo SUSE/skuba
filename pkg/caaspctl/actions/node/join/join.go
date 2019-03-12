@@ -60,7 +60,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 }
 
 // ConfigPath returns the configuration path for a specific Target; if this file does
-// not exist, it will be created out of the template file.
+// not exist, it will be created out of the template file
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
