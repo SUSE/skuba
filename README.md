@@ -150,3 +150,23 @@ master2   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1    
 worker0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
 worker1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   cri-o://1.13.0      <none>        <none>
 ```
+
+## Demo
+
+This is a quick screencast showing how it's easy to deploy a multi master node
+on top of AWS. The procedure is the same as the deployment on OpenStack or on
+libvirt.
+
+The deployment is done on AWS via the terraform files shared inside of the `infra`
+repository.
+
+Videos:
+
+  * [infrastructure creation](https://asciinema.org/a/wy9bqNjzszRN030sUIGM7f9j6)
+  * [cluster creation](https://asciinema.org/a/PjblNTwwx0Z7ujyQPEu8SNHgF)
+
+The videos are uncut, as you will see the whole deployment takes around 7 minutes:
+4 minutes for the infrastructure, 3 minutes for the actual cluster.
+
+The demo uses a small script to automate the sequential invocations of `caaspctl`.
+Anything can be used to do that, including bash.
