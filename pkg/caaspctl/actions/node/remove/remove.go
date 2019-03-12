@@ -27,6 +27,9 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
+// Remove removes a node from the cluster
+//
+// FIXME: error handling with `github.com/pkg/errors`; return errors
 func Remove(target string) {
 	client := kubernetes.GetAdminClientSet()
 
