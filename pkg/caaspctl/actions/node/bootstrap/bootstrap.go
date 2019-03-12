@@ -33,6 +33,11 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
+// Bootstrap initializes the first master node of the cluster
+//
+// FIXME: being this a part of the go API accept the toplevel directory instead
+//        of using the PWD
+// FIXME: error handling with `github.com/pkg/errors`
 func Bootstrap(target *deployments.Target) error {
 	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
 	if err != nil {

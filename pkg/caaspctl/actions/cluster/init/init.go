@@ -30,6 +30,13 @@ type InitConfiguration struct {
 	ControlPlane string
 }
 
+// Init creates a cluster definition scaffold in the local machine, in the current
+// folder, at a directory named after ClusterName provided in the InitConfiguration
+// parameter
+//
+// FIXME: being this a part of the go API accept the toplevel directory instead of
+//        using the PWD
+// FIXME: error handling with `github.com/pkg/errors`; return errors
 func Init(initConfiguration InitConfiguration) {
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
 		log.Fatalf("could not create directory %s\n", initConfiguration.ClusterName)

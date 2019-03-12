@@ -43,6 +43,12 @@ import (
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
+// Join joins a new machine to the cluster. The role of the machine will be
+// provided by the JoinConfiguration, and will target Target node
+//
+// FIXME: being this a part of the go API accept the toplevel directory instead of
+//        using the PWD
+// FIXME: error handling with `github.com/pkg/errors`; return errors
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) {
 	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
 
@@ -53,6 +59,12 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	target.Apply(joinConfiguration, statesToApply...)
 }
 
+// ConfigPath returns the configuration path for a specific Target; if this file does
+// not exist, it will be created out of the template file.
+//
+// FIXME: being this a part of the go API accept the toplevel directory instead of
+//        using the PWD
+// FIXME: error handling with `github.com/pkg/errors`; return errors
 func ConfigPath(role deployments.Role, target *deployments.Target) string {
 	configPath := caaspctl.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
