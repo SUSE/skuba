@@ -43,7 +43,7 @@ func NewInitCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&initOptions.ControlPlane, "control-plane", "", "", "The control plane location that will load balance the master nodes")
-	cmd.MarkFlagRequired("control-plane-endpoint")
+	cmd.MarkFlagRequired("control-plane")
 
 	return cmd
 }
