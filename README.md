@@ -13,6 +13,14 @@ If you want to perform an HA deployment you also need to set up a load balancer,
 depending on your needs this setup can be as advanced as required. Please, refer
 to our Deployment Guide to find out.
 
+The target nodes must have some packages already preinstalled:
+
+  * docker
+  * kubelet
+  * kubeadm
+
+The terraform based deployments are taking care of fulfilling these requirements.
+
 ## Creating a cluster
 
 Go to any directory in your machine, e.g. `~/clusters`. From there, execute:
@@ -129,3 +137,16 @@ caaspctl node remove second-master
 This project also comes with a kubectl plugin that has the same layout as `caaspctl`. You can
 call to the same commands presented in `caaspctl` as `kubectl caasp` when installing the
 `kubectl-caasp` binary in your path.
+
+The purpose of the tool is to provide a quick way to see if nodes have pending
+upgrades. The tool is currently returning fake data.
+
+```
+$ kubectl caasp --kubeconfig admin.conf nodes                                                                                                                                 1 ↵
+NAME      OS-IMAGE             KERNEL-VERSION                CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES
+master0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
+master1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
+master2   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
+worker0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
+worker1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   cri-o://1.13.0      <none>        <none>
+```
