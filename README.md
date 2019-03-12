@@ -142,7 +142,7 @@ The purpose of the tool is to provide a quick way to see if nodes have pending
 upgrades. The tool is currently returning fake data.
 
 ```
-$ kubectl caasp --kubeconfig admin.conf nodes                                                                                                                                 1 ↵
+$ kubectl caasp cluster status
 NAME      OS-IMAGE             KERNEL-VERSION                CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES
 master0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
 master1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
