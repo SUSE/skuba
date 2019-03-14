@@ -7,7 +7,11 @@ Tool to manage the full lifecycle of a cluster.
 The required infrastructure for deploying CaaSP needs to exist beforehand, it's
 required for you to have SSH access to these machines from the machine that you
 are running `caaspctl` from. `caaspctl` requires you to have added your SSH
-keys to the SSH agent on this machine.
+keys to the SSH agent on this machine, e.g:
+
+```sh
+ssh-add ~/.ssh/id_rsa
+```
 
 If you want to perform an HA deployment you also need to set up a load balancer,
 depending on your needs this setup can be as advanced as required. Please, refer
