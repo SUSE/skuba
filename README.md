@@ -21,6 +21,16 @@ The target nodes must have some packages already preinstalled:
 
 The terraform based deployments are taking care of fulfilling these requirements.
 
+## Installation
+
+```sh
+mkdir -p $GOPATH/src/suse.com
+cd $GOPATH/src/suse.com
+git clone https://gitlab.suse.de/avant-garde/caaspctl
+cd caaspctl
+make
+```
+
 ## Creating a cluster
 
 Go to any directory in your machine, e.g. `~/clusters`. From there, execute:
