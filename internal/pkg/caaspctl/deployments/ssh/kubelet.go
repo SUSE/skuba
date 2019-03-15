@@ -30,7 +30,10 @@ func init() {
 
 func kubeletConfigure() Runner {
 	return func(t *Target, data interface{}) error {
-		osRelease, _ := t.target.OSRelease()
+		osRelease, err := t.target.OSRelease()
+		if err != nil {
+			return err
+		}
 		if strings.Contains(osRelease["ID_LIKE"], "suse") {
 			if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
 				return err
@@ -49,7 +52,7 @@ func kubeletConfigure() Runner {
 				return err
 			}
 		}
-		_, _, err := t.ssh("systemctl", "daemon-reload")
+		_, _, err = t.ssh("systemctl", "daemon-reload")
 		return err
 	}
 }

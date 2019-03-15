@@ -106,7 +106,10 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	osRelease, _ := target.OSRelease()
+	osRelease, err := target.OSRelease()
+	if err != nil {
+		log.Fatalf("could not retrieve OS release information")
+	}
 	if strings.Contains(osRelease["ID_LIKE"], "suse") {
 		joinConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
 	}
