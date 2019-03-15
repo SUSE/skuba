@@ -28,6 +28,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
@@ -74,7 +75,9 @@ func (t *Target) silentSshWithStdin(stdin string, command string, args ...string
 
 func (t *Target) sshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
 	if t.client == nil {
-		t.initClient()
+		if err := t.initClient(); err != nil {
+			return "", "", errors.Wrap(err, "failed to initialize client")
+		}
 	}
 	session, err := t.client.NewSession()
 	if err != nil {
@@ -121,11 +124,11 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	outputChan <- result.String()
 }
 
-func (t *Target) initClient() {
+func (t *Target) initClient() error {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		log.Fatalf("dial: %v", err)
+		return err
 	}
 	agentClient := agent.NewClient(conn)
 	config := &ssh.ClientConfig{
@@ -137,6 +140,7 @@ func (t *Target) initClient() {
 	}
 	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
 	if err != nil {
-		log.Fatalf("dial: %v", err)
+		return err
 	}
+	return nil
 }
