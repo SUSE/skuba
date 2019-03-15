@@ -99,7 +99,7 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	osRelease, err := target.OSRelease()
 	if err != nil {
-		log.Fatal("could not retrieve OS release information")
+		log.Fatalf("could not retrieve OS release information: %v", err)
 	}
 	if strings.Contains(osRelease["ID_LIKE"], "suse") {
 		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
