@@ -45,6 +45,7 @@ func Bootstrap(target *deployments.Target) error {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
 	}
 	addTargetInformationToInitConfiguration(target, initConfiguration)
+	setHyperkubeImageToInitConfiguration(initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -104,6 +105,10 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 	if strings.Contains(osRelease["ID_LIKE"], "suse") {
 		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
 	}
+}
+
+func setHyperkubeImageToInitConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
+	initConfiguration.UseHyperKubeImage = true
 }
 
 func configFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.InitConfiguration, error) {
