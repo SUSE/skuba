@@ -41,7 +41,7 @@ variable "workers" {
 }
 
 variable "stack_name" {
-  default = ""
+  default = "testing"
   description = "identifier to make all your resources unique and avoid clashes with other users of this terraform project"
 }
 
@@ -49,4 +49,9 @@ variable "authorized_keys" {
   type = "list"
   default = []
   description = "ssh keys to inject into all the nodes"
+}
+
+variable "repo_baseurl" {
+  default     = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+  description = "Url of the repository to mount via cloud-init"
 }
