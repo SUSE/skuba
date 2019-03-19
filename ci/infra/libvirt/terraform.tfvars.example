@@ -3,11 +3,11 @@
 #####################
 # A remote host running libvirt
 # eg: an host with more than 8GB or RAM
-libvirt_uri = "qemu+ssh://root@arrakis.green.lan/system"
+libvirt_uri = "qemu:///system"
 
 # A custom pool defined on the libvirt host
 # eg: a pool backed by a fast SSD
-pool = "home_libvirtd"
+pool = "default"
 
 #####################
 # Cluster variables #
@@ -21,3 +21,6 @@ worker_count = 1
 #net_mode = "route"
 
 img_source_url = "openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.113.qcow2"
+
+# define the base url of the repository to use
+# repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"

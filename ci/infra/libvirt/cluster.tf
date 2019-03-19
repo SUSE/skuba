@@ -21,6 +21,11 @@ variable "img_source_url" {
   default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.127.qcow2"
 }
 
+variable "repo_baseurl" {
+  type        = "string"
+  default     = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+}
+
 variable "lb_memory" {
   default     = 2048
   description = "The amount of RAM for a load balancer node"
@@ -201,6 +206,7 @@ data "template_file" "master_cloud_init_user_data" {
   vars = {
     hostname = "${var.name_prefix}master-${count.index}"
     fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
+    repo_baseurl = "${var.repo_baseurl}"
   }
 }
 
@@ -270,6 +276,7 @@ data "template_file" "worker_cloud_init_user_data" {
   vars = {
     hostname = "${var.name_prefix}worker-${count.index}"
     fqdn = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
+    repo_baseurl = "${var.repo_baseurl}"
   }
 }
 
