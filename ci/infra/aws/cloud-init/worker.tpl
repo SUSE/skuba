@@ -15,7 +15,7 @@ ${authorized_keys}
 #  repos:
 #    - id: caasp
 #      name: caasp
-#      baseurl: https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0
+#      baseurl: ${repo_baseurl}
 #      enabled: 1
 #      autorefresh: 1
 #      gpgcheck: 0
@@ -40,7 +40,7 @@ ${authorized_keys}
 # order and actication on EC2. I've already reached out to Robert
 # about that
 runcmd:
-  - /usr/bin/zypper ar -G https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0 caasp
+  - /usr/bin/zypper ar -G ${repo_baseurl} caasp
   - /usr/bin/zypper ref
   - /usr/bin/zypper in -y kubernetes-kubeadm kubernetes-kubelet kubectl cni-plugins -docker -containerd -docker-runc -docker-libnetwork
 
