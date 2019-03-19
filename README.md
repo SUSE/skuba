@@ -2,6 +2,12 @@
 
 Tool to manage the full lifecycle of a cluster.
 
+## Table of Content
+
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [CI](/ci/README.md)
+
 ## Prerequisites
 
 The required infrastructure for deploying CaaSP needs to exist beforehand, it's
