@@ -3,8 +3,13 @@ variable "image_name" {
   description = "Name of the image to use"
 }
 
+variable "repo_baseurl" {
+  default     = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+  description = "Url of the repository to mount via cloud-init"
+}
+
 variable "internal_net" {
-  default = ""
+  default = "testing-net"
   description = "Name of the internal network to be created"
 }
 
@@ -54,7 +59,7 @@ variable "dnsentry" {
 }
 
 variable "stack_name" {
-  default = ""
+  default = "testing"
   description = "identifier to make all your resources unique and avoid clashes with other users of this terraform project"
 }
 

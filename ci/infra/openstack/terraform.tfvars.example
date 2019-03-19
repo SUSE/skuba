@@ -1,7 +1,14 @@
 # Name of the internal network to be created
-internal_net = ""
+internal_net = "testing"
+
 # identifier to make all your resources unique and avoid clashes with other users of this terraform project
-stack_name = ""
+stack_name = "testing"
+
+# define which image to use
+# image_name = ""
+
+# define the base url of the repository to use
+# repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
 
 # ssh keys to inject into all the nodes
 authorized_keys = [

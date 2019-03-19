@@ -22,7 +22,7 @@ zypper:
   repos:
     - id: caasp
       name: caasp
-      baseurl: https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0
+      baseurl: ${repo_baseurl}
       enabled: 1
       autorefresh: 1
       gpgcheck: 0
