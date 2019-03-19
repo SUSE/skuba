@@ -1,0 +1,9 @@
+# Name of the internal network to be created
+internal_net = ""
+# identifier to make all your resources unique and avoid clashes with other users of this terraform project
+stack_name = ""
+
+# ssh keys to inject into all the nodes
+authorized_keys = [
+  ""
+]
