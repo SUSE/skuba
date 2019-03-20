@@ -41,7 +41,7 @@ STAGE_NAMES = (
     "initial_cleanup", "retrieve_code", "retrieve_image", "create_environment",
     "install_netdata", "configure_environment",
     "bootstrap_environment", "setup_testinfra", "run_testinfra",
-    "fetch_kubeconfig", "final_cleanup"
+    "run_conformance_tests", "fetch_kubeconfig", "final_cleanup"
 )
 
 TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
@@ -555,6 +555,9 @@ def caaspctl_node_bootstrap():
         "node bootstrap --user sles --sudo --target "
         "%s my-master" % get_masters_ipaddrs()[0])
 
+    # Copy the kubeconfig to the correct location
+    shp("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster", "cp admin.conf ${WORKSPACE}/kubeconfig")
+
 @step()
 def caaspctl_cluster_status():
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
@@ -614,7 +617,7 @@ def bootstrap_environment():
 @timeout(20)
 @step()
 def fetch_kubeconfig():
-    pass
+    archive_artifacts('${WORKSPACE}', 'kubeconfig')
 
 @step()
 def retrieve_image():
@@ -755,8 +758,25 @@ def add_node():
 @step()
 def run_conformance_tests():
     """Run K8S Conformance Tests"""
-    # TODO
-    pass
+    exe_path = os.path.join(getvar("WORKSPACE"), "caaspctl/ci/tests/K8s")
+    kubeconfig = os.path.join(getvar("WORKSPACE"), "kubeconfig")
+    e2e_cmd = "./sonobuoy_e2e.py --kubeconfig {} --timeout {}".format(kubeconfig, conf.e2e_timeout)
+
+    if conf.e2e_focus is not None:
+        e2e_cmd += " --e2e-focus '{}'".format(conf.e2e_focus)
+    if conf.e2e_skip is not None:
+        e2e_cmd += " --e2e-skip '{}'".format(conf.e2e_skip)
+    if conf.e2e_image is not None:
+        e2e_cmd += " --sonobuoy-image {}".format(conf.e2e_image)
+    if conf.e2e_version is not None:
+        e2e_cmd += " --sonobuoy-version {}".format(conf.e2e_version)
+
+    shp(exe_path, e2e_cmd)
+
+    archive_artifacts(exe_path, "results/**")
+    # TODO: uncomment after junit logging added
+    # junit(exe_path, "results/plugins/e2e/results/*.xml")
+
 
 @step()
 def gather_netdata_metrics():
@@ -894,6 +914,11 @@ def parse_args():
     conf.podname = "default"
     conf.image = replace_vars("file://${WORKSPACE}/automation/downloads/kvm-devel")
     conf.generate_pipeline = False
+    conf.e2e_focus = None
+    conf.e2e_skip = None
+    conf.e2e_timeout = 180
+    conf.e2e_image = None
+    conf.e2e_version = None
 
     if '-h' in sys.argv or '--help' in sys.argv:
         print("Help:\n\n")
