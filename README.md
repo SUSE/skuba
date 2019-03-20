@@ -36,7 +36,7 @@ The terraform based deployments are taking care of fulfilling these requirements
 ```sh
 mkdir -p $GOPATH/src/suse.com
 cd $GOPATH/src/suse.com
-git clone https://gitlab.suse.de/avant-garde/caaspctl
+git clone https://github.com/SUSE/caaspctl.git
 cd caaspctl
 make
 ```
