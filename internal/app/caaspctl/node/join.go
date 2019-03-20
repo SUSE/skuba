@@ -28,11 +28,12 @@ import (
 )
 
 type joinOptions struct {
-	target string
-	user   string
-	sudo   bool
-	port   int
-	role   string
+	target                string
+	user                  string
+	sudo                  bool
+	port                  int
+	role                  string
+	ignorePreflightErrors string
 }
 
 func NewJoinCmd() *cobra.Command {
@@ -60,6 +61,7 @@ func NewJoinCmd() *cobra.Command {
 					joinOptions.user,
 					joinOptions.sudo,
 					joinOptions.port,
+					map[string]interface{}{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
 				),
 			)
 		},
@@ -71,6 +73,7 @@ func NewJoinCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&joinOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().IntVarP(&joinOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")
+	cmd.Flags().StringVarP(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "", "Comma separated list of preflight errors to ignore")
 
 	cmd.MarkFlagRequired("target")
 	cmd.MarkFlagRequired("role")

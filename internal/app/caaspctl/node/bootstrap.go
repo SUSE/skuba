@@ -26,10 +26,11 @@ import (
 )
 
 type bootstrapOptions struct {
-	target string
-	user   string
-	sudo   bool
-	port   int
+	target                string
+	user                  string
+	sudo                  bool
+	port                  int
+	ignorePreflightErrors string
 }
 
 func NewBootstrapCmd() *cobra.Command {
@@ -46,6 +47,7 @@ func NewBootstrapCmd() *cobra.Command {
 					bootstrapOptions.user,
 					bootstrapOptions.sudo,
 					bootstrapOptions.port,
+					map[string]interface{}{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
 				),
 			)
 			if err != nil {
@@ -59,6 +61,7 @@ func NewBootstrapCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&bootstrapOptions.user, "user", "u", "root", "User identity used to connect to target")
 	cmd.Flags().IntVarP(&bootstrapOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().BoolVarP(&bootstrapOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
+	cmd.Flags().StringVarP(&bootstrapOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "", "Comma separated list of preflight errors to ignore")
 
 	cmd.MarkFlagRequired("target")
 

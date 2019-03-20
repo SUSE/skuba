@@ -43,7 +43,13 @@ func kubeadmInit() Runner {
 		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
 			return err
 		}
-		_, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print")
+
+		ignorePreflightErrors := ""
+		ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
+		if len(ignorePreflightErrorsVal) > 0 {
+			ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
+		}
+		_, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print", ignorePreflightErrors)
 		return err
 	}
 }
@@ -66,7 +72,12 @@ func kubeadmJoin() Runner {
 		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
 			return err
 		}
-		_, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf")
+		ignorePreflightErrors := ""
+		ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
+		if len(ignorePreflightErrorsVal) > 0 {
+			ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
+		}
+		_, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf", ignorePreflightErrors)
 		return err
 	}
 }
