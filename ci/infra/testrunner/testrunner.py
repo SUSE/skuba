@@ -331,7 +331,7 @@ def boot_openstack():
             " terraform plan"
             " -var image_name='openSUSE-Leap-15.0-OpenStack.x86_64'"
             " -var repo_baseurl='https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0'"
-            " -var internal_net=containers-ci" + keyvar +
+            " -var internal_net=${JOB_NAME}-${BUILD_NUMBER}" + keyvar +
             " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}"
             " -out ${WORKSPACE}/tfout"
         )
