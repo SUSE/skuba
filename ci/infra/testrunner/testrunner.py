@@ -10,7 +10,6 @@ from functools import wraps
 import json
 import os
 import re
-import socket
 import subprocess
 import sys
 import time
@@ -33,10 +32,9 @@ Requires root privileges.
 
 """
 
-# Please flag requirements for packages with:
-#    #requirepkg <packagename>
-#
-# ...and credentials and other stuff with:  #require
+# Please flag requirements for packages with: #requirepkg <packagename>
+# Env vars with #requireenv
+# ...and other stuff with:  #require
 
 STAGE_NAMES = (
     "info", "github_collaborator_check",
@@ -56,9 +54,6 @@ env_defaults = dict(
     WORKSPACE=os.path.join(os.getcwd(), "workspace"),
     BMCONF="error-bare-metal-config-file-not-set",
 )
-
-OPENSTACK_TFSTATES_HOST = '10.84.43.5' # caasp-net-01.caasp.suse.net
-OPENSTACK_TFSTATES_DIR = '/srv/openstack-terraform-states'
 
 # global conf
 conf = None
@@ -95,6 +90,8 @@ def replace_vars(s):
 
 # TODO: Replacing Jenkins variables like ${WORKSPACE} is a temporary hack
 # to ease the migration from groovy.
+
+# TODO: reimplement dry run
 
 def sh(cmd, env=None):
     """emulate Jenkins `sh`"""
@@ -174,8 +171,6 @@ def info():
     sh('ip a')
     sh('ip r')
     sh('cat /etc/resolv.conf')
-    #def response = httpRequest(url: 'http://169.254.169.254/latest/meta-data/public-ipv4')
-    #echo "Public IPv4: ${response.content}"<Paste>
 
 
 @timeout(125)
@@ -186,22 +181,8 @@ def initial_cleanup():
     #create_workspace_dir()
     sh('mkdir -p ${WORKSPACE}/logs')
     sh('chmod a+x ${WORKSPACE}')
-    if conf.stack_type == 'bare-metal':
-        return
+    # TODO: implement cleanups for openstack / vsphere etc
 
-    # sh('virsh net-undefine caasp-dev-net || : ')
-    # sh('virsh net-destroy caasp-dev-net || : ')
-    # sh('virsh net-undefine net || : ')
-    # sh('virsh net-destroy net || : ')
-    # sh('for i in $(virsh list --all --name);do echo $i;virsh destroy $i || : ;done')
-    # sh('for i in $(virsh list --all --name);do echo $i;virsh undefine $i;done')
-    # sh('for fn in $(virsh vol-list default|awk \'/var/ {print $2}\'); do echo $fn; virsh vol-delete $fn ; done')
-    # sh('virsh list --all')
-    # sh('virsh net-list --all')
-    # sh('virsh pool-list --all')
-    # sh('virsh vol-list default')
-    # sh('docker rm -f $(docker ps -a -q) || :')
-    # sh('docker system prune --all --force --volumes || :')
 
 @timeout(25)
 @step()
@@ -211,10 +192,7 @@ def clone_repo(provider, project, reponame, branch="", ignorePullRequest=""):
         token = os.getenv('GITHUB_TOKEN')
     else:
         provider = "gitlab.suse.de"
-        # different token syntax than github
-        #token = "gitlab-ci-token:" + os.getenv('GITLAB_TOKEN')
-        # FIXME temporary throwaway token
-        token = "gitlab+deploy-token-6:LrWMhpGED4egqf9JX7Pi"
+
     cmd = "git clone --depth 1 https://{}@{}/{}/{}".format(
         token, provider, project, reponame)
     # the token is masked out by Jenkins
@@ -314,56 +292,22 @@ def create_tfout_from_environment_json():
         json.dump(tfout, f, sort_keys=True, indent=2)
     print("Wrote %s" % fn)
 
-@step()
-def fetch_stored_ftstate(run_name):
-    cmd = ["ssh", OPENSTACK_TFSTATES_HOST, "cat",
-        os.path.join(OPENSTACK_TFSTATES_DIR, run_name)]
-    print(cmd)
-    o = subprocess.check_output(cmd, stderr=sys.stdout.buffer)
-    print(o)
-
-def probe_ssh_port(ipaddr):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.settimeout(0.500)
-    try:
-        s.connect((ipaddr, 22))
-        s.close()
-        return 'open'
-    except socket.timeout:
-        s.close()
-        return 'timeout'
-    except Exception as e:
-        s.close()
-        if e.errno == 111:
-            return 'closed'
-        return str(e)
-
-@timeout(600)
-@step()
-def wait_for_ssh(ipaddrs):
-    """Wait for SSH to be available"""
-    for ipa in ipaddrs:
-        status = None
-        while status != 'open':
-            new_status = probe_ssh_port(ipa)
-            if new_status != status:
-                status = new_status
-                print("SSH on {} is now: {}".format(ipa, status))
-                if status == 'open':
-                      continue
-            time.sleep(10)
 
 @step()
 def fetch_openstack_terraform_output():
     shp("infra/openstack", "source ${OPENRC}; "
         "terraform output -json > ${WORKSPACE}/tfout.json")
 
+def wait_for_packages(ipaddrs, package_names):
+    key_fn = locate_id_shared()
+    time.sleep(300)
+    return # TODO
+
 @step()
-def wait_for_ssh_openstack():
-    """Wait for hosts to be available"""
+def wait_for_kube_package_openstack():
+    """Wait for hosts to be available and have kube installed"""
     ipaddrs = get_masters_ipaddrs() + get_workers_ipaddrs()
-    wait_for_ssh(ipaddrs)
+    wait_for_packages(ipaddrs, ["kubernetes-kubelet"])
 
 
 @step()
@@ -373,9 +317,7 @@ def boot_openstack():
     # Implement a simple state machine to handle tfstate files
     # and prevent leaving around "forgotten" stacks
     print("Test SSH")
-    #fetch_stored_ftstate(run_name)
 
-    #FIXME
     fn = locate_id_shared() + ".pub"
     with open(fn) as f:
         shared_pubkey = f.read().strip()
@@ -418,17 +360,7 @@ def print_ipaddr_summary():
 def create_environment():
     """Create Environment"""
     if conf.stack_type == 'caasp-kvm':
-        raise NotImplementedError
-        # TODO
-        #shp("automation/caasp-kvm",
-        #    "./caasp-kvm -L ${netlocation} "
-        #    " --build -m ${master_count} -w ${worker_count} "
-        #    "--image ${image}"
-        #    " --admin-ram ${admin_ram} --admin-cpu ${admin_cpu}"
-        #    " --master-ram ${master_ram} --master-cpu ${master_cpu}"
-        #    " --worker-ram ${worker_ram} --worker-cpu ${worker_cpu}"
-        #)
-        #sh("cp ${WORKSPACE}/automation/caasp-kvm/environment.json ${WORKSPACE}/")
+        raise NotImplementedError # TODO
 
     elif conf.stack_type == 'openstack-terraform':
         boot_openstack()
@@ -443,7 +375,8 @@ def create_environment():
         bare_metal_cloud_init()
 
     elif conf.stack_type == 'vmware-terraform':
-        #require VSPHERE_USER VSPHERE_PASSWORD
+        #requireenv VSPHERE_USER
+        #requireenv VSPHERE_PASSWORD
         shp("vmware", "terraform init")
         shp("vmware",
             "terraform apply -auto-approve"
