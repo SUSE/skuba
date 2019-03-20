@@ -1,0 +1,4 @@
+#!/bin/bash
+set -u
+../../misc-tools/setup-python PyYAML prometheus_client urllib3 robobrowser
+${WORKSPACE:-~}/py3venv/bin/python3 ./deploy_testbed.py $@
