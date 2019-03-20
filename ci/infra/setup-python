@@ -1,0 +1,19 @@
+#!/bin/bash
+set -u
+
+# Install Python3, create virtualenv, set up required packages
+
+type python3 >/dev/null 2>&1 || sudo zypper install --no-confirm python3
+
+echo "Python version:" $(python3 -V)
+
+VENVDIR=${WORKSPACE:-~}/py3venv
+echo "Virtualenv dir:" $VENVDIR
+
+if [ ! -d $VENVDIR ]; then
+  echo "Creating Python 3 virtualenv"
+  python3 -m venv $VENVDIR
+fi
+if [ ! -z "$*" ]; then
+  $VENVDIR/bin/pip3 install $@
+fi
