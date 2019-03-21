@@ -321,17 +321,28 @@ def boot_openstack():
     fn = locate_id_shared() + ".pub"
     with open(fn) as f:
         shared_pubkey = f.read().strip()
-    keyvar = " -var authorized_keys='[\"{}\"]'".format(shared_pubkey)
+
+    image_name = "SLES15-SP1-JeOS-GM"
+    repositories = [
+      {
+        "caasp_devel": "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/SLE_15"
+      },
+      {
+        "sle15_ga": "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+      }
+    ]
+
+    authorized_keys_var = " -var authorized_keys='[\"{}\"]'".format(shared_pubkey)
+    image_name_var = " -var image_name='\"{}\"'".format(image_name)
+    repositories_var = " -var repositories='[\"{}\"]'".format(repositories)
 
     print("Init terraform")
     shp("infra/openstack", "terraform init")
     for retry in range(1, 5):
         print("Run terraform plan - execution n. %d" % retry)
         shp("infra/openstack", "source ${OPENRC};"
-            " terraform plan"
-            " -var image_name='openSUSE-Leap-15.0-OpenStack.x86_64'"
-            " -var repo_baseurl='https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0'"
-            " -var internal_net=${JOB_NAME}-${BUILD_NUMBER}" + keyvar +
+            " terraform plan" + repositories_var + image_name_var +
+            " -var internal_net=${JOB_NAME}-${BUILD_NUMBER}" + authorized_keys_var +
             " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}"
             " -out ${WORKSPACE}/tfout"
         )
