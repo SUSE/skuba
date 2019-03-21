@@ -7,8 +7,12 @@ stack_name = "testing"
 # define which image to use
 # image_name = ""
 
-# define the base url of the repository to use
-# repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+# define the repositories to use
+# repositories = [
+#   {
+#     caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+#   }
+# ]
 
 # ssh keys to inject into all the nodes
 authorized_keys = [
