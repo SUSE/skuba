@@ -1,9 +1,19 @@
+data "template_file" "worker_repositories" {
+  template = "${file("cloud-init/repository.tpl")}"
+  count    = "${length(var.repositories)}"
+
+  vars {
+    repository_url  = "${element(values(var.repositories[count.index]), 0)}"
+    repository_name = "${element(keys(var.repositories[count.index]), 0)}"
+  }
+}
+
 data "template_file" "worker-cloud-init" {
   template = "${file("cloud-init/worker.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repo_baseurl = "${var.repo_baseurl}"
+    repositories = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
   }
 }
 
