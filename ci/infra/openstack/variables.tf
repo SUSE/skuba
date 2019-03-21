@@ -3,9 +3,14 @@ variable "image_name" {
   description = "Name of the image to use"
 }
 
-variable "repo_baseurl" {
-  default     = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
-  description = "Url of the repository to mount via cloud-init"
+variable "repositories" {
+  type        = "list"
+  default     = [
+    {
+      caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+    }
+  ]
+  description = "Urls of the repositories to mount via cloud-init"
 }
 
 variable "internal_net" {

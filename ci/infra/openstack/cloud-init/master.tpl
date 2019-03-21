@@ -20,12 +20,7 @@ ${authorized_keys}
 # need to disable gpg checks because the cloud image has an untrusted repo
 zypper:
   repos:
-    - id: caasp
-      name: caasp
-      baseurl: ${repo_baseurl}
-      enabled: 1
-      autorefresh: 1
-      gpgcheck: 0
+${repositories}
   config:
     gpgcheck: "off"
     solver.onlyRequires: "true"
