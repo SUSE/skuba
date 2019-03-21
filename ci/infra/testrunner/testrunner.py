@@ -344,6 +344,8 @@ def boot_openstack():
             " terraform plan" + repositories_var + image_name_var +
             " -var internal_net=${JOB_NAME}-${BUILD_NUMBER}" + authorized_keys_var +
             " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}"
+            " -var master_size='m1.large'"
+            " -var worker_size='m1.large'"
             " -out ${WORKSPACE}/tfout"
         )
         sh("find ${WORKSPACE}/tfout")
