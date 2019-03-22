@@ -41,9 +41,10 @@ STAGE_NAMES = (
     "initial_cleanup", "retrieve_code", "retrieve_image", "create_environment",
     "install_netdata", "configure_environment",
     "bootstrap_environment", "setup_testinfra", "run_testinfra",
-    "fetch_kubeconfig", "install_helm_client", "run_k9s_pod_tests",
-    "final_cleanup"
+    "fetch_kubeconfig", "final_cleanup"
 )
+
+TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
 
 # Jenkins env vars: BUILD_NUMBER
 
@@ -57,6 +58,9 @@ env_defaults = dict(
 
 # global conf
 conf = None
+
+ssh_opts = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
+    "-oConnectTimeout=10 -oBatchMode=yes "
 
 def getvar(name):
     """Resolve in order:
@@ -87,6 +91,7 @@ def replace_vars(s):
         print(e)
         raise
 
+run_name = replace_vars("${JOB_NAME}-${BUILD_NUMBER}")
 
 # TODO: Replacing Jenkins variables like ${WORKSPACE} is a temporary hack
 # to ease the migration from groovy.
@@ -162,6 +167,31 @@ def step(foo=None):
     return deco
 
 
+def chmod_id_shared():
+    key_fn = locate_id_shared()
+    sh("chmod 400 " + key_fn)
+
+def locate_tfstate(platform):
+    assert platform in ("openstack", "vmware")
+    return os.path.join(replace_vars("${WORKSPACE}"),
+        "caaspctl/ci/infra/{}/terraform.tfstate".format(platform))
+
+@step()
+def fetch_tfstate(platform):
+    chmod_id_shared()
+    fn = locate_tfstate(platform)
+    key_fn = locate_id_shared()
+    sh("scp {} -i {} {}:~/tfstates/{} {}".format(
+        ssh_opts, key_fn, TFSTATE_USER_HOST, run_name, fn))
+
+@step()
+def push_tfstate(platform):
+    chmod_id_shared()
+    key_fn = locate_id_shared()
+    fn = locate_tfstate(platform)
+    sh("scp {} -i {} {} {}:~/tfstates/{}".format(
+        ssh_opts, key_fn, fn, TFSTATE_USER_HOST, run_name))
+
 @timeout(5)
 @step()
 def info():
@@ -181,7 +211,13 @@ def initial_cleanup():
     #create_workspace_dir()
     sh('mkdir -p ${WORKSPACE}/logs')
     sh('chmod a+x ${WORKSPACE}')
-    # TODO: implement cleanups for openstack / vsphere etc
+    # TODO: implement cleanups for vsphere etc
+    if conf.stack_type == 'openstack-terraform':
+        try:
+            fetch_tfstate("openstack")
+            cleanup_openstack_terraform()
+        except:
+            print("Nothing to clean up")
 
 
 @timeout(25)
@@ -195,6 +231,8 @@ def clone_repo(provider, project, reponame, branch="", ignorePullRequest=""):
 
     cmd = "git clone --depth 1 https://{}@{}/{}/{}".format(
         token, provider, project, reponame)
+    if branch:
+        cmd += " -b {}".format(branch)
     # the token is masked out by Jenkins
     print("Checking out repo using: %r" % cmd)
     if conf.dryrun:
@@ -295,13 +333,30 @@ def create_tfout_from_environment_json():
 
 @step()
 def fetch_openstack_terraform_output():
-    shp("infra/openstack", "source ${OPENRC}; "
+    shp("caaspctl/ci/infra/openstack", "source ${OPENRC}; "
         "terraform output -json > ${WORKSPACE}/tfout.json")
 
-def wait_for_packages(ipaddrs, package_names):
+def ssh(ipaddr, cmd):
     key_fn = locate_id_shared()
-    time.sleep(300)
-    return # TODO
+    cmd = "ssh " + ssh_opts + " -i {} sles@{} -- '{}'".format(
+        key_fn, ipaddr, cmd)
+    sh(cmd)
+
+@timeout(600)
+@step()
+def wait_for_packages(ipaddrs, package_names):
+    # TODO remove this when caaspctl will be able to check
+    key_fn = locate_id_shared()
+    cmd = 'zypper se -i kubectl'
+    for ipa in ipaddrs:
+        while True:
+            try:
+                ssh(ipa, cmd)
+                break
+            except:
+                print("{} is not ready yet...".format(ipa))
+                time.sleep(10)
+    print("All hosts are ready")
 
 @step()
 def wait_for_kube_package_openstack():
@@ -309,56 +364,57 @@ def wait_for_kube_package_openstack():
     ipaddrs = get_masters_ipaddrs() + get_workers_ipaddrs()
     wait_for_packages(ipaddrs, ["kubernetes-kubelet"])
 
+def authorized_keys():
+    fn = locate_id_shared() + ".pub"
+    with open(fn) as f:
+        shared_pubkey = f.read().strip()
+    return shared_pubkey
 
 @step()
 def boot_openstack():
-    # TODO make this a global
-    run_name = replace_vars("${JOB_NAME}-${BUILD_NUMBER}")
     # Implement a simple state machine to handle tfstate files
     # and prevent leaving around "forgotten" stacks
     print("Test SSH")
 
-    fn = locate_id_shared() + ".pub"
-    with open(fn) as f:
-        shared_pubkey = f.read().strip()
-
-    image_name = "SLES15-SP1-JeOS-GM"
-    repositories = [
-      {
-        "caasp_devel": "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/SLE_15"
-      },
-      {
-        "sle15_ga": "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
-      }
-    ]
-
-    authorized_keys_var = " -var authorized_keys='[\"{}\"]'".format(shared_pubkey)
-    image_name_var = " -var image_name='\"{}\"'".format(image_name)
-    repositories_var = " -var repositories='[\"{}\"]'".format(repositories)
+    # generate terraform variables file
+    fn = os.path.join(replace_vars("${WORKSPACE}"), "terraform.tfvars")
+    with open(fn, 'w') as f:
+        f.write(generate_tfvars_file())
+    print("Wrote %s" % fn)
 
     print("Init terraform")
-    shp("infra/openstack", "terraform init")
+    shp("caaspctl/ci/infra/openstack", "terraform init")
+    print("------------------------")
+    print()
+    print("To clean up OpenStack manually, run:")
+    print(replace_vars("BUILD_NUMBER=${BUILD_NUMBER} "
+        "JOB_NAME=${JOB_NAME} OPENRC=<replace-me> ./testrunner "
+        "stack-type=openstack-terraform stage=initial_cleanup"))
+    print()
+    print("------------------------")
     for retry in range(1, 5):
         print("Run terraform plan - execution n. %d" % retry)
-        shp("infra/openstack", "source ${OPENRC};"
-            " terraform plan" + repositories_var + image_name_var +
-            " -var internal_net=${JOB_NAME}-${BUILD_NUMBER}" + authorized_keys_var +
-            " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}"
-            " -var master_size='m1.large'"
-            " -var worker_size='m1.large'"
-            " -out ${WORKSPACE}/tfout"
+        shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
+            " terraform plan -var-file='${WORKSPACE}/terraform.tfvars' -out ${WORKSPACE}/tfout"
         )
-        sh("find ${WORKSPACE}/tfout")
         print("Running terraform apply - execution n. %d" % retry)
         try:
-            shp("infra/openstack", "source ${OPENRC};"
+            shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
                 " terraform apply -auto-approve ${WORKSPACE}/tfout")
+            push_tfstate("openstack")
             break
+
         except:
-            print("Failed terraform apply")
+            print("Failed terraform apply n. %d" % retry)
+            # push the tfstate anyways in case something is created
+            push_tfstate("openstack")
+            if retry == 4:
+                print("Last failed attempt, cleaning up and exiting")
+                cleanup_openstack_terraform()
+                raise Exception("Failed OpenStack deploy")
 
     fetch_openstack_terraform_output()
-    wait_for_ssh_openstack()
+    wait_for_kube_package_openstack()
 
 def print_ipaddr_summary():
     print("-" * 20)
@@ -426,9 +482,10 @@ def caaspctl(rundir, cmd):
 def configure_environment():
     """Configure Environment"""
     sh("mkdir -p ${WORKSPACE}/go/src/suse.com")
+    # TODO: better idempotency?
     try:
-        # TODO: better idempotency?
-        sh("mv ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/suse.com/")
+        sh("test -d ${WORKSPACE}/go/src/suse.com/caaspctl || "
+           "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/suse.com/")
     except:
         pass
     print("Building caaspctl")
@@ -477,6 +534,8 @@ def get_workers_ipaddrs():
 
 @step()
 def caaspctl_cluster_init():
+    print("Cleaning up any previous test-cluster dir")
+    sh("rm /go/src/suse.com/caaspctl/test-cluster -rf")
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl",
         "cluster init --control-plane %s test-cluster" %
         get_lb_ipaddr())
@@ -486,20 +545,25 @@ def locate_id_shared():
 
 @step()
 def kubeadm_reset():
-    key_fn = locate_id_shared()
+    # TODO: temporary hack - will be done by caaspctl
     ipaddr = get_masters_ipaddrs()[0]
-    sh("ssh -i {} opensuse@{} -- 'sudo kubeadm reset -f'".format(key_fn, ipaddr))
+    ssh(ipaddr, 'sudo kubeadm reset -f')
 
 @step()
 def caaspctl_node_bootstrap():
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
-        "node bootstrap --user opensuse --sudo --target "
+        "node bootstrap --user sles --sudo --target "
         "%s my-master" % get_masters_ipaddrs()[0])
+
+@step()
+def caaspctl_cluster_status():
+    caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
+        "cluster status")
 
 @step()
 def caaspctl_node_join():
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
-        "node join --role master --user opensuse --sudo --target "
+        "node join --role worker --user sles --sudo --target "
           "$(jq -r '.ip_workers.value[0]' ${WORKSPACE}/tfout.json) my-worker")
 
 def pick_ssh_agent_sock():
@@ -508,6 +572,7 @@ def pick_ssh_agent_sock():
 @timeout(10)
 @step()
 def setup_ssh():
+    chmod_id_shared()
     print("Starting ssh-agent ")
     # use a dedicated agent to minimize stateful components
     sock_fn = pick_ssh_agent_sock()
@@ -519,7 +584,6 @@ def setup_ssh():
     sh("ssh-agent -a %s" % sock_fn)
     print("adding id_shared ssh key")
     key_fn = locate_id_shared()
-    sh("chmod 400 " + key_fn)
     sh("ssh-add " + key_fn, env={"SSH_AUTH_SOCK": sock_fn})
     # TODO kill agent on cleanup
 
@@ -529,8 +593,8 @@ def setup_ssh():
 def bare_metal_cloud_init():
     #requirepkg cloud-init
     # TODO: move cloud-init outside of openstack dir
-    shp("infra/openstack", "cloud-init status")
-    #shp("infra/openstack", "cloud-init collect-logs ")
+    shp("caaspctl/ci/infra/openstack", "cloud-init status")
+    #shp("caaspctl/ci/infra/openstack", "cloud-init collect-logs ")
 
 @timeout(600)
 @step()
@@ -541,12 +605,16 @@ def bootstrap_environment():
     kubeadm_reset()
     caaspctl_node_bootstrap()
     caaspctl_node_join()
+    try:
+        caaspctl_cluster_status()
+    except:
+        pass
 
 
 @timeout(20)
 @step()
 def fetch_kubeconfig():
-    raise NotImplementedError
+    pass
 
 @step()
 def retrieve_image():
@@ -678,34 +746,6 @@ def run_k8s_pod_tests():
     k8s_test_scaleup(env)
     k8s_teardown(env)
 
-@timeout(300)
-@step()
-def install_helm_client():
-    env = {
-        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:~/bin",
-        "KUBECONFIG": replace_vars("${WORKSPACE}/kubeconfig")
-    }
-    sh("env", env=env)
-    sh("kubectl get namespaces", env=env)
-    sh("set -o pipefail; kubectl get namespaces | grep kube-system", env=env)
-    sh("set -o pipefail;"
-       " kubectl get serviceaccounts --namespace kube-system |grep tiller",
-       env=env)
-    sh("set -o pipefail;"
-       " kubectl get pods --namespace kube-system"
-       " --kubeconfig=${WORKSPACE}/kubeconfig  | grep tiller-deploy ",
-       env=env)
-
-    # This whole thing is a hack, we should be using our builds of the
-    # helm client.
-    url = "https://kubernetes-helm.storage.googleapis.com/helm-v2.8.2-linux-amd64.tar.gz"
-    sh("mkdir -p ${WORKSPACE}/tmp")
-    sh("wget -N -O ${WORKSPACE}/tmp/helm.tar.gz " + url)
-    sh("tar --directory ${WORKSPACE}/tmp -xzvf ${WORKSPACE}/tmp/helm.tar.gz")
-    sh("mv ${WORKSPACE}/tmp/linux-amd64/helm ${WORKSPACE}/helm")
-    sh("${WORKSPACE}/helm --home ${WORKSPACE}/.helm init --client-only")
-    sh("${WORKSPACE}/helm --home ${WORKSPACE}/.helm repo update")
-
 @timeout(125)
 @step()
 def add_node():
@@ -719,14 +759,6 @@ def run_conformance_tests():
     pass
 
 @step()
-def transactional_update():
-    """Run transactional update"""
-    for minion in load_env_json()["minions"]:
-        ssh(minion, 'systemctl disable --now transactional-update.timer')
-        ssh(minion, '/usr/sbin/transactional-update cleanup dup salt')
-
-
-@step()
 def gather_netdata_metrics():
     """Gather Netdata metrics"""
     #TODO fix and enable this
@@ -734,21 +766,10 @@ def gather_netdata_metrics():
        " admin --outdir ${WORKSPACE}/netdata/admin"
        " -l ${WORKSPACE}/logs/netdata-capture-admin.log")
 
-@step()
-def ssh(minion, script):
-    sh("ssh -F ${WORKSPACE}/automation/misc-tools/environment.ssh_config" +
-       " {} -- \"{}\"".format(minion["fqdn"], script))
-
-@step()
-def scp(minion, src, dst):
-    sh("scp -F ${WORKSPACE}/automation/misc-tools/environment.ssh_config" +
-       " {}:{} {}".format(minion["fqdn"], src, dst))
-
 @timeout(300)
 @step()
 def _gather_logs(minion):
-    ssh(minion, "supportconfig -b")
-    scp(minion, "/var/log/nts_*.tbz", replace_vars("${WORKSPACE}/logs/"))
+    return
 
 @step()
 def gather_logs():
@@ -760,22 +781,6 @@ def gather_logs():
     # TODO: parallel
     for minion in load_env_json()["minions"]:
         _gather_logs(minion)
-
-    extract_salt_events()
-
-@timeout(10)
-@step()
-def extract_salt_events():
-    """Extract failed Salt events from supportconfig tarballs"""
-    print("Note: tar 'Not found in archive' errors should be ignored")
-    try:
-        shp("${WORKSPACE}/logs",
-            "find . -name 'nts_*.tbz' -print0 | "
-            "xargs -I ! -0 tar --wildcards --strip-components=1 "
-            "-xf ! */salt-events.json */salt-events-summary.txt")
-    except:
-        pass
-
 
 def archive_artifacts(path, glob):
     sh("mkdir -p ${WORKSPACE}/artifacts")
@@ -814,9 +819,9 @@ def cleanup_vmware():
 def swift(args):
     sh("source ${OPENRC}; swift " + args)
 
-@timeout(20)
+@timeout(60)
 def _cleanup_openstack_terraform():
-    shp("infra/openstack", "source ${OPENRC};"
+    shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
         " terraform destroy -auto-approve"
         " -var internal_net=net-${JOB_NAME}-${BUILD_NUMBER}"
         " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}")
@@ -826,6 +831,7 @@ def cleanup_openstack_terraform():
     """Cleanup Openstack (twice)"""
     _cleanup_openstack_terraform()
     _cleanup_openstack_terraform()
+    push_tfstate("openstack")
 
 
 @timeout(40)
@@ -942,7 +948,7 @@ pipeline {
     stages {
         stage('Init') { steps {
             sh "rm ${WORKSPACE}/* -rf"
-            sh "git clone https://${GITHUB_TOKEN}@github.com/SUSE/automation"
+            sh "git clone https://${GITHUB_TOKEN}@github.com/SUSE/caaspctl"
         } }
         %s
    }
@@ -950,7 +956,7 @@ pipeline {
     """
     stage_tpl = """
     stage('%s') { steps {
-        sh "automation/misc-tools/test_kubic/testrunner stage=%s ${PARAMS}"
+        sh "caaspctl/ci/infra/testrunner/testrunner stage=%s ${PARAMS}"
     } }
     """
 
@@ -958,6 +964,39 @@ pipeline {
     for sn in STAGE_NAMES:
         stages_block += stage_tpl % (sn.replace('_', ' ').title(), sn)
     print(tpl % stages_block)
+
+
+def generate_tfvars_file():
+    """Generate terraform tfvars file"""
+    tpl = '''
+internal_net = "{job_name}"
+stack_name = "{job_name}"
+
+provider "openstack" {{
+  user_name   = "container-ci"
+  tenant_name = "container-ci"
+  auth_url    = "https://engcloud.prv.suse.net:5000/v3"
+}}
+
+image_name = "SLES15-SP1-JeOS-GM"
+
+repositories = [
+  {{
+    caasp_devel_sle15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/SLE_15"
+  }},
+  {{
+    sle15_ga = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+  }}
+]
+
+master_size = "m1.large"
+worker_size = "m1.large"
+
+authorized_keys = [
+  "{authorized_keys}"
+]
+    '''.format(job_name=run_name, authorized_keys=authorized_keys())
+    return tpl
 
 
 def main():
