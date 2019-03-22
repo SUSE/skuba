@@ -252,6 +252,7 @@ resource "libvirt_domain" "master" {
     password = "linux"
   }
 
+  depends_on = ["libvirt_domain.lb"]
 }
 
 output "masters" {
@@ -322,6 +323,8 @@ resource "libvirt_domain" "worker" {
     user     = "root"
     password = "linux"
   }
+
+  depends_on = ["libvirt_domain.master"]
 }
 
 output "workers" {
