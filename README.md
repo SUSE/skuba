@@ -38,7 +38,42 @@ mkdir -p $GOPATH/src/suse.com
 cd $GOPATH/src/suse.com
 git clone https://github.com/SUSE/caaspctl.git
 cd caaspctl
+```
+
+### Development
+
+A development build will:
+
+* Pull container images from `registry.suse.de/devel/caasp/4.0/containers/caasp/v4`
+
+To build it, run:
+
+```sh
 make
+```
+
+### Staging
+
+A staging build will:
+
+* Pull container images from `registry.suse.de/suse/sle-15-sp1/update/products/casp40/containers/caasp/v4`
+
+To build it, run:
+
+```sh
+make staging
+```
+
+### Release
+
+A release build will:
+
+* Pull container images from `registry.suse.com/caasp/v4`
+
+To build it, run:
+
+```sh
+make release
 ```
 
 ## Creating a cluster

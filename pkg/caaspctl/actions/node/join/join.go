@@ -32,6 +32,7 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
@@ -103,6 +104,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.CRISocket = "/var/run/crio/crio.sock"
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	osRelease, err := target.OSRelease()
 	if err != nil {
 		log.Fatalf("could not retrieve OS release information: %v", err)
