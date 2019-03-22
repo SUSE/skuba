@@ -6,7 +6,6 @@ locale: en_GB.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# flavio, rafa, salt-ssh keys
 ssh_authorized_keys:
 ${authorized_keys}
 
