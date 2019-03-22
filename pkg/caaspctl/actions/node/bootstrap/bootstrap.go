@@ -64,13 +64,24 @@ func Bootstrap(target *deployments.Target) error {
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
-		"cni.deploy",
 	)
 	if err != nil {
 		return err
 	}
 
-	return downloadSecrets(target)
+	err = downloadSecrets(target)
+	if err != nil {
+		return err
+	}
+
+	/* deploy cni only after downloadSecrets because
+	we need to generate cilium etcd certs */
+	err = target.Apply(nil, "cni.deploy")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func downloadSecrets(target *deployments.Target) error {

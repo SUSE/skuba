@@ -62,8 +62,8 @@ func CniDir() string {
 	return path.Join(AddonsDir(), "cni")
 }
 
-func FlannelManifestFile() string {
-	return path.Join(CniDir(), "flannel.yaml")
+func CiliumManifestFile() string {
+	return path.Join(CniDir(), "cilium.yaml")
 }
 
 func KubeConfigAdminFile() string {

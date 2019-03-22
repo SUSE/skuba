@@ -780,7 +780,7 @@
   revision = "80add6525af10c696792916ee25d651c0f89ff20"
 
 [[projects]]
-  digest = "1:0a35539073df1d9ba2052820167c8a24de9d350bec829a723acf5b1ec9e7aebf"
+  digest = "1:63ddcfd47bb47428664a9ef6d1b4892dcd06eba34840fad9bd042d5ab25f2856"
   name = "k8s.io/kubernetes"
   packages = [
     "cmd/kubeadm/app/apis/kubeadm",
@@ -798,6 +798,7 @@
     "cmd/kubeadm/app/util/config",
     "cmd/kubeadm/app/util/config/strict",
     "cmd/kubeadm/app/util/kubeconfig",
+    "cmd/kubeadm/app/util/pkiutil",
     "pkg/api/legacyscheme",
     "pkg/api/service",
     "pkg/apis/apps",
@@ -946,15 +947,18 @@
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/client-go/kubernetes",
+    "k8s.io/client-go/util/cert",
     "k8s.io/cluster-bootstrap/token/util",
     "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm",
     "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme",
     "k8s.io/kubernetes/cmd/kubeadm/app/constants",
     "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node",
     "k8s.io/kubernetes/cmd/kubeadm/app/util",
+    "k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient",
     "k8s.io/kubernetes/cmd/kubeadm/app/util/config",
     "k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict",
     "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig",
+    "k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil",
     "k8s.io/kubernetes/pkg/kubectl/cmd/get",
   ]
   solver-name = "gps-cdcl"
