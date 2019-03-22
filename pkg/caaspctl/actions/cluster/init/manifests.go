@@ -26,7 +26,7 @@ localAPIEndpoint:
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: v1.13.3
+kubernetesVersion: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_BOOTSTRAP_
 apiServer:
   certSANs:
     - {{.ControlPlane}}
@@ -135,7 +135,7 @@ data:
     {
       "Network": "10.244.0.0/16",
       "Backend": {
-        "Type": "vxlan"
+        "Type": "udp"
       }
     }
 ---
@@ -163,7 +163,7 @@ spec:
       serviceAccountName: flannel
       initContainers:
       - name: install-cni
-        image: quay.io/coreos/flannel:v0.11.0-amd64
+        image: registry.suse.de/devel/casp/head/containers/sle-12-sp3/container/caasp/v4/flannel:0.9.1
         command:
         - cp
         args:
@@ -177,9 +177,9 @@ spec:
           mountPath: /etc/kube-flannel/
       containers:
       - name: kube-flannel
-        image: quay.io/coreos/flannel:v0.11.0-amd64
+        image: registry.suse.de/devel/casp/head/containers/sle-12-sp3/container/caasp/v4/flannel:0.9.1
         command:
-        - /opt/bin/flanneld
+        - /usr/sbin/flanneld
         args:
         - --ip-masq
         - --kube-subnet-mgr
