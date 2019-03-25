@@ -73,3 +73,9 @@ variable "authorized_keys" {
   default = []
   description = "ssh keys to inject into all the nodes"
 }
+
+variable "packages" {
+  type = "list"
+  default = []
+  description = "list of additional packages to install"
+}
