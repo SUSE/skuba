@@ -31,6 +31,7 @@ func newRootCmd(args []string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		caaspctl.NewVersionCmd(),
 		caaspctl.NewClusterCmd(),
 		caaspctl.NewNodeCmd(),
 	)
