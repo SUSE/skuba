@@ -25,7 +25,7 @@ import (
 )
 
 func (t *Target) UploadFileContents(targetPath, contents string) error {
-	log.Printf("uploading local file %q with contents", targetPath)
+	log.Printf("uploading to remote file %q with contents", targetPath)
 	dir, _ := path.Split(targetPath)
 	encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
 	if _, _, err := t.silentSsh("mkdir", "-p", dir); err != nil {
