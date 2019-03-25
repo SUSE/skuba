@@ -37,6 +37,7 @@ packages:
   - "-containerd"
   - "-docker-runc"
   - "-docker-libnetwork"
+${packages}
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
