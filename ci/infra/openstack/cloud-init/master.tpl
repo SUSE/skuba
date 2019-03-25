@@ -13,7 +13,6 @@ chpasswd:
     opensuse:linux
   expire: False
 
-# flavio, rafa, salt-ssh keys
 ssh_authorized_keys:
 ${authorized_keys}
 
