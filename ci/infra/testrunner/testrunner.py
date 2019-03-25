@@ -986,7 +986,14 @@ repositories = [
   }},
   {{
     sle15_ga = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+  }},
+  {{
+    suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
   }}
+]
+
+packages = [
+  "ca-certificates-suse"
 ]
 
 master_size = "m1.large"
