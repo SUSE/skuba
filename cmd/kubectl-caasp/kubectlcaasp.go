@@ -18,6 +18,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -38,6 +39,7 @@ func newRootCmd(args []string) *cobra.Command {
 }
 
 func main() {
+	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
 	cmd := newRootCmd(os.Args[1:])
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
