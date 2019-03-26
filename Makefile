@@ -21,6 +21,14 @@ MANPAGES    := $(MANPAGES_MD:%.md=%)
 docs/man/%.1: docs/man/%.1.md
 	$(GO_MD2MAN) -in $< -out $@
 
+
+# make test t
+
+.PHONY: test-e2e
+test-e2e:
+	./ci/tasks/e2e-tests.py
+
+
 .PHONY: docs
 docs: $(MANPAGES)
 
