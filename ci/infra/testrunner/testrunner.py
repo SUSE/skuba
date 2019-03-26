@@ -238,10 +238,7 @@ def clone_repo(provider, project, reponame, branch="", ignorePullRequest=""):
     if conf.dryrun:
         return
 
-    path = replace_vars("${WORKSPACE}")
-    p = subprocess.call(cmd, cwd=path, stderr=sys.stdout.buffer, shell=True)
-    if p != 0:
-        raise Exception("git clone exited with {}".format(cmd, p))
+    sh(cmd)
 
 @step()
 def retrieve_code():
