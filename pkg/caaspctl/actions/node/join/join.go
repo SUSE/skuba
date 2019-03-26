@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"strings"
 	"time"
@@ -100,9 +99,6 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 func addTargetInformationToJoinConfiguration(target *deployments.Target, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) {
 	if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 		joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-	}
-	if ip := net.ParseIP(target.Target); ip != nil {
-		joinConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename

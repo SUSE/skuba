@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"path"
 	"strings"
@@ -92,9 +91,6 @@ func downloadSecrets(target *deployments.Target) error {
 func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
 	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-	}
-	if ip := net.ParseIP(target.Target); ip != nil {
-		initConfiguration.NodeRegistration.KubeletExtraArgs["node-ip"] = target.Target
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
