@@ -12,13 +12,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
-	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 	pkiutil "k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+
+	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
+)
+
+const (
+	ciliumSecretName = "cilium-secret"
 )
 
 var (
-	ciliumSecretName = "cilium-secret"
-
 	ciliumCertConfig = certutil.Config{
 		CommonName: "cilium-etcd-client",
 		Usages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
@@ -32,7 +35,7 @@ type ciliumConfiguration struct {
 func renderCiliumTemplate(t *Target, file string) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		return fmt.Errorf("could not create file %s\n", file)
+		return fmt.Errorf("could not create file %s", file)
 	}
 
 	template, err := template.New("").Parse(string(content))
@@ -53,7 +56,7 @@ func renderCiliumTemplate(t *Target, file string) error {
 }
 
 func fillCiliumManifestFile(t *Target, file string) error {
-	etcdDir := filepath.Join("./pki/", "etcd")
+	etcdDir := filepath.Join("pki", "etcd")
 	renderCiliumTemplate(t, "addons/cni/cilium.yaml")
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
@@ -78,11 +81,7 @@ func fillCiliumManifestFile(t *Target, file string) error {
 		},
 	}
 
-	client, err := kubeconfigutil.ClientSetFromFile("./admin.conf")
-	if err != nil {
-		return err
-	}
-
+	client := kubernetes.GetAdminClientSet()
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return fmt.Errorf("error when creating cilium secret  %v", err)
 	}

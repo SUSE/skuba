@@ -76,7 +76,9 @@ func Bootstrap(target *deployments.Target) error {
 
 	/* deploy cni only after downloadSecrets because
 	we need to generate cilium etcd certs */
-	err = target.Apply(nil, "cni.deploy")
+	err = target.Apply(nil,
+		"cni.render",
+		"cni.deploy")
 	if err != nil {
 		return err
 	}
