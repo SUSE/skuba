@@ -38,7 +38,7 @@ Requires root privileges.
 
 STAGE_NAMES = (
     "info", "github_collaborator_check",
-    "initial_cleanup", "retrieve_code", "retrieve_image", "create_environment",
+    "initial_cleanup", "retrieve_image", "create_environment",
     "install_netdata", "configure_environment",
     "bootstrap_environment", "grow_environment", "setup_testinfra", "run_testinfra",
     "fetch_kubeconfig", "final_cleanup"
@@ -49,7 +49,6 @@ TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
 # Jenkins env vars: BUILD_NUMBER
 
 env_defaults = dict(
-    CHANGE_TARGET="master",
     HOSTNAME="dev-desktop",
     CHOOSE_CRIO="false",
     WORKSPACE=os.path.join(os.getcwd(), "workspace"),
@@ -218,38 +217,6 @@ def initial_cleanup():
             cleanup_openstack_terraform()
         except:
             print("Nothing to clean up")
-
-
-@timeout(25)
-@step()
-def clone_repo(provider, project, reponame, branch="", ignorePullRequest=""):
-    if provider == "gh":
-        provider = "github.com"
-        token = os.getenv('GITHUB_TOKEN')
-    else:
-        provider = "gitlab.suse.de"
-
-    cmd = "git clone --depth 1 https://{}@{}/{}/{}".format(
-        token, provider, project, reponame)
-    if branch:
-        cmd += " -b {}".format(branch)
-    # the token is masked out by Jenkins
-    print("Checking out repo using: %r" % cmd)
-    if conf.dryrun:
-        return
-
-    sh(cmd)
-
-@step()
-def retrieve_code():
-    """Retrieve Code"""
-    if conf.no_checkout:
-        print("no-checkout was passed: skipping checkout")
-        return
-    branch = getvar('CHANGE_TARGET')
-    ignorePullRequest = False
-    # already checked out by Jenkins?
-    clone_repo("gh", "SUSE", "caaspctl", branch=branch, ignorePullRequest=ignorePullRequest)
 
 
 @timeout(90)
