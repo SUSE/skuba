@@ -40,7 +40,7 @@ STAGE_NAMES = (
     "info", "github_collaborator_check",
     "initial_cleanup", "retrieve_code", "retrieve_image", "create_environment",
     "install_netdata", "configure_environment",
-    "bootstrap_environment", "setup_testinfra", "run_testinfra",
+    "bootstrap_environment", "grow_environment", "setup_testinfra", "run_testinfra",
     "fetch_kubeconfig", "final_cleanup"
 )
 
@@ -553,7 +553,7 @@ def kubeadm_reset():
 def caaspctl_node_bootstrap():
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
         "node bootstrap --user sles --sudo --target "
-        "%s my-master" % get_masters_ipaddrs()[0])
+        "%s my-master-0" % get_masters_ipaddrs()[0])
 
 @step()
 def caaspctl_cluster_status():
@@ -561,10 +561,15 @@ def caaspctl_cluster_status():
         "cluster status")
 
 @step()
-def caaspctl_node_join():
+def caaspctl_node_join(role="worker", nr=0):
+    if role == "master":
+        ip_addr = get_masters_ipaddrs()[nr]
+    else:
+        ip_addr = get_workers_ipaddrs()[nr]
+
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
-        "node join --role worker --user sles --sudo --target "
-          "$(jq -r '.ip_workers.value[0]' ${WORKSPACE}/tfout.json) my-worker")
+        "node join --role {role} --user sles --sudo --target "
+          "{ip} my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr))
 
 def pick_ssh_agent_sock():
     return os.path.join(replace_vars("${WORKSPACE}"), "ssh-agent-sock")
@@ -603,13 +608,26 @@ def bootstrap_environment():
     setup_ssh()
     caaspctl_cluster_init()
     kubeadm_reset()
+    # bootstrap on the first master and then join the first worker. The other workers and masters are joined in `grow_environment`
     caaspctl_node_bootstrap()
-    caaspctl_node_join()
+    caaspctl_node_join(role="worker", nr=0)
     try:
         caaspctl_cluster_status()
     except:
         pass
 
+@timeout(600)
+@step()
+def grow_environment():
+    # master-0 and worker-0 are already in the cluster
+    """Grow Environment by one worker and 2 masters"""
+    caaspctl_node_join(role="worker", nr=1)
+    caaspctl_node_join(role="master", nr=1)
+    caaspctl_node_join(role="master", nr=2)
+    try:
+        caaspctl_cluster_status()
+    except:
+        pass
 
 @timeout(20)
 @step()
@@ -995,6 +1013,9 @@ repositories = [
 packages = [
   "ca-certificates-suse"
 ]
+
+masters = 3
+workers = 2
 
 master_size = "m1.large"
 worker_size = "m1.large"
