@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"suse.com/caaspctl/internal/pkg/caaspctl/cni"
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
@@ -33,7 +34,7 @@ func init() {
 
 func cniRender() Runner {
 	return func(t *Target, data interface{}) error {
-		if err := fillCiliumManifestFile(t, caaspctl.CiliumManifestFile()); err != nil {
+		if err := cni.FillCiliumManifestFile(t.target.Target, caaspctl.CiliumManifestFile()); err != nil {
 			return err
 		}
 		return nil

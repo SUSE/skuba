@@ -1,4 +1,4 @@
-package ssh
+package cni
 
 import (
 	"bytes"
@@ -32,7 +32,7 @@ type ciliumConfiguration struct {
 	EtcdServer string
 }
 
-func renderCiliumTemplate(t *Target, file string) error {
+func renderCiliumTemplate(ciliumConfig ciliumConfiguration, file string) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return fmt.Errorf("could not create file %s", file)
@@ -44,7 +44,7 @@ func renderCiliumTemplate(t *Target, file string) error {
 	}
 
 	var rendered bytes.Buffer
-	if err := template.Execute(&rendered, ciliumConfiguration{EtcdServer: t.target.Target}); err != nil {
+	if err := template.Execute(&rendered, ciliumConfig); err != nil {
 		return fmt.Errorf("could not render configuration")
 	}
 
@@ -55,9 +55,10 @@ func renderCiliumTemplate(t *Target, file string) error {
 	return nil
 }
 
-func fillCiliumManifestFile(t *Target, file string) error {
+func FillCiliumManifestFile(target, file string) error {
+	ciliumConfig := ciliumConfiguration{EtcdServer: target}
 	etcdDir := filepath.Join("pki", "etcd")
-	renderCiliumTemplate(t, "addons/cni/cilium.yaml")
+	renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
 		return fmt.Errorf("etcd generation retrieval failed %v", err)
