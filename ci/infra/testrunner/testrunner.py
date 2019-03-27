@@ -934,6 +934,11 @@ pipeline {
         } }
         %s
    }
+   post {
+        unsuccessful {
+            sh "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}"
+        }
+    }
 }
     """
     stage_tpl = """
