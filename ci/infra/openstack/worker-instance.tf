@@ -63,3 +63,19 @@ resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
   floating_ip = "${element(openstack_networking_floatingip_v2.worker_ext.*.address, count.index)}"
   instance_id = "${element(openstack_compute_instance_v2.worker.*.id, count.index)}"
 }
+
+resource "null_resource" "worker_wait_cloudinit" {
+  count = "${var.workers}"
+  connection {
+    host     = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
+    user     = "${var.username}"
+    password = "linux"
+    type     = "ssh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait"
+    ]
+  }
+}
