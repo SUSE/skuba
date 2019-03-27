@@ -10,7 +10,7 @@ timezone: Etc/UTC
 chpasswd:
   list: |
     root:linux
-    opensuse:linux
+    ${username}:linux
   expire: False
 
 ssh_authorized_keys:
