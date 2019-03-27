@@ -47,7 +47,7 @@ data "template_file" "lb_cloud_init_user_data" {
     hostname = "${var.name_prefix}lb-${count.index}"
     fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
-    authorized_keys = "${var.authorized_keys}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
 }
 
@@ -93,9 +93,6 @@ resource "libvirt_domain" "lb" {
   }
 }
 
-output "ip_lb" {
-  value = "${libvirt_domain.lb.network_interface.0.addresses[0]}"
-}
 
 #####################
 ### Cluster masters #
@@ -116,7 +113,7 @@ data "template_file" "master_cloud_init_user_data" {
     hostname = "${var.name_prefix}master-${count.index}"
     fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
-    authorized_keys = "${var.authorized_keys}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
 }
 
@@ -164,10 +161,6 @@ resource "libvirt_domain" "master" {
 
 }
 
-output "masters" {
-  value = ["${libvirt_domain.master.*.network_interface.0.addresses[0]}"]
-}
-
 ####################
 ## Cluster workers #
 ####################
@@ -187,7 +180,7 @@ data "template_file" "worker_cloud_init_user_data" {
     hostname = "${var.name_prefix}worker-${count.index}"
     fqdn = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
-    authorized_keys = "${var.authorized_keys}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
 }
 
@@ -235,6 +228,3 @@ resource "libvirt_domain" "worker" {
   }
 }
 
-output "workers" {
-  value = ["${libvirt_domain.worker.*.network_interface.0.addresses[0]}"]
-}

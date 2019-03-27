@@ -92,7 +92,7 @@ variable "network" {
 }
 
 variable "authorized_keys" {
-  type = "string"
-  default = "- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyuJPNE3NxGd7nV1nLTTB2z2a98dbkLc0aTjW7Wc151g9NWxiFNlvcnXKOlryXUDGSoNwnkFJ3ji/6B0rViDnkT1QCtzIwZJa2ZrTc2xjUKlnQeQEAsMnTybNrbtRb0dz9VPGxk+Ygn1krz3vbAyHNnTFTsLo5eoKJ+9S3vJ34d8p7+0O2Cxu9ZE5r3AJzuN/V8zea7rHZzpohWTRElAAR8plYWYJYkhvfLgGwqKgSFzTeEsIoiHLjdSNL3GFS6pDFeq6Eq92QLglDRIa1eYpFEwPiP2ItoJXWhNeZKR82WnehTs5pRwOWtD8QH5T2dlAIUiHZsaAQKrGqv2JKsXOh dario@dario-local"
+  type = "list"
+  default = []
   description = "ssh keys to inject into all the nodes"
 }
