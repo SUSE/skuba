@@ -47,6 +47,7 @@ data "template_file" "lb_cloud_init_user_data" {
     hostname = "${var.name_prefix}lb-${count.index}"
     fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
+    authorized_keys = "${var.authorized_keys}"
   }
 }
 
@@ -115,6 +116,7 @@ data "template_file" "master_cloud_init_user_data" {
     hostname = "${var.name_prefix}master-${count.index}"
     fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
+    authorized_keys = "${var.authorized_keys}"
   }
 }
 
@@ -185,6 +187,7 @@ data "template_file" "worker_cloud_init_user_data" {
     hostname = "${var.name_prefix}worker-${count.index}"
     fqdn = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
+    authorized_keys = "${var.authorized_keys}"
   }
 }
 

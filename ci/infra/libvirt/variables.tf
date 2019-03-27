@@ -8,7 +8,7 @@ variable "libvirt_uri" {
 }
 
 variable "pool" {
-  default     = "home_libvirtd"
+  default     = "default"
   description = "pool to be used to store all the volumes"
 }
 
@@ -16,9 +16,10 @@ variable "pool" {
 # Cluster variables #
 #####################
 
+## fixme: see issue https://github.com/SUSE/avant-garde/issues/91
 variable "img_source_url" {
   type        = "string"
-  default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.127.qcow2"
+  default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.136.qcow2"
 }
 
 variable "repo_baseurl" {
@@ -91,7 +92,7 @@ variable "network" {
 }
 
 variable "authorized_keys" {
-  type = "list"
-  default = []
+  type = "string"
+  default = "- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCyuJPNE3NxGd7nV1nLTTB2z2a98dbkLc0aTjW7Wc151g9NWxiFNlvcnXKOlryXUDGSoNwnkFJ3ji/6B0rViDnkT1QCtzIwZJa2ZrTc2xjUKlnQeQEAsMnTybNrbtRb0dz9VPGxk+Ygn1krz3vbAyHNnTFTsLo5eoKJ+9S3vJ34d8p7+0O2Cxu9ZE5r3AJzuN/V8zea7rHZzpohWTRElAAR8plYWYJYkhvfLgGwqKgSFzTeEsIoiHLjdSNL3GFS6pDFeq6Eq92QLglDRIa1eYpFEwPiP2ItoJXWhNeZKR82WnehTs5pRwOWtD8QH5T2dlAIUiHZsaAQKrGqv2JKsXOh dario@dario-local"
   description = "ssh keys to inject into all the nodes"
 }
