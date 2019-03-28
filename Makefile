@@ -23,3 +23,9 @@ docs/man/%.1: docs/man/%.1.md
 
 .PHONY: docs
 docs: $(MANPAGES)
+
+.PHONY: test-e2e
+test-e2e:
+	echo "FAKING TESTS"
+	uptime
+	echo "TEST-DONE"
