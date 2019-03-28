@@ -19,6 +19,8 @@ package ssh
 
 import (
 	"log"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -32,7 +34,7 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 		log.Printf("=== applying state %s ===\n", stateName)
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
-				log.Printf("=== failed to apply state %s: %v ===\n", stateName, err)
+				return errors.Errorf("failed to apply state %s: %v", stateName, err)
 			} else {
 				log.Printf("=== state %s applied successfully ===\n", stateName)
 			}

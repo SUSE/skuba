@@ -39,24 +39,24 @@ type InitConfiguration struct {
 // FIXME: error handling with `github.com/pkg/errors`; return errors
 func Init(initConfiguration InitConfiguration) {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
-		log.Fatalf("Error: cluster configuration directory %q already exists\n", initConfiguration.ClusterName)
+		log.Fatalf("cluster configuration directory %q already exists\n", initConfiguration.ClusterName)
 	}
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
-		log.Fatalf("Error: could not create cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		log.Fatalf("could not create cluster directory %q: %v\n", initConfiguration.ClusterName, err)
 	}
 	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
-		log.Fatalf("Error: could not change to cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		log.Fatalf("could not change to cluster directory %q: %v\n", initConfiguration.ClusterName, err)
 	}
 	for _, file := range scaffoldFiles {
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {
-				log.Fatalf("Error: could not create directory %q: %v\n", filePath, err)
+				log.Fatalf("could not create directory %q: %v\n", filePath, err)
 			}
 		}
 		f, err := os.Create(file.Location)
 		if err != nil {
-			log.Fatalf("Error: could not create file %q: %v\n", file.Location, err)
+			log.Fatalf("could not create file %q: %v\n", file.Location, err)
 		}
 		f.WriteString(renderTemplate(file.Content, initConfiguration))
 		f.Close()
