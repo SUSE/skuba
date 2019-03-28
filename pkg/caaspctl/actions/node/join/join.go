@@ -49,7 +49,7 @@ import (
 //        using the PWD
 // FIXME: error handling with `github.com/pkg/errors`; return errors
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) {
-	statesToApply := []string{"kubelet.configure", "kubelet.enable", "kubeadm.join"}
+	statesToApply := []string{"kernel.load-modules", "kernel.configure-parameters", "cri.start", "kubelet.configure", "kubelet.enable", "kubeadm.join"}
 
 	if joinConfiguration.Role == deployments.MasterRole {
 		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
@@ -101,6 +101,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 		joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename
+	joinConfiguration.NodeRegistration.CRISocket = "/var/run/crio/crio.sock"
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	osRelease, err := target.OSRelease()
 	if err != nil {

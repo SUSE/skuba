@@ -60,6 +60,9 @@ func Bootstrap(target *deployments.Target) error {
 	err = target.Apply(
 		nil,
 		"kubernetes.bootstrap.upload-secrets",
+		"kernel.load-modules",
+		"kernel.configure-parameters",
+		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
@@ -93,6 +96,7 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename
+	initConfiguration.NodeRegistration.CRISocket = "/var/run/crio/crio.sock"
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	osRelease, err := target.OSRelease()
 	if err != nil {
