@@ -302,8 +302,8 @@ def fetch_openstack_terraform_output():
 
 def ssh(ipaddr, cmd):
     key_fn = locate_id_shared()
-    cmd = "ssh " + ssh_opts + " -i {} sles@{} -- '{}'".format(
-        key_fn, ipaddr, cmd)
+    cmd = "ssh " + ssh_opts + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(
+        key_fn=key_fn, ip=ipaddr, cmd=cmd, username=conf.username)
     sh(cmd)
 
 @timeout(600)
@@ -516,8 +516,8 @@ def kubeadm_reset():
 @step()
 def caaspctl_node_bootstrap():
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
-        "node bootstrap --user sles --sudo --target "
-        "%s my-master-0" % get_masters_ipaddrs()[0])
+        "node bootstrap --user {username} --sudo --target "
+        "{ip} my-master-0".format(ip=get_masters_ipaddrs()[0], username=conf.username))
 
 @step()
 def caaspctl_cluster_status():
@@ -532,8 +532,8 @@ def caaspctl_node_join(role="worker", nr=0):
         ip_addr = get_workers_ipaddrs()[nr]
 
     caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
-        "node join --role {role} --user sles --sudo --target "
-          "{ip} my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr))
+        "node join --role {role} --user {username} --sudo --target "
+          "{ip} my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=conf.username))
 
 def pick_ssh_agent_sock():
     return os.path.join(replace_vars("${WORKSPACE}"), "ssh-agent-sock")
@@ -876,6 +876,7 @@ def parse_args():
     conf.podname = "default"
     conf.image = replace_vars("file://${WORKSPACE}/automation/downloads/kvm-devel")
     conf.generate_pipeline = False
+    conf.username = "sles"
 
     if '-h' in sys.argv or '--help' in sys.argv:
         print("Help:\n\n")
@@ -992,7 +993,8 @@ worker_size = "m1.large"
 authorized_keys = [
   "{authorized_keys}"
 ]
-    '''.format(job_name=run_name, authorized_keys=authorized_keys())
+username = "{username}"
+    '''.format(job_name=run_name, authorized_keys=authorized_keys(), username=conf.username)
     return tpl
 
 
