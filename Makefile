@@ -23,3 +23,11 @@ docs/man/%.1: docs/man/%.1.md
 
 .PHONY: docs
 docs: $(MANPAGES)
+
+.PHONY: staging
+staging:
+	$(GO) install $(CAASPCTL_LDFLAGS) -tags staging suse.com/caaspctl/cmd/...
+
+.PHONY: release
+release:
+	$(GO) install $(CAASPCTL_LDFLAGS) -tags release suse.com/caaspctl/cmd/...

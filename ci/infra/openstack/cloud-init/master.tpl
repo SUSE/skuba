@@ -29,14 +29,6 @@ ${repositories}
 # cloud image because they conflict with the kubic- ones that are pulled by
 # the kubernetes packages
 packages:
-  - kubernetes-kubeadm
-  - kubernetes-kubelet
-  - kubectl
-  - cni-plugins
-  - "-docker"
-  - "-containerd"
-  - "-docker-runc"
-  - "-docker-libnetwork"
 ${packages}
 
 bootcmd:
