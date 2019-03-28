@@ -101,6 +101,16 @@ output "ip_lb" {
 ### Cluster masters #
 #####################
 
+data "template_file" "zypper_repositories" {
+  template = "${file("cloud-init/repository.tpl")}"
+  count    = "${length(var.repositories)}"
+
+  vars {
+    repository_url  = "${element(values(var.repositories[count.index]), 0)}"
+    repository_name = "${element(keys(var.repositories[count.index]), 0)}"
+  }
+}
+
 resource "libvirt_volume" "master" {
   name           = "${var.name_prefix}master_${count.index}.qcow2"
   pool           = "${var.pool}"
@@ -113,10 +123,11 @@ data "template_file" "master_cloud_init_user_data" {
   count    = "${var.master_count}"
   template = "${file("cloud-init/master.cfg.tpl")}"
   vars = {
-    hostname = "${var.name_prefix}master-${count.index}"
-    fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
-    repo_baseurl = "${var.repo_baseurl}"
+    hostname        = "${var.name_prefix}master-${count.index}"
+    fqdn            = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
+    packages        = "${join("\n", formatlist("  - %s", var.packages))}"
   }
 
   depends_on = ["libvirt_domain.lb"]
@@ -187,10 +198,11 @@ data "template_file" "worker_cloud_init_user_data" {
   count    = "${var.worker_count}"
   template = "${file("cloud-init/worker.cfg.tpl")}"
   vars = {
-    hostname = "${var.name_prefix}worker-${count.index}"
-    fqdn = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
-    repo_baseurl = "${var.repo_baseurl}"
+    hostname        = "${var.name_prefix}worker-${count.index}"
+    fqdn            = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
+    packages        = "${join("\n", formatlist("  - %s", var.packages))}"
   }
 
   depends_on = ["libvirt_domain.lb"]
