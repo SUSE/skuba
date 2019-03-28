@@ -45,7 +45,7 @@ All the nodes can ping each other and can resolve their FQDN.
 Download the image referenced inside of the checkout of this repository:
 
 ```
-$ wget `grep http cluster.tf | awk {'print $3'} | sed -e 's/"//g'`
+$ wget `grep qcow2 variables.tf | awk {'print $3'} | sed -e 's/"//g'`
 ```
 
 Then `cp terraform.tfvars.example terraform.tfvars` and edit it to reference

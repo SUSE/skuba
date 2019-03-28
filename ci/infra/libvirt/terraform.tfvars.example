@@ -24,3 +24,9 @@ img_source_url = "openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.113.qc
 
 # define the base url of the repository to use
 # repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+
+# Add your key here as you would do for the `~/.ssh/authorized_keys` file. They
+# will be added into this same file for each node.
+#authorized_keys = [
+#  ""
+#]
