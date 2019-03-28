@@ -15,6 +15,7 @@ data "template_file" "worker-cloud-init" {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
     packages = "${join("\n", formatlist("  - %s", var.packages))}"
+    username = "${var.username}"
   }
 }
 
