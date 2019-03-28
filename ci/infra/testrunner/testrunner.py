@@ -282,6 +282,7 @@ def boot_openstack():
 
     print("Init terraform")
     shp("caaspctl/ci/infra/openstack", "terraform init")
+    shp("caaspctl/ci/infra/openstack", "terraform version")
     print("------------------------")
     print()
     print("To clean up OpenStack manually, run:")
@@ -378,6 +379,7 @@ def configure_environment():
            "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/suse.com/")
     except:
         pass
+    gorun("${WORKSPACE}", "go version")
     print("Building caaspctl")
     gorun("${WORKSPACE}/go/src/suse.com/caaspctl", "make")
 
