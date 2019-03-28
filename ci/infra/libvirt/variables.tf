@@ -8,7 +8,7 @@ variable "libvirt_uri" {
 }
 
 variable "pool" {
-  default     = "home_libvirtd"
+  default     = "default"
   description = "pool to be used to store all the volumes"
 }
 
@@ -16,9 +16,10 @@ variable "pool" {
 # Cluster variables #
 #####################
 
+## fixme: see issue https://github.com/SUSE/avant-garde/issues/91
 variable "img_source_url" {
   type        = "string"
-  default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.127.qcow2"
+  default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.136.qcow2"
 }
 
 variable "repo_baseurl" {
