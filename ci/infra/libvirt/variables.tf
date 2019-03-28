@@ -8,7 +8,7 @@ variable "libvirt_uri" {
 }
 
 variable "pool" {
-  default     = "home_libvirtd"
+  default     = "default"
   description = "pool to be used to store all the volumes"
 }
 
