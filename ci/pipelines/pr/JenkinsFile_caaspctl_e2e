@@ -1,0 +1,64 @@
+#!/usr/bin/env groovy
+
+properties([
+    buildDiscarder(logRotator(numToKeepStr: '500', daysToKeepStr: '4')),
+    disableConcurrentBuilds(),
+])
+
+// Prerequisites for making this working:
+// - 1) having gitarro rubygem installed on jenkins worker
+//  Jenkins:
+// - 2) having a jenkins worker labelled "caasp-ci" see agent later on
+
+pipeline {
+  // CONFIGURE ONLY THIS
+  environment {
+     // * github repoc 
+     repository = "SUSE/caaspctl"
+     // * Unique ID/name of tests 
+     context = "demo-caascptl-gitarro"
+     // * Description showed in Github check
+     description = "caaspctl e2e tests" 
+     // * trigger tests based on a file/directory modified by PR github repo, that the pr has changed  filter = "pkg/"
+     // * where to clone the repo
+     git_fs = "${env.WORKSPACE}"      
+     // * which test to run on PR
+     test = "make test-e2e"
+
+    // DON"T CHANGE THIS
+    gitarro_bin = "gitarro.ruby2.5"
+    check = "${gitarro_bin}  -r ${repository}" + 
+                " -c ${context} -d \"${description}\" " +
+                " -t ${test} " +
+                " -g ${git_fs} " +
+                "--https " +
+                "--check --changed_since 3600" 
+
+    runtest = "${gitarro_bin}  -r ${repository}" + 
+                " -c ${context} -d \"${description}\" " +
+                " -g ${git_fs} " +
+                "--https " +
+                " -u ${env.BUILD_URL}" +
+                " -t ${test} " 
+   }
+    agent { label 'caasp-pr' }
+    triggers {  cron('H/5 * * * *')  }
+    stages {
+        stage('Check Pull Request') {
+            steps {
+                 echo 'Check if a PR need a test'
+                 sh "${check} | grep \"TESTREQUIRED=true\" "
+            }
+         }
+        stage('Run tests') {
+            steps {
+                   sh "$runtest}"
+            }
+        }
+    }
+  post { 
+        always {
+            cleanWs()
+        }
+    }
+}
