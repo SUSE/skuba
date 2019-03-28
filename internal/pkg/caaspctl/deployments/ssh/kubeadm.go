@@ -32,17 +32,10 @@ func init() {
 
 func kubeadmInit() Runner {
 	return func(t *Target, data interface{}) error {
-		defer t.ssh("rm", "/tmp/kubeadm.conf")
-
 		if err := t.target.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
-		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {
-			return err
-		}
-		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
-			return err
-		}
+		defer t.ssh("rm", "/tmp/kubeadm.conf")
 
 		ignorePreflightErrors := ""
 		ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
@@ -61,17 +54,11 @@ func kubeadmJoin() Runner {
 			return errors.New("couldn't access join configuration")
 		}
 
-		defer t.ssh("rm", "/tmp/kubeadm.conf")
-
 		if err := t.target.UploadFile(node.ConfigPath(joinConfiguration.Role, t.target), "/tmp/kubeadm.conf"); err != nil {
 			return err
 		}
-		if _, _, err := t.ssh("systemctl", "enable", "--now", "docker"); err != nil {
-			return err
-		}
-		if _, _, err := t.ssh("systemctl", "stop", "kubelet"); err != nil {
-			return err
-		}
+		defer t.ssh("rm", "/tmp/kubeadm.conf")
+
 		ignorePreflightErrors := ""
 		ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
 		if len(ignorePreflightErrorsVal) > 0 {
