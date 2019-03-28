@@ -22,8 +22,17 @@ worker_count = 1
 
 img_source_url = "openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.113.qcow2"
 
-# define the base url of the repository to use
-# repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+# Define the repositories to use.
+#repositories = [
+#  {
+#    caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+#  }
+#]
+
+# Additional packages that you may want to install in the initialization process.
+#packages = [
+#  ""
+#]
 
 # Add your key here as you would do for the `~/.ssh/authorized_keys` file. They
 # will be added into this same file for each node.
