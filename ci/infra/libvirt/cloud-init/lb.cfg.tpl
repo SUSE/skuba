@@ -81,6 +81,9 @@ write_files:
       ${backends}
 
 runcmd:
-  - [ systemctl, enable, haproxy ]
+  # Since we are currently inside of the cloud-init systemd unit, trying to
+  # start another service by either `enable --now` or `start` will create a
+  # deadlock. Instead, we have to use the `--no-block-` flag.
+  - [ systemctl, enable, --now, --no-block, haproxy ]
 
 final_message: "The system is finally up, after $UPTIME seconds"
