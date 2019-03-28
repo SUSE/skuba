@@ -47,6 +47,7 @@ data "template_file" "lb_cloud_init_user_data" {
     hostname = "${var.name_prefix}lb-${count.index}"
     fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
 }
 
@@ -115,7 +116,10 @@ data "template_file" "master_cloud_init_user_data" {
     hostname = "${var.name_prefix}master-${count.index}"
     fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
+
+  depends_on = ["libvirt_domain.lb"]
 }
 
 resource "libvirt_cloudinit_disk" "master" {
@@ -128,11 +132,12 @@ resource "libvirt_cloudinit_disk" "master" {
 
 resource "libvirt_domain" "master" {
   count      = "${var.master_count}"
-  name       = "${var.name_prefix}master_${count.index}"
+  name       = "${var.name_prefix}master-${count.index}"
   memory     = "${var.master_memory}"
   vcpu       = "${var.master_vcpu}"
   cloudinit  = "${element(libvirt_cloudinit_disk.master.*.id, count.index)}"
   metadata   = "master-${count.index}.${var.domain_name},master,${count.index},${var.name_prefix}"
+  depends_on = ["libvirt_domain.lb"]
 
   cpu {
     mode = "host-passthrough"
@@ -185,7 +190,10 @@ data "template_file" "worker_cloud_init_user_data" {
     hostname = "${var.name_prefix}worker-${count.index}"
     fqdn = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     repo_baseurl = "${var.repo_baseurl}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
   }
+
+  depends_on = ["libvirt_domain.lb"]
 }
 
 resource "libvirt_cloudinit_disk" "worker" {
@@ -198,11 +206,12 @@ resource "libvirt_cloudinit_disk" "worker" {
 
 resource "libvirt_domain" "worker" {
   count      = "${var.worker_count}"
-  name       = "${var.name_prefix}worker_${count.index}"
+  name       = "${var.name_prefix}worker-${count.index}"
   memory     = "${var.worker_memory}"
   vcpu       = "${var.worker_vcpu}"
   cloudinit  = "${element(libvirt_cloudinit_disk.worker.*.id, count.index)}"
   metadata   = "worker-${count.index}.${var.domain_name},worker,${count.index},${var.name_prefix}"
+  depends_on = ["libvirt_domain.lb"]
 
   cpu {
     mode = "host-passthrough"
