@@ -933,7 +933,12 @@ pipeline {
             sh "git clone https://${GITHUB_TOKEN}@github.com/SUSE/caaspctl"
         } }
         %s
-   }
+    }
+    post {
+        unsuccessful {
+            sh "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}"
+        }
+    }
 }
     """
     stage_tpl = """
