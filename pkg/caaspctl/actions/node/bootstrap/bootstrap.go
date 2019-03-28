@@ -27,9 +27,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
+	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"suse.com/caaspctl/pkg/caaspctl"
 )
 
@@ -45,6 +47,7 @@ func Bootstrap(target *deployments.Target) error {
 	}
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
+	setContainerImages(initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -60,6 +63,9 @@ func Bootstrap(target *deployments.Target) error {
 	err = target.Apply(
 		nil,
 		"kubernetes.bootstrap.upload-secrets",
+		"kernel.load-modules",
+		"kernel.configure-parameters",
+		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
@@ -93,7 +99,9 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename
+	initConfiguration.NodeRegistration.CRISocket = "/var/run/crio/crio.sock"
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
+	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	osRelease, err := target.OSRelease()
 	if err != nil {
 		log.Fatalf("could not retrieve OS release information: %v", err)
@@ -105,6 +113,21 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 
 func setHyperkubeImageToInitConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
 	initConfiguration.UseHyperKubeImage = true
+}
+
+func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
+	initConfiguration.ImageRepository = caaspctl.ImageRepository
+	initConfiguration.KubernetesVersion = kubernetes.CurrentVersion
+	initConfiguration.Etcd.Local = &kubeadmapi.LocalEtcd{
+		ImageMeta: kubeadmapi.ImageMeta{
+			ImageRepository: caaspctl.ImageRepository,
+			ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.Etcd),
+		},
+	}
+	initConfiguration.DNS.ImageMeta = kubeadmapi.ImageMeta{
+		ImageRepository: caaspctl.ImageRepository,
+		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
+	}
 }
 
 func configFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.InitConfiguration, error) {

@@ -960,20 +960,23 @@ def generate_tfvars_file():
 internal_net = "{job_name}"
 stack_name = "{job_name}"
 
-provider "openstack" {{
-  user_name   = "container-ci"
-  tenant_name = "container-ci"
-  auth_url    = "https://engcloud.prv.suse.net:5000/v3"
-}}
-
 image_name = "SLES15-SP1-JeOS-GM"
 
 repositories = [
   {{
-    caasp_devel_sle15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/SLE_15"
+    caasp_40_devel_sle15sp1 = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/"
   }},
   {{
-    sle15_ga = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+    sle15sp1_pool = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
+  }},
+  {{
+    sle15sp1_update = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
+  }},
+  {{
+    sle15_pool = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+  }},
+  {{
+    sle15_update = "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/"
   }},
   {{
     suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
@@ -981,7 +984,10 @@ repositories = [
 ]
 
 packages = [
-  "ca-certificates-suse"
+  "ca-certificates-suse",
+  "kubernetes-kubeadm",
+  "kubernetes-kubelet",
+  "kubernetes-client"
 ]
 
 masters = 3
