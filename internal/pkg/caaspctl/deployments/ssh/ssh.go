@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
+	"k8s.io/klog"
 	"net"
 	"os"
 	"strings"
@@ -59,8 +59,8 @@ func NewTarget(nodename, target, user string, sudo bool, port int, kubeadmArgs m
 }
 
 func (t *Target) silentSsh(command string, args ...string) (stdout string, stderr string, error error) {
-	log.SetOutput(ioutil.Discard)
-	defer log.SetOutput(os.Stderr)
+	klog.SetOutput(ioutil.Discard)
+	defer klog.SetOutput(os.Stderr)
 	return t.ssh(command, args...)
 }
 
@@ -69,8 +69,8 @@ func (t *Target) ssh(command string, args ...string) (stdout string, stderr stri
 }
 
 func (t *Target) silentSshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
-	log.SetOutput(ioutil.Discard)
-	defer log.SetOutput(os.Stderr)
+	klog.SetOutput(ioutil.Discard)
+	defer klog.SetOutput(os.Stderr)
 	return t.sshWithStdin(stdin, command, args...)
 }
 
@@ -99,7 +99,7 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	if t.sudo {
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
-	log.Printf("running command: %q", finalCommand)
+	klog.Infof("running command: %q", finalCommand)
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
 	}
@@ -120,7 +120,7 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		log.Printf("%s%s\n", description, scanner.Text())
+		klog.Infof("%s%s\n", description, scanner.Text())
 	}
 	outputChan <- result.String()
 }

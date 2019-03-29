@@ -19,10 +19,11 @@ package etcd
 
 import (
 	"fmt"
-	"log"
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+
+	"k8s.io/klog"
 
 	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
@@ -30,19 +31,19 @@ import (
 func RemoveMember(node *v1.Node) error {
 	masterNodes, err := kubernetes.GetMasterNodes()
 	if err != nil {
-		log.Fatalf("could not get the list of master nodes, aborting\n")
+		klog.Fatalf("could not get the list of master nodes, aborting\n")
 		return err
 	}
 
 	// Remove etcd member if target is a master
-	log.Println("removing etcd member from the etcd cluster")
+	klog.Info("removing etcd member from the etcd cluster")
 	for _, masterNode := range masterNodes.Items {
-		log.Printf("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+		klog.Infof("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
 		if err := RemoveMemberFrom(node, &masterNode); err == nil {
-			log.Printf("etcd member for node %s removed from master node %s\n", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
+			klog.Infof("etcd member for node %s removed from master node %s\n", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
 			break
 		} else {
-			log.Printf("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+			klog.Infof("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
 		}
 	}
 
@@ -75,7 +76,7 @@ func removeMemberFromJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
 							fmt.Sprintf("etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member remove $(etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list | grep ', %s,' | cut -d',' -f1)", node.ObjectMeta.Name),
 						},
 						Env: []v1.EnvVar{
-							v1.EnvVar{
+							{
 								Name:  "ETCDCTL_API",
 								Value: "3",
 							},
