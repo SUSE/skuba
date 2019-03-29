@@ -16,6 +16,7 @@ data "template_file" "worker-cloud-init" {
     repositories = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
     packages = "${join("\n", formatlist("  - %s", var.packages))}"
     username = "${var.username}"
+    password = "${var.password}"
   }
 }
 
@@ -69,7 +70,7 @@ resource "null_resource" "worker_wait_cloudinit" {
   connection {
     host     = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
     user     = "${var.username}"
-    password = "linux"
+    password = "${var.password}"
     type     = "ssh"
   }
 
