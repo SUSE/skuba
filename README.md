@@ -44,7 +44,7 @@ cd caaspctl
 
 A development build will:
 
-* Pull container images from `registry.suse.de/devel/caasp/4.0/containers/caasp/v4`
+* Pull container images from `registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4`
 
 To build it, run:
 
