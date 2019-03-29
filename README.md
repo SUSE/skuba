@@ -20,8 +20,7 @@ ssh-add ~/.ssh/id_rsa
 ```
 
 If you want to perform an HA deployment you also need to set up a load balancer,
-depending on your needs this setup can be as advanced as required. Please, refer
-to our Deployment Guide to find out.
+depending on your needs this setup can be as advanced as required.
 
 The target nodes must have some packages already preinstalled:
 
