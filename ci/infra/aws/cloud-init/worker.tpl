@@ -41,6 +41,6 @@ ${authorized_keys}
 runcmd:
   - /usr/bin/zypper ar -G ${repo_baseurl} caasp
   - /usr/bin/zypper ref
-  - /usr/bin/zypper in -y kubernetes-kubeadm kubernetes-kubelet kubectl cni-plugins -docker -containerd -docker-runc -docker-libnetwork
+  - /usr/bin/zypper in -y kubernetes-kubeadm kubernetes-kubelet kubernetes-client cri-o cni-plugins -docker -containerd -docker-runc -docker-libnetwork
 
 final_message: "The system is finally up, after $UPTIME seconds"
