@@ -970,8 +970,8 @@ packages = [
 masters = 3
 workers = 2
 
-master_size = "m1.large"
-worker_size = "m1.large"
+master_size = "caasp.medium"
+worker_size = "caasp.medium"
 
 authorized_keys = [
   "{authorized_keys}"
