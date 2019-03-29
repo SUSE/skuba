@@ -308,10 +308,10 @@ def ssh(ipaddr, cmd):
 
 @timeout(600)
 @step()
-def wait_for_packages(ipaddrs, package_names):
+def wait_for_packages(ipaddrs):
     # TODO remove this when caaspctl will be able to check
     key_fn = locate_id_shared()
-    cmd = 'zypper se -i kubectl'
+    cmd = 'zypper se -i kubernetes-client'
     for ipa in ipaddrs:
         while True:
             try:
@@ -326,7 +326,7 @@ def wait_for_packages(ipaddrs, package_names):
 def wait_for_kube_package_openstack():
     """Wait for hosts to be available and have kube installed"""
     ipaddrs = get_masters_ipaddrs() + get_workers_ipaddrs()
-    wait_for_packages(ipaddrs, ["kubernetes-kubelet"])
+    wait_for_packages(ipaddrs)
 
 def authorized_keys():
     fn = locate_id_shared() + ".pub"
