@@ -18,7 +18,7 @@
 package node
 
 import (
-	"log"
+	"k8s.io/klog"
 
 	"github.com/spf13/cobra"
 
@@ -51,7 +51,7 @@ func NewJoinCmd() *cobra.Command {
 			case "worker":
 				joinConfiguration.Role = deployments.WorkerRole
 			default:
-				log.Fatalf("invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
+				klog.Fatalf("invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
 			}
 
 			node.Join(joinConfiguration,
