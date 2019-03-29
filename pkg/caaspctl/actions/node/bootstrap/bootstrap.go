@@ -99,15 +99,15 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
 	initConfiguration.NodeRegistration.Name = target.Nodename
-	initConfiguration.NodeRegistration.CRISocket = "/var/run/crio/crio.sock"
+	initConfiguration.NodeRegistration.CRISocket = caaspctl.CRISocket
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	osRelease, err := target.OSRelease()
 	if err != nil {
 		log.Fatalf("could not retrieve OS release information: %v", err)
 	}
-	if strings.Contains(osRelease["ID_LIKE"], "suse") {
-		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
+	if strings.Contains(osRelease["ID_LIKE"], caaspctl.SUSEOSID) {
+		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = caaspctl.SUSECNIDir
 	}
 }
 
