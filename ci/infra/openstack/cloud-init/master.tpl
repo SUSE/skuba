@@ -10,7 +10,7 @@ timezone: Etc/UTC
 chpasswd:
   list: |
     root:linux
-    ${username}:linux
+    ${username}:${password}
   expire: False
 
 ssh_authorized_keys:
