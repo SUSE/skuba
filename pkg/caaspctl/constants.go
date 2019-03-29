@@ -24,6 +24,12 @@ import (
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
+const (
+	CRISocket  = "/var/run/crio/crio.sock"
+	SUSEOSID   = "suse"
+	SUSECNIDir = "/usr/lib/cni"
+)
+
 func KubeadmInitConfFile() string {
 	return "kubeadm-init.conf"
 }
