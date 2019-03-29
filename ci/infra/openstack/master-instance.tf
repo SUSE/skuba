@@ -16,6 +16,7 @@ data "template_file" "master-cloud-init" {
     repositories    = "${join("\n", data.template_file.master_repositories.*.rendered)}"
     packages = "${join("\n", formatlist("  - %s", var.packages))}"
     username = "${var.username}"
+    password = "${var.password}"
   }
 }
 
@@ -57,7 +58,7 @@ resource "null_resource" "master_wait_cloudinit" {
   connection {
     host     = "${element(openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip, count.index)}"
     user     = "${var.username}"
-    password = "linux"
+    password = "${var.password}"
     type     = "ssh"
   }
 
