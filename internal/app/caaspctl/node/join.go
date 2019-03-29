@@ -73,7 +73,7 @@ func NewJoinCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&joinOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().IntVarP(&joinOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")
-	cmd.Flags().StringVarP(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "", "Comma separated list of preflight errors to ignore")
+	cmd.Flags().StringVar(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
 
 	cmd.MarkFlagRequired("target")
 	cmd.MarkFlagRequired("role")
