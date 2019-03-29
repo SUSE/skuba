@@ -18,7 +18,7 @@
 package kubeadm
 
 import (
-	"log"
+	"k8s.io/klog"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,16 +34,16 @@ import (
 func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
 	kubeadmConfig, err := kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
-		log.Fatalf("could not retrieve the kubeadm-config configmap to change the apiEndpoints\n")
+		klog.Fatalf("could not retrieve the kubeadm-config configmap to change the apiEndpoints\n")
 	}
 	clusterStatus := &kubeadmapi.ClusterStatus{}
 	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), []byte(kubeadmConfig.Data[kubeadmconstants.ClusterStatusConfigMapKey]), clusterStatus); err != nil {
-		log.Fatalf("could not unmarshal cluster status from kubeadm-config configmap\n")
+		klog.Fatalf("could not unmarshal cluster status from kubeadm-config configmap\n")
 	}
 	delete(clusterStatus.APIEndpoints, node.ObjectMeta.Name)
 	clusterStatusYaml, err := configutil.MarshalKubeadmConfigObject(clusterStatus)
 	if err != nil {
-		log.Fatalf("could not marshal modified cluster status\n")
+		klog.Fatalf("could not marshal modified cluster status\n")
 	}
 	_, err = kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -56,7 +56,7 @@ func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
 		},
 	})
 	if err != nil {
-		log.Fatalf("could not update kubeadm-config configmap\n")
+		klog.Fatalf("could not update kubeadm-config configmap\n")
 	}
 	return nil
 }

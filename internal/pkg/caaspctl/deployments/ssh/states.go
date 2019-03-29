@@ -18,9 +18,8 @@
 package ssh
 
 import (
-	"log"
-
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 )
 
 var (
@@ -31,15 +30,15 @@ type Runner func(t *Target, data interface{}) error
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, stateName := range states {
-		log.Printf("=== applying state %s ===\n", stateName)
+		klog.Infof("=== applying state %s ===\n", stateName)
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
 				return errors.Errorf("failed to apply state %s: %v", stateName, err)
 			} else {
-				log.Printf("=== state %s applied successfully ===\n", stateName)
+				klog.Infof("=== state %s applied successfully ===\n", stateName)
 			}
 		} else {
-			log.Fatalf("state does not exist: %s", stateName)
+			klog.Fatalf("state does not exist: %s", stateName)
 		}
 	}
 	return nil

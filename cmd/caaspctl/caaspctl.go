@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/klog"
+
 	"github.com/spf13/cobra"
 
 	"suse.com/caaspctl/internal/app/caaspctl"
@@ -42,6 +44,7 @@ func newRootCmd(args []string) *cobra.Command {
 
 func main() {
 	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
+	klog.InitFlags(nil)
 	cmd := newRootCmd(os.Args[1:])
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

@@ -20,7 +20,7 @@ package kubernetes
 import (
 	"errors"
 	"fmt"
-	"log"
+	"k8s.io/klog"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -50,13 +50,13 @@ func CreateAndWaitForJob(name string, spec batchv1.JobSpec) error {
 	for i := 0; i < 60; i++ {
 		job, err := GetAdminClientSet().BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 		if err != nil {
-			log.Printf("failed to get status for job %s, continuing...\n", name)
+			klog.Infof("failed to get status for job %s, continuing...\n", name)
 		} else {
 			if job.Status.Active > 0 {
-				log.Printf("job %s is active, waiting...\n", name)
+				klog.Infof("job %s is active, waiting...\n", name)
 			} else {
 				if job.Status.Succeeded > 0 {
-					log.Printf("job %s executed successfully\n", name)
+					klog.Infof("job %s executed successfully\n", name)
 					return nil
 				}
 			}
