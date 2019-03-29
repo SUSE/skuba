@@ -20,10 +20,11 @@ package node
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
+
+	"k8s.io/klog"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
@@ -104,7 +105,7 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	osRelease, err := target.OSRelease()
 	if err != nil {
-		log.Fatalf("could not retrieve OS release information: %v", err)
+		klog.Fatalf("could not retrieve OS release information: %v", err)
 	}
 	if strings.Contains(osRelease["ID_LIKE"], "suse") {
 		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"

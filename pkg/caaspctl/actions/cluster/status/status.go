@@ -18,7 +18,7 @@
 package cluster
 
 import (
-	"log"
+	"k8s.io/klog"
 	"os"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +37,7 @@ func Status() {
 
 	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
-		log.Fatal("could not retrieve node list")
+		klog.Fatal("could not retrieve node list")
 	}
 
 	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates"
@@ -47,7 +47,7 @@ func Status() {
 
 	printer, err := printFlags.ToPrinter()
 	if err != nil {
-		log.Fatal("could not create printer")
+		klog.Fatal("could not create printer")
 	}
 	printer.PrintObj(nodeList, os.Stdout)
 }

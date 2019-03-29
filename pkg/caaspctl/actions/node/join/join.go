@@ -21,10 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"time"
+
+	"k8s.io/klog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -73,17 +74,17 @@ func ConfigPath(role deployments.Role, target *deployments.Target) string {
 
 	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
 	if err != nil {
-		log.Fatalf("error parsing configuration: %v", err)
+		klog.Fatalf("error parsing configuration: %v", err)
 	}
 	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
 	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
 	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
 	if err != nil {
-		log.Fatal("could not marshal configuration")
+		klog.Fatal("could not marshal configuration")
 	}
 
 	if err := ioutil.WriteFile(caaspctl.MachineConfFile(target.Target), finalJoinConfigurationContents, 0600); err != nil {
-		log.Fatal("error writing specific machine configuration")
+		klog.Fatal("error writing specific machine configuration")
 	}
 
 	return caaspctl.MachineConfFile(target.Target)
@@ -107,7 +108,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	osRelease, err := target.OSRelease()
 	if err != nil {
-		log.Fatalf("could not retrieve OS release information: %v", err)
+		klog.Fatalf("could not retrieve OS release information: %v", err)
 	}
 	if strings.Contains(osRelease["ID_LIKE"], "suse") {
 		joinConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = "/usr/lib/cni"
@@ -119,21 +120,21 @@ func createBootstrapToken(target string) string {
 
 	internalCfg, err := kubeadmconfigutil.ConfigFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile(), nil)
 	if err != nil {
-		log.Fatal("could not load init configuration")
+		klog.Fatal("could not load init configuration")
 	}
 
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
-		log.Fatal("could not generate a new boostrap token")
+		klog.Fatal("could not generate a new boostrap token")
 	}
 
 	bootstrapToken, err := kubeadmapi.NewBootstrapTokenString(bootstrapTokenRaw)
 	if err != nil {
-		log.Fatal("could not generate a new boostrap token")
+		klog.Fatal("could not generate a new boostrap token")
 	}
 
 	internalCfg.BootstrapTokens = []kubeadmapi.BootstrapToken{
-		kubeadmapi.BootstrapToken{
+		{
 			Token:       bootstrapToken,
 			Description: fmt.Sprintf("Bootstrap token for %s machine join", target),
 			TTL: &metav1.Duration{
@@ -145,7 +146,7 @@ func createBootstrapToken(target string) string {
 	}
 
 	if err := kubeadmtokenphase.CreateNewTokens(client, internalCfg.BootstrapTokens); err != nil {
-		log.Fatal("could not create new bootstrap token")
+		klog.Fatal("could not create new bootstrap token")
 	}
 
 	return bootstrapTokenRaw

@@ -18,7 +18,7 @@
 package node
 
 import (
-	"log"
+	"k8s.io/klog"
 
 	"github.com/spf13/cobra"
 	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
@@ -51,7 +51,7 @@ func NewBootstrapCmd() *cobra.Command {
 				),
 			)
 			if err != nil {
-				log.Fatal(err)
+				klog.Fatal(err)
 			}
 		},
 		Args: cobra.ExactArgs(1),

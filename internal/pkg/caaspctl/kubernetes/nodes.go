@@ -19,7 +19,7 @@ package kubernetes
 
 import (
 	"fmt"
-	"log"
+	"k8s.io/klog"
 	"os/exec"
 
 	v1 "k8s.io/api/core/v1"
@@ -47,10 +47,10 @@ func DrainNode(node *v1.Node) error {
 		"drain", "--delete-local-data=true", "--force=true", "--ignore-daemonsets=true", node.ObjectMeta.Name)
 
 	if err := cmd.Run(); err != nil {
-		log.Printf("could not drain node %s, aborting (use --force if you want to ignore this error)\n", node.ObjectMeta.Name)
+		klog.Infof("could not drain node %s, aborting (use --force if you want to ignore this error)\n", node.ObjectMeta.Name)
 		return err
 	} else {
-		log.Printf("node %s correctly drained\n", node.ObjectMeta.Name)
+		klog.Infof("node %s correctly drained\n", node.ObjectMeta.Name)
 	}
 
 	return nil

@@ -19,10 +19,11 @@ package cluster
 
 import (
 	"bytes"
-	"log"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"k8s.io/klog"
 )
 
 type InitConfiguration struct {
@@ -39,24 +40,24 @@ type InitConfiguration struct {
 // FIXME: error handling with `github.com/pkg/errors`; return errors
 func Init(initConfiguration InitConfiguration) {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
-		log.Fatalf("cluster configuration directory %q already exists\n", initConfiguration.ClusterName)
+		klog.Fatalf("cluster configuration directory %q already exists\n", initConfiguration.ClusterName)
 	}
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
-		log.Fatalf("could not create cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		klog.Fatalf("could not create cluster directory %q: %v\n", initConfiguration.ClusterName, err)
 	}
 	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
-		log.Fatalf("could not change to cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		klog.Fatalf("could not change to cluster directory %q: %v\n", initConfiguration.ClusterName, err)
 	}
 	for _, file := range scaffoldFiles {
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {
-				log.Fatalf("could not create directory %q: %v\n", filePath, err)
+				klog.Fatalf("could not create directory %q: %v\n", filePath, err)
 			}
 		}
 		f, err := os.Create(file.Location)
 		if err != nil {
-			log.Fatalf("could not create file %q: %v\n", file.Location, err)
+			klog.Fatalf("could not create file %q: %v\n", file.Location, err)
 		}
 		f.WriteString(renderTemplate(file.Content, initConfiguration))
 		f.Close()
@@ -66,11 +67,11 @@ func Init(initConfiguration InitConfiguration) {
 func renderTemplate(templateContents string, initConfiguration InitConfiguration) string {
 	template, err := template.New("").Parse(templateContents)
 	if err != nil {
-		log.Fatal("could not parse template")
+		klog.Fatal("could not parse template")
 	}
 	var rendered bytes.Buffer
 	if err := template.Execute(&rendered, initConfiguration); err != nil {
-		log.Fatal("could not render configuration")
+		klog.Fatal("could not render configuration")
 	}
 	return rendered.String()
 }
