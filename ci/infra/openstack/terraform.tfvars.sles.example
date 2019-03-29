@@ -4,8 +4,15 @@ internal_net = "testing"
 # identifier to make all your resources unique and avoid clashes with other users of this terraform project
 stack_name = "testing"
 
+# instance user name
+username = "sles"
+
 # define which image to use
 image_name = "SLES15-SP1-JeOS-GM"
+
+# openstack flavor
+master_size = "caasp.medium"
+worker_size = "caasp.medium"
 
 # define the repositories to use
 repositories = [
