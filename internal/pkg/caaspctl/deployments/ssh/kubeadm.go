@@ -37,12 +37,14 @@ func kubeadmInit() Runner {
 		}
 		defer t.ssh("rm", "/tmp/kubeadm.conf")
 
+		_, _, err := t.ssh("kubeadm", "config", "--config", "/tmp/kubeadm.conf", "images", "pull")
+
 		ignorePreflightErrors := ""
 		ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
 		if len(ignorePreflightErrorsVal) > 0 {
 			ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 		}
-		_, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print", ignorePreflightErrors)
+		_, _, err = t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print", ignorePreflightErrors)
 		return err
 	}
 }
