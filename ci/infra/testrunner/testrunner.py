@@ -456,22 +456,23 @@ def stop_monitor_logs():
        "-i ${WORKSPACE}/automation/misc-files/id_shared all "
        "-- journalctl -f")
 
-def load_tfout():
-    fn = replace_vars("${WORKSPACE}/tfout.json")
+def load_tfstate():
+    fn = replace_vars("${WORKSPACE}/caaspctl/ci/infra/openstack/terraform.tfstate")
+    print("Reading {}".format(fn))
     with open(fn) as f:
         return json.load(f)
 
 def get_lb_ipaddr():
-    j = load_tfout()
-    return j["ip_ext_load_balancer"]["value"]
+    j = load_tfstate()
+    return j["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
 
 def get_masters_ipaddrs():
-    j = load_tfout()
-    return j["ip_masters"]["value"]
+    j = load_tfstate()
+    return j["modules"][0]["outputs"]["ip_masters"]["value"]
 
 def get_workers_ipaddrs():
-    j = load_tfout()
-    return j["ip_workers"]["value"]
+    j = load_tfstate()
+    return j["modules"][0]["outputs"]["ip_workers"]["value"]
 
 @step()
 def caaspctl_cluster_init():
