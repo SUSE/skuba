@@ -39,9 +39,9 @@ import (
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
-	"suse.com/caaspctl/pkg/caaspctl"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 // Join joins a new machine to the cluster. The role of the machine will be

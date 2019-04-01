@@ -20,7 +20,7 @@ package cluster
 import (
 	"github.com/spf13/cobra"
 
-	cluster "suse.com/caaspctl/pkg/caaspctl/actions/cluster/status"
+	cluster "github.com/SUSE/caaspctl/pkg/caaspctl/actions/cluster/status"
 )
 
 func NewStatusCmd() *cobra.Command {

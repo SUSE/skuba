@@ -422,15 +422,15 @@ def caaspctl(rundir, cmd):
 @step()
 def configure_environment():
     """Configure Environment"""
-    sh("mkdir -p ${WORKSPACE}/go/src/suse.com")
+    sh("mkdir -p ${WORKSPACE}/go/src/github.com/SUSE")
     # TODO: better idempotency?
     try:
-        sh("test -d ${WORKSPACE}/go/src/suse.com/caaspctl || "
-           "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/suse.com/")
+        sh("test -d ${WORKSPACE}/go/src/github.com/SUSE/caaspctl || "
+           "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/github.com/SUSE/")
     except:
         pass
     print("Building caaspctl")
-    gorun("${WORKSPACE}/go/src/suse.com/caaspctl", "make")
+    gorun("${WORKSPACE}/go/src/github.com/SUSE/caaspctl", "make")
 
 
 @timeout(10)
@@ -477,8 +477,8 @@ def get_workers_ipaddrs():
 @step()
 def caaspctl_cluster_init():
     print("Cleaning up any previous test-cluster dir")
-    sh("rm /go/src/suse.com/caaspctl/test-cluster -rf")
-    caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl",
+    sh("rm /go/src/github.com/SUSE/caaspctl/test-cluster -rf")
+    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl",
         "cluster init --control-plane %s test-cluster" %
         get_lb_ipaddr())
 
@@ -493,13 +493,13 @@ def kubeadm_reset():
 
 @step()
 def caaspctl_node_bootstrap():
-    caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
+    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
         "node bootstrap --user {username} --sudo --target "
         "{ip} my-master-0".format(ip=get_masters_ipaddrs()[0], username=conf.username))
 
 @step()
 def caaspctl_cluster_status():
-    caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
+    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
         "cluster status")
 
 @step()
@@ -509,7 +509,7 @@ def caaspctl_node_join(role="worker", nr=0):
     else:
         ip_addr = get_workers_ipaddrs()[nr]
 
-    caaspctl("${WORKSPACE}/go/src/suse.com/caaspctl/test-cluster",
+    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
         "node join --role {role} --user {username} --sudo --target "
           "{ip} my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=conf.username))
 

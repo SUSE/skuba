@@ -22,9 +22,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
-	node "suse.com/caaspctl/pkg/caaspctl/actions/node/join"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh"
+	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
 type joinOptions struct {

@@ -21,8 +21,8 @@ import (
 	"k8s.io/klog"
 
 	"github.com/spf13/cobra"
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh"
-	node "suse.com/caaspctl/pkg/caaspctl/actions/node/bootstrap"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh"
+	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/bootstrap"
 )
 
 type bootstrapOptions struct {
