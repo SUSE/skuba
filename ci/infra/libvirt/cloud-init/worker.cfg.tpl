@@ -35,7 +35,8 @@ ${repositories}
 packages:
   - kubernetes-kubeadm
   - kubernetes-kubelet
-  - kubectl
+  - kubernetes-client
+  - cri-o
   - cni-plugins
   - "-docker"
   - "-containerd"

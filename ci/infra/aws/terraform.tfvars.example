@@ -1,6 +1,12 @@
 access_key = "<from openbare>"
 secret_key = "<from openbare>"
 
+# AWS region to be used - see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+# region = ""
+
+# AWS availability zones to be used
+# availability_zones = []
+
 # identifier to make all your resources unique and avoid clashes with other users of this terraform project
 # stack_name = ""
 
