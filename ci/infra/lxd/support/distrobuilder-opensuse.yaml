@@ -1,0 +1,147 @@
+#
+# openSUSE definition file for CaaSP
+#
+###################################################################################
+# NOTE: make sure you REMOVE the old image (with `lxc delete opensuse-caasp`)
+#       AFTER MODIFYING THIS FILE
+###################################################################################
+
+image:
+  distribution: openSUSE
+  release: 15.0
+  description: openSUSE Leap {{ image.release }} for CaaSP
+  expiry: 30d
+  architecture: x86_64
+
+source:
+  downloader: opensuse-http
+  url: https://download.opensuse.org
+  skip_verification: true
+
+targets:
+  lxc:
+    create-message: |
+      You just created an openSUSE Leap container (release={{ image.release }}, arch={{ image.architecture }})
+
+    config:
+      - type: all
+        before: 5
+        content: |-
+          lxc.include = LXC_TEMPLATE_CONFIG/opensuse.common.conf
+
+      - type: user
+        before: 5
+        content: |-
+          lxc.include = LXC_TEMPLATE_CONFIG/opensuse.userns.conf
+
+      - type: all
+        after: 4
+        content: |-
+          lxc.include = LXC_TEMPLATE_CONFIG/common.conf
+
+      - type: user
+        after: 4
+        content: |-
+          lxc.include = LXC_TEMPLATE_CONFIG/userns.conf
+
+      - type: all
+        content: |-
+          lxc.arch = {{ image.architecture_kernel }}
+
+files:
+  - path: /etc/hostname
+    generator: hostname
+
+  - path: /etc/hosts
+    generator: hosts
+
+  - name: ifcfg-eth0.lxd
+    path: /etc/sysconfig/network/ifcfg-eth0
+    generator: template
+    content: |-
+      STARTMODE='auto'
+      BOOTPROTO='dhcp'
+      HOSTNAME={{ container.name }}
+      DHCP_HOSTNAME=`hostname`
+
+packages:
+  manager: zypper
+  update: false
+  refresh: true
+  cleanup: true
+  repositories:
+    - name: caasp
+      url: https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0
+  sets:
+    - packages:
+        - systemd-sysvinit
+        - openssh
+        - sudo
+        - apparmor-abstractions
+        - elfutils
+        - file
+        - glib2-tools
+        - gzip
+        - hardlink
+        - hostname
+        - iputils
+        - net-tools
+        - openslp
+        - rsync
+        - shared-mime-info
+        - which
+        - vim
+        # CaaSP packages
+        - salt-ssh
+        - kubernetes-kubeadm
+        - kubernetes-kubelet
+        - kubectl
+        - cni-plugins
+        - haproxy
+        - cri-o
+      action: install
+
+actions:
+  - trigger: post-packages
+    action: |-
+      #!/bin/sh
+
+      # encryted "linux"
+      # obtained with `echo "linux" | openssl passwd -1 -stdin`
+      ROOT_PASSWORD='$1$62xujQ/G$IxTMM4LZimNXF3LFcBawC1'
+
+      echo ">>> setting a trivial password for root"
+      echo "root:$ROOT_PASSWORD" | /usr/sbin/chpasswd -e
+      echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+
+      mkdir -p /root/.ssh
+      chmod 700 /root/.ssh
+      touch /root/.ssh/authorized_keys
+      chmod 600 /root/.ssh/authorized_keys
+
+      # for using this image with the Vagrant-LXD  plugin, uncomment the following lines:
+      # encryted "vagrant"
+      # obtained with `echo "vagrant" | openssl passwd -1 -stdin`
+      # PASSWORD='$1$TEfkpqbs$cwgryzvqKnlWf5WgPBvKS0'
+      # echo ">>> creating vagrant user"
+      # groupadd -f vagrant
+      # useradd --create-home -p "$PASSWORD" -s /bin/bash vagrant
+      # echo ">>> adding vagrant to the 'sudo' group"
+      # groupadd -f sudo
+      # usermod -a -G sudo vagrant
+      # echo ">>> adding vagrant to the 'docker' group"
+      # usermod -a -G docker vagrant
+      # echo ">>> enabling passwordless sudo for users under the 'sudo' group"
+      # mkdir -p /etc/sudoers.d
+      # echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/sudo
+
+      echo ">>> enabling services"
+      systemctl enable sshd
+      systemctl enable crio
+      
+      exit 0
+
+environment:
+  variables:
+    - key: HOME
+      value: /root
