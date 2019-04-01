@@ -19,6 +19,7 @@ package cluster
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -61,6 +62,12 @@ func Init(initConfiguration InitConfiguration) {
 		}
 		f.WriteString(renderTemplate(file.Content, initConfiguration))
 		f.Close()
+	}
+
+	if currentDir, err := os.Getwd(); err != nil {
+		klog.Fatalf("could not get current directory %s\n", err)
+	} else {
+		fmt.Printf("configuration files written to %s\n", currentDir)
 	}
 }
 
