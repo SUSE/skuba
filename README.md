@@ -24,7 +24,7 @@ depending on your needs this setup can be as advanced as required.
 
 The target nodes must have some packages already preinstalled:
 
-  * docker
+  * cri-o
   * kubelet
   * kubeadm
 
