@@ -20,7 +20,7 @@ package caaspctl
 import (
 	"github.com/spf13/cobra"
 
-	"suse.com/caaspctl/internal/app/caaspctl/cluster"
+	"github.com/SUSE/caaspctl/internal/app/caaspctl/cluster"
 )
 
 func NewClusterCmd() *cobra.Command {

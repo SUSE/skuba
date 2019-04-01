@@ -20,9 +20,9 @@ package ssh
 import (
 	"github.com/pkg/errors"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
-	"suse.com/caaspctl/pkg/caaspctl"
-	node "suse.com/caaspctl/pkg/caaspctl/actions/node/join"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
+	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/join"
 )
 
 func init() {

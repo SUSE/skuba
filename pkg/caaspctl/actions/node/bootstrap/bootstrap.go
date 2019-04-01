@@ -31,9 +31,9 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
-	"suse.com/caaspctl/pkg/caaspctl"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 // Bootstrap initializes the first master node of the cluster

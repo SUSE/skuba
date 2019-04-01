@@ -23,7 +23,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
-	"suse.com/caaspctl/pkg/caaspctl"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 func GetAdminClientSet() *clientset.Clientset {

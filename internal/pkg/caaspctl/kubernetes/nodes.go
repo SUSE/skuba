@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
-	"suse.com/caaspctl/pkg/caaspctl"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 func GetMasterNodes() (*v1.NodeList, error) {

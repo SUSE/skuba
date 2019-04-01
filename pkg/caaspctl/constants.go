@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"path"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
 const (
