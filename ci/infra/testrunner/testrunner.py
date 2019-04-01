@@ -41,7 +41,7 @@ STAGE_NAMES = (
     "initial_cleanup", "retrieve_image", "create_environment",
     "install_netdata", "configure_environment",
     "bootstrap_environment", "grow_environment", "setup_testinfra", "run_testinfra",
-    "fetch_kubeconfig", "final_cleanup"
+    "fetch_kubeconfig", "gather_logs", "final_cleanup"
 )
 
 TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
@@ -730,6 +730,8 @@ def gather_netdata_metrics():
 def _gather_logs(minion):
     return
 
+
+@timeout(60)
 @step()
 def gather_logs():
     """Gather Kubic Logs"""
@@ -737,9 +739,14 @@ def gather_logs():
         print("DRYRUN: skipping gather_logs")
         return
 
-    # TODO: parallel
-    for minion in load_env_json()["minions"]:
-        _gather_logs(minion)
+    ipaddrs = get_masters_ipaddrs() + get_workers_ipaddrs()
+    for ipa in ipaddrs:
+        print("--------------------------------------------------------------")
+        print("Gathering logs from {}".format(ipa))
+        ssh(ipa, "cat /var/run/cloud-init/status.json")
+        print("--------------------------------------------------------------")
+        ssh(ipa, "cat /var/log/cloud-init-output.log")
+
 
 def archive_artifacts(path, glob):
     sh("mkdir -p ${WORKSPACE}/artifacts")
@@ -914,6 +921,7 @@ pipeline {
    }
    post {
         unsuccessful {
+            sh "caaspctl/ci/infra/testrunner/testrunner stage=gather_logs ${PARAMS}"
             sh "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}"
         }
     }
