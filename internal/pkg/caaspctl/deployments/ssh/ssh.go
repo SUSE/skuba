@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"k8s.io/klog"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -36,24 +37,28 @@ import (
 )
 
 type Target struct {
-	target *deployments.Target
-	user   string
-	sudo   bool
-	port   int
-	client *ssh.Client
+	target   *deployments.Target
+	user     string
+	keyfile  string
+	password string
+	sudo     bool
+	port     int
+	client   *ssh.Client
 }
 
-func NewTarget(nodename, target, user string, sudo bool, port int, kubeadmArgs map[string]interface{}) *deployments.Target {
+func NewTarget(nodename, target, user, password, keyfile string, sudo bool, port int, kubeadmArgs map[string]interface{}) *deployments.Target {
 	res := deployments.Target{
 		Target:      target,
 		Nodename:    nodename,
 		KubeadmArgs: kubeadmArgs,
 	}
 	res.Actionable = &Target{
-		target: &res,
-		user:   user,
-		sudo:   sudo,
-		port:   port,
+		target:   &res,
+		user:     user,
+		password: password,
+		keyfile:  keyfile,
+		sudo:     sudo,
+		port:     port,
 	}
 	return &res
 }
@@ -131,15 +136,45 @@ func (t *Target) initClient() error {
 	if err != nil {
 		return err
 	}
+
+	dstAddr := fmt.Sprintf("%s:%d", t.target.Target, t.port)
+
 	agentClient := agent.NewClient(conn)
-	config := &ssh.ClientConfig{
-		User: t.user,
-		Auth: []ssh.AuthMethod{
+	var auth []ssh.AuthMethod
+	if t.keyfile != "" {
+		klog.V(3).Infof("Using private key '%s' for connecting to '%s'", t.keyfile, dstAddr)
+		key, err := ioutil.ReadFile(t.keyfile)
+		if err != nil {
+			return fmt.Errorf("unable to read private key: %v", err)
+		}
+
+		// Create the Signer for this private key.
+		signer, err := ssh.ParsePrivateKey(key)
+		if err != nil {
+			log.Fatalf("unable to parse private key: %v", err)
+		}
+
+		auth = []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		}
+	} else if t.password != "" {
+		klog.V(3).Infof("Using password for connecting to '%s'", dstAddr)
+		auth = []ssh.AuthMethod{
+			ssh.Password(t.password),
+		}
+	} else {
+		klog.V(3).Infof("Using default private key for connecting to '%s'", dstAddr)
+		auth = []ssh.AuthMethod{
 			ssh.PublicKeysCallback(agentClient.Signers),
-		},
+		}
+	}
+
+	config := &ssh.ClientConfig{
+		User:            t.user,
+		Auth:            auth,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
+	t.client, err = ssh.Dial("tcp", dstAddr, config)
 	if err != nil {
 		return err
 	}

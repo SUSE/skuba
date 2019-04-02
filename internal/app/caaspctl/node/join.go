@@ -30,6 +30,8 @@ import (
 type joinOptions struct {
 	target                string
 	user                  string
+	password              string
+	keyfile               string
 	sudo                  bool
 	port                  int
 	role                  string
@@ -59,6 +61,8 @@ func NewJoinCmd() *cobra.Command {
 					nodenames[0],
 					joinOptions.target,
 					joinOptions.user,
+					joinOptions.password,
+					joinOptions.keyfile,
 					joinOptions.sudo,
 					joinOptions.port,
 					map[string]interface{}{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
@@ -70,6 +74,8 @@ func NewJoinCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&joinOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
 	cmd.Flags().StringVarP(&joinOptions.user, "user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().StringVarP(&joinOptions.password, "password", "P", "", "Password used to connect to target")
+	cmd.Flags().StringVarP(&joinOptions.keyfile, "keyfile", "i", "", "Private SSH key used to connect to target")
 	cmd.Flags().BoolVarP(&joinOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().IntVarP(&joinOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")

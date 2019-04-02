@@ -20,14 +20,16 @@ package node
 import (
 	"k8s.io/klog"
 
-	"github.com/spf13/cobra"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh"
 	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/bootstrap"
+	"github.com/spf13/cobra"
 )
 
 type bootstrapOptions struct {
 	target                string
 	user                  string
+	password              string
+	keyfile               string
 	sudo                  bool
 	port                  int
 	ignorePreflightErrors string
@@ -45,6 +47,8 @@ func NewBootstrapCmd() *cobra.Command {
 					nodenames[0],
 					bootstrapOptions.target,
 					bootstrapOptions.user,
+					bootstrapOptions.password,
+					bootstrapOptions.keyfile,
 					bootstrapOptions.sudo,
 					bootstrapOptions.port,
 					map[string]interface{}{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
@@ -59,6 +63,8 @@ func NewBootstrapCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&bootstrapOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
 	cmd.Flags().StringVarP(&bootstrapOptions.user, "user", "u", "root", "User identity used to connect to target")
+	cmd.Flags().StringVarP(&bootstrapOptions.password, "password", "P", "", "Password used to connect to target")
+	cmd.Flags().StringVarP(&bootstrapOptions.keyfile, "keyfile", "i", "", "Private SSH key used to connect to target")
 	cmd.Flags().IntVarP(&bootstrapOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().BoolVarP(&bootstrapOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().StringVar(&bootstrapOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
