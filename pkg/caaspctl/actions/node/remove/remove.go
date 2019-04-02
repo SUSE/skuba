@@ -22,9 +22,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/etcd"
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubeadm"
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/etcd"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubeadm"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
 // Remove removes a node from the cluster

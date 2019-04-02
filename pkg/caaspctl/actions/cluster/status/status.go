@@ -23,7 +23,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
 // Status prints the status of the cluster on the standard output by reading the

@@ -33,10 +33,7 @@ The terraform based deployments are taking care of fulfilling these requirements
 ## Installation
 
 ```sh
-mkdir -p $GOPATH/src/suse.com
-cd $GOPATH/src/suse.com
-git clone https://github.com/SUSE/caaspctl.git
-cd caaspctl
+go get -d github.com/SUSE/caaspctl
 ```
 
 ### Development

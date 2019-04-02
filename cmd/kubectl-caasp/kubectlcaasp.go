@@ -22,7 +22,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"suse.com/caaspctl/internal/app/caaspctl"
+	"github.com/SUSE/caaspctl/internal/app/caaspctl"
 )
 
 func newRootCmd(args []string) *cobra.Command {

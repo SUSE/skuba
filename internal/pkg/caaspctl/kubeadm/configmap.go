@@ -28,7 +28,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
 func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
