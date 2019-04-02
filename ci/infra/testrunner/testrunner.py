@@ -12,13 +12,12 @@ import os
 import re
 import subprocess
 import sys
-import time
 
 import requests
 
 from timeout_decorator import timeout
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 help = """
 This script is meant to be run manually on test servers, developer desktops
@@ -38,10 +37,10 @@ Requires root privileges.
 
 STAGE_NAMES = (
     "info", "github_collaborator_check",
-    "initial_cleanup", "retrieve_image", "create_environment",
-    "install_netdata", "configure_environment",
-    "bootstrap_environment", "grow_environment", "setup_testinfra", "run_testinfra",
-    "fetch_kubeconfig", "gather_logs", "final_cleanup"
+    "initial_cleanup", "create_environment",
+    "configure_environment",
+    "bootstrap_environment", "grow_environment",
+    "gather_logs", "final_cleanup"
 )
 
 TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
@@ -49,8 +48,6 @@ TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
 # Jenkins env vars: BUILD_NUMBER
 
 env_defaults = dict(
-    HOSTNAME="dev-desktop",
-    CHOOSE_CRIO="false",
     WORKSPACE=os.path.join(os.getcwd(), "workspace"),
     BMCONF="error-bare-metal-config-file-not-set",
 )
@@ -255,47 +252,6 @@ def github_collaborator_check():
     raise Exception(msg)
 
 @step()
-def create_tfout_from_environment_json():
-    # TODO: hacky temporary workaround
-    fn = os.path.join(replace_vars("${WORKSPACE}"), "environment.json")
-    print("Reading %s" % fn)
-    with open(fn) as f:
-        j = json.load(f)
-    nodes_addrs = [m['addresses']['publicIpv4'] for m in j['minions']]
-    tfout = {
-            "hostnames_masters": {
-                        "sensitive": False,
-                        "type": "list",
-                        "value": []
-                    },
-            "ip_ext_load_balancer": {
-                        "sensitive": False,
-                        "type": "string",
-                        "value": nodes_addrs[0]
-                    },
-            "ip_internal_load_balancer": {
-                        "sensitive": False,
-                        "type": "string",
-                        "value": nodes_addrs[0]
-                    },
-            "ip_masters": {
-                        "sensitive": False,
-                        "type": "list",
-                        "value": [ nodes_addrs[1] ]
-                    },
-            "ip_workers": {
-                        "sensitive": False,
-                        "type": "list",
-                        "value": [ nodes_addrs[2] ]
-                    }
-    }
-    fn = os.path.join(replace_vars("${WORKSPACE}"), "tfout.json")
-    with open(fn, 'w') as f:
-        json.dump(tfout, f, sort_keys=True, indent=2)
-    print("Wrote %s" % fn)
-
-
-@step()
 def fetch_openstack_terraform_output():
     shp("caaspctl/ci/infra/openstack", "source ${OPENRC}; "
         "terraform output -json > ${WORKSPACE}/tfout.json")
@@ -326,6 +282,7 @@ def boot_openstack():
 
     print("Init terraform")
     shp("caaspctl/ci/infra/openstack", "terraform init")
+    shp("caaspctl/ci/infra/openstack", "terraform version")
     print("------------------------")
     print()
     print("To clean up OpenStack manually, run:")
@@ -381,7 +338,6 @@ def create_environment():
             "--master-count 1 --worker-count 1"
             " --conffile deployer.conf.json")
         sh("cp ${WORKSPACE}/caaspctl/ci/infra/bare-metal/deployer/environment.json ${WORKSPACE}/")
-        create_tfout_from_environment_json()
         bare_metal_cloud_init()
 
     elif conf.stack_type == 'vmware-terraform':
@@ -396,12 +352,6 @@ def create_environment():
             "terraform output -json > ${WORKSPACE}/tfout.json")
 
     print_ipaddr_summary()
-
-@step()
-def install_netdata():
-    """Deploy CI Tools"""
-    return #TODO
-    sh("${WORKSPACE}/automation/misc-tools/netdata/install admin")
 
 def gorun(rundir, cmd, extra_env=None):
     env = {
@@ -429,32 +379,10 @@ def configure_environment():
            "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/suse.com/")
     except:
         pass
+    gorun("${WORKSPACE}", "go version")
     print("Building caaspctl")
     gorun("${WORKSPACE}/go/src/suse.com/caaspctl", "make")
 
-
-@timeout(10)
-@step()
-def start_monitor_logs():
-    # FIXME
-    raise NotImplementedError
-    sh_fork(
-        "${WORKSPACE}/automation/misc-tools/parallel-ssh "
-        "-e ${WORKSPACE}/environment.json "
-        "-i ${WORKSPACE}/automation/misc-files/id_shared all "
-        "-- journalctl -f"
-    )
-
-@timeout(10)
-@step()
-def stop_monitor_logs():
-    # FIXME
-    raise NotImplementedError
-    # on teardown, call --stop to terminate the runner
-    sh("${WORKSPACE}/automation/misc-tools/parallel-ssh --stop "
-       "-e ${WORKSPACE}/environment.json "
-       "-i ${WORKSPACE}/automation/misc-files/id_shared all "
-       "-- journalctl -f")
 
 def load_tfstate():
     fn = replace_vars("${WORKSPACE}/caaspctl/ci/infra/openstack/terraform.tfstate")
@@ -571,22 +499,6 @@ def grow_environment():
     except:
         pass
 
-@timeout(20)
-@step()
-def fetch_kubeconfig():
-    pass
-
-@step()
-def retrieve_image():
-    if conf.stack_type == 'bare-metal':
-        print("No dload needed")
-    elif conf.stack_type == 'openstack-terraform':
-        print("No dload needed")
-    elif conf.stack_type == 'vmware-terraform':
-        print("No dload needed")
-    else:
-        raise Exception("unknown stack type")
-
 @step()
 def create_environment_workers_bare_metal():
     # Warning: requires deployer.conf.json
@@ -615,116 +527,23 @@ def setup_testinfra_tox(env, cmd):
 def setup_testinfra():
     #FIXME implement tests
     return
-    #requirepkg python-devel
-    env = {
-        "ENVIRONMENT_JSON": replace_vars("${WORKSPACE}/environment.json"),
-        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
-        "SSH_CONFIG": replace_vars("${WORKSPACE}/automation/misc-tools/environment.ssh_config"),
-    }
-    shp("${WORKSPACE}/automation/testinfra", "tox -l")
-
-    if conf.dryrun:
-        print("DRYRUN: skipping setup_testinfra_tox()")
-        return
-
-    cmds = {
-        "tox -e {role}-{status} --notest".format(**minion)
-        for minion in load_env_json()["minions"]
-    } # avoid unneded runs
-    for cmd in cmds:
-        setup_testinfra_tox(env, cmd)
-
 
 @timeout(30 * 10) # implement parallel run
 @step()
 def run_testinfra():
     #FIXME implement tests
     return
-    env = {
-        "ENVIRONMENT_JSON": replace_vars("${WORKSPACE}/environment.json"),
-        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
-        "SSH_CONFIG": replace_vars("${WORKSPACE}/automation/misc-tools/environment.ssh_config"),
-    }
-    if conf.dryrun:
-        print("DRYRUN: skipping tox run")
-        return
-
-    for minion in load_env_json()["minions"]:
-        cmd = "tox -e {role}-{status} --notest".format(**minion)
-        cmd = "tox -e {role}-{status} -- --hosts {fqdn} --junit-xml" \
-           " testinfra-{role}-{index}.xml -v".format(**minion)
-        shp("${WORKSPACE}/automation/testinfra", cmd, env=env)
-
-    #junit "testinfra-${minion.role}-${minion.index}.xml"
-
-
-
-@timeout(600)
-@step()
-def k8s_create_pod(env):
-    # FIXME: avoid manipulating PATH
-    sh("${WORKSPACE}/automation/k8s-pod-tests/k8s-pod-tests -k"
-       " ${WORKSPACE}/kubeconfig"
-       " -c ${WORKSPACE}/automation/k8s-pod-tests/yaml/${podname}.yml",
-       env=env)
-
-@timeout(600)
-@step()
-def k8s_test_scaleup(env):
-    sh("${WORKSPACE}/automation/k8s-pod-tests/k8s-pod-tests"
-       " -k ${WORKSPACE}/kubeconfig --wait --slowscale ${podname}"
-       " ${replica_count} ${replicas_creation_interval_seconds}",
-       env=env)
-
-@timeout(600)
-@step()
-def k8s_teardown(env):
-    sh("${WORKSPACE}/automation/k8s-pod-tests/k8s-pod-tests"
-       " -k ${WORKSPACE}/kubeconfig"
-       " -d ${WORKSPACE}/automation/k8s-pod-tests/yaml/${podname}.yml",
-       env=env)
-
-@timeout(5)
-@step()
-def k8s_show_running_pods(env):
-    """Show running pods"""
-    sh("${WORKSPACE}/automation/k8s-pod-tests/k8s-pod-tests"
-       " -k ${WORKSPACE}/kubeconfig -l", env=env)
-
-@step()
-def run_k8s_pod_tests():
-    env = {
-        "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:~/bin",
-        "KUBECONFIG": replace_vars("${WORKSPACE}/kubeconfig")
-    }
-    sh("wc -l ${WORKSPACE}/kubeconfig")
-    sh("${WORKSPACE}/automation/k8s-pod-tests/k8s-pod-tests"
-       " -k ${WORKSPACE}/kubeconfig -l", env=env)
-
-    k8s_create_pod(env)
-    k8s_show_running_pods(env)
-    k8s_test_scaleup(env)
-    k8s_teardown(env)
 
 @timeout(125)
 @step()
 def add_node():
     raise NotImplementedError
 
-
 @step()
 def run_conformance_tests():
     """Run K8S Conformance Tests"""
     # TODO
     pass
-
-@step()
-def gather_netdata_metrics():
-    """Gather Netdata metrics"""
-    #TODO fix and enable this
-    sh("${WORKSPACE}/automation/misc-tools/netdata/capture/capture-charts"
-       " admin --outdir ${WORKSPACE}/netdata/admin"
-       " -l ${WORKSPACE}/logs/netdata-capture-admin.log")
 
 @timeout(300)
 @step()
@@ -761,15 +580,12 @@ def archive_artifacts(path, glob):
 def archive_logs():
     """Archive Logs"""
     archive_artifacts('${WORKSPACE}', 'logs/**')
-    archive_artifacts('${WORKSPACE}', 'netdata/**')
 
 @timeout(15)
 @step()
 def cleanup_kvm():
     #TODO
     raise NotImplementedError
-    shp('automation/caasp-kvm',
-        "./caasp-kvm --destroy")
 
 def show_vmware_status():
     # TODO cleanup
@@ -782,9 +598,6 @@ def cleanup_vmware():
     # TODO cleanup
     show_vmware_status()
 
-
-def swift(args):
-    sh("source ${OPENRC}; swift " + args)
 
 @timeout(60)
 def _cleanup_openstack_terraform():
@@ -842,7 +655,6 @@ def parse_args():
     conf.no_checkout = False
     conf.no_collab_check = False
     conf.no_destroy = False
-    conf.fake_update_is_available = False
     conf.workers = "3"
     conf.job_name = getvar("JOB_NAME")
     conf.build_number = getvar("BUILD_NUMBER")
@@ -901,7 +713,6 @@ def generate_pipeline():
     """Generate stub Jenkins pipeline"""
     # TODO: show PARAMS as a parameter, default with type=openstack-terraform
     # TODO: collect artifacts
-    # FIXME vsphere user/pass
     tpl = """
 pipeline {
     agent any
@@ -909,8 +720,6 @@ pipeline {
         OPENRC = credentials("ecp-cloud-shared")
         GITHUB_TOKEN = credentials("github-token")
         GITLAB_TOKEN = credentials("gitlab-token")
-        VSPHERE_USER = credentials("jazz.qa.prv.suse.net")
-        VSPHERE_PASSWORD = credentials("jazz.qa.prv.suse.net")
         PARAMS = ""
     }
     stages {
@@ -929,9 +738,9 @@ pipeline {
 }
     """
     stage_tpl = """
-    stage('%s') { steps {
-        sh "caaspctl/ci/infra/testrunner/testrunner stage=%s ${PARAMS}"
-    } }
+        stage('%s') { steps {
+            sh "caaspctl/ci/infra/testrunner/testrunner stage=%s ${PARAMS}"
+        } }
     """
 
     stages_block = ""
