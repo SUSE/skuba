@@ -9,7 +9,6 @@ from argparse import Namespace
 from functools import wraps
 import json
 import os
-import re
 import subprocess
 import sys
 
@@ -25,7 +24,7 @@ and by Jenkins.
 
 Warning: it removes docker containers, VMs, images, and network configuration.
 
-It creates a workspace directory and a virtualenv.
+It creates a virtualenv.
 
 Requires root privileges.
 
@@ -45,12 +44,7 @@ STAGE_NAMES = (
 
 TFSTATE_USER_HOST="ci-tfstate@hpa6s10.caasp.suse.net"
 
-# Jenkins env vars: BUILD_NUMBER
-
-env_defaults = dict(
-    WORKSPACE=os.path.join(os.getcwd(), "workspace"),
-    BMCONF="error-bare-metal-config-file-not-set",
-)
+# Jenkins env vars: BUILD_NUMBER JOB_NAME GITHUB_TOKEN OPENRC CHANGE_AUTHOR
 
 # global conf
 conf = None
@@ -58,46 +52,16 @@ conf = None
 ssh_opts = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
     "-oConnectTimeout=10 -oBatchMode=yes "
 
-def getvar(name):
-    """Resolve in order:
-    - CLI k/v variable (case insensitive)
-    - environment variable (case sensitive)
-    - default value
-    """
-    lc = name.lower()
-    if hasattr(conf, lc):
-        return getattr(conf, lc)
-    if name in os.environ:
-        return os.environ[name]
-    if name in env_defaults:
-        return env_defaults[name]
-    raise Exception("env variable '{}' not found".format(name))
-
-
-def replace_vars(s):
-    """Replace jenkins ${} variables"""
-    try:
-        for match in re.findall('\$\{[\w\-\.]+\}', s):
-            varname = match[2:-1]
-            val = getvar(varname)
-            s = s.replace(match, val, 1)  # replace only the first
-        return s
-    except Exception as e:
-        print("Error while replacing '{}'".format(s))
-        print(e)
-        raise
-
-run_name = replace_vars("${JOB_NAME}-${BUILD_NUMBER}")
-
-# TODO: Replacing Jenkins variables like ${WORKSPACE} is a temporary hack
-# to ease the migration from groovy.
+def ws_join(path):
+    if path.startswith('/'):
+        path = path[1:]
+    return os.path.join(conf.workspace, path)
 
 # TODO: reimplement dry run
 
 def sh(cmd, env=None):
     """emulate Jenkins `sh`"""
-    cmd = replace_vars(cmd)
-    path = replace_vars("${WORKSPACE}")
+    path = conf.workspace
     print(">  in {}".format(path))
     print("$ {}".format(cmd))
     if conf.dryrun:
@@ -110,7 +74,6 @@ def sh(cmd, env=None):
 
 def sh_fork(cmd):
     """emulate Jenkins `sh`"""
-    cmd = replace_vars(cmd)
     print("$ {}".format(cmd))
     if conf.dryrun:
         return
@@ -118,10 +81,8 @@ def sh_fork(cmd):
 
 def shp(path, cmd, env=None):
     """emulate Jenkins `sh`"""
-    cmd = replace_vars(cmd)
-    path = replace_vars(path)
     if not os.path.isabs(path):
-        path = os.path.join(replace_vars("${WORKSPACE}"), path)
+        path = os.path.join(conf.workspace, path)
 
     print(">  in {}".format(path))
     print("$ {}".format(cmd))
@@ -131,11 +92,10 @@ def shp(path, cmd, env=None):
     subprocess.check_call(cmd, cwd=path, shell=True, env=env)
 
 def create_workspace_dir():
-    path = replace_vars("${WORKSPACE}")
     try:
-        os.makedirs(path)
+        os.makedirs(conf.workspace)
     except:
-        print(path, "created")
+        print(conf.workspace, "created")
         pass
 
 ## nested output blocks
@@ -164,29 +124,29 @@ def step(foo=None):
 
 
 def chmod_id_shared():
-    key_fn = locate_id_shared()
+    key_fn = conf.id_shared_fn
     sh("chmod 400 " + key_fn)
 
 def locate_tfstate(platform):
     assert platform in ("openstack", "vmware")
-    return os.path.join(replace_vars("${WORKSPACE}"),
+    return os.path.join(conf.workspace,
         "caaspctl/ci/infra/{}/terraform.tfstate".format(platform))
 
 @step()
 def fetch_tfstate(platform):
     chmod_id_shared()
     fn = locate_tfstate(platform)
-    key_fn = locate_id_shared()
+    key_fn = conf.id_shared_fn
     sh("scp {} -i {} {}:~/tfstates/{} {}".format(
-        ssh_opts, key_fn, TFSTATE_USER_HOST, run_name, fn))
+        ssh_opts, key_fn, TFSTATE_USER_HOST, conf.run_name, fn))
 
 @step()
 def push_tfstate(platform):
     chmod_id_shared()
-    key_fn = locate_id_shared()
+    key_fn = conf.id_shared_fn
     fn = locate_tfstate(platform)
     sh("scp {} -i {} {} {}:~/tfstates/{}".format(
-        ssh_opts, key_fn, fn, TFSTATE_USER_HOST, run_name))
+        ssh_opts, key_fn, fn, TFSTATE_USER_HOST, conf.run_name))
 
 @timeout(5)
 @step()
@@ -203,10 +163,8 @@ def info():
 @step()
 def initial_cleanup():
     """Cleanup"""
-    #sh('rm -rf ${WORKSPACE} || : ')
-    #create_workspace_dir()
-    sh('mkdir -p ${WORKSPACE}/logs')
-    sh('chmod a+x ${WORKSPACE}')
+    sh('mkdir -p {}/logs'.format(conf.workspace))
+    sh('chmod a+x {}'.format(conf.workspace))
     # TODO: implement cleanups for vsphere etc
     if conf.stack_type == 'openstack-terraform':
         try:
@@ -225,7 +183,7 @@ def github_collaborator_check():
     print("Starting GitHub Collaborator Check")
     org = "SUSE"
     repo = 'avantgarde-caaspctl'
-    user = getvar('CHANGE_AUTHOR')
+    user = conf.change_author
     token = os.getenv('GITHUB_TOKEN')
     url = "https://api.github.com/repos/{}/{}/collaborators/{}"
     url = url.format(org, repo, user)
@@ -253,17 +211,18 @@ def github_collaborator_check():
 
 @step()
 def fetch_openstack_terraform_output():
-    shp("caaspctl/ci/infra/openstack", "source ${OPENRC}; "
-        "terraform output -json > ${WORKSPACE}/tfout.json")
+    shp("caaspctl/ci/infra/openstack", "source {}; "
+        "terraform output -json > {}/tfout.json".format(
+            conf.openrc, conf.workspace))
 
 def ssh(ipaddr, cmd):
-    key_fn = locate_id_shared()
+    key_fn = conf.id_shared_fn
     cmd = "ssh " + ssh_opts + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(
         key_fn=key_fn, ip=ipaddr, cmd=cmd, username=conf.username)
     sh(cmd)
 
 def authorized_keys():
-    fn = locate_id_shared() + ".pub"
+    fn = conf.id_shared_fn + ".pub"
     with open(fn) as f:
         shared_pubkey = f.read().strip()
     return shared_pubkey
@@ -275,7 +234,7 @@ def boot_openstack():
     print("Test SSH")
 
     # generate terraform variables file
-    fn = os.path.join(replace_vars("${WORKSPACE}"), "terraform.tfvars")
+    fn = os.path.join(conf.workspace, "terraform.tfvars")
     with open(fn, 'w') as f:
         f.write(generate_tfvars_file())
     print("Wrote %s" % fn)
@@ -286,20 +245,23 @@ def boot_openstack():
     print("------------------------")
     print()
     print("To clean up OpenStack manually, run:")
-    print(replace_vars("BUILD_NUMBER=${BUILD_NUMBER} "
-        "JOB_NAME=${JOB_NAME} OPENRC=<replace-me> ./testrunner "
-        "stack-type=openstack-terraform stage=initial_cleanup"))
+    print(("./testrunner stack-type=openstack-terraform job_name={} "
+          "build_number={} openrc={} stage=initial_cleanup").format(
+          conf.job_name, conf.build_number, conf.openrc))
     print()
     print("------------------------")
+    plan_cmd = ("source {};"
+        " terraform plan -var-file='{}/terraform.tfvars'"
+        " -out {}/tfout".format(conf.openrc, conf.workspace, conf.workspace)
+    )
+    apply_cmd = ("source {}; terraform apply -auto-approve {}/tfout".format(
+        conf.openrc, conf.workspace))
     for retry in range(1, 5):
         print("Run terraform plan - execution n. %d" % retry)
-        shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
-            " terraform plan -var-file='${WORKSPACE}/terraform.tfvars' -out ${WORKSPACE}/tfout"
-        )
+        shp("caaspctl/ci/infra/openstack", plan_cmd)
         print("Running terraform apply - execution n. %d" % retry)
         try:
-            shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
-                " terraform apply -auto-approve ${WORKSPACE}/tfout")
+            shp("caaspctl/ci/infra/openstack", apply_cmd)
             push_tfstate("openstack")
             break
 
@@ -348,14 +310,13 @@ def create_environment():
             "terraform apply -auto-approve"
             " -var internal_net=containers-ci"
             " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}")
-        shp("vmware",
-            "terraform output -json > ${WORKSPACE}/tfout.json")
+        shp("vmware", "terraform output -json > tfout.json")
 
     print_ipaddr_summary()
 
 def gorun(rundir, cmd, extra_env=None):
     env = {
-        'GOPATH': replace_vars("${WORKSPACE}") + '/go',
+        'GOPATH': ws_join('go'),
         'PATH': os.environ['PATH']
     }
     if extra_env:
@@ -364,28 +325,28 @@ def gorun(rundir, cmd, extra_env=None):
 
 def caaspctl(rundir, cmd):
     env={"SSH_AUTH_SOCK": pick_ssh_agent_sock()}
-    binpath = os.path.join(replace_vars("${WORKSPACE}"), 'go/bin/caaspctl')
+    binpath = ws_join('go/bin/caaspctl')
     gorun(rundir, binpath + ' ' + cmd, extra_env=env)
 
 
-@timeout(90)
+@timeout(120)
 @step()
 def configure_environment():
     """Configure Environment"""
-    sh("mkdir -p ${WORKSPACE}/go/src/github.com/SUSE")
+    sh("mkdir -p go/src/github.com/SUSE")
     # TODO: better idempotency?
     try:
-        sh("test -d ${WORKSPACE}/go/src/github.com/SUSE/caaspctl || "
-           "cp -a ${WORKSPACE}/caaspctl ${WORKSPACE}/go/src/github.com/SUSE/")
+        sh("test -d go/src/github.com/SUSE/caaspctl || "
+           "cp -a caaspctl go/src/github.com/SUSE/")
     except:
         pass
-    gorun("${WORKSPACE}", "go version")
+    gorun(conf.workspace, "go version")
     print("Building caaspctl")
-    gorun("${WORKSPACE}/go/src/github.com/SUSE/caaspctl", "make")
+    gorun("go/src/github.com/SUSE/caaspctl", "make")
 
 
 def load_tfstate():
-    fn = replace_vars("${WORKSPACE}/caaspctl/ci/infra/openstack/terraform.tfstate")
+    fn = ws_join("caaspctl/ci/infra/openstack/terraform.tfstate")
     print("Reading {}".format(fn))
     with open(fn) as f:
         return json.load(f)
@@ -406,12 +367,12 @@ def get_workers_ipaddrs():
 def caaspctl_cluster_init():
     print("Cleaning up any previous test-cluster dir")
     sh("rm /go/src/github.com/SUSE/caaspctl/test-cluster -rf")
-    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl",
+    caaspctl("go/src/github.com/SUSE/caaspctl",
         "cluster init --control-plane %s test-cluster" %
         get_lb_ipaddr())
 
 def locate_id_shared():
-    return replace_vars("${WORKSPACE}/caaspctl/ci/infra/id_shared")
+    return ws_join("caaspctl/ci/infra/id_shared")
 
 @step()
 def kubeadm_reset():
@@ -421,13 +382,13 @@ def kubeadm_reset():
 
 @step()
 def caaspctl_node_bootstrap():
-    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
+    caaspctl("go/src/github.com/SUSE/caaspctl/test-cluster",
         "node bootstrap --user {username} --sudo --target "
         "{ip} my-master-0".format(ip=get_masters_ipaddrs()[0], username=conf.username))
 
 @step()
 def caaspctl_cluster_status():
-    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
+    caaspctl("go/src/github.com/SUSE/caaspctl/test-cluster",
         "cluster status")
 
 @step()
@@ -437,12 +398,12 @@ def caaspctl_node_join(role="worker", nr=0):
     else:
         ip_addr = get_workers_ipaddrs()[nr]
 
-    caaspctl("${WORKSPACE}/go/src/github.com/SUSE/caaspctl/test-cluster",
+    caaspctl("go/src/github.com/SUSE/caaspctl/test-cluster",
         "node join --role {role} --user {username} --sudo --target "
           "{ip} my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=conf.username))
 
 def pick_ssh_agent_sock():
-    return os.path.join(replace_vars("${WORKSPACE}"), "ssh-agent-sock")
+    return ws_join("ssh-agent-sock")
 
 @timeout(10)
 @step()
@@ -458,8 +419,7 @@ def setup_ssh():
         pass
     sh("ssh-agent -a %s" % sock_fn)
     print("adding id_shared ssh key")
-    key_fn = locate_id_shared()
-    sh("ssh-add " + key_fn, env={"SSH_AUTH_SOCK": sock_fn})
+    sh("ssh-add " + conf.id_shared_fn, env={"SSH_AUTH_SOCK": sock_fn})
     # TODO kill agent on cleanup
 
 
@@ -514,13 +474,9 @@ def create_environment_workers_bare_metal():
 
 
 def load_env_json():
-    with open(replace_vars("${WORKSPACE}/environment.json")) as f:
+    with open(ws_join("environment.json")) as f:
         return json.load(f)
 
-
-@step()
-def setup_testinfra_tox(env, cmd):
-    shp("${WORKSPACE}/automation/testinfra", cmd, env=env)
 
 @timeout(30)
 @step()
@@ -569,17 +525,17 @@ def gather_logs():
 
 
 def archive_artifacts(path, glob):
-    sh("mkdir -p ${WORKSPACE}/artifacts")
+    sh("mkdir -p artifacts")
     path = os.path.join(path, glob)
     try:
-        sh("rsync -a " + path + " ${WORKSPACE}/artifacts")
+        sh("rsync -a " + path + " {}/artifacts".format(conf.workspace))
     except:
         print("rsync error")
 
 @step()
 def archive_logs():
     """Archive Logs"""
-    archive_artifacts('${WORKSPACE}', 'logs/**')
+    archive_artifacts(conf.workspace, 'logs/**')
 
 @timeout(15)
 @step()
@@ -601,10 +557,11 @@ def cleanup_vmware():
 
 @timeout(60)
 def _cleanup_openstack_terraform():
-    shp("caaspctl/ci/infra/openstack", "source ${OPENRC};"
+    cmd = ("source {orc};"
         " terraform destroy -auto-approve"
-        " -var internal_net=net-${JOB_NAME}-${BUILD_NUMBER}"
-        " -var stack_name=${JOB_NAME}-${BUILD_NUMBER}")
+        " -var internal_net=net-{run}"
+        " -var stack_name={run}").format(orc=conf.openrc, run=conf.run_name)
+    shp("caaspctl/ci/infra/openstack", cmd)
 
 @step()
 def cleanup_openstack_terraform():
@@ -618,8 +575,8 @@ def cleanup_openstack_terraform():
 @step()
 def cleanup_bare_metal():
     shp('caaspctl/ci/infra/bare-metal/deployer',
-        './deployer --release ${JOB_NAME}-${BUILD_NUMBER}'
-             " --conffile deployer.conf.json")
+        "./deployer --release {run} --conffile deployer.conf.json".format(
+        run=conf.run_name))
 
 @timeout(40)
 @step()
@@ -649,15 +606,18 @@ def parse_args():
     """
     conf = Namespace()
     conf.dryrun = False
-    conf.stack_type = 'caasp-kvm'
+    conf.stack_type = 'openstack-terraform'
     conf.stage = None   # None: run all stages
-    conf.change_author = ""
+    conf.change_author = os.getenv("CHANGE_AUTHOR")
     conf.no_checkout = False
     conf.no_collab_check = False
     conf.no_destroy = False
     conf.workers = "3"
-    conf.job_name = getvar("JOB_NAME")
-    conf.build_number = getvar("BUILD_NUMBER")
+    conf.job_name = os.getenv("JOB_NAME")
+    conf.build_number = os.getenv("BUILD_NUMBER")
+    conf.workspace = os.getenv("WORKSPACE")
+    conf.id_shared_fn = None
+    conf.openrc = os.getenv("OPENRC")
     conf.master_count = "3"
     conf.worker_count = "3"
     conf.admin_cpu = "4"
@@ -671,7 +631,6 @@ def parse_args():
     conf.replica_count = "5"
     conf.replicas_creation_interval_seconds = "5"
     conf.podname = "default"
-    conf.image = replace_vars("file://${WORKSPACE}/automation/downloads/kvm-devel")
     conf.generate_pipeline = False
     conf.username = "sles"
 
@@ -701,6 +660,9 @@ def parse_args():
         else:
             print("Unexpected conf param {}".format(k))
             sys.exit(1)
+
+    conf.run_name = "{}-{}".format(conf.job_name, conf.build_number)
+    assert conf.workspace, "A workspace env var or CLI param is required"
 
     return conf
 
@@ -792,7 +754,8 @@ authorized_keys = [
   "{authorized_keys}"
 ]
 username = "{username}"
-    '''.format(job_name=run_name, authorized_keys=authorized_keys(), username=conf.username)
+    '''.format(job_name=conf.run_name, authorized_keys=authorized_keys(),
+               username=conf.username)
     return tpl
 
 
@@ -800,12 +763,16 @@ def main():
     global conf
     print("Testrunner v. {}".format(__version__))
     conf = parse_args()
+    if conf.id_shared_fn is None:
+        conf.id_shared_fn = ws_join("caaspctl/ci/infra/id_shared")
+
+    if conf.stack_type == 'openstack-terraform':
+        assert conf.openrc, "An openrc env var or CLI param is required"
 
     if conf.generate_pipeline:
         generate_pipeline()
         sys.exit()
 
-    print("Using workspace: {}".format(getvar("WORKSPACE")))
     print("Conf: {}".format(conf))
     print("PATH: {}".format(os.getenv("PATH")))
 
