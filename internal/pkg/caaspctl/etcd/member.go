@@ -25,7 +25,7 @@ import (
 
 	"k8s.io/klog"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
 func RemoveMember(node *v1.Node) error {

@@ -20,7 +20,7 @@ package node
 import (
 	"github.com/spf13/cobra"
 
-	node "suse.com/caaspctl/pkg/caaspctl/actions/node/remove"
+	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/remove"
 )
 
 func NewRemoveCmd() *cobra.Command {

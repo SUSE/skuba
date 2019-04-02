@@ -20,7 +20,7 @@ package ssh
 import (
 	"strings"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments/ssh/assets"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh/assets"
 )
 
 func init() {

@@ -32,7 +32,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"suse.com/caaspctl/internal/pkg/caaspctl/deployments"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
 type Target struct {

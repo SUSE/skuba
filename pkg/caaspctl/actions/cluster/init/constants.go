@@ -18,7 +18,7 @@
 package cluster
 
 import (
-	"suse.com/caaspctl/pkg/caaspctl"
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 var (
