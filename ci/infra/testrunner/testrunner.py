@@ -133,20 +133,20 @@ def locate_tfstate(platform):
         "caaspctl/ci/infra/{}/terraform.tfstate".format(platform))
 
 @step()
-def fetch_tfstate(platform):
+def fetch_tfstate(platform, run_name):
     chmod_id_shared()
     fn = locate_tfstate(platform)
     key_fn = conf.id_shared_fn
     sh("scp {} -i {} {}:~/tfstates/{} {}".format(
-        ssh_opts, key_fn, TFSTATE_USER_HOST, conf.run_name, fn))
+        ssh_opts, key_fn, TFSTATE_USER_HOST, run_name, fn))
 
 @step()
-def push_tfstate(platform):
+def push_tfstate(platform, run_name):
     chmod_id_shared()
     key_fn = conf.id_shared_fn
     fn = locate_tfstate(platform)
     sh("scp {} -i {} {} {}:~/tfstates/{}".format(
-        ssh_opts, key_fn, fn, TFSTATE_USER_HOST, conf.run_name))
+        ssh_opts, key_fn, fn, TFSTATE_USER_HOST, run_name))
 
 @timeout(5)
 @step()
@@ -167,11 +167,7 @@ def initial_cleanup():
     sh('chmod a+x {}'.format(conf.workspace))
     # TODO: implement cleanups for vsphere etc
     if conf.stack_type == 'openstack-terraform':
-        try:
-            fetch_tfstate("openstack")
-            cleanup_openstack_terraform()
-        except:
-            print("Nothing to clean up")
+        cleanup_openstack_terraform()
 
 
 @timeout(90)
@@ -262,16 +258,16 @@ def boot_openstack():
         print("Running terraform apply - execution n. %d" % retry)
         try:
             shp("caaspctl/ci/infra/openstack", apply_cmd)
-            push_tfstate("openstack")
+            push_tfstate("openstack", conf.run_name)
             break
 
         except:
             print("Failed terraform apply n. %d" % retry)
             # push the tfstate anyways in case something is created
-            push_tfstate("openstack")
+            push_tfstate("openstack", conf.run_name)
             if retry == 4:
                 print("Last failed attempt, cleaning up and exiting")
-                cleanup_openstack_terraform()
+                cleanup_openstack_terraform(clean_previous=False)
                 raise Exception("Failed OpenStack deploy")
 
     fetch_openstack_terraform_output()
@@ -556,19 +552,32 @@ def cleanup_vmware():
 
 
 @timeout(60)
-def _cleanup_openstack_terraform():
+def _cleanup_openstack_terraform(run_name):
     cmd = ("source {orc};"
         " terraform destroy -auto-approve"
         " -var internal_net=net-{run}"
-        " -var stack_name={run}").format(orc=conf.openrc, run=conf.run_name)
+        " -var stack_name={run}").format(orc=conf.openrc, run=run_name)
     shp("caaspctl/ci/infra/openstack", cmd)
 
 @step()
-def cleanup_openstack_terraform():
-    """Cleanup Openstack (twice)"""
-    _cleanup_openstack_terraform()
-    _cleanup_openstack_terraform()
-    push_tfstate("openstack")
+def cleanup_openstack_terraform(clean_previous=True):
+    """Cleanup OpenStack"""
+    # OpenStack can leave running stacks around. This functions
+    # cleans stacks from previous runs and the current one.
+    shifter = [-2, -1, 0] if clean_previous else [0]
+    for shift in shifter:
+        bn = conf.build_number + shift
+        if bn < 1:
+            continue
+        run_name = "{}-{}".format(conf.job_name, bn)
+        try:
+            fetch_tfstate("openstack", run_name)
+            print("Cleaning up run n. {}".format(bn))
+            _cleanup_openstack_terraform(run_name)
+            # Upload "empty" tfstate
+            push_tfstate("openstack", run_name)
+        except:
+            print("Nothing to clean up for run n. {}".format(bn))
 
 
 @timeout(40)
@@ -660,6 +669,12 @@ def parse_args():
         else:
             print("Unexpected conf param {}".format(k))
             sys.exit(1)
+
+    try:
+        conf.build_number = int(conf.build_number)
+    except ValueError:
+        print("ERROR: unable to parse build number as an integer")
+        sys.exit(1)
 
     conf.run_name = "{}-{}".format(conf.job_name, conf.build_number)
     assert conf.workspace, "A workspace env var or CLI param is required"
