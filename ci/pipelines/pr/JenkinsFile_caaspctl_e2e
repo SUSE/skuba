@@ -11,31 +11,35 @@ properties([
 
 pipeline {
   // CONFIGURE ONLY THIS
-  environment { 
+  environment {
+     // * github repoc 
      repository = "SUSE/caaspctl"
+     // * Unique ID/name of tests 
      context = "caaspctl-test-e2e"
+     // * Description showed in Github check
      description = "caaspctl e2e tests" 
-     // TODO: adapt it later on. this is to trigger when a file in that dir is changed by a pr for example. etc
-     filter = "pkg/"
+     // * trigger tests based on a file on github repo, that the pr has changed
+     //   filter = "pkg/"
+     // * where to clone the repo
      git_fs = "${env.WORKSPACE}"      
+     // * which test to run on PR
      test = "make test-e2e"
 
     // DON"T CHANGE THIS
-    check = "gitarro.ruby2.1  -r ${repository}" + 
+    gitarro_bin = "gitarro.ruby2.5"
+    check = "${gitarro_bin}  -r ${repository}" + 
                 " -c ${context} -d \"${description}\" " +
-                " -f ${filter} " +
                 " -t ${test} " +
                 " -g ${git_fs} " +
                 "--check --changed_since 3600" 
 
-    runtest = "gitarro.ruby2.1  -r ${repository}" + 
+    runtest = "${gitarro_bin}  -r ${repository}" + 
                 " -c ${context} -d \"${description}\" " +
-                " -f ${filter} " +
                 " -g ${git_fs} " +
                 " -u ${env.BUILD_URL}" +
                 " -t ${test} " 
    }
-    agent { label 'caasp-ci' }
+    agent { label 'caasp-pr' }
     triggers {  cron('H/5 * * * *')  }
     stages {
         stage('Check Pull Request') {
