@@ -31,11 +31,13 @@ pipeline {
                 " -c ${context} -d \"${description}\" " +
                 " -t ${test} " +
                 " -g ${git_fs} " +
+                "--https " +
                 "--check --changed_since 3600" 
 
     runtest = "${gitarro_bin}  -r ${repository}" + 
                 " -c ${context} -d \"${description}\" " +
                 " -g ${git_fs} " +
+                "--https " +
                 " -u ${env.BUILD_URL}" +
                 " -t ${test} " 
    }
