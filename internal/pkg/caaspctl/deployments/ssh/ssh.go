@@ -22,11 +22,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"k8s.io/klog"
 	"net"
 	"os"
 	"strings"
+
+	"k8s.io/klog"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -59,22 +59,22 @@ func NewTarget(nodename, target, user string, sudo bool, port int, kubeadmArgs m
 }
 
 func (t *Target) silentSsh(command string, args ...string) (stdout string, stderr string, error error) {
-	klog.SetOutput(ioutil.Discard)
-	defer klog.SetOutput(os.Stderr)
-	return t.ssh(command, args...)
+	return t.internalSshWithStdin(true, "", command, args...)
 }
 
 func (t *Target) ssh(command string, args ...string) (stdout string, stderr string, error error) {
-	return t.sshWithStdin("", command, args...)
+	return t.internalSshWithStdin(false, "", command, args...)
 }
 
 func (t *Target) silentSshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
-	klog.SetOutput(ioutil.Discard)
-	defer klog.SetOutput(os.Stderr)
-	return t.sshWithStdin(stdin, command, args...)
+	return t.internalSshWithStdin(true, stdin, command, args...)
 }
 
 func (t *Target) sshWithStdin(stdin string, command string, args ...string) (stdout string, stderr string, error error) {
+	return t.internalSshWithStdin(false, stdin, command, args...)
+}
+
+func (t *Target) internalSshWithStdin(silent bool, stdin string, command string, args ...string) (stdout string, stderr string, error error) {
 	if t.client == nil {
 		if err := t.initClient(); err != nil {
 			return "", "", errors.Wrap(err, "failed to initialize client")
@@ -99,14 +99,16 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	if t.sudo {
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
-	klog.Infof("running command: %q", finalCommand)
+	if !silent {
+		klog.Infof("running command: %q", finalCommand)
+	}
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
 	}
 	stdoutChan := make(chan string)
 	stderrChan := make(chan string)
-	go readerStreamer(stdoutReader, stdoutChan, "stdout | ")
-	go readerStreamer(stderrReader, stderrChan, "stderr | ")
+	go readerStreamer(stdoutReader, stdoutChan, "stdout", silent)
+	go readerStreamer(stderrReader, stderrChan, "stderr", silent)
 	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
@@ -115,12 +117,14 @@ func (t *Target) sshWithStdin(stdin string, command string, args ...string) (std
 	return
 }
 
-func readerStreamer(reader io.Reader, outputChan chan<- string, description string) {
+func readerStreamer(reader io.Reader, outputChan chan<- string, description string, silent bool) {
 	result := bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		klog.Infof("%s%s\n", description, scanner.Text())
+		if !silent {
+			klog.Infof("%s | %s\n", description, scanner.Text())
+		}
 	}
 	outputChan <- result.String()
 }
