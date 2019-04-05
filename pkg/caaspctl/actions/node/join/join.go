@@ -18,7 +18,6 @@
 package node
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,16 +27,11 @@ import (
 	"k8s.io/klog"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
-	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
-	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
-	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
@@ -72,7 +66,7 @@ func ConfigPath(role deployments.Role, target *deployments.Target) string {
 		configPath = caaspctl.TemplatePathForRole(role)
 	}
 
-	joinConfiguration, err := joinConfigFileAndDefaultsToInternalConfig(configPath)
+	joinConfiguration, err := LoadJoinConfigurationFromFile(configPath)
 	if err != nil {
 		klog.Fatalf("error parsing configuration: %v", err)
 	}
@@ -118,11 +112,6 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 func createBootstrapToken(target string) string {
 	client := kubernetes.GetAdminClientSet()
 
-	internalCfg, err := kubeadmconfigutil.ConfigFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile(), nil)
-	if err != nil {
-		klog.Fatal("could not load init configuration")
-	}
-
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
 		klog.Fatal("could not generate a new boostrap token")
@@ -133,7 +122,7 @@ func createBootstrapToken(target string) string {
 		klog.Fatal("could not generate a new boostrap token")
 	}
 
-	internalCfg.BootstrapTokens = []kubeadmapi.BootstrapToken{
+	bootstrapTokens := []kubeadmapi.BootstrapToken{
 		{
 			Token:       bootstrapToken,
 			Description: fmt.Sprintf("Bootstrap token for %s machine join", target),
@@ -145,46 +134,9 @@ func createBootstrapToken(target string) string {
 		},
 	}
 
-	if err := kubeadmtokenphase.CreateNewTokens(client, internalCfg.BootstrapTokens); err != nil {
+	if err := kubeadmtokenphase.CreateNewTokens(client, bootstrapTokens); err != nil {
 		klog.Fatal("could not create new bootstrap token")
 	}
 
 	return bootstrapTokenRaw
-}
-
-func joinConfigFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.JoinConfiguration, error) {
-	internalcfg := &kubeadmapi.JoinConfiguration{}
-
-	b, err := ioutil.ReadFile(cfgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := kubeadmconfigutil.DetectUnsupportedVersion(b); err != nil {
-		return nil, err
-	}
-
-	gvkmap, err := kubeadmutil.SplitYAMLDocuments(b)
-	if err != nil {
-		return nil, err
-	}
-
-	joinBytes := []byte{}
-	for gvk, bytes := range gvkmap {
-		if gvk.Kind == constants.JoinConfigurationKind {
-			joinBytes = bytes
-			// verify the validity of the YAML
-			strict.VerifyUnmarshalStrict(bytes, gvk)
-		}
-	}
-
-	if len(joinBytes) == 0 {
-		return nil, errors.New("invalid config")
-	}
-
-	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), joinBytes, internalcfg); err != nil {
-		return nil, err
-	}
-
-	return internalcfg, nil
 }

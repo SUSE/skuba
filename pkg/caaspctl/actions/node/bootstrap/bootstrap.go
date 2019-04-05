@@ -42,7 +42,7 @@ import (
 //        of using the PWD
 // FIXME: error handling with `github.com/pkg/errors`
 func Bootstrap(target *deployments.Target) error {
-	initConfiguration, err := configFileAndDefaultsToInternalConfig(caaspctl.KubeadmInitConfFile())
+	initConfiguration, err := LoadInitConfigurationFromFile(caaspctl.KubeadmInitConfFile())
 	if err != nil {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
 	}
@@ -129,19 +129,4 @@ func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
 		ImageRepository: caaspctl.ImageRepository,
 		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
 	}
-}
-
-func configFileAndDefaultsToInternalConfig(cfgPath string) (*kubeadmapi.InitConfiguration, error) {
-	internalcfg := &kubeadmapi.InitConfiguration{}
-
-	b, err := ioutil.ReadFile(cfgPath)
-	if err != nil {
-		return nil, err
-	}
-	internalcfg, err = kubeadmconfigutil.BytesToInternalConfig(b)
-	if err != nil {
-		return nil, err
-	}
-
-	return internalcfg, nil
 }
