@@ -25,7 +25,7 @@ import (
 	"github.com/SUSE/caaspctl/internal/app/caaspctl"
 )
 
-func newRootCmd(args []string) *cobra.Command {
+func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "kubectl-caasp",
 	}
@@ -41,7 +41,7 @@ func newRootCmd(args []string) *cobra.Command {
 
 func main() {
 	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
-	cmd := newRootCmd(os.Args[1:])
+	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
