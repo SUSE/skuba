@@ -40,6 +40,7 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewVersionCmd(),
 		NewClusterCmd(),
+		NewCompletionCmd(),
 		NewNodeCmd(),
 		NewAuthCmd(),
 		NewAddonCmd(),
