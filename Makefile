@@ -22,7 +22,7 @@ docs/man/%.1: docs/man/%.1.md
 	$(GO_MD2MAN) -in $< -out $@
 
 
-# make test t
+# this run ginko and is REMOTE=local
 
 .PHONY: test-e2e
 test-e2e:

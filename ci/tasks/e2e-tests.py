@@ -5,4 +5,4 @@
 import subprocess
 
 # todo: check ginkgo flags. 
-subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --failFast --cover --trace --race --progress -v", shell=True)
+subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --cover --trace --race --progress -v", shell=True)

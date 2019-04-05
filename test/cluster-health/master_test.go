@@ -26,14 +26,15 @@ import (
 var _ = Describe("Add 1 worker node to cluster", func() {
 	/// TODO 03: this will run remote cmd via ssh
 
-	// It("Add 1 worker node to cluster", func() {
-	// 	output, err := RunCmd("localhost", "caaspctl cluster status")
-	// 	if err != nil {
-	// 		fmt.Printf("[ERROR]: Cluster is not healthy")
-	// 		panic(err)
-	// 	}
-	// 	fmt.Println(string(output))
-	// })
+	It("000: fake test passing", func() {
+		output, err := exec.Command("uptime").Output()
+		if err != nil {
+			fmt.Printf("[ERROR]: Cluster is not healthy")
+			fmt.Println(string(output))
+			panic(err)
+		}
+		fmt.Println(string(output))
+	})
 
 	It("Check cluster status after 1 worker was added", func() {
 		output, err := exec.Command("caaspctl cluster status").Output()
