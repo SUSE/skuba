@@ -18,26 +18,22 @@
 package ssh
 
 func init() {
-	stateMap["kernel.load-modules"] = kernelLoadModules()
-	stateMap["kernel.configure-parameters"] = kernelConfigureParameters()
+	stateMap["kernel.load-modules"] = kernelLoadModules
+	stateMap["kernel.configure-parameters"] = kernelConfigureParameters
 }
 
-func kernelLoadModules() Runner {
-	return func(t *Target, data interface{}) error {
-		if _, _, err := t.ssh("modprobe br_netfilter"); err != nil {
-			return err
-		}
-		err := t.UploadFileContents("/etc/modules-load.d/br_netfilter.conf", "br_netfilter")
+func kernelLoadModules(t *Target, data interface{}) error {
+	if _, _, err := t.ssh("modprobe br_netfilter"); err != nil {
 		return err
 	}
+	err := t.UploadFileContents("/etc/modules-load.d/br_netfilter.conf", "br_netfilter")
+	return err
 }
 
-func kernelConfigureParameters() Runner {
-	return func(t *Target, data interface{}) error {
-		if _, _, err := t.ssh("sysctl -w net.ipv4.ip_forward=1"); err != nil {
-			return err
-		}
-		_, _, err := t.ssh("sysctl -w net.bridge.bridge-nf-call-iptables=1")
+func kernelConfigureParameters(t *Target, data interface{}) error {
+	if _, _, err := t.ssh("sysctl -w net.ipv4.ip_forward=1"); err != nil {
 		return err
 	}
+	_, _, err := t.ssh("sysctl -w net.bridge.bridge-nf-call-iptables=1")
+	return err
 }
