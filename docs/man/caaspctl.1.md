@@ -21,6 +21,9 @@ reconfiguration in an easy way.
 **cluster**
   Cluster initialization and handling commands.
 
+**completion**
+  Command line completion commands.
+
 **node**
   Node handling commands.
 

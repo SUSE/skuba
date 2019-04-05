@@ -15,39 +15,24 @@
  *
  */
 
-package main
+package caaspctl
 
 import (
-	"fmt"
-	"os"
-
-	"k8s.io/klog"
-
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/caaspctl/internal/app/caaspctl"
+	"github.com/SUSE/caaspctl/internal/app/caaspctl/completion"
 )
 
-func newRootCmd() *cobra.Command {
+func NewCompletionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "caaspctl",
+		Use:   "completion",
+		Short: "Output shell completion code for the specified shell (bash or zsh)",
 	}
 
 	cmd.AddCommand(
-		caaspctl.NewClusterCmd(),
-		caaspctl.NewCompletionCmd(),
-		caaspctl.NewNodeCmd(),
-		caaspctl.NewVersionCmd(),
+		completion.NewBashCompletion(),
+		completion.NewZshCompletion(),
 	)
 
 	return cmd
-}
-
-func main() {
-	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
-	klog.InitFlags(nil)
-	cmd := newRootCmd()
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
 }

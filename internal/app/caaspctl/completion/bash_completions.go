@@ -15,39 +15,23 @@
  *
  */
 
-package main
+package completion
 
 import (
-	"fmt"
-	"os"
-
-	"k8s.io/klog"
-
 	"github.com/spf13/cobra"
-
-	"github.com/SUSE/caaspctl/internal/app/caaspctl"
+	"os"
 )
 
-func newRootCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use: "caaspctl",
-	}
+func NewBashCompletion() *cobra.Command {
+	return &cobra.Command{
+		Use:   "bash",
+		Short: "Generates bash completion scripts",
+		// FIXME: tail -n +2 can be dropped when stdout from main() is not polluted anymore
+		Long: `To load caaspctl bash completion add the following to your ~/.bashrc or ~/.profile
 
-	cmd.AddCommand(
-		caaspctl.NewClusterCmd(),
-		caaspctl.NewCompletionCmd(),
-		caaspctl.NewNodeCmd(),
-		caaspctl.NewVersionCmd(),
-	)
-
-	return cmd
-}
-
-func main() {
-	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
-	klog.InitFlags(nil)
-	cmd := newRootCmd()
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+. <(caaspctl completion | tail -n +2)`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Parent().GenBashCompletion(os.Stdout)
+		},
 	}
 }
