@@ -31,43 +31,47 @@
 
 [[override]]
   name = "k8s.io/kubernetes"
-  version = "=v1.13.3"
+  version = "=v1.14.0"
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apiserver"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/cluster-bootstrap"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
+
+[[override]]
+  name = "k8s.io/kube-proxy"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/cli-runtime"
-  version = "kubernetes-1.13.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/component-base"
-  version = "kubernetes-1.13.3-alpha.3"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "github.com/russross/blackfriday"
