@@ -23,7 +23,7 @@ pipeline {
      // * where to clone the repo
      git_fs = "${env.WORKSPACE}"      
      // * which test to run on PR
-     test = "make test-e2e"
+     test = "uptime"
 
     // DON"T CHANGE THIS
     gitarro_bin = "gitarro.ruby2.5"
