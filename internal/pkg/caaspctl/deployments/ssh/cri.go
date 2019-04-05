@@ -18,12 +18,10 @@
 package ssh
 
 func init() {
-	stateMap["cri.start"] = criStart()
+	stateMap["cri.start"] = criStart
 }
 
-func criStart() Runner {
-	return func(t *Target, data interface{}) error {
-		_, _, err := t.ssh("systemctl", "enable", "--now", "crio")
-		return err
-	}
+func criStart(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "enable", "--now", "crio")
+	return err
 }
