@@ -41,7 +41,7 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead
 //        of using the PWD
 // FIXME: error handling with `github.com/pkg/errors`
-func Bootstrap(target *deployments.Target) error {
+func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	initConfiguration, err := LoadInitConfigurationFromFile(caaspctl.KubeadmInitConfFile())
 	if err != nil {
 		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
@@ -62,7 +62,7 @@ func Bootstrap(target *deployments.Target) error {
 	}
 
 	err = target.Apply(
-		nil,
+		bootstrapConfiguration,
 		"kubernetes.bootstrap.upload-secrets",
 		"kernel.load-modules",
 		"kernel.configure-parameters",

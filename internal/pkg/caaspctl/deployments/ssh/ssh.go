@@ -43,11 +43,10 @@ type Target struct {
 	client *ssh.Client
 }
 
-func NewTarget(nodename, target, user string, sudo bool, port int, kubeadmArgs map[string]interface{}) *deployments.Target {
+func NewTarget(nodename, target, user string, sudo bool, port int) *deployments.Target {
 	res := deployments.Target{
-		Target:      target,
-		Nodename:    nodename,
-		KubeadmArgs: kubeadmArgs,
+		Target:   target,
+		Nodename: nodename,
 	}
 	res.Actionable = &Target{
 		target: &res,

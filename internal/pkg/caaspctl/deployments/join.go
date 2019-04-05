@@ -17,13 +17,14 @@
 
 package deployments
 
+type Role uint
+
 const (
-	MasterRole = iota
-	WorkerRole = iota
+	MasterRole Role = iota
+	WorkerRole Role = iota
 )
 
-type Role int
-
 type JoinConfiguration struct {
-	Role Role
+	Role             Role
+	KubeadmExtraArgs map[string]string
 }
