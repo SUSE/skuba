@@ -26,7 +26,6 @@ localAPIEndpoint:
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_BOOTSTRAP_
 apiServer:
   certSANs:
     - {{.ControlPlane}}
@@ -42,7 +41,6 @@ kind: JoinConfiguration
 discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlane}}:6443
-    token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_JOIN_
     unsafeSkipCAVerification: true
 controlPlane:
   localAPIEndpoint:
@@ -54,7 +52,6 @@ kind: JoinConfiguration
 discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlane}}:6443
-    token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_JOIN_
     unsafeSkipCAVerification: true
 `
 
