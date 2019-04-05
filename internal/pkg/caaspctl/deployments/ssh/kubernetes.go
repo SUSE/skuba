@@ -23,17 +23,17 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
+type KubernetesUploadSecretsErrorBehavior uint
+
 const (
-	KubernetesUploadSecretsFailOnError     = iota
-	KubernetesUploadSecretsContinueOnError = iota
+	KubernetesUploadSecretsFailOnError     KubernetesUploadSecretsErrorBehavior = iota
+	KubernetesUploadSecretsContinueOnError KubernetesUploadSecretsErrorBehavior = iota
 )
 
 func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
 }
-
-type KubernetesUploadSecretsErrorBehavior uint
 
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
 	return func(t *Target, data interface{}) error {

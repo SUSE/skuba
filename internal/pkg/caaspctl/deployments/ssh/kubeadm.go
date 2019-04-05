@@ -31,13 +31,18 @@ func init() {
 }
 
 func kubeadmInit(t *Target, data interface{}) error {
+	bootstrapConfiguration, ok := data.(deployments.BootstrapConfiguration)
+	if !ok {
+		return errors.New("couldn't access bootstrap configuration")
+	}
+
 	if err := t.target.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
 		return err
 	}
 	defer t.ssh("rm", "/tmp/kubeadm.conf")
 
 	ignorePreflightErrors := ""
-	ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
+	ignorePreflightErrorsVal := bootstrapConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
@@ -57,7 +62,7 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	defer t.ssh("rm", "/tmp/kubeadm.conf")
 
 	ignorePreflightErrors := ""
-	ignorePreflightErrorsVal := t.target.KubeadmArgs["ignore-preflight-errors"].(string)
+	ignorePreflightErrorsVal := joinConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}

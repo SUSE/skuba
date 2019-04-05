@@ -43,7 +43,9 @@ func NewJoinCmd() *cobra.Command {
 		Use:   "join <node-name>",
 		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			joinConfiguration := deployments.JoinConfiguration{}
+			joinConfiguration := deployments.JoinConfiguration{
+				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
+			}
 
 			switch joinOptions.role {
 			case "master":
@@ -61,7 +63,6 @@ func NewJoinCmd() *cobra.Command {
 					joinOptions.user,
 					joinOptions.sudo,
 					joinOptions.port,
-					map[string]interface{}{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
 				),
 			)
 		},

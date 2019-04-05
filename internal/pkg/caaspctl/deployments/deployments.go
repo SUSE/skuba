@@ -36,11 +36,10 @@ type TargetCache struct {
 }
 
 type Target struct {
-	Target      string
-	Nodename    string
-	Actionable  Actionable
-	Cache       TargetCache
-	KubeadmArgs map[string]interface{}
+	Target     string
+	Nodename   string
+	Actionable Actionable
+	Cache      TargetCache
 }
 
 func (t *Target) Apply(data interface{}, states ...string) error {
