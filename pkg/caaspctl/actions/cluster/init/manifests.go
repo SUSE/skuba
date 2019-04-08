@@ -55,6 +55,211 @@ discovery:
     unsafeSkipCAVerification: true
 `
 
+	pspPrivManifest = `---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: suse.caasp.psp.privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+spec:
+  # Privileged
+  privileged: true
+  # Volumes and File Systems
+  volumes:
+    # Kubernetes Pseudo Volume Types
+    - configMap
+    - secret
+    - emptyDir
+    - downwardAPI
+    - projected
+    - persistentVolumeClaim
+    # Kubernetes Host Volume Types
+    - hostPath
+    # Networked Storage
+    - nfs
+    - rbd
+    - cephFS
+    - glusterfs
+    - fc
+    - iscsi
+    # Cloud Volumes
+    - cinder
+    - gcePersistentDisk
+    - awsElasticBlockStore
+    - azureDisk
+    - azureFile
+    - vsphereVolume
+  #allowedHostPaths: []
+  readOnlyRootFilesystem: false
+  # Users and groups
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  # Privilege Escalation
+  allowPrivilegeEscalation: true
+  defaultAllowPrivilegeEscalation: true
+  # Capabilities
+  allowedCapabilities:
+    - '*'
+  defaultAddCapabilities: []
+  requiredDropCapabilities: []
+  # Host namespaces
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  seLinux:
+    # SELinux is unsed in CaaSP
+    rule: 'RunAsAny'
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: suse:caasp:psp:privileged
+rules:
+  - apiGroups: ['extensions']
+    resources: ['podsecuritypolicies']
+    resourceNames: ['suse.caasp.psp.privileged']
+    verbs: ['use']
+---
+# Allow CaaSP nodes to use the privileged
+# PodSecurityPolicy.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: suse:caasp:psp:privileged
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: suse:caasp:psp:privileged
+subjects:
+# Only authenticated users
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: system:authenticated
+# All ServiceAccounts in the 'kube-system' namespace
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: system:serviceaccounts:kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: suse:caasp:psp:cilium
+roleRef:
+  kind: ClusterRole
+  name: suse:caasp:psp:privileged
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: cilium
+  namespace: kube-system
+`
+
+	pspUnprivManifest = `---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: suse.caasp.psp.unprivileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+spec:
+  # Privileged
+  privileged: false
+  # Volumes and File Systems
+  volumes:
+    # Kubernetes Pseudo Volume Types
+    - configMap
+    - secret
+    - emptyDir
+    - downwardAPI
+    - projected
+    - persistentVolumeClaim
+    # Networked Storage
+    - nfs
+    - rbd
+    - cephFS
+    - glusterfs
+    - fc
+    - iscsi
+    # Cloud Volumes
+    - cinder
+    - gcePersistentDisk
+    - awsElasticBlockStore
+    - azureDisk
+    - azureFile
+    - vsphereVolume
+  allowedHostPaths:
+    # Note: We don't allow hostPath volumes above, but set this to a path we
+    # control anyway as a belt+braces protection. /dev/null may be a better
+    # option, but the implications of pointing this towards a device are
+    # unclear.
+    - pathPrefix: /opt/kubernetes-hostpath-volumes
+  readOnlyRootFilesystem: false
+  # Users and groups
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  # Privilege Escalation
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
+  # Capabilities
+  allowedCapabilities: []
+  defaultAddCapabilities: []
+  requiredDropCapabilities: []
+  # Host namespaces
+  hostPID: false
+  hostIPC: false
+  hostNetwork: false
+  hostPorts:
+  - min: 0
+    max: 65535
+  # SELinux
+  seLinux:
+    # SELinux is unused in CaaSP
+    rule: 'RunAsAny'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: suse:caasp:psp:unprivileged
+rules:
+  - apiGroups: ['extensions']
+    resources: ['podsecuritypolicies']
+    verbs: ['use']
+    resourceNames: ['suse.caasp.psp.unprivileged']
+---
+# Allow all users and serviceaccounts to use the unprivileged
+# PodSecurityPolicy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: suse:caasp:psp:default
+roleRef:
+  kind: ClusterRole
+  name: suse:caasp:psp:unprivileged
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: system:serviceaccounts
+- kind: Group
+  apiGroup: rbac.authorization.k8s.io
+  name: system:authenticated
+`
+
 	ciliumManifest = `---
 apiVersion: v1
 kind: ServiceAccount
