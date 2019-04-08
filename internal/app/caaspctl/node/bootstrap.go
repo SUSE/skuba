@@ -18,9 +18,11 @@
 package node
 
 import (
+	"github.com/spf13/cobra"
+
 	"k8s.io/klog"
 
-	"github.com/spf13/cobra"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh"
 	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/bootstrap"
 )
@@ -40,14 +42,17 @@ func NewBootstrapCmd() *cobra.Command {
 		Use:   "bootstrap <node-name>",
 		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			err := node.Bootstrap(
+			bootstrapConfiguration := deployments.BootstrapConfiguration{
+				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
+			}
+
+			err := node.Bootstrap(bootstrapConfiguration,
 				ssh.NewTarget(
 					nodenames[0],
 					bootstrapOptions.target,
 					bootstrapOptions.user,
 					bootstrapOptions.sudo,
 					bootstrapOptions.port,
-					map[string]interface{}{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
 				),
 			)
 			if err != nil {
