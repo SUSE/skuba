@@ -12,14 +12,14 @@ import (
 // TESTS spec:
 //Add 2 master nodes to the cluster and check cluster-healt + logs
 
-var _ = Describe("00-caaspctl-init: basics ", func() {
+var _ = Describe("caaspctl: CLI basics", func() {
 	// parameters , for convenience here but they should be global parameter, configurable.
 	clusterName := "caaspci"
 	controlPlane := os.Getenv("CONTROLPLANE")
 	caaspctlPath := os.Getenv("GOPATH") //devel mode . For release this can be changed.
 	caaspctl := caaspctlPath + "/bin/caaspctl"
 
-	It("run caaspctl help", func() {
+	It("run caaspct cluster help", func() {
 		output, err := exec.Command(caaspctl, "cluster", "-h").Output()
 		if err != nil {
 			fmt.Printf("[ERROR]: caaspctl cluster cluster help failed")
@@ -31,7 +31,7 @@ var _ = Describe("00-caaspctl-init: basics ", func() {
 	// TODO use goexec from gomega here for better handling o errors
 	// https://onsi.github.io/gomega/#gexec-testing-external-processes
 
-	It("run cluster-init", func() {
+	It("create caaspctl init configuration", func() {
 		output, err := exec.Command(caaspctl, "cluster", "init", "--control-plane", controlPlane, clusterName).Output()
 		if err != nil {
 			fmt.Printf("[ERROR]: caaspctl cluster init failed")
