@@ -8,6 +8,12 @@ BUILD_DATE := $(shell date +%Y%m%d-%H:%M:%S)
 CAASPCTL_LDFLAGS = -ldflags "-X=github.com/SUSE/caaspctl/internal/app/caaspctl.Version=$(VERSION) \
                              -X=github.com/SUSE/caaspctl/internal/app/caaspctl.Commit=$(COMMIT) \
                              -X=github.com/SUSE/caaspctl/internal/app/caaspctl.BuildDate=$(BUILD_DATE)"
+
+CAASPCTL_DIRS    = cmd pkg internal test
+
+# go source files, ignore vendor directory
+CAASPCTL_SRCS = $(shell find $(CAASPCTL_DIRS) -type f -name '*.go')
+
 .PHONY: all
 all: build
 
@@ -31,3 +37,7 @@ staging:
 .PHONY: release
 release:
 	$(GO) install $(CAASPCTL_LDFLAGS) -tags release ./cmd/...
+
+.PHONY: vet
+vet:
+	$(GO) tool vet ${CAASPCTL_SRCS} 
