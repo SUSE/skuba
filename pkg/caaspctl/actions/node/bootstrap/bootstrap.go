@@ -48,6 +48,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
 	setContainerImages(initConfiguration)
+	setApiserverAdmissionPlugins(initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -71,7 +72,9 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
+		"psp.deploy",
 	)
+
 	if err != nil {
 		return err
 	}
@@ -144,4 +147,11 @@ func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
 		ImageRepository: caaspctl.ImageRepository,
 		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
 	}
+}
+
+func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguration) {
+	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
+		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
+	}
+	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = "NodeRestriction,PodSecurityPolicy"
 }
