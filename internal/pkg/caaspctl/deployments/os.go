@@ -29,7 +29,7 @@ const (
 	SUSEOSID = "suse"
 )
 
-func (t *Target) oSRelease() (map[string]string, error) {
+func (t *Target) osRelease() (map[string]string, error) {
 	if len(t.Cache.OsRelease) > 0 {
 		return t.Cache.OsRelease, nil
 	}
@@ -50,7 +50,7 @@ func (t *Target) oSRelease() (map[string]string, error) {
 }
 
 func (t *Target) hasOS(os string) (bool, error) {
-	osRelease, err := t.oSRelease()
+	osRelease, err := t.osRelease()
 	if err != nil {
 		return false, errors.Errorf("could not retrieve OS release information: %v", err)
 	}
