@@ -26,7 +26,6 @@ import (
 
 const (
 	CRISocket  = "/var/run/crio/crio.sock"
-	SUSEOSID   = "suse"
 	SUSECNIDir = "/usr/lib/cni"
 )
 

@@ -18,8 +18,6 @@
 package ssh
 
 import (
-	"strings"
-
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh/assets"
 )
 
@@ -29,11 +27,11 @@ func init() {
 }
 
 func kubeletConfigure(t *Target, data interface{}) error {
-	osRelease, err := t.target.OSRelease()
+	isSUSE, err := t.target.IsSUSEOS()
 	if err != nil {
 		return err
 	}
-	if strings.Contains(osRelease["ID_LIKE"], "suse") {
+	if isSUSE {
 		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
 			return err
 		}

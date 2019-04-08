@@ -21,9 +21,15 @@ import (
 	"bufio"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
-func (t *Target) OSRelease() (map[string]string, error) {
+const (
+	SUSEOSID = "suse"
+)
+
+func (t *Target) oSRelease() (map[string]string, error) {
 	if len(t.Cache.OsRelease) > 0 {
 		return t.Cache.OsRelease, nil
 	}
@@ -41,4 +47,21 @@ func (t *Target) OSRelease() (map[string]string, error) {
 		}
 	}
 	return t.Cache.OsRelease, nil
+}
+
+func (t *Target) hasOS(os string) (bool, error) {
+	osRelease, err := t.oSRelease()
+	if err != nil {
+		return false, errors.Errorf("could not retrieve OS release information: %v", err)
+	}
+
+	if strings.Contains(osRelease["ID_LIKE"], os) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (t *Target) IsSUSEOS() (bool, error) {
+	return t.hasOS(SUSEOSID)
 }
