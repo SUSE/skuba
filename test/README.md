@@ -4,27 +4,26 @@ This tests are BDD style, using ginkgo Kubernetes framework for doing specific `
 
 # Prerequisites for e2e tests.
 
-0) you need to have deployed caaspctl cluster then run the `e2e` tests.
+1) Having 4 Instances: (1 load-balancer, 1 master, 2 workers).
+   This Instances can be 
 
-`make test-e2e` will trigger all tests in a idempotent way, you can run it XX times.
+# Run e2e-tests
 
-This will run all sub-suites in random order, random sub-test.
-
-# Testsuites for caaspctl
-
-- cluster-health : this tests will check a cluster health.
+`make test-e2e`
 
 # Architecture and design:
 
-A testsuite is a subdirectory of `tests` and exist conceptually like a indipendent microservice.
+This testsuite can be executed indipendently and consumed from each different tests/ci frameworks.
 
-The testsuite share only the `lib` directory which are utilty. 
+A testsuite is a subdirectory of `tests` and is a indipendent unit. Examples: `tests/cluster-scale`, `tests/cilium`.
+
+Each subdirectory, testsuite will contain tests. E.g the `tests/cluster-scale` can contain several BDD tests which (growth, node removal etc).
+
+The testsuite shares only the `lib` directory which are utilty. 
 The Common library is stored on `lib` directory, You should try to put code there to make clean the specs.
 
-This testsuite can be executed indipendently from each framework of deployment. You need only the source code.
-
 You need only pass the IP you can run the tests to any deployed cluster outside in the wild.
-Alls hosts/vms should have sshd enabled on port 22. We use linux as std password but you can change it with the ENV.variable.
+Alls hosts/vms should have sshd enabled on port 22. We use `linux` as std password but you can change it with the ENV.variable.
 
 # Developing New Tests:
 
