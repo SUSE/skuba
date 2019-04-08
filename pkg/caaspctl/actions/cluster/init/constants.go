@@ -46,5 +46,13 @@ var (
 			// fields remain unknown while `cluster init`
 			DoNotRender: true,
 		},
+		{
+			Location: caaspctl.PspUnprivManifestFile(),
+			Content:  pspUnprivManifest,
+		},
+		{
+			Location: caaspctl.PspPrivManifestFile(),
+			Content:  pspPrivManifest,
+		},
 	}
 )

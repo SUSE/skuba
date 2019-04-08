@@ -71,6 +71,18 @@ func CiliumManifestFile() string {
 	return path.Join(CniDir(), "cilium.yaml")
 }
 
+func PspDir() string {
+	return path.Join(AddonsDir(), "psp")
+}
+
+func PspUnprivManifestFile() string {
+	return path.Join(PspDir(), "podsecuritypolicy-unprivileged.yaml")
+}
+
+func PspPrivManifestFile() string {
+	return path.Join(PspDir(), "podsecuritypolicy-privileged.yaml")
+}
+
 func KubeConfigAdminFile() string {
 	return "admin.conf"
 }
