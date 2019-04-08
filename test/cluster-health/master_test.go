@@ -2,6 +2,7 @@ package clusterhealth
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
@@ -11,38 +12,35 @@ import (
 // TESTS spec:
 //Add 2 master nodes to the cluster and check cluster-healt + logs
 
-// TODO 02: this need  to be adapted better ( wip): e.g better detection of ip master etc.
-// working on this now. ( to be though if using env. vars or files.
+var _ = Describe("00-caaspctl-init: basics ", func() {
+	// parameters , for convenience here but they should be global parameter, configurable.
+	clusterName := "caaspci"
+	controlPlane := os.Getenv("CONTROLPLANE")
+	caaspctlPath := os.Getenv("GOPATH") //devel mode . For release this can be changed.
+	caaspctl := caaspctlPath + "/bin/caaspctl"
 
-// use init function for reading IPs of cluster. This should be read all ips if possible.
-// func init() {
-// masterHost := os.Getenv("MASTER")
-// if masterHost == "" {
-// 	panic("MASTER IP not set")
-// }
-//}
-// this is another suite for checking the health of cluster...
-// 00: add 1 worker and check status
-var _ = Describe("Add 1 worker node to cluster", func() {
-	/// TODO 03: this will run remote cmd via ssh
-
-	It("000: fake test passing", func() {
-		output, err := exec.Command("uptime").Output()
+	It("run caaspctl help", func() {
+		output, err := exec.Command(caaspctl, "cluster", "-h").Output()
 		if err != nil {
-			fmt.Printf("[ERROR]: Cluster is not healthy")
+			fmt.Printf("[ERROR]: caaspctl cluster cluster help failed")
 			fmt.Println(string(output))
 			panic(err)
 		}
 		fmt.Println(string(output))
 	})
-	// this is a real test but it will fail since i didn't have deployed things etc..
-	It("Check cluster status after 1 worker was added", func() {
-		output, err := exec.Command("caaspctl cluster status").Output()
+	// TODO use goexec from gomega here for better handling o errors
+	// https://onsi.github.io/gomega/#gexec-testing-external-processes
+
+	It("run cluster-init", func() {
+		output, err := exec.Command(caaspctl, "cluster", "init", "--control-plane", controlPlane, clusterName).Output()
 		if err != nil {
-			fmt.Printf("[ERROR]: Cluster is not healthy")
+			fmt.Printf("[ERROR]: caaspctl cluster init failed")
 			fmt.Println(string(output))
 			panic(err)
 		}
 		fmt.Println(string(output))
 	})
+
+	// TODO: add tear-down function
+
 })
