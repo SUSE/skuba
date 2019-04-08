@@ -52,7 +52,7 @@ func (t *Target) oSRelease() (map[string]string, error) {
 func (t *Target) hasOS(os string) (bool, error) {
 	osRelease, err := t.oSRelease()
 	if err != nil {
-		return false, errors.Errorf("could not retrieve OS release information: %v", err)
+		return false, errors.Wrap(err, "could not retrieve OS release information")
 	}
 
 	if strings.Contains(osRelease["ID_LIKE"], os) {

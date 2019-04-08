@@ -18,14 +18,12 @@
 package node
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
-	"k8s.io/klog"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
@@ -33,17 +31,17 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
+	"github.com/pkg/errors"
 )
 
 // Bootstrap initializes the first master node of the cluster
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead
 //        of using the PWD
-// FIXME: error handling with `github.com/pkg/errors`
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	initConfiguration, err := LoadInitConfigurationFromFile(caaspctl.KubeadmInitConfFile())
 	if err != nil {
-		return fmt.Errorf("Could not parse %s file: %v", caaspctl.KubeadmInitConfFile(), err)
+		return errors.Wrapf(err, "could not parse %s file", caaspctl.KubeadmInitConfFile())
 	}
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
@@ -53,11 +51,11 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		Version: "v1beta1",
 	})
 	if err != nil {
-		return fmt.Errorf("Could not marshal configuration: %v", err)
+		return errors.Wrap(err, "could not marshal configuration")
 	}
 
 	if err := ioutil.WriteFile(caaspctl.KubeadmInitConfFile(), finalInitConfigurationContents, 0600); err != nil {
-		return fmt.Errorf("Error writing init configuration: %v", err)
+		return errors.Wrap(err, "error writing init configuration")
 	}
 
 	err = target.Apply(

@@ -33,7 +33,7 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 		klog.Infof("=== applying state %s ===\n", stateName)
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
-				return errors.Errorf("failed to apply state %s: %v", stateName, err)
+				return errors.Wrapf(err, "failed to apply state %s", stateName)
 			} else {
 				klog.Infof("=== state %s applied successfully ===\n", stateName)
 			}
