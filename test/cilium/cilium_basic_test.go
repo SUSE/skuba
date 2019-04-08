@@ -9,6 +9,7 @@ import (
 )
 
 // 00: add 1 worker and check status
+// this is a scenario we expect. ( it is the specification /testcase you can have multiple of them
 var _ = Describe("Add 1 worker node to cluster", func() {
 	/// TODO 03: this will run remote cmd via ssh
 
@@ -33,6 +34,7 @@ var _ = Describe("Add 1 worker node to cluster", func() {
 	})
 })
 
+// 2nd case
 // 00: add 1 worker and check status
 var _ = Describe("awesome-feature", func() {
 	/// TODO 03: this will run remote cmd via ssh
@@ -58,6 +60,7 @@ var _ = Describe("awesome-feature", func() {
 	})
 })
 
+// etc
 // 00: add 1 worker and check status
 var _ = Describe("002-fake-scenario", func() {
 	/// TODO 03: this will run remote cmd via ssh

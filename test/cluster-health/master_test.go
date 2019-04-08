@@ -21,7 +21,7 @@ import (
 // 	panic("MASTER IP not set")
 // }
 //}
-
+// this is another suite for checking the health of cluster...
 // 00: add 1 worker and check status
 var _ = Describe("Add 1 worker node to cluster", func() {
 	/// TODO 03: this will run remote cmd via ssh
@@ -35,7 +35,7 @@ var _ = Describe("Add 1 worker node to cluster", func() {
 		}
 		fmt.Println(string(output))
 	})
-
+	// this is a real test but it will fail since i didn't have deployed things etc..
 	It("Check cluster status after 1 worker was added", func() {
 		output, err := exec.Command("caaspctl cluster status").Output()
 		if err != nil {
