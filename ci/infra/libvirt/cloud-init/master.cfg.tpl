@@ -38,6 +38,7 @@ packages:
   - kubernetes-kubelet
   - kubernetes-client
   - cri-o
+  - cri-tools
   - cni-plugins
   - "-docker"
   - "-containerd"
@@ -47,5 +48,11 @@ ${packages}
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
+
+# NOTE: Uncomment the following code if the CRI-O that you are using is
+# expecting to be working on top of BTRFS. This may happen in packages from
+# repositories which haven't fixed this issue.
+#runcmd:
+  #- /usr/bin/sed -i -e 's/btrfs/overlay2/g' /etc/crio/crio.conf
 
 final_message: "The system is finally up, after $UPTIME seconds"

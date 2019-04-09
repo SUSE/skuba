@@ -39,6 +39,16 @@ The worker nodes will be named `ag-worker-{N}.ag-test.net` and will always have 
 
 All the nodes can ping each other and can resolve their FQDN.
 
+## Further customization with cloud-init
+
+There are two cloud-init files inside of the `cloud-init` directory that you can
+use to further customize your image: master.cfg.tpl and worker.cfg.tpl. These
+two files will automatically set some of the variables defined in your
+`terraform.tfvars` file (e.g. `packages` or `repositories`).
+
+Moreover, in some repository distributions the CRI-O package will require to run
+on top of BTRFS. If this is not the case for your images, you can uncomment a
+`runcmd` instruction that disables just that in the CRI-O configuration.
 
 # PRO-tip
 
