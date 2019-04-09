@@ -1,0 +1,7 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: 10.17.1.0:6443
+    token: _DO_NOT_CHANGE_WILL_BE_REPLACED_ON_JOIN_
+    unsafeSkipCAVerification: true
