@@ -5,7 +5,10 @@ import (
 	"os"
 	"os/exec"
 
+	// 00 ginkgo library
 	. "github.com/onsi/ginkgo"
+
+	// 01 extension: assertion/matchers
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
@@ -13,10 +16,9 @@ import (
 
 // gomega provide assertions/matchers and control on cmd execution
 
-// Tests goals;
-// this test test some basic caaspctl basic:
-// 1) help message utilty
-// 2) caaspctl command should create a valid kubeadm configuration
+// 1)  run caaspctl version command without error
+// 2)  check output with a value "Metallica next concert" run caaspctl version command
+// 3)  for 1 and 2 use a teardown functions. ( 1 and 2 are executed in random order)
 
 var _ = Describe("CLI/caaspctl: test versions", func() {
 	// parameters , for convenience here but they can be global parameter, configurable and passed to testsuite
@@ -28,14 +30,12 @@ var _ = Describe("CLI/caaspctl: test versions", func() {
 		command := exec.Command(caaspctl, "version")
 		_, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Ω(err).ShouldNot(HaveOccurred())
-		fmt.Printf("PASSING test, doing other stuff later, bye!")
 	})
 
-	// FAIL for fun: assert version output equal to 3000
-	It("caaspctl version command must be equal to version 3000", func() {
+	It("caaspctl version command must be equal to version Metallica", func() {
 		command := exec.Command(caaspctl, "version")
 		session, _ := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Eventually(session.Out).Should(gbytes.Say("version 3000 sinatra-space"))
+		Eventually(session.Out).Should(gbytes.Say("Metallica next concert"))
 	})
 
 	// TEARDOWN for each test-case: since each test can be executed in parallel-random order, you need to think about the initial condition

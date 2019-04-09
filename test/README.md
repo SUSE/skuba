@@ -2,16 +2,20 @@
 
 This tests are BDD style, using ginkgo Kubernetes framework for doing specific `caaspctl` e2e tests.
 
+This doc is about the demo.
+
+
 # Prerequisites for e2e tests.
 
 1) Having 4 Instances: (1 load-balancer, 1 master, 2 workers).
-   This Instances can be 
+   This variables are passed via ENV. see `vim ../ci/tasks/e2e-tests.py`
 
 # Run e2e-tests
 
 `make test-e2e`
+`DEBUG=True make test-e2e`
 
-# Architecture and design:
+## Architecture and design:
 
 This testsuite can be executed indipendently and consumed from each different tests/ci frameworks.
 
@@ -24,24 +28,3 @@ The Common library is stored on `lib` directory, You should try to put code ther
 
 You need only pass the IP you can run the tests to any deployed cluster outside in the wild.
 Alls hosts/vms should have sshd enabled on port 22. We use `linux` as std password but you can change it with the ENV.variable.
-
-# Developing New Tests:
-
-## Tests requirements:
-
-0) All tests should be idempotent, meanining you can run them XX times, you will have the same results.
-
-1) All tests can be run in parallel.
-
-2) All tests doesn't require or have dependencies each others. Meaining: we can change order in which tests are executed, results will be the same. There is no hidden dependency between tests.
-
-## How to create a new suite:
-
-Generally we should avoid to create much subsuites if they are not needed. 
-
-0) Create a dir like `your_suite_name`
-1) Create a pkg accordingly inside the dir. This pkg should be empty, only containing `pkg services` as example.
-2) Use `ginkgo bootstrap` for createing the `testsuite` file
-3) Use `ginkgo generate name_test` for generating specs. 
-
-See upstream doc for further details.

@@ -58,7 +58,7 @@
     "pkg/caaspctl/actions/node/remove",
   ]
   pruneopts = "UT"
-  revision = "c31efcea9d9a2e34e1288a4ecab6f7bfbbdd0d5c"
+  revision = "e59bbbafbde99066ce30b0247a7c35b4c9e3a487"
 
 [[projects]]
   digest = "1:fd61cf4ae1953d55df708acb6b91492d538f49c305b364a014049914495db426"
@@ -223,12 +223,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3ee90c0d94da31b442dde97c99635aaafec68d0b8a3c12ee2075c6bdabeec6bb"
+  digest = "1:a6181aca1fd5e27103f9a920876f29ac72854df7345a39f3b01e61c8c94cc8af"
   name = "github.com/google/gofuzz"
   packages = ["."]
   pruneopts = "UT"
-  revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
+  revision = "f140a6486e521aad38f5917de355cbf147cc0496"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:65c4414eeb350c47b8de71110150d0ea8a281835b1f386eacaa3ad7325929c21"
@@ -382,11 +382,13 @@
   version = "v1.8.0"
 
 [[projects]]
-  digest = "1:fe167e8f858cbfc10c721f2000f2446140800bb53fa83c088e03d191275611a4"
+  digest = "1:029c6999f3efa5f1cd3f8b9e02a8bc4276cc439d2dc8dc73cd98e4efd5c76cba"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
     "format",
+    "gbytes",
+    "gexec",
     "internal/assertion",
     "internal/asyncassertion",
     "internal/oraclematcher",
@@ -897,7 +899,7 @@
   name = "k8s.io/cloud-provider"
   packages = ["features"]
   pruneopts = "UT"
-  revision = "75f58abbee5cb9d4674f8260c99cd3d9704a77f6"
+  revision = "fca63a37790d876a9192e709bb04eec163bf8a77"
 
 [[projects]]
   digest = "1:28fd6a61b5220aab30c6f7344676ff5aaea4a5f14407d95f33e238b13da2d2ef"
@@ -952,11 +954,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c315e859e0da8b226202d60b2df6c48b17568468503ba080b4e3a30ad99887b4"
+  digest = "1:9cee2a0644de4caac433454657c8770ac8f076c050f8347506a7f4c6815f8485"
   name = "k8s.io/kubelet"
   packages = ["config/v1beta1"]
   pruneopts = "UT"
-  revision = "9dc42e1c9bcb96851c1741933feef5023a6b6f34"
+  revision = "d2fa325fe6fec30d147aeae078af4d51819dbfe1"
 
 [[projects]]
   digest = "1:939a597eb17f4553ec3865a0ce74b08be61ff32c7cabfbdb9f8ba299b627d4dc"
@@ -1170,6 +1172,8 @@
     "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/remove",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/onsi/gomega/gbytes",
+    "github.com/onsi/gomega/gexec",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "golang.org/x/crypto/ssh",
