@@ -1,0 +1,58 @@
+#cloud-config
+disable_root: False
+ssh_authorized_keys: $ssh_keys
+
+# set locale
+locale: en_GB.UTF-8
+
+# set timezone
+timezone: Etc/UTC
+
+groups:
+  - jenkins
+
+users:
+  - name: jenkins
+    groups: jenkins, users, admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+
+write_files:
+  - path: /etc/systemd/system/swarm-client.service
+    content: |
+        [Unit]
+        Description=ci.suse.de swarm plugin
+        Documentation=https://gitlab.suse.de/caasp/caasp-ops/wikis/jenkins
+        After=network.target
+        AssertPathIsDirectory=/home/jenkins
+
+        [Service]
+        ExecStart=/usr/bin/java -jar /home/jenkins/swarm-client.jar -master "https://ci.suse.de/" -disableSslVerification -disableClientsUniqueId -name "%H" -description "CaaSP team worker" -username "caasp" -password $(cat /srv/ci/ci.suse.de.caasp-user-password) -labels "caasp-kvm-bm swarm" -executors "24" -mode "exclusive" -fsroot "/home/jenkins" -deleteExistingClients -disableClientsUniqueId -maxRetryInterval 20 -retry 10
+        User=jenkins
+        Restart=on-failure
+        RestartSec=1min
+        StandardOutput=journal
+        StandardError=journal
+        SyslogIdentifier=swarm-client
+        Nice=-5
+
+        [Install]
+        WantedBy=multi-user.target
+
+zypper:
+  config:
+    solver.onlyRequires: "true"
+    download.use_deltarpm: "true"
+
+packages:
+  - java
+  - python3
+  - cloud-init
+
+runcmd:
+  - ip link set dev eth0 mtu 1400
+  - mkdir -p /srv/ci
+  - mkdir -p /srv/jenkins
+  - curl --retry 10 --retry-connrefused   http://ci.suse.de/swarm/swarm-client.jar -o /home/jenkins/swarm-client.jar
+  - systemctl enable swarm-client.service
+  - systemctl start swarm-client.service
+

@@ -1,0 +1,75 @@
+heat_template_version: 2017-09-01
+description: Template to create a Jenkins worker
+
+parameters:
+  worker_name:
+    type: string
+    description: Name of the worker
+  worker_flavor:
+    type: string
+    description: Flavor of the worker
+    constraints:
+      - custom_constraint: nova.flavor
+  keypair:
+    type: string
+    description: Nova key value pair
+    constraints:
+      - custom_constraint: nova.keypair
+  image:
+    type: string
+    description: Name of image to use for the worker
+    constraints:
+      - custom_constraint: glance.image
+  internal_network:
+    type: string
+    description: Internal network
+    constraints:
+      - custom_constraint: neutron.network
+  external_network:
+    type: string
+    description: Internal network
+    constraints:
+      - custom_constraint: neutron.network
+  ssh_keys:
+    type: comma_delimited_list
+    description: Extra keys to add to the workers
+    default: []
+  
+resources:
+  worker_port:
+      type: OS::Neutron::Port
+      properties:
+        network: { get_param: internal_network }
+
+  worker_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: external_network }
+      port_id: { get_resource: worker_port }
+  
+  worker_floating_ip_association:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: worker_floating_ip }
+      port_id: { get_resource: worker_port }
+
+  jenkins_worker:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: worker_name }
+      image: { get_param: image }
+      key_name: { get_param: keypair }
+      flavor: { get_param: worker_flavor }
+      networks:
+        - port: { get_resource: worker_port }
+      personality: {
+        "/srv/ci/github-token": { get_file: github-token },
+        "/srv/ci/ci.suse.de.caasp-user-password": { get_file: ci.suse.de.caasp-user-password },
+        "/srv/ci/ecp.openrc": { get_file: ecp.openrc }
+      }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: { get_file: user-data }
+          params:
+            $ssh_keys: { get_param: ssh_keys }

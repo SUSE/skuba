@@ -1,0 +1,60 @@
+heat_template_version: 2017-09-01
+description: Template to create a Jenkins worker
+
+parameters:
+  worker_count:
+    type: number
+    description: Number of Jenkins workers to boot
+    default: 1
+  worker_flavor:
+    type: string
+    description: Flavor of the worker
+    constraints:
+      - custom_constraint: nova.flavor
+    default: d2.small
+  keypair:
+    type: string
+    description: Nova key value pair
+    constraints:
+      - custom_constraint: nova.keypair
+    default: caasp-jenkins
+  image:
+    type: string
+    description: Name of image to use for the worker
+    constraints:
+      - custom_constraint: glance.image
+    default: openSUSE-Leap-15.0-JeOS.x86_64
+  internal_network:
+    type: string
+    description: Internal network
+    constraints:
+      - custom_constraint: neutron.network
+    default: fixed
+  external_network:
+    type: string
+    description: Internal network
+    constraints:
+      - custom_constraint: neutron.network
+    default: floating
+  ssh_keys:
+    type: comma_delimited_list
+    description: Extra keys to add to the workers
+    default: []
+  
+resources:
+  jenkins_worker:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: { get_param: worker_count }
+      resource_def:
+        type: jenkins-worker.yaml
+        properties:
+          worker_flavor: { get_param: worker_flavor }
+          worker_name: { list_join: ['-', [{get_param: 'OS::stack_name'}, 'jenkins', 'worker', '%index%']] }
+          keypair: { get_param: keypair }
+          image: { get_param: image }
+          internal_network: { get_param: internal_network }
+          external_network: { get_param: external_network }
+          ssh_keys: { get_param: ssh_keys }
+          
+
