@@ -60,7 +60,11 @@ func Init(initConfiguration InitConfiguration) {
 		if err != nil {
 			klog.Fatalf("could not create file %q: %v\n", file.Location, err)
 		}
-		f.WriteString(renderTemplate(file.Content, initConfiguration))
+		if file.DoNotRender {
+			f.WriteString(file.Content)
+		} else {
+			f.WriteString(renderTemplate(file.Content, initConfiguration))
+		}
 		f.Close()
 	}
 

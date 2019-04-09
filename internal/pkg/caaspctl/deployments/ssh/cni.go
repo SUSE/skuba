@@ -23,11 +23,20 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/cni"
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 func init() {
 	stateMap["cni.deploy"] = cniDeploy
+	stateMap["cni.render"] = cniRender
+}
+
+func cniRender(t *Target, data interface{}) error {
+	if err := cni.FillCiliumManifestFile(t.target.Target, caaspctl.CiliumManifestFile()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func cniDeploy(t *Target, data interface{}) error {
