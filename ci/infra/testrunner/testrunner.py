@@ -99,12 +99,8 @@ def create_workspace_dir():
         pass
 
 ## nested output blocks
-if 'JENKINS_HOME' in os.environ:
-    DOT = '●'
-    DOT_exit = '●'
-else:
-    DOT = '\033[34m●\033[0m'
-    DOT_exit = '\033[32m●\033[0m'
+DOT = '\033[34m●\033[0m'
+DOT_exit = '\033[32m●\033[0m'
 
 _stepdepth = 0
 def step(foo=None):
