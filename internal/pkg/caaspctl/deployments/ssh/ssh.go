@@ -130,6 +130,10 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 
 func (t *Target) initClient() error {
 	socket := os.Getenv("SSH_AUTH_SOCK")
+	if len(socket) == 0 {
+		return errors.Errorf("SSH_AUTH_SOCK is undefined. Make sure ssh-agent is running")
+	}
+
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
 		return err
