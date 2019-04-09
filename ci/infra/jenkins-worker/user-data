@@ -19,24 +19,29 @@ users:
 write_files:
   - path: /etc/systemd/system/swarm-client.service
     content: |
-        [Unit]
-        Description=ci.suse.de swarm plugin
-        Documentation=https://gitlab.suse.de/caasp/caasp-ops/wikis/jenkins
-        After=network.target
-        AssertPathIsDirectory=/home/jenkins
+      [Unit]
+      Description=ci.suse.de swarm plugin
+      Documentation=https://gitlab.suse.de/caasp/caasp-ops/wikis/jenkins
+      After=network.target
+      AssertPathIsDirectory=/home/jenkins
 
-        [Service]
-        ExecStart=/usr/bin/java -jar /home/jenkins/swarm-client.jar -master "https://ci.suse.de/" -disableSslVerification -disableClientsUniqueId -name "%H" -description "CaaSP team worker" -username "caasp" -password $(cat /srv/ci/ci.suse.de.caasp-user-password) -labels "caasp-kvm-bm swarm" -executors "24" -mode "exclusive" -fsroot "/home/jenkins" -deleteExistingClients -disableClientsUniqueId -maxRetryInterval 20 -retry 10
-        User=jenkins
-        Restart=on-failure
-        RestartSec=1min
-        StandardOutput=journal
-        StandardError=journal
-        SyslogIdentifier=swarm-client
-        Nice=-5
+      [Service]
+      ExecStart=/usr/bin/java -jar /home/jenkins/swarm-client.jar -master "https://ci.suse.de/" -disableSslVerification -disableClientsUniqueId -name "%H" -description "CaaSP team worker" -username "caasp" -password $(cat /srv/ci/ci.suse.de.caasp-user-password) -labels "caasp-kvm-bm swarm" -executors "24" -mode "exclusive" -fsroot "/home/jenkins" -deleteExistingClients -disableClientsUniqueId -maxRetryInterval 20 -retry 10
+      User=jenkins
+      Restart=on-failure
+      RestartSec=1min
+      StandardOutput=journal
+      StandardError=journal
+      SyslogIdentifier=swarm-client
+      Nice=-5
 
-        [Install]
-        WantedBy=multi-user.target
+      [Install]
+      WantedBy=multi-user.target
+  - path: /etc/resolv.conf
+    content: |
+      search suse.de
+      nameserver 10.84.44.1
+      nameserver 10.84.44.2
 
 zypper:
   config:
