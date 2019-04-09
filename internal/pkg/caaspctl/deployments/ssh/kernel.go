@@ -17,23 +17,63 @@
 
 package ssh
 
+import (
+	"fmt"
+)
+
+var (
+	modules = []string{
+		"br_netfilter",
+	}
+
+	parameters = map[string]struct {
+		Attribute string
+		Value     string
+	}{
+		"net-ipv4-ip-forward": {
+			Attribute: "net.ipv4.ip_forward",
+			Value:     "1",
+		},
+		"net-bridge-bridge-nf-call-iptables": {
+			Attribute: "net.bridge.bridge-nf-call-iptables",
+			Value:     "1",
+		},
+	}
+)
+
 func init() {
 	stateMap["kernel.load-modules"] = kernelLoadModules
 	stateMap["kernel.configure-parameters"] = kernelConfigureParameters
 }
 
 func kernelLoadModules(t *Target, data interface{}) error {
-	if _, _, err := t.ssh("modprobe br_netfilter"); err != nil {
-		return err
+	for _, module := range modules {
+		if err := loadModule(t, module); err != nil {
+			return err
+		}
 	}
-	err := t.UploadFileContents("/etc/modules-load.d/br_netfilter.conf", "br_netfilter")
-	return err
+	return nil
 }
 
 func kernelConfigureParameters(t *Target, data interface{}) error {
-	if _, _, err := t.ssh("sysctl -w net.ipv4.ip_forward=1"); err != nil {
+	for parameterName, parameter := range parameters {
+		if err := configureParameter(t, parameterName, parameter.Attribute, parameter.Value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func loadModule(t *Target, module string) error {
+	if _, _, err := t.ssh(fmt.Sprintf("modprobe %s", module)); err != nil {
 		return err
 	}
-	_, _, err := t.ssh("sysctl -w net.bridge.bridge-nf-call-iptables=1")
-	return err
+	return t.UploadFileContents(fmt.Sprintf("/etc/modules-load.d/caaspctl-%s.conf", module), module)
+}
+
+func configureParameter(t *Target, name, attribute, value string) error {
+	if _, _, err := t.ssh(fmt.Sprintf("sysctl -w %s=%s", attribute, value)); err != nil {
+		return err
+	}
+	return t.UploadFileContents(fmt.Sprintf("/etc/sysctl.d/90-caaspctl-%s.conf", name), fmt.Sprintf("%s=%s", attribute, value))
 }
