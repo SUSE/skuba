@@ -36,7 +36,7 @@ func Remove(target string) {
 
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
 	if err != nil {
-		fmt.Printf("[remove] could not get node %s: %v\n", target, err)
+		fmt.Printf("[remove-node] could not get node %s: %v\n", target, err)
 		os.Exit(1)
 	}
 
@@ -44,31 +44,31 @@ func Remove(target string) {
 
 	var isMaster bool
 	if isMaster = kubernetes.IsMaster(node); isMaster {
-		fmt.Printf("[remove] removing master node %s\n", targetName)
+		fmt.Printf("[remove-node] removing master node %s\n", targetName)
 	} else {
-		fmt.Printf("[remove] removing worker node %s\n", targetName)
+		fmt.Printf("[remove-node] removing worker node %s\n", targetName)
 	}
 
 	kubernetes.DrainNode(node)
 
 	if isMaster {
-		fmt.Printf("[remove] removing etcd from node %s\n", targetName)
+		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
 		etcd.RemoveMember(node)
 	}
 
 	if err := kubernetes.DisarmKubelet(node); err != nil {
-		fmt.Printf("[error] failed disarming kubelet: %v; node could be down, continuing with node removal...", err)
+		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...", err)
 	}
 
 	if isMaster {
 		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
-			fmt.Printf("[error] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
+			fmt.Printf("[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
 		}
 	}
 
 	if err := client.CoreV1().Nodes().Delete(targetName, &metav1.DeleteOptions{}); err == nil {
-		fmt.Printf("[remove] node %s successfully removed from the cluster\n", targetName)
+		fmt.Printf("[remove-node] node %s successfully removed from the cluster\n", targetName)
 	} else {
-		fmt.Printf("[remove] could not remove node %s\n", targetName)
+		fmt.Printf("[remove-node] could not remove node %s\n", targetName)
 	}
 }

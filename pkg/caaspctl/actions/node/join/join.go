@@ -53,7 +53,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	fmt.Println("[join] applying states to new node")
 
 	if err := target.Apply(joinConfiguration, statesToApply...); err != nil {
-		fmt.Printf("[error] failed to apply join to node %s \n", err)
+		fmt.Printf("[join] failed to apply join to node %s\n", err)
 		return
 	}
 
