@@ -101,7 +101,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
-		klog.Fatalf("could not retrieve OS release information: %v", err)
+		klog.Fatal(err)
 	}
 	if isSUSE {
 		joinConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = caaspctl.SUSECNIDir
