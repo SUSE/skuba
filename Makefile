@@ -21,13 +21,10 @@ MANPAGES    := $(MANPAGES_MD:%.md=%)
 docs/man/%.1: docs/man/%.1.md
 	$(GO_MD2MAN) -in $< -out $@
 
-
 # this run ginko and is REMOTE=local
-
 .PHONY: test-e2e
 test-e2e:
-	./ci/tasks/e2e-tests.py
-
+	./ci/tasks/e2e-tests.py 2> /dev/null
 
 .PHONY: docs
 docs: $(MANPAGES)

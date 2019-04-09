@@ -15,8 +15,15 @@ if not "CONTROLPLANE" in os.environ:
 # we will have here a set of core feature, actually only 1, where we setup the cluster with caaspctl init etc. this need to run first the rest of feature 
 # will be random and idempotent.
 
+# setup cluster feature..
+
+
 # idempotent features run in random order
 # this can be configured later. you can check the upstream doc. we have everything random here
 
-# the flags can be made configurable later on
-subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --progress -v", shell=True, env=dict(os.environ))
+# debug mode
+if os.environ.get('DEBUG')=='True':
+    subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --progress -v", shell=True, env=dict(os.environ))
+
+else:
+    subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --race --progress", shell=True, env=dict(os.environ))
