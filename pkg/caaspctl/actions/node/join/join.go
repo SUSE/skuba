@@ -50,7 +50,15 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
 	}
 
-	target.Apply(joinConfiguration, statesToApply...)
+	fmt.Println("[join] applying states to new node")
+
+	if err := target.Apply(joinConfiguration, statesToApply...); err != nil {
+		fmt.Printf("[join] failed to apply join to node %s\n", err)
+		return
+	}
+
+	fmt.Println("[join] node successfully joined the cluster")
+
 }
 
 // ConfigPath returns the configuration path for a specific Target; if this file does
