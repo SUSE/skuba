@@ -27,12 +27,14 @@ const (
 	Etcd    Component = "etcd"
 	CoreDNS Component = "coredns"
 	Pause   Component = "pause"
+	Cilium  Component = "cilium"
 )
 
 type ControlPlaneComponentsVersion struct {
 	EtcdVersion    string
 	CoreDNSVersion string
 	PauseVersion   string
+	CiliumVersion  string
 }
 
 type ComponentsVersion struct {
@@ -55,6 +57,7 @@ var (
 				EtcdVersion:    "3.3.1",
 				CoreDNSVersion: "1.2.6",
 				PauseVersion:   "3.1",
+				CiliumVersion:  "1.4.0",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion: "1.14.0",
@@ -72,6 +75,8 @@ func CurrentComponentVersion(component Component) string {
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.CoreDNSVersion
 	case Pause:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.PauseVersion
+	case Cilium:
+		return currentKubernetesVersion.ControlPlaneComponentsVersion.CiliumVersion
 	}
 	log.Fatalf("unknown component %q", component)
 	panic("unreachable")

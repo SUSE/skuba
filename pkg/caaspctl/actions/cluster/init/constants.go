@@ -23,8 +23,9 @@ import (
 
 var (
 	scaffoldFiles = []struct {
-		Location string
-		Content  string
+		Location    string
+		Content     string
+		DoNotRender bool
 	}{
 		{
 			Location: caaspctl.KubeadmInitConfFile(),
@@ -39,8 +40,11 @@ var (
 			Content:  workerConfTemplate,
 		},
 		{
-			Location: caaspctl.FlannelManifestFile(),
-			Content:  flannelManifest,
+			Location: caaspctl.CiliumManifestFile(),
+			Content:  ciliumManifest,
+			// cilium.yaml need delayed rendering as some
+			// fields remain unknown while `cluster init`
+			DoNotRender: true,
 		},
 	}
 )
