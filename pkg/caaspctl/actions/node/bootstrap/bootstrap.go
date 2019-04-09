@@ -18,6 +18,7 @@
 package node
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -43,6 +44,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", caaspctl.KubeadmInitConfFile())
 	}
+	fmt.Println("[bootstrap] updating init configuration with target information")
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
 	setContainerImages(initConfiguration)
@@ -54,10 +56,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrap(err, "could not marshal configuration")
 	}
 
+	fmt.Println("[bootstrap] writing init configuration for node")
 	if err := ioutil.WriteFile(caaspctl.KubeadmInitConfFile(), finalInitConfigurationContents, 0600); err != nil {
 		return errors.Wrap(err, "error writing init configuration")
 	}
 
+	fmt.Println("[bootstrap] applying init configuration to node")
 	err = target.Apply(
 		bootstrapConfiguration,
 		"kubernetes.bootstrap.upload-secrets",
@@ -84,6 +88,7 @@ func downloadSecrets(target *deployments.Target) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("[bootstrap] downloading secrets from new node")
 		if err := ioutil.WriteFile(secretLocation, []byte(secretData), 0600); err != nil {
 			return err
 		}
