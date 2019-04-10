@@ -24,6 +24,7 @@ import (
 var (
 	modules = []string{
 		"br_netfilter",
+		"vxlan",
 	}
 
 	parameters = map[string]struct {
