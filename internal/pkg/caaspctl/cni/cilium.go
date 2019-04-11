@@ -7,22 +7,33 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"text/template"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
+	"k8s.io/klog"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	pkiutil "k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubeadm"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
+	"github.com/go-yaml/yaml"
 )
 
 const (
-	ciliumSecretName = "cilium-secret"
+	ciliumSecretName      = "cilium-secret"
+	ciliumConfigMapName   = "cilium-config"
+	ciliumUpdateLabelsFmt = `{"spec":{"template":{"metadata":{"labels":{"caaspctl-updated-at":"%v"}}}}}`
+	etcdEndpointFmt       = "https://%s:2379"
+	etcdCAFileName        = "/tmp/cilium-etcd/ca.crt"
+	etcdCertFileName      = "/tmp/cilium-etcd/tls.crt"
+	etcdKeyFileName       = "/tmp/cilium-etcd/tls.key"
 )
 
 var (
@@ -33,8 +44,14 @@ var (
 	}
 )
 
+type EtcdConfig struct {
+	Endpoints []string `yaml:"endpoints,inline`
+	CAFile    string   `yaml:"ca-file"`
+	CertFile  string   `yaml:"cert-file"`
+	KeyFile   string   `yaml:"key-file"`
+}
+
 type ciliumConfiguration struct {
-	EtcdServer  string
 	CiliumImage string
 }
 
@@ -61,18 +78,12 @@ func renderCiliumTemplate(ciliumConfig ciliumConfiguration, file string) error {
 	return nil
 }
 
-func FillCiliumManifestFile(target, file string) error {
-	ciliumImage := images.GetGenericImage(caaspctl.ImageRepository, "cilium",
-		kubernetes.CurrentComponentVersion(kubernetes.Cilium))
-	ciliumConfig := ciliumConfiguration{EtcdServer: target, CiliumImage: ciliumImage}
-
+func CreateCiliumSecret() error {
 	etcdDir := filepath.Join("pki", "etcd")
-	renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
 		return fmt.Errorf("etcd generation retrieval failed %v", err)
 	}
-
 	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &ciliumCertConfig)
 	if err != nil {
 		return fmt.Errorf("error when creating etcd client certificate for cilium %v", err)
@@ -99,6 +110,61 @@ func FillCiliumManifestFile(target, file string) error {
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return fmt.Errorf("error when creating cilium secret  %v", err)
 	}
+	return nil
+}
+
+func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
+	client := kubernetes.GetAdminClientSet()
+	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
+	if err != nil {
+		return err
+	}
+
+	klog.Info("successfully annonated cilium daemonset with current timestamp, which will restart all cilium pods")
+	return nil
+}
+
+func CreateOrUpdateCiliumConfigMap() error {
+	etcdEndpoints := []string{}
+	for _, apiEndpoints := range kubeadm.GetAPIEndpointsFromConfigMap() {
+		etcdEndpoints = append(etcdEndpoints, fmt.Sprintf(etcdEndpointFmt, apiEndpoints))
+	}
+	etcdConfigData := EtcdConfig{
+		Endpoints: etcdEndpoints,
+		CAFile:    etcdCAFileName,
+		CertFile:  etcdCertFileName,
+		KeyFile:   etcdKeyFileName,
+	}
+
+	etcdConfigDataByte, err := yaml.Marshal(&etcdConfigData)
+	if err != nil {
+		return err
+	}
+	ciliumConfigMapData := map[string]string{
+		"debug":        "false",
+		"disable-ipv4": "false",
+		"etcd-config":  string(etcdConfigDataByte),
+	}
+	ciliumConfigMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ciliumConfigMapName,
+			Namespace: metav1.NamespaceSystem,
+		},
+		Data: ciliumConfigMapData,
+	}
+	client := kubernetes.GetAdminClientSet()
+	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
+		return fmt.Errorf("error when creating cilium config  %v", err)
+	}
 
 	return nil
+}
+
+func FillCiliumManifestFile(target, file string) error {
+	ciliumImage := images.GetGenericImage(caaspctl.ImageRepository, "cilium",
+		kubernetes.CurrentComponentVersion(kubernetes.Cilium))
+	ciliumConfig := ciliumConfiguration{CiliumImage: ciliumImage}
+
+	return renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
 }
