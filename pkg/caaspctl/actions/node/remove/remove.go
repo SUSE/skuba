@@ -23,6 +23,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/cni"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/etcd"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubeadm"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
@@ -63,6 +64,14 @@ func Remove(target string) {
 	if isMaster {
 		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
 			fmt.Printf("[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
+		} else {
+			if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+				fmt.Printf("[remove-node] could not update cilium-config configmap: %v", err)
+			} else {
+				if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(); err != nil {
+					fmt.Printf("[remove-node] could not annonate cilium daemonset: %v", err)
+				}
+			}
 		}
 	}
 

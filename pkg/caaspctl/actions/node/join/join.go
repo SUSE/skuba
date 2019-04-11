@@ -44,7 +44,8 @@ import (
 //        using the PWD
 // FIXME: error handling with `github.com/pkg/errors`; return errors
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) {
-	statesToApply := []string{"kernel.load-modules", "kernel.configure-parameters", "cri.start", "kubelet.configure", "kubelet.enable", "kubeadm.join"}
+	statesToApply := []string{"kernel.load-modules", "kernel.configure-parameters",
+		"cri.start", "kubelet.configure", "kubelet.enable", "kubeadm.join", "cni.cilium-update-configmap"}
 
 	if joinConfiguration.Role == deployments.MasterRole {
 		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)

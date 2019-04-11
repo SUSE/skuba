@@ -30,6 +30,7 @@ import (
 func init() {
 	stateMap["cni.deploy"] = cniDeploy
 	stateMap["cni.render"] = cniRender
+	stateMap["cni.cilium-update-configmap"] = ciliumUpdateConfigMap
 }
 
 func cniRender(t *Target, data interface{}) error {
@@ -40,6 +41,12 @@ func cniRender(t *Target, data interface{}) error {
 }
 
 func cniDeploy(t *Target, data interface{}) error {
+	if err := cni.CreateCiliumSecret(); err != nil {
+		return nil
+	}
+	if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+		return nil
+	}
 	cniFiles, err := ioutil.ReadDir(caaspctl.CniDir())
 	if err != nil {
 		return errors.Wrap(err, "could not read local cni directory")
@@ -55,4 +62,12 @@ func cniDeploy(t *Target, data interface{}) error {
 
 	_, _, err = t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/cni.d")
 	return err
+}
+
+func ciliumUpdateConfigMap(t *Target, data interface{}) error {
+	if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+		return err
+	}
+
+	return cni.AnnotateCiliumDaemonsetWithCurrentTimestamp()
 }
