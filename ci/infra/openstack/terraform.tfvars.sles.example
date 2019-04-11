@@ -8,7 +8,7 @@ stack_name = "testing"
 username = "sles"
 
 # define which image to use
-image_name = "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-RC1"
+image_name = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default"
 
 # define the repositories to use
 repositories = [
