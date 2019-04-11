@@ -17,8 +17,6 @@ limitations under the License.
 package features
 
 import (
-	"k8s.io/apimachinery/pkg/util/runtime"
-
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 )
 
@@ -112,7 +110,7 @@ const (
 )
 
 func init() {
-	runtime.Must(utilfeature.DefaultMutableFeatureGate.Add(defaultKubernetesFeatureGates))
+	utilfeature.DefaultMutableFeatureGate.Add(defaultKubernetesFeatureGates)
 }
 
 // defaultKubernetesFeatureGates consists of all known Kubernetes-specific feature keys.

@@ -1,4 +1,4 @@
-GO ?= GO111MODULE=on go
+GO ?= go
 GO_MD2MAN ?= go-md2man
 
 
