@@ -728,7 +728,7 @@ def generate_tfvars_file():
 internal_net = "{job_name}"
 stack_name = "{job_name}"
 
-image_name = "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-RC1"
+image_name = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default"
 
 repositories = [
   {{
