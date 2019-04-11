@@ -31,6 +31,24 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
+func GetAPIEndpointsFromConfigMap() []string {
+	apiEndpoints := []string{}
+	kubeadmConfig, err := kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	if err != nil {
+		klog.Fatalf("could not retrieve the kubeadm-config configmap to get apiEndpoints\n")
+	}
+	clusterStatus, err := configutil.UnmarshalClusterStatus(kubeadmConfig.Data)
+	if err != nil {
+		klog.Fatalf("could not unmarshal cluster status from kubeadm-config configmap\n")
+	}
+
+	for node, _ := range clusterStatus.APIEndpoints {
+		apiEndpoints = append(apiEndpoints, clusterStatus.APIEndpoints[node].AdvertiseAddress)
+	}
+
+	return apiEndpoints
+}
+
 func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
 	kubeadmConfig, err := kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {

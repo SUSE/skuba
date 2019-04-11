@@ -56,36 +56,6 @@ discovery:
 `
 
 	ciliumManifest = `---
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: cilium-config
-  namespace: kube-system
-  labels:
-    tier: node
-    app: cilium
-data:
-  # This etcd-config contains the etcd endpoints of your cluster. If you use
-  # TLS please make sure you uncomment the ca-file line and add the respective
-  # certificate has a k8s secret, see explanation below in the comment labeled
-  # "ETCD-CERT"
-  etcd-config: |-
-    ---
-    endpoints:
-    - https://{{.EtcdServer}}:2379
-    #
-    # In case you want to use TLS in etcd, uncomment the following line
-    # and add the certificate as explained in the comment labeled "ETCD-CERT"
-    ca-file: '/tmp/cilium-etcd/ca.crt'
-    #
-    # In case you want client to server authentication, uncomment the following
-    # lines and add the certificate and key in cilium-etcd-secrets below
-    key-file: '/tmp/cilium-etcd/tls.key'
-    cert-file: '/tmp/cilium-etcd/tls.crt'
-  # If you want to run cilium in debug mode change this value to true
-  debug: "false"
-  disable-ipv4: "false"
----
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
