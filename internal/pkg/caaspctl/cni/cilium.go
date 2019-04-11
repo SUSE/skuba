@@ -8,10 +8,11 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
+	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	pkiutil "k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
@@ -26,8 +27,9 @@ const (
 
 var (
 	ciliumCertConfig = certutil.Config{
-		CommonName: "cilium-etcd-client",
-		Usages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		CommonName:   "cilium-etcd-client",
+		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
+		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
 )
 
@@ -86,7 +88,6 @@ func FillCiliumManifestFile(target, file string) error {
 			Name:      ciliumSecretName,
 			Namespace: metav1.NamespaceSystem,
 		},
-		Type: v1.SecretTypeTLS,
 		Data: map[string][]byte{
 			v1.TLSCertKey:       pkiutil.EncodeCertPEM(cert),
 			v1.TLSPrivateKeyKey: privateKey,

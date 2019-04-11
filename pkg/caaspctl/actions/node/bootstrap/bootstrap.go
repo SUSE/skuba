@@ -48,6 +48,9 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
 	setContainerImages(initConfiguration)
+	// FIXME: this is required when cilium uses the cluster etcd and we have floating IP addresses, remove me after
+	// cilium uses its own etcd cluster
+	setEtcdExtraSANs(target, initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -144,4 +147,11 @@ func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
 		ImageRepository: caaspctl.ImageRepository,
 		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
 	}
+}
+
+func setEtcdExtraSANs(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
+	if initConfiguration.Etcd.Local.ServerCertSANs == nil {
+		initConfiguration.Etcd.Local.ServerCertSANs = []string{}
+	}
+	initConfiguration.Etcd.Local.ServerCertSANs = append(initConfiguration.Etcd.Local.ServerCertSANs, target.Target)
 }
