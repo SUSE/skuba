@@ -37,7 +37,7 @@ func NewResetCmd() *cobra.Command {
 			)
 
 			if err != nil {
-				klog.Errorf("error removing node: %s", err)
+				klog.Errorf("error resetting node: %s", err)
 			}
 
 			fmt.Println("successfully reset node to state prior to running bootstrap or join")
