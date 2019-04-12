@@ -30,3 +30,4 @@ reconfiguration in an easy way.
 **caaspctl-node-bootstrap**(1),
 **caaspctl-node-join**(1),
 **caaspctl-node-remove**(1),
+**caaspctl-node-reset**(1),
