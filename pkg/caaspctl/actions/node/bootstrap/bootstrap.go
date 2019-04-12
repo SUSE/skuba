@@ -99,12 +99,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 func downloadSecrets(target *deployments.Target) error {
 	os.MkdirAll(path.Join("pki", "etcd"), 0700)
 
+	fmt.Printf("[bootstrap] downloading secrets from bootstrapped node %q\n", target.Target)
 	for _, secretLocation := range deployments.Secrets {
 		secretData, err := target.DownloadFileContents(path.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			return err
 		}
-		fmt.Println("[bootstrap] downloading secrets from new node")
 		if err := ioutil.WriteFile(secretLocation, []byte(secretData), 0600); err != nil {
 			return err
 		}
