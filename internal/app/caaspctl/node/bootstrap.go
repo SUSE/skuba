@@ -33,6 +33,7 @@ type bootstrapOptions struct {
 	sudo                  bool
 	port                  int
 	ignorePreflightErrors string
+	podSubnet             string
 }
 
 func NewBootstrapCmd() *cobra.Command {
@@ -43,7 +44,9 @@ func NewBootstrapCmd() *cobra.Command {
 		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
 			bootstrapConfiguration := deployments.BootstrapConfiguration{
-				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
+				KubeadmExtraArgs: map[string]string{
+					"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors,
+					"pod-network-cidr":        bootstrapOptions.podSubnet},
 			}
 
 			err := node.Bootstrap(bootstrapConfiguration,
@@ -67,6 +70,7 @@ func NewBootstrapCmd() *cobra.Command {
 	cmd.Flags().IntVarP(&bootstrapOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().BoolVarP(&bootstrapOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().StringVar(&bootstrapOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
+	cmd.Flags().StringVar(&bootstrapOptions.podSubnet, "pod-network-cidr", "", "Specify range of IP addresses for the pod network. If set, the control plane will automatically allocate CIDRs for every node.")
 
 	cmd.MarkFlagRequired("target")
 

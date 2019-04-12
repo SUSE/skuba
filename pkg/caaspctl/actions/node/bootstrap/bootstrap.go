@@ -20,6 +20,7 @@ package node
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 
@@ -48,6 +49,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	addTargetInformationToInitConfiguration(target, initConfiguration)
 	setHyperkubeImageToInitConfiguration(initConfiguration)
 	setContainerImages(initConfiguration)
+	setPodNetwork(initConfiguration, bootstrapConfiguration.KubeadmExtraArgs["pod-network-cidr"])
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -144,4 +146,12 @@ func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
 		ImageRepository: caaspctl.ImageRepository,
 		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
 	}
+}
+
+func setPodNetwork(initConfiguration *kubeadmapi.InitConfiguration, podSubnet string) {
+	_, _, err := net.ParseCIDR(podSubnet)
+	if err != nil {
+		klog.Fatalf("[bootstrap] failed to parse podsubnet: %v", err)
+	}
+	initConfiguration.ClusterConfiguration.Networking.PodSubnet = podSubnet
 }
