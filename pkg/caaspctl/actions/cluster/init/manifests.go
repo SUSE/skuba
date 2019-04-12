@@ -56,6 +56,12 @@ discovery:
 `
 
 	ciliumManifest = `---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium
+  namespace: kube-system
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -224,12 +230,6 @@ spec:
       - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: cilium
-  namespace: kube-system
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
