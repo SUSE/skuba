@@ -28,6 +28,12 @@ import (
 func init() {
 	stateMap["kubeadm.init"] = kubeadmInit
 	stateMap["kubeadm.join"] = kubeadmJoin
+	stateMap["kubeadm.reset"] = kubeadmReset
+}
+
+func kubeadmReset(t *Target, data interface{}) error {
+	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force")
+	return err
 }
 
 func kubeadmInit(t *Target, data interface{}) error {

@@ -15,26 +15,16 @@
  *
  */
 
-package caaspctl
+package node
 
 import (
-	"github.com/spf13/cobra"
+	"fmt"
 
-	"github.com/SUSE/caaspctl/internal/app/caaspctl/node"
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
-func NewNodeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "node",
-		Short: "Commands to handle a specific node",
-	}
-
-	cmd.AddCommand(
-		node.NewBootstrapCmd(),
-		node.NewJoinCmd(),
-		node.NewRemoveCmd(),
-		node.NewResetCmd(),
-	)
-
-	return cmd
+// Reset the target node
+func Reset(target *deployments.Target) error {
+	fmt.Println("[reset] resetting the node")
+	return target.Apply(nil, "kubeadm.reset")
 }
