@@ -15,7 +15,6 @@ type resetOptions struct {
 	user                  string
 	sudo                  bool
 	port                  int
-	role                  string
 	ignorePreflightErrors string
 }
 
