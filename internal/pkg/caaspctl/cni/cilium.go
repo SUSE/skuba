@@ -23,7 +23,9 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubeadm"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
+
 	"github.com/go-yaml/yaml"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -58,21 +60,21 @@ type ciliumConfiguration struct {
 func renderCiliumTemplate(ciliumConfig ciliumConfiguration, file string) error {
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		return fmt.Errorf("could not create file %s", file)
+		return errors.Errorf("could not create file %s", file)
 	}
 
 	template, err := template.New("").Parse(string(content))
 	if err != nil {
-		return fmt.Errorf("could not parse template")
+		return errors.Errorf("could not parse template")
 	}
 
 	var rendered bytes.Buffer
 	if err := template.Execute(&rendered, ciliumConfig); err != nil {
-		return fmt.Errorf("could not render configuration")
+		return errors.Errorf("could not render configuration")
 	}
 
 	if err := ioutil.WriteFile(file, rendered.Bytes(), 0644); err != nil {
-		return fmt.Errorf("could not write to %s: %s", file, err)
+		return errors.Errorf("could not write to %s: %s", file, err)
 	}
 
 	return nil
@@ -82,16 +84,16 @@ func CreateCiliumSecret() error {
 	etcdDir := filepath.Join("pki", "etcd")
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
-		return fmt.Errorf("etcd generation retrieval failed %v", err)
+		return errors.Errorf("etcd generation retrieval failed %v", err)
 	}
 	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &ciliumCertConfig)
 	if err != nil {
-		return fmt.Errorf("error when creating etcd client certificate for cilium %v", err)
+		return errors.Errorf("error when creating etcd client certificate for cilium %v", err)
 	}
 
 	privateKey, err := keyutil.MarshalPrivateKeyToPEM(key)
 	if err != nil {
-		return fmt.Errorf("etcd private key marshal failed %v", err)
+		return errors.Errorf("etcd private key marshal failed %v", err)
 	}
 
 	secret := &v1.Secret{
@@ -108,7 +110,7 @@ func CreateCiliumSecret() error {
 
 	client := kubernetes.GetAdminClientSet()
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return fmt.Errorf("error when creating cilium secret  %v", err)
+		return errors.Errorf("error when creating cilium secret  %v", err)
 	}
 	return nil
 }
@@ -155,7 +157,7 @@ func CreateOrUpdateCiliumConfigMap() error {
 	}
 	client := kubernetes.GetAdminClientSet()
 	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
-		return fmt.Errorf("error when creating cilium config  %v", err)
+		return errors.Errorf("error when creating cilium config  %v", err)
 	}
 
 	return nil
