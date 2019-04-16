@@ -160,9 +160,9 @@ def info():
         r.raise_for_status()
     except (requests.HTTPError, requests.Timeout) as err:
         print(err)
-        print('Meta Data service unavailable could not get external IP')
+        print('Meta Data service unavailable could not get external IP addr')
     else:
-        print('External IP: {}'.format(r.text))
+        print('External IP addr: {}'.format(r.text))
 
 
 @timeout(125)
