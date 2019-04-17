@@ -15,16 +15,9 @@
  *
  */
 
-package node
+package deployments
 
-import (
-	"fmt"
-
-	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
-)
-
-// Reset the target node
-func Reset(resetConfiguration deployments.ResetConfiguration, target *deployments.Target) error {
-	fmt.Println("[reset] resetting the node")
-	return target.Apply(resetConfiguration, "kubeadm.reset")
+// ResetConfiguration holds information passed to kubeadm
+type ResetConfiguration struct {
+	KubeadmExtraArgs map[string]string
 }
