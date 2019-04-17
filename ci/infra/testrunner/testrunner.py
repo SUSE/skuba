@@ -144,7 +144,8 @@ def push_tfstate(platform, run_name):
     sh("scp {} -i {} {} {}:~/tfstates/{}".format(
         ssh_opts, key_fn, fn, TFSTATE_USER_HOST, run_name))
 
-@timeout(5)
+
+@timeout(7)
 @step()
 def info():
     """Node info"""
@@ -153,6 +154,15 @@ def info():
     sh('ip a')
     sh('ip r')
     sh('cat /etc/resolv.conf')
+
+    try:
+        r = requests.get('http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
+        r.raise_for_status()
+    except (requests.HTTPError, requests.Timeout) as err:
+        print(err)
+        print('Meta Data service unavailable could not get external IP addr')
+    else:
+        print('External IP addr: {}'.format(r.text))
 
 
 @timeout(125)
