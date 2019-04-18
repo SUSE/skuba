@@ -47,6 +47,7 @@ data "template_file" "lb_cloud_init_user_data" {
     fqdn            = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
     username        = "${var.username}"
     password        = "${var.password}"
   }

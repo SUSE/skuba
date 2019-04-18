@@ -25,12 +25,7 @@ bootcmd:
 # need to disable gpg checks because the cloud image has an untrusted repo
 zypper:
   repos:
-    - id: caasp
-      name: caasp
-      baseurl: https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0
-      enabled: 1
-      autorefresh: 1
-      gpgcheck: 0
+${repositories}
   config:
     gpgcheck: "off"
     solver.onlyRequires: "true"
