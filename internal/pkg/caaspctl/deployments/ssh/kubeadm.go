@@ -18,6 +18,8 @@
 package ssh
 
 import (
+	"path/filepath"
+
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
@@ -31,6 +33,8 @@ func init() {
 	stateMap["kubeadm.reset"] = kubeadmReset
 }
 
+var remoteKubeadmInitConfFile = filepath.Join("/tmp/", caaspctl.KubeadmInitConfFile())
+
 func kubeadmReset(t *Target, data interface{}) error {
 	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force")
 	return err
@@ -42,17 +46,17 @@ func kubeadmInit(t *Target, data interface{}) error {
 		return errors.New("couldn't access bootstrap configuration")
 	}
 
-	if err := t.target.UploadFile(caaspctl.KubeadmInitConfFile(), "/tmp/kubeadm.conf"); err != nil {
+	if err := t.target.UploadFile(caaspctl.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", "/tmp/kubeadm.conf")
+	defer t.ssh("rm", remoteKubeadmInitConfFile)
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := bootstrapConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "init", "--config", "/tmp/kubeadm.conf", "--skip-token-print", ignorePreflightErrors)
+	_, _, err := t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors)
 	return err
 }
 
@@ -62,16 +66,16 @@ func kubeadmJoin(t *Target, data interface{}) error {
 		return errors.New("couldn't access join configuration")
 	}
 
-	if err := t.target.UploadFile(node.ConfigPath(joinConfiguration.Role, t.target), "/tmp/kubeadm.conf"); err != nil {
+	if err := t.target.UploadFile(node.ConfigPath(joinConfiguration.Role, t.target), remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", "/tmp/kubeadm.conf")
+	defer t.ssh("rm", remoteKubeadmInitConfFile)
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := joinConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "join", "--config", "/tmp/kubeadm.conf", ignorePreflightErrors)
+	_, _, err := t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors)
 	return err
 }
