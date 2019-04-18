@@ -143,7 +143,7 @@ func createBootstrapToken(target string) string {
 	}
 
 	if err := kubeadmtokenphase.CreateNewTokens(client, bootstrapTokens); err != nil {
-		klog.Fatal("could not create new bootstrap token")
+		klog.Fatalf("could not create new bootstrap token: %v", err)
 	}
 
 	return bootstrapTokenRaw
