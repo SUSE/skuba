@@ -18,8 +18,10 @@
 package node
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -32,7 +34,7 @@ import (
 // Remove removes a node from the cluster
 //
 // FIXME: error handling with `github.com/pkg/errors`; return errors
-func Remove(target string) {
+func Remove(target string, isForced bool) {
 	client := kubernetes.GetAdminClientSet()
 
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
@@ -42,9 +44,32 @@ func Remove(target string) {
 	}
 
 	targetName := node.ObjectMeta.Name
+	isMaster := kubernetes.IsMaster(node)
 
-	var isMaster bool
-	if isMaster = kubernetes.IsMaster(node); isMaster {
+	masterNodes, err := kubernetes.GetMasterNodes()
+	if err != nil {
+		fmt.Printf("[remove-node] could not get list of master nodes %s\n", err)
+		return
+	}
+
+	if isMaster && !isForced {
+		if len(masterNodes.Items) == 1 {
+			fmt.Println("[remove-node] WARNING: trying to remove last master node from the cluster")
+			fmt.Print("[remove-node] Are you sure you want to proceed? [y/N]: ")
+			s := bufio.NewScanner(os.Stdin)
+			s.Scan()
+			if err := s.Err(); err != nil {
+				fmt.Println(err)
+				return
+			}
+			if strings.ToLower(s.Text()) != "y" {
+				fmt.Println("Aborted remove-node operation")
+				return
+			}
+		}
+	}
+
+	if isMaster {
 		fmt.Printf("[remove-node] removing master node %s\n", targetName)
 	} else {
 		fmt.Printf("[remove-node] removing worker node %s\n", targetName)

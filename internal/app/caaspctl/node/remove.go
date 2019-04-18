@@ -23,15 +23,20 @@ import (
 	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/remove"
 )
 
+type removeOptions struct {
+	isForced bool
+}
+
 func NewRemoveCmd() *cobra.Command {
+	removeOptions := removeOptions{}
 	cmd := &cobra.Command{
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			node.Remove(nodenames[0])
+			node.Remove(nodenames[0], removeOptions.isForced)
 		},
 		Args: cobra.ExactArgs(1),
 	}
-
+	cmd.Flags().BoolVarP(&removeOptions.isForced, "force", "f", false, "Remove the node without prompting for confirmation.")
 	return cmd
 }
