@@ -47,6 +47,13 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	statesToApply := []string{"kernel.load-modules", "kernel.configure-parameters",
 		"cri.start", "kubelet.configure", "kubelet.enable", "kubeadm.join", "cni.cilium-update-configmap"}
 
+	client := kubernetes.GetAdminClientSet()
+	_, err := client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	if err == nil {
+		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
+		return
+	}
+
 	if joinConfiguration.Role == deployments.MasterRole {
 		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
 	}
