@@ -44,7 +44,6 @@ data "template_file" "haproxy_backends_master" {
 data "template_file" "lb_cloud_init_user_data" {
   template = "${file("cloud-init/lb.cfg.tpl")}"
   vars = {
-    hostname = "${var.name_prefix}lb-${count.index}"
     fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
@@ -123,7 +122,6 @@ data "template_file" "master_cloud_init_user_data" {
   count    = "${var.master_count}"
   template = "${file("cloud-init/master.cfg.tpl")}"
   vars = {
-    hostname        = "${var.name_prefix}master-${count.index}"
     fqdn            = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
@@ -198,7 +196,6 @@ data "template_file" "worker_cloud_init_user_data" {
   count    = "${var.worker_count}"
   template = "${file("cloud-init/worker.cfg.tpl")}"
   vars = {
-    hostname        = "${var.name_prefix}worker-${count.index}"
     fqdn            = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
