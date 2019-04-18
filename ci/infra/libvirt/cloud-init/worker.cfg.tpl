@@ -6,8 +6,7 @@ locale: en_GB.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# Set hostname and FQDN
-hostname: ${hostname}
+# Set FQDN
 fqdn: ${fqdn}
 
 # set root password
