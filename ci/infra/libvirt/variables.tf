@@ -107,3 +107,13 @@ variable "packages" {
   default = []
   description = "list of additional packages to install"
 }
+
+variable "username" {
+  default = "opensuse"
+  description = "Username for the cluster nodes"
+}
+
+variable "password" {
+  default = "linux"
+  description = "Password for the cluster nodes"
+}

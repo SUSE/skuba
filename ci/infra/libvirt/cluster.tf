@@ -44,9 +44,11 @@ data "template_file" "haproxy_backends_master" {
 data "template_file" "lb_cloud_init_user_data" {
   template = "${file("cloud-init/lb.cfg.tpl")}"
   vars = {
-    fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
-    backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
+    fqdn            = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
+    backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 }
 
@@ -126,6 +128,8 @@ data "template_file" "master_cloud_init_user_data" {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 
   depends_on = ["libvirt_domain.lb"]
@@ -200,6 +204,8 @@ data "template_file" "worker_cloud_init_user_data" {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 
   depends_on = ["libvirt_domain.lb"]
