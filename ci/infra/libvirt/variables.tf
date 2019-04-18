@@ -104,7 +104,17 @@ variable "authorized_keys" {
 
 variable "packages" {
   type = "list"
-  default = []
+  default = [
+    "kubernetes-kubeadm",
+    "kubernetes-kubelet",
+    "kubernetes-client",
+    "cri-o",
+    "cni-plugins",
+    "-docker",
+    "-containerd",
+    "-docker-runc",
+    "-docker-libnetwork",
+  ]
   description = "list of additional packages to install"
 }
 
