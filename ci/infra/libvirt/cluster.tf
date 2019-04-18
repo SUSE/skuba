@@ -57,6 +57,7 @@ resource "libvirt_cloudinit_disk" "lb" {
   pool      = "${var.pool}"
 
   user_data = "${data.template_file.lb_cloud_init_user_data.rendered}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "lb" {
@@ -141,6 +142,7 @@ resource "libvirt_cloudinit_disk" "master" {
   name      = "${var.name_prefix}master_cloud_init_${count.index}.iso"
   pool      = "${var.pool}"
   user_data = "${element(data.template_file.master_cloud_init_user_data.*.rendered, count.index)}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "master" {
@@ -217,6 +219,7 @@ resource "libvirt_cloudinit_disk" "worker" {
   name      = "${var.name_prefix}worker_cloud_init_${count.index}.iso"
   pool      = "${var.pool}"
   user_data = "${element(data.template_file.worker_cloud_init_user_data.*.rendered, count.index)}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "worker" {
