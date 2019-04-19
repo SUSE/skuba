@@ -1,0 +1,18 @@
+- job-template:
+    name: '{name}-integration'
+    project-type: multibranch
+    periodic-folder-trigger: 5m
+    number-to-keep: 30
+    days-to-keep: 30
+    script-path: ci/jenkins/pipelines/caaspctl-integration.Jenkinsfile
+    scm:
+      - github:
+          repo: '{repo-name}'
+          repo-owner: '{repo-owner}'
+          credentials-id: '{repo-credentials}'
+          branch-discovery: no-pr
+          discover-pr-forks-strategy: current
+          discover-pr-forks-trust: contributors
+          discover-pr-origin: current
+          notification-context: continuous-integration/jenkins
+          filter-head-regex: ^(master|release\-\d\.\d|PR\-\d+)$
