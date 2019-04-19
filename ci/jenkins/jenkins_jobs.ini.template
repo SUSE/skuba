@@ -1,0 +1,5 @@
+[jenkins]
+query_plugins_info=False
+user=USERNAME
+password=APITOKEN
+url=JENKINSURL
