@@ -108,7 +108,10 @@ func CreateCiliumSecret() error {
 		},
 	}
 
-	client := kubernetes.GetAdminClientSet()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "unable to get admin client set")
+	}
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return errors.Errorf("error when creating cilium secret  %v", err)
 	}
@@ -116,9 +119,12 @@ func CreateCiliumSecret() error {
 }
 
 func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
-	client := kubernetes.GetAdminClientSet()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return err
+	}
 	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
-	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
+	_, err = client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -129,8 +135,12 @@ func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
 
 func CreateOrUpdateCiliumConfigMap() error {
 	etcdEndpoints := []string{}
-	for _, apiEndpoints := range kubeadm.GetAPIEndpointsFromConfigMap() {
-		etcdEndpoints = append(etcdEndpoints, fmt.Sprintf(etcdEndpointFmt, apiEndpoints))
+	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap()
+	if err != nil {
+		return errors.Wrap(err, "unable to get api endpoints")
+	}
+	for _, endpoints := range apiEndpoints {
+		etcdEndpoints = append(etcdEndpoints, fmt.Sprintf(etcdEndpointFmt, endpoints))
 	}
 	etcdConfigData := EtcdConfig{
 		Endpoints: etcdEndpoints,
@@ -155,9 +165,12 @@ func CreateOrUpdateCiliumConfigMap() error {
 		},
 		Data: ciliumConfigMapData,
 	}
-	client := kubernetes.GetAdminClientSet()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
 	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
-		return errors.Errorf("error when creating cilium config  %v", err)
+		return errors.Wrap(err, "error when creating cilium config ")
 	}
 
 	return nil

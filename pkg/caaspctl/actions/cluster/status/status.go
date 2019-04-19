@@ -18,12 +18,12 @@
 package cluster
 
 import (
-	"k8s.io/klog"
 	"os"
 
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
-	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 )
 
 // Status prints the status of the cluster on the standard output by reading the
@@ -31,13 +31,16 @@ import (
 //
 // FIXME: being this a part of the go API accept a io.Writer parameter instead of
 //        using os.Stdout
-// FIXME: error handling with `github.com/pkg/errors`; return errors
-func Status() {
-	client := kubernetes.GetAdminClientSet()
+func Status() error {
+	client, err := kubernetes.GetAdminClientSet()
+
+	if err != nil {
+		return errors.Wrap(err, "unable to get admin client set")
+	}
 
 	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
-		klog.Fatal("could not retrieve node list")
+		return errors.Wrap(err, "could not retrieve node list")
 	}
 
 	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates"
@@ -47,7 +50,8 @@ func Status() {
 
 	printer, err := printFlags.ToPrinter()
 	if err != nil {
-		klog.Fatal("could not create printer")
+		return errors.Wrap(err, "could not create printer")
 	}
 	printer.PrintObj(nodeList, os.Stdout)
+	return nil
 }

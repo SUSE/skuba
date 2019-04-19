@@ -26,13 +26,13 @@ import (
 	"k8s.io/klog"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/pkg/errors"
 )
 
 func RemoveMember(node *v1.Node) error {
 	masterNodes, err := kubernetes.GetMasterNodes()
 	if err != nil {
-		klog.Fatalf("could not get the list of master nodes, aborting\n")
-		return err
+		return errors.Wrap(err, "could not get the list of master nodes, aborting")
 	}
 
 	// Remove etcd member if target is a master
