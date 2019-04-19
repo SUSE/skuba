@@ -42,10 +42,10 @@ func cniRender(t *Target, data interface{}) error {
 
 func cniDeploy(t *Target, data interface{}) error {
 	if err := cni.CreateCiliumSecret(); err != nil {
-		return nil
+		return errors.Wrap(err, "unable to create cilium secrets")
 	}
 	if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
-		return nil
+		return errors.Wrap(err, "unable to create or update cilium config map")
 	}
 	cniFiles, err := ioutil.ReadDir(caaspctl.CniDir())
 	if err != nil {

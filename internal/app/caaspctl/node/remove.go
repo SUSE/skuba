@@ -19,6 +19,7 @@ package node
 
 import (
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	node "github.com/SUSE/caaspctl/pkg/caaspctl/actions/node/remove"
 )
@@ -28,7 +29,9 @@ func NewRemoveCmd() *cobra.Command {
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			node.Remove(nodenames[0])
+			if err := node.Remove(nodenames[0]); err != nil {
+				klog.Fatalf("error removing node %s: %s\n", nodenames[0], err)
+			}
 		},
 		Args: cobra.ExactArgs(1),
 	}

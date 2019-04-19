@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/klog"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
@@ -44,8 +43,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", caaspctl.KubeadmInitConfFile())
 	}
+
 	fmt.Println("[bootstrap] updating init configuration with target information")
-	addTargetInformationToInitConfiguration(target, initConfiguration)
+	if err := addTargetInformationToInitConfiguration(target, initConfiguration); err != nil {
+		return errors.Wrap(err, "unable to add target information to init configuration")
+	}
+
 	setHyperkubeImageToInitConfiguration(initConfiguration)
 	setContainerImages(initConfiguration)
 	setApiserverAdmissionPlugins(initConfiguration)
@@ -53,6 +56,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
 	})
+
 	if err != nil {
 		return errors.Wrap(err, "could not marshal configuration")
 	}
@@ -113,7 +117,7 @@ func downloadSecrets(target *deployments.Target) error {
 	return nil
 }
 
-func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) {
+func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) error {
 	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
@@ -123,11 +127,12 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(caaspctl.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
-		klog.Fatal(err)
+		return err
 	}
 	if isSUSE {
 		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = caaspctl.SUSECNIDir
 	}
+	return nil
 }
 
 func setHyperkubeImageToInitConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {

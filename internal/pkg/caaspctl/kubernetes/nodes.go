@@ -28,10 +28,15 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
+	"github.com/pkg/errors"
 )
 
 func GetMasterNodes() (*v1.NodeList, error) {
-	return GetAdminClientSet().CoreV1().Nodes().List(metav1.ListOptions{
+	clientSet, err := GetAdminClientSet()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get admin clinet set")
+	}
+	return clientSet.CoreV1().Nodes().List(metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 	})
 }

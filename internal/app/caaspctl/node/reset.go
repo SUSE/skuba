@@ -42,7 +42,7 @@ func NewResetCmd() *cobra.Command {
 			)
 
 			if err != nil {
-				klog.Errorf("error resetting node: %s", err)
+				klog.Fatalf("error resetting node: %s", err)
 			}
 
 			fmt.Println("successfully reset node to state prior to running bootstrap or join")
