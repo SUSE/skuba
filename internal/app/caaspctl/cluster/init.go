@@ -19,6 +19,7 @@ package cluster
 
 import (
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	cluster "github.com/SUSE/caaspctl/pkg/caaspctl/actions/cluster/init"
 )
@@ -34,10 +35,13 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <cluster-name>",
 		Short: "Initialize caaspctl structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
-			cluster.Init(cluster.InitConfiguration{
+			err := cluster.Init(cluster.InitConfiguration{
 				ClusterName:  args[0],
 				ControlPlane: initOptions.ControlPlane,
 			})
+			if err != nil {
+				klog.Fatalf("init failed due to error: %s", err)
+			}
 		},
 		Args: cobra.ExactArgs(1),
 	}

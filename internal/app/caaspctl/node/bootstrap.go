@@ -56,7 +56,7 @@ func NewBootstrapCmd() *cobra.Command {
 				),
 			)
 			if err != nil {
-				klog.Fatal(err)
+				klog.Fatalf("error bootstraping node: %s\n", err)
 			}
 		},
 		Args: cobra.ExactArgs(1),

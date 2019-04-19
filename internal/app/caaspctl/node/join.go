@@ -18,10 +18,8 @@
 package node
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments/ssh"
@@ -54,11 +52,10 @@ func NewJoinCmd() *cobra.Command {
 			case "worker":
 				joinConfiguration.Role = deployments.WorkerRole
 			default:
-				fmt.Printf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles\n", joinOptions.role)
-				os.Exit(1)
+				klog.Fatalf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles\n", joinOptions.role)
 			}
 
-			node.Join(joinConfiguration,
+			err := node.Join(joinConfiguration,
 				ssh.NewTarget(
 					nodenames[0],
 					joinOptions.target,
@@ -67,6 +64,9 @@ func NewJoinCmd() *cobra.Command {
 					joinOptions.port,
 				),
 			)
+			if err != nil {
+				klog.Fatalf("error joining node %s: %s\n", nodenames[0], err)
+			}
 		},
 		Args: cobra.ExactArgs(1),
 	}

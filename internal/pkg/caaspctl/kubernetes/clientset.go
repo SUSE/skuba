@@ -18,18 +18,17 @@
 package kubernetes
 
 import (
-	"k8s.io/klog"
-
 	clientset "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
+	"github.com/pkg/errors"
 )
 
-func GetAdminClientSet() *clientset.Clientset {
+func GetAdminClientSet() (*clientset.Clientset, error) {
 	client, err := kubeconfigutil.ClientSetFromFile(caaspctl.KubeConfigAdminFile())
 	if err != nil {
-		klog.Fatal("could not load admin kubeconfig file")
+		return nil, errors.Wrap(err, "could not load admin kubeconfig file")
 	}
-	return client
+	return client, nil
 }

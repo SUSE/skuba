@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"k8s.io/klog"
+	"github.com/pkg/errors"
 )
 
 type InitConfiguration struct {
@@ -38,51 +38,57 @@ type InitConfiguration struct {
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
-// FIXME: error handling with `github.com/pkg/errors`; return errors
-func Init(initConfiguration InitConfiguration) {
+func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
-		klog.Fatalf("cluster configuration directory %q already exists\n", initConfiguration.ClusterName)
+		return errors.Wrapf(err, "cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
-		klog.Fatalf("could not create cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		return errors.Wrapf(err, "could not create cluster directory %q", initConfiguration.ClusterName)
 	}
 	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
-		klog.Fatalf("could not change to cluster directory %q: %v\n", initConfiguration.ClusterName, err)
+		return errors.Wrapf(err, "could not change to cluster directory %q", initConfiguration.ClusterName)
 	}
 	for _, file := range scaffoldFiles {
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {
-				klog.Fatalf("could not create directory %q: %v\n", filePath, err)
+				return errors.Wrapf(err, "could not create directory %q", filePath)
 			}
 		}
 		f, err := os.Create(file.Location)
 		if err != nil {
-			klog.Fatalf("could not create file %q: %v\n", file.Location, err)
+			return errors.Wrapf(err, "could not create file %q", file.Location)
 		}
 		if file.DoNotRender {
 			f.WriteString(file.Content)
 		} else {
-			f.WriteString(renderTemplate(file.Content, initConfiguration))
+			str, err := renderTemplate(file.Content, initConfiguration)
+			if err != nil {
+				return errors.Wrap(err, "unable to render template")
+			}
+			f.WriteString(str)
 		}
 		f.Close()
 	}
 
-	if currentDir, err := os.Getwd(); err != nil {
-		klog.Fatalf("could not get current directory %s\n", err)
-	} else {
-		fmt.Printf("[init] configuration files written to %s\n", currentDir)
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("[init] configuration files written, unable to get directory")
+		return nil
 	}
+
+	fmt.Printf("[init] configuration files written to %s\n", currentDir)
+	return nil
 }
 
-func renderTemplate(templateContents string, initConfiguration InitConfiguration) string {
+func renderTemplate(templateContents string, initConfiguration InitConfiguration) (string, error) {
 	template, err := template.New("").Parse(templateContents)
 	if err != nil {
-		klog.Fatal("could not parse template")
+		return "", errors.Wrap(err, "could not parse template")
 	}
 	var rendered bytes.Buffer
 	if err := template.Execute(&rendered, initConfiguration); err != nil {
-		klog.Fatal("could not render configuration")
+		return "", errors.Wrap(err, "could not render configuration")
 	}
-	return rendered.String()
+	return rendered.String(), nil
 }

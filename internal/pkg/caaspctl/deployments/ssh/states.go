@@ -18,6 +18,8 @@
 package ssh
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 )
@@ -38,7 +40,7 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 				klog.V(1).Infof("=== state %s applied successfully ===\n", stateName)
 			}
 		} else {
-			klog.Fatalf("state does not exist: %s", stateName)
+			return errors.New(fmt.Sprintf("state does not exist: %s", stateName))
 		}
 	}
 	return nil

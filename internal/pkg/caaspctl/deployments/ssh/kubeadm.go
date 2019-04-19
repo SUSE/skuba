@@ -76,7 +76,12 @@ func kubeadmJoin(t *Target, data interface{}) error {
 		return errors.New("couldn't access join configuration")
 	}
 
-	if err := t.target.UploadFile(node.ConfigPath(joinConfiguration.Role, t.target), remoteKubeadmInitConfFile); err != nil {
+	configPath, err := node.ConfigPath(joinConfiguration.Role, t.target)
+	if err != nil {
+		return errors.Wrap(err, "unable to configure path")
+	}
+
+	if err := t.target.UploadFile(configPath, remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
 	defer t.ssh("rm", remoteKubeadmInitConfFile)
@@ -86,6 +91,6 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors)
+	_, _, err = t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors)
 	return err
 }

@@ -19,7 +19,6 @@ package node
 
 import (
 	"fmt"
-	"os"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -27,18 +26,20 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/etcd"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubeadm"
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/pkg/errors"
 )
 
 // Remove removes a node from the cluster
 //
-// FIXME: error handling with `github.com/pkg/errors`; return errors
-func Remove(target string) {
-	client := kubernetes.GetAdminClientSet()
+func Remove(target string) error {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "unable to get admin client set")
+	}
 
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
 	if err != nil {
-		fmt.Printf("[remove-node] could not get node %s: %v\n", target, err)
-		os.Exit(1)
+		return errors.Wrapf(err, "[remove-node] could not get node %s", target)
 	}
 
 	targetName := node.ObjectMeta.Name
@@ -63,21 +64,23 @@ func Remove(target string) {
 
 	if isMaster {
 		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
-			fmt.Printf("[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
-		} else {
-			if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
-				fmt.Printf("[remove-node] could not update cilium-config configmap: %v", err)
-			} else {
-				if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(); err != nil {
-					fmt.Printf("[remove-node] could not annonate cilium daemonset: %v", err)
-				}
-			}
+			return errors.Wrapf(err, "[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
+		}
+
+		if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+			return errors.Wrap(err, "[remove-node] could not update cilium-config configmap")
+		}
+
+		if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(); err != nil {
+			fmt.Printf("[remove-node] could not annonate cilium daemonset: %v", err)
 		}
 	}
 
-	if err := client.CoreV1().Nodes().Delete(targetName, &metav1.DeleteOptions{}); err == nil {
-		fmt.Printf("[remove-node] node %s successfully removed from the cluster\n", targetName)
-	} else {
-		fmt.Printf("[remove-node] could not remove node %s\n", targetName)
+	if err := client.CoreV1().Nodes().Delete(targetName, &metav1.DeleteOptions{}); err != nil {
+		errors.Wrapf(err, "[remove-node] could not remove node %s", targetName)
 	}
+
+	fmt.Printf("[remove-node] node %s successfully removed from the cluster\n", targetName)
+
+	return nil
 }

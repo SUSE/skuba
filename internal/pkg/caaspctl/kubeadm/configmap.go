@@ -18,8 +18,6 @@
 package kubeadm
 
 import (
-	"k8s.io/klog"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,41 +27,56 @@ import (
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
+	"github.com/pkg/errors"
 )
 
-func GetAPIEndpointsFromConfigMap() []string {
+// GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
+func GetAPIEndpointsFromConfigMap() ([]string, error) {
 	apiEndpoints := []string{}
-	kubeadmConfig, err := kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	clientSet, err := kubernetes.GetAdminClientSet()
 	if err != nil {
-		klog.Fatalf("could not retrieve the kubeadm-config configmap to get apiEndpoints\n")
+		return nil, errors.Wrap(err, "Error getting client set")
+	}
+	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config configmap to get apiEndpoints")
 	}
 	clusterStatus, err := configutil.UnmarshalClusterStatus(kubeadmConfig.Data)
 	if err != nil {
-		klog.Fatalf("could not unmarshal cluster status from kubeadm-config configmap\n")
+		return nil, errors.Wrap(err, "could not unmarshal cluster status from kubeadm-config configmap")
 	}
 
-	for node, _ := range clusterStatus.APIEndpoints {
+	for node := range clusterStatus.APIEndpoints {
 		apiEndpoints = append(apiEndpoints, clusterStatus.APIEndpoints[node].AdvertiseAddress)
 	}
 
-	return apiEndpoints
+	return apiEndpoints, nil
 }
 
+// RemoveAPIEndpointFromConfigMap removes api endpoints from the config map
 func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
-	kubeadmConfig, err := kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	clientSet, err := kubernetes.GetAdminClientSet()
 	if err != nil {
-		klog.Fatalf("could not retrieve the kubeadm-config configmap to change the apiEndpoints\n")
+		return errors.Wrap(err, "Error getting client set")
+	}
+	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve the kubeadm-config configmap to change the apiEndpoints")
 	}
 	clusterStatus := &kubeadmapi.ClusterStatus{}
 	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), []byte(kubeadmConfig.Data[kubeadmconstants.ClusterStatusConfigMapKey]), clusterStatus); err != nil {
-		klog.Fatalf("could not unmarshal cluster status from kubeadm-config configmap\n")
+		return errors.Wrap(err, "could not unmarshal cluster status from kubeadm-config configmap")
 	}
 	delete(clusterStatus.APIEndpoints, node.ObjectMeta.Name)
 	clusterStatusYaml, err := configutil.MarshalKubeadmConfigObject(clusterStatus)
 	if err != nil {
-		klog.Fatalf("could not marshal modified cluster status\n")
+		return errors.Wrap(err, "could not marshal modified cluster status")
 	}
-	_, err = kubernetes.GetAdminClientSet().CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&v1.ConfigMap{
+	clientSet, err = kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "Error getting client set")
+	}
+	_, err = clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kubeadmconstants.KubeadmConfigConfigMap,
 			Namespace: metav1.NamespaceSystem,
@@ -74,7 +87,7 @@ func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
 		},
 	})
 	if err != nil {
-		klog.Fatalf("could not update kubeadm-config configmap\n")
+		return errors.Wrap(err, "could not update kubeadm-config configmap")
 	}
 	return nil
 }
