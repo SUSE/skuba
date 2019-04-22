@@ -1,0 +1,13 @@
+
+# test, ldaptest.com
+dn: cn=test,dc=ldaptest,dc=com
+changetype: add
+objectClass: person
+objectClass: inetOrgPerson
+cn: test
+sn: user
+givenName: test
+mail: user@suse.com
+uid: test
+userPassword:: e1NTSEF9Y3JDaGQ5ejZXcW00U0o4T0lJSUxoSFVwejhCbWMyVnFiMjltYzJVPQ=
+ =
