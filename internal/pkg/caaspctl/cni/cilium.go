@@ -47,7 +47,7 @@ var (
 )
 
 type EtcdConfig struct {
-	Endpoints []string `yaml:"endpoints,inline`
+	Endpoints []string `yaml:"endpoints"`
 	CAFile    string   `yaml:"ca-file"`
 	CertFile  string   `yaml:"cert-file"`
 	KeyFile   string   `yaml:"key-file"`
