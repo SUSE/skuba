@@ -18,7 +18,7 @@
 package ssh
 
 import (
-	"path/filepath"
+	"path"
 
 	"github.com/pkg/errors"
 
@@ -33,7 +33,7 @@ func init() {
 	stateMap["kubeadm.reset"] = kubeadmReset
 }
 
-var remoteKubeadmInitConfFile = filepath.Join("/tmp/", caaspctl.KubeadmInitConfFile())
+var remoteKubeadmInitConfFile = path.Join("/tmp/", caaspctl.KubeadmInitConfFile())
 
 func kubeadmReset(t *Target, data interface{}) error {
 	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force")

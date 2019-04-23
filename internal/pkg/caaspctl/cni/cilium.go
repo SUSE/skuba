@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
+	"path"
 	"text/template"
 	"time"
 
@@ -81,7 +81,7 @@ func renderCiliumTemplate(ciliumConfig ciliumConfiguration, file string) error {
 }
 
 func CreateCiliumSecret() error {
-	etcdDir := filepath.Join("pki", "etcd")
+	etcdDir := path.Join("pki", "etcd")
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
 		return errors.Errorf("etcd generation retrieval failed %v", err)
@@ -168,5 +168,5 @@ func FillCiliumManifestFile(target, file string) error {
 		kubernetes.CurrentComponentVersion(kubernetes.Cilium))
 	ciliumConfig := ciliumConfiguration{CiliumImage: ciliumImage}
 
-	return renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
+	return renderCiliumTemplate(ciliumConfig, path.Join("addons", "cni", "cilium.yaml"))
 }
