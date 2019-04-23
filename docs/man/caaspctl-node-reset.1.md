@@ -6,7 +6,7 @@ reset - Reset a node to a state prior to join or bootstrap
 # SYNOPSIS
 **reset**
 [**--help**|**-h**] [**--target**|**-t**] [**--user**|**-u**]
-[**--sudo**|**-s**] [**--port**|**-p**]
+[**--sudo**|**-s**] [**--port**|**-p**] [**--ignore-preflight-errors**]
 *reset* *-t <fqdn>* [-hsp] [-u user] [-p port]
 
 # DESCRIPTION
@@ -29,3 +29,6 @@ to the state prior to join or bootstrap being run.
 
 **--port, -p**
   Port to connect to using SSH
+
+**--ignore-preflight-errors**
+  A list of checks whose errors will be shown as warnings. Value 'all' ignores errors from all checks.
