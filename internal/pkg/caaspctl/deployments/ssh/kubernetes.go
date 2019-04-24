@@ -18,7 +18,7 @@
 package ssh
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
@@ -38,7 +38,7 @@ func init() {
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
 	return func(t *Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
-			if err := t.target.UploadFile(file, path.Join("/etc/kubernetes", file)); err != nil {
+			if err := t.target.UploadFile(file, filepath.Join("/etc/kubernetes", file)); err != nil {
 				if errorHandling == KubernetesUploadSecretsFailOnError {
 					return err
 				}
