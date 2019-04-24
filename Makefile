@@ -1,7 +1,9 @@
 GO ?= go
 GO_MD2MAN ?= go-md2man
+LN = ln
+RM = rm
 
-
+GOBINPATH  := $(GOPATH)/bin
 VERSION    := $(shell cat VERSION)
 COMMIT     := $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE := $(shell date +%Y%m%d-%H:%M:%S)
@@ -13,7 +15,9 @@ all: build
 
 .PHONY: build
 build:
-	$(GO) install $(CAASPCTL_LDFLAGS) ./cmd/...
+	$(GO) build $(CAASPCTL_LDFLAGS) -o $(GOBINPATH)/caaspctl ./cmd/caaspctl
+	$(RM) -f $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
 MANPAGES    := $(MANPAGES_MD:%.md=%)
@@ -26,8 +30,12 @@ docs: $(MANPAGES)
 
 .PHONY: staging
 staging:
-	$(GO) install $(CAASPCTL_LDFLAGS) -tags staging ./cmd/...
+	$(GO) build $(CAASPCTL_LDFLAGS) -o $(GOBINPATH)/caaspctl -tags staging  ./cmd/caaspctl
+	$(RM) -f $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
 
 .PHONY: release
 release:
-	$(GO) install $(CAASPCTL_LDFLAGS) -tags release ./cmd/...
+	$(GO) build $(CAASPCTL_LDFLAGS) -o $(GOBINPATH)/caaspctl -tags release ./cmd/caaspctl
+	$(RM) -f $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
