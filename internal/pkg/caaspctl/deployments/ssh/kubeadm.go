@@ -36,7 +36,17 @@ func init() {
 var remoteKubeadmInitConfFile = filepath.Join("/tmp/", caaspctl.KubeadmInitConfFile())
 
 func kubeadmReset(t *Target, data interface{}) error {
-	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force")
+	resetConfiguration, ok := data.(deployments.ResetConfiguration)
+	if !ok {
+		return errors.New("couldn't access reset configuration")
+	}
+
+	ignorePreflightErrors := ""
+	ignorePreflightErrorsVal := resetConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
+	if len(ignorePreflightErrorsVal) > 0 {
+		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
+	}
+	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force", ignorePreflightErrors)
 	return err
 }
 
