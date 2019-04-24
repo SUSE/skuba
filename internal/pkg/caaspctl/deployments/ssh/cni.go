@@ -19,7 +19,7 @@ package ssh
 
 import (
 	"io/ioutil"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -55,7 +55,7 @@ func cniDeploy(t *Target, data interface{}) error {
 	defer t.ssh("rm -rf /tmp/cni.d")
 
 	for _, f := range cniFiles {
-		if err := t.target.UploadFile(path.Join(caaspctl.CniDir(), f.Name()), path.Join("/tmp/cni.d", f.Name())); err != nil {
+		if err := t.target.UploadFile(filepath.Join(caaspctl.CniDir(), f.Name()), filepath.Join("/tmp/cni.d", f.Name())); err != nil {
 			return err
 		}
 	}
