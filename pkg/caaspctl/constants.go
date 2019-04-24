@@ -19,7 +19,7 @@ package caaspctl
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
@@ -38,15 +38,15 @@ func JoinConfDir() string {
 }
 
 func MasterConfTemplateFile() string {
-	return path.Join(JoinConfDir(), "master.conf.template")
+	return filepath.Join(JoinConfDir(), "master.conf.template")
 }
 
 func WorkerConfTemplateFile() string {
-	return path.Join(JoinConfDir(), "worker.conf.template")
+	return filepath.Join(JoinConfDir(), "worker.conf.template")
 }
 
 func MachineConfFile(target string) string {
-	return path.Join(JoinConfDir(), fmt.Sprintf("%s.conf", target))
+	return filepath.Join(JoinConfDir(), fmt.Sprintf("%s.conf", target))
 }
 
 func TemplatePathForRole(role deployments.Role) string {
@@ -64,23 +64,23 @@ func AddonsDir() string {
 }
 
 func CniDir() string {
-	return path.Join(AddonsDir(), "cni")
+	return filepath.Join(AddonsDir(), "cni")
 }
 
 func CiliumManifestFile() string {
-	return path.Join(CniDir(), "cilium.yaml")
+	return filepath.Join(CniDir(), "cilium.yaml")
 }
 
 func PspDir() string {
-	return path.Join(AddonsDir(), "psp")
+	return filepath.Join(AddonsDir(), "psp")
 }
 
 func PspUnprivManifestFile() string {
-	return path.Join(PspDir(), "podsecuritypolicy-unprivileged.yaml")
+	return filepath.Join(PspDir(), "podsecuritypolicy-unprivileged.yaml")
 }
 
 func PspPrivManifestFile() string {
-	return path.Join(PspDir(), "podsecuritypolicy-privileged.yaml")
+	return filepath.Join(PspDir(), "podsecuritypolicy-privileged.yaml")
 }
 
 func KubeConfigAdminFile() string {

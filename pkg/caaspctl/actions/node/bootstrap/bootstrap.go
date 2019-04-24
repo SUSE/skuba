@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog"
@@ -97,11 +97,11 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 }
 
 func downloadSecrets(target *deployments.Target) error {
-	os.MkdirAll(path.Join("pki", "etcd"), 0700)
+	os.MkdirAll(filepath.Join("pki", "etcd"), 0700)
 
 	fmt.Printf("[bootstrap] downloading secrets from bootstrapped node %q\n", target.Target)
 	for _, secretLocation := range deployments.Secrets {
-		secretData, err := target.DownloadFileContents(path.Join("/etc/kubernetes", secretLocation))
+		secretData, err := target.DownloadFileContents(filepath.Join("/etc/kubernetes", secretLocation))
 		if err != nil {
 			return err
 		}

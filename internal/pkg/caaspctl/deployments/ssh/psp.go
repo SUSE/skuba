@@ -19,7 +19,7 @@ package ssh
 
 import (
 	"io/ioutil"
-	"path"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -39,7 +39,7 @@ func pspDeploy(t *Target, data interface{}) error {
 	defer t.ssh("rm -rf /tmp/psp.d")
 
 	for _, f := range pspFiles {
-		if err := t.target.UploadFile(path.Join(caaspctl.PspDir(), f.Name()), path.Join("/tmp/psp.d", f.Name())); err != nil {
+		if err := t.target.UploadFile(filepath.Join(caaspctl.PspDir(), f.Name()), filepath.Join("/tmp/psp.d", f.Name())); err != nil {
 			return err
 		}
 	}
