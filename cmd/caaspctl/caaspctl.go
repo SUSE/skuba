@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"k8s.io/klog"
 
@@ -30,7 +31,8 @@ import (
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "caaspctl",
+		// grab the base filename if the binary file is link
+		Use: filepath.Base(os.Args[0]),
 	}
 
 	cmd.AddCommand(
