@@ -57,7 +57,7 @@ var (
 				EtcdVersion:    "3.3.1",
 				CoreDNSVersion: "1.2.6",
 				PauseVersion:   "3.1",
-				CiliumVersion:  "1.4.0",
+				CiliumVersion:  "1.4.2",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion: "1.14.0",
