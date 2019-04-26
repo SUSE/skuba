@@ -23,6 +23,9 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 func DisarmKubelet(node *v1.Node) error {
@@ -43,9 +46,8 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 			Spec: v1.PodSpec{
 				Containers: []v1.Container{
 					{
-						Name: disarmKubeletJobName(node),
-						// This can be simplified to use `go-systemd` or `godbus` and embedding this calling logic in a possible separate smally containerized binary
-						Image: "ereslibre/opensuse-tooling:latest",
+						Name:  disarmKubeletJobName(node),
+						Image: images.GetGenericImage(caaspctl.ImageRepository, "caaspctl-tooling", CurrentAddonVersion(Tooling)),
 						Command: []string{
 							"/bin/bash", "-c",
 							strings.Join(
