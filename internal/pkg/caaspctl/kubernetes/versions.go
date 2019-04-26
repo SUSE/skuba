@@ -21,29 +21,37 @@ import (
 	"log"
 )
 
+type Addon string
 type Component string
 
 const (
+	Cilium  Addon = "cilium"
+	Tooling Addon = "tooling"
+
 	Etcd    Component = "etcd"
 	CoreDNS Component = "coredns"
 	Pause   Component = "pause"
-	Cilium  Component = "cilium"
 )
 
 type ControlPlaneComponentsVersion struct {
 	EtcdVersion    string
 	CoreDNSVersion string
 	PauseVersion   string
-	CiliumVersion  string
 }
 
 type ComponentsVersion struct {
 	KubeletVersion string
 }
 
+type AddonsVersion struct {
+	CiliumVersion  string
+	ToolingVersion string
+}
+
 type KubernetesVersion struct {
 	ControlPlaneComponentsVersion ControlPlaneComponentsVersion
 	ComponentsVersion             ComponentsVersion
+	AddonsVersion                 AddonsVersion
 }
 
 const (
@@ -57,10 +65,13 @@ var (
 				EtcdVersion:    "3.3.11",
 				CoreDNSVersion: "1.2.6",
 				PauseVersion:   "3.1",
-				CiliumVersion:  "1.4.2",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion: "1.14.0",
+			},
+			AddonsVersion: AddonsVersion{
+				CiliumVersion:  "1.4.2",
+				ToolingVersion: "0.1.0",
 			},
 		},
 	}
@@ -75,9 +86,19 @@ func CurrentComponentVersion(component Component) string {
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.CoreDNSVersion
 	case Pause:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.PauseVersion
-	case Cilium:
-		return currentKubernetesVersion.ControlPlaneComponentsVersion.CiliumVersion
 	}
 	log.Fatalf("unknown component %q", component)
+	panic("unreachable")
+}
+
+func CurrentAddonVersion(addon Addon) string {
+	currentKubernetesVersion := Versions[CurrentVersion]
+	switch addon {
+	case Tooling:
+		return currentKubernetesVersion.AddonsVersion.ToolingVersion
+	case Cilium:
+		return currentKubernetesVersion.AddonsVersion.CiliumVersion
+	}
+	log.Fatalf("unknown addon %q", addon)
 	panic("unreachable")
 }

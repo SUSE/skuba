@@ -165,7 +165,7 @@ func CreateOrUpdateCiliumConfigMap() error {
 
 func FillCiliumManifestFile(target, file string) error {
 	ciliumImage := images.GetGenericImage(caaspctl.ImageRepository, "cilium",
-		kubernetes.CurrentComponentVersion(kubernetes.Cilium))
+		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
 	ciliumConfig := ciliumConfiguration{CiliumImage: ciliumImage}
 
 	return renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
