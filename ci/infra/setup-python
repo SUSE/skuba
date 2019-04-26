@@ -15,5 +15,5 @@ if [ ! -d $VENVDIR ]; then
   python3 -m venv $VENVDIR
 fi
 if [ ! -z "$*" ]; then
-  $VENVDIR/bin/pip3 install $@
+  $VENVDIR/bin/pip3 --disable-pip-version-check install $@
 fi
