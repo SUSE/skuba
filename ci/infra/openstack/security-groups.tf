@@ -1,5 +1,5 @@
 resource "openstack_compute_secgroup_v2" "secgroup_base" {
-  name        = "ag-base-${var.stack_name}"
+  name        = "caasp-base-${var.stack_name}"
   description = "Basic security group for AG"
 
   rule {
@@ -32,7 +32,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_master" {
-  name        = "ag-master-${var.stack_name}"
+  name        = "caasp-master-${var.stack_name}"
   description = "AG security group for masters"
 
   rule {
@@ -72,7 +72,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_worker" {
-  name        = "ag-worker-${var.stack_name}"
+  name        = "caasp-worker-${var.stack_name}"
   description = "AG security group for workers"
 
   rule {
@@ -140,7 +140,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
 }
 
 resource "openstack_compute_secgroup_v2" "secgroup_master_lb" {
-  name        = "ag-master-lb-${var.stack_name}"
+  name        = "caasp-master-lb-${var.stack_name}"
   description = "AG security group for master load balancers"
 
   rule {
