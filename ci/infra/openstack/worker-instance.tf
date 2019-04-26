@@ -34,7 +34,7 @@ resource "openstack_compute_volume_attach_v2" "worker_vol_attach" {
 
 resource "openstack_compute_instance_v2" "worker" {
   count      = "${var.workers}"
-  name       = "ag-worker-${var.stack_name}-${count.index}"
+  name       = "caasp-worker-${var.stack_name}-${count.index}"
   image_name = "${var.image_name}"
   depends_on = [
     "openstack_networking_network_v2.network",
