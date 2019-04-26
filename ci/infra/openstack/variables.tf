@@ -18,10 +18,26 @@ variable "internal_net" {
   description = "Name of the internal network to be created"
 }
 
+variable "subnet_cidr" {
+  default     = "172.28.0.0/24"
+  description = "CIDR of the subnet for the internal network"
+}
+
+variable "dns_nameservers" {
+  type        = "list"
+  default     = [
+    "172.28.0.2",
+    "8.8.8.8",
+    "8.8.8.4"
+  ]
+  description = "DNS servers for the nodes"
+}
+
 variable "external_net" {
   default = "floating"
   description = "Name of the external network to be used, the one used to allocate floating IPs"
 }
+
 
 variable "master_size" {
   default = "m1.medium"
