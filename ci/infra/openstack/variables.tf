@@ -38,7 +38,6 @@ variable "external_net" {
   description = "Name of the external network to be used, the one used to allocate floating IPs"
 }
 
-
 variable "master_size" {
   default = "m1.medium"
   description = "Size of the master nodes"
