@@ -32,3 +32,13 @@ resource "openstack_networking_floatingip_v2" "lb_ext" {
   pool  = "${var.external_net}"
   port_id = "${openstack_lb_loadbalancer_v2.lb.vip_port_id}"
 }
+
+resource "openstack_lb_monitor_v2" "monitor" {
+  pool_id        = "${openstack_lb_pool_v2.pool.id}"
+  type           = "HTTPS"
+  url_path       = "/healthz"
+  expected_codes = 200
+  delay          = 10
+  timeout        = 5
+  max_retries    = 3
+}
