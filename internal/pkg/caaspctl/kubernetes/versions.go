@@ -54,7 +54,7 @@ var (
 	Versions = map[string]KubernetesVersion{
 		"v1.14.0": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
-				EtcdVersion:    "3.3.1",
+				EtcdVersion:    "3.3.11",
 				CoreDNSVersion: "1.2.6",
 				PauseVersion:   "3.1",
 				CiliumVersion:  "1.4.2",
