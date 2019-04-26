@@ -19,7 +19,7 @@ to the state prior to join or bootstrap being run.
   Print usage statement.
 
 **--target, -t**
-  IP or host name of the node to connect to using SSH
+  (required) IP or host name of the node to connect to using SSH
 
 **--user, -u**
   User identity used to connect to target (default=root)
