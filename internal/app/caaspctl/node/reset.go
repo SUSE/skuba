@@ -24,16 +24,16 @@ func NewResetCmd() *cobra.Command {
 	resetOptions := resetOptions{}
 
 	cmd := cobra.Command{
-		Use:   "reset <node-name>",
+		Use:   "reset",
 		Short: "Resets the node to it's state prior to running join or bootstrap",
-		Run: func(cmd *cobra.Command, nodenames []string) {
+		Run: func(cmd *cobra.Command, args []string) {
 			resetConfiguration := deployments.ResetConfiguration{
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": resetOptions.ignorePreflightErrors},
 			}
 
 			err := node.Reset(resetConfiguration,
 				ssh.NewTarget(
-					nodenames[0],
+					"",
 					resetOptions.target,
 					resetOptions.user,
 					resetOptions.sudo,
@@ -48,6 +48,7 @@ func NewResetCmd() *cobra.Command {
 			fmt.Println("successfully reset node to state prior to running bootstrap or join")
 
 		},
+		Args: cobra.NoArgs,
 	}
 
 	cmd.Flags().StringVarP(&resetOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
@@ -55,6 +56,7 @@ func NewResetCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&resetOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
 	cmd.Flags().IntVarP(&resetOptions.port, "port", "p", 22, "Port to connect to using SSH")
 	cmd.Flags().StringVar(&resetOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
+	cmd.MarkFlagRequired("target")
 
 	return &cmd
 }
