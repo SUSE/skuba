@@ -23,6 +23,8 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+
+	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
 var (
@@ -36,7 +38,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(os.Stderr, "caaspctl version: %s %s %s %s\n", Version, Commit, BuildDate, runtime.Version())
+			fmt.Fprintf(os.Stderr, "caaspctl version: %s (%s) %s %s %s\n", Version, caaspctl.BuildType, Commit, BuildDate, runtime.Version())
 		},
 	}
 }
