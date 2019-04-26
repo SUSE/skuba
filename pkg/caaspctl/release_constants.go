@@ -20,5 +20,6 @@
 package caaspctl
 
 const (
+	BuildType       = "release"
 	ImageRepository = "registry.suse.com/caasp/v4"
 )

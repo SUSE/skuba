@@ -20,5 +20,6 @@
 package caaspctl
 
 const (
+	BuildType       = "staging"
 	ImageRepository = "registry.suse.de/suse/sle-15-sp1/update/products/casp40/containers/caasp/v4"
 )

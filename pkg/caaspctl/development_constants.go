@@ -20,5 +20,6 @@
 package caaspctl
 
 const (
+	BuildType       = "development"
 	ImageRepository = "registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4"
 )
