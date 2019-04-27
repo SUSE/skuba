@@ -141,6 +141,8 @@ def push_tfstate(platform, run_name):
     chmod_id_shared()
     key_fn = conf.id_shared_fn
     fn = locate_tfstate(platform)
+    sh("ssh {} -i {} {} -- 'mkdir -p ~/tfstates/{}'".format(
+        ssh_opts, key_fn, TFSTATE_USER_HOST, os.path.dirname(run_name)))
     sh("scp {} -i {} {} {}:~/tfstates/{}".format(
         ssh_opts, key_fn, fn, TFSTATE_USER_HOST, run_name))
 
