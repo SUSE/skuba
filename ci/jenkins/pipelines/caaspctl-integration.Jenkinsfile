@@ -14,17 +14,16 @@ pipeline {
     stages {
         stage('Git Clone') { steps {
             checkout([$class: 'GitSCM',
-                      branches: [[name: "*/pr/${CHANGE_ID}"], [name: '*/master']],
+                      branches: [[name: "*/${BRANCH_NAME}"], [name: '*/master']],
                       doGenerateSubmoduleConfigurations: false,
                       extensions: [[$class: 'LocalBranch'],
                                    [$class: 'WipeWorkspace'],
-                                   [$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'master']],
                                    [$class: 'RelativeTargetDirectory', relativeTargetDir: 'caaspctl']],
                       submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/pr/*',
+                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
                                            credentialsId: 'github-token',
                                            url: 'https://github.com/SUSE/caaspctl']]])
-        } }
+        }}
 
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=info ${PARAMS}", label: "Info")
