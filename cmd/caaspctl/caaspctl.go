@@ -18,6 +18,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/SUSE/caaspctl/internal/app/caaspctl"
 )
@@ -41,6 +43,8 @@ func newRootCmd() *cobra.Command {
 		caaspctl.NewNodeCmd(),
 	)
 
+	register(cmd.PersistentFlags(), "v")
+
 	return cmd
 }
 
@@ -50,5 +54,15 @@ func main() {
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+// register adds a flag to local that targets the Value associated with the Flag named globalName in flag.CommandLine.
+func register(local *pflag.FlagSet, globalName string) {
+	if f := flag.CommandLine.Lookup(globalName); f != nil {
+		pflagFlag := pflag.PFlagFromGoFlag(f)
+		local.AddFlag(pflagFlag)
+	} else {
+		klog.Fatalf("failed to find flag in global flagset (flag): %s", globalName)
 	}
 }

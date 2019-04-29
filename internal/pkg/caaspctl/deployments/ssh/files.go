@@ -26,7 +26,7 @@ import (
 )
 
 func (t *Target) UploadFileContents(targetPath, contents string) error {
-	klog.Infof("uploading to remote file %q with contents", targetPath)
+	klog.V(1).Infof("uploading to remote file %q with contents", targetPath)
 	dir, _ := path.Split(targetPath)
 	encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
 	if _, _, err := t.silentSsh("mkdir", "-p", dir); err != nil {
@@ -37,7 +37,7 @@ func (t *Target) UploadFileContents(targetPath, contents string) error {
 }
 
 func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
-	klog.Infof("downloading remote file %q contents", sourcePath)
+	klog.V(1).Infof("downloading remote file %q contents", sourcePath)
 	if stdout, _, err := t.silentSsh("base64", "-w0", sourcePath); err == nil {
 		decodedStdout, err := base64.StdEncoding.DecodeString(stdout)
 		if err != nil {

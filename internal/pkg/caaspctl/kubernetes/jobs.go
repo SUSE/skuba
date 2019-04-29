@@ -50,13 +50,13 @@ func CreateAndWaitForJob(name string, spec batchv1.JobSpec) error {
 	for i := 0; i < 60; i++ {
 		job, err := GetAdminClientSet().BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 		if err != nil {
-			klog.Infof("failed to get status for job %s, continuing...\n", name)
+			klog.V(1).Infof("failed to get status for job %s, continuing...\n", name)
 		} else {
 			if job.Status.Active > 0 {
-				klog.Infof("job %s is active, waiting...\n", name)
+				klog.V(1).Infof("job %s is active, waiting...\n", name)
 			} else {
 				if job.Status.Succeeded > 0 {
-					klog.Infof("job %s executed successfully\n", name)
+					klog.V(1).Infof("job %s executed successfully\n", name)
 					return nil
 				}
 			}

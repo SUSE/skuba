@@ -123,7 +123,7 @@ func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
 		return err
 	}
 
-	klog.Info("successfully annotated cilium daemonset with current timestamp, which will restart all cilium pods")
+	klog.V(1).Info("successfully annotated cilium daemonset with current timestamp, which will restart all cilium pods")
 	return nil
 }
 

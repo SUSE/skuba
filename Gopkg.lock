@@ -1053,6 +1053,7 @@
     "github.com/go-yaml/yaml",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
+    "github.com/spf13/pflag",
     "golang.org/x/crypto/ssh",
     "golang.org/x/crypto/ssh/agent",
     "k8s.io/api/batch/v1",
