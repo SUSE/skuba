@@ -29,6 +29,7 @@ resource "libvirt_network" "network" {
 resource "libvirt_volume" "lb" {
   name           = "${var.name_prefix}lb.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
 }
 
@@ -117,6 +118,7 @@ data "template_file" "zypper_repositories" {
 resource "libvirt_volume" "master" {
   name           = "${var.name_prefix}master_${count.index}.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
   count          = "${var.master_count}"
 }
@@ -194,6 +196,7 @@ output "masters" {
 resource "libvirt_volume" "worker" {
   name           = "${var.name_prefix}worker_${count.index}.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
   count          = "${var.worker_count}"
 }
