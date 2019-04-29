@@ -29,6 +29,7 @@ pipeline {
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=info ${PARAMS}", label: "Info")
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=github_collaborator_check ${PARAMS}", label: "GitHub Collaborator Check")
+            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=git_rebase branch-name=${env.BRANCH_NAME} ${PARAMS}", label: "Git Rebase Check")
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=initial_cleanup ${PARAMS}", label: "Initial Cleanup")
         } }
 
