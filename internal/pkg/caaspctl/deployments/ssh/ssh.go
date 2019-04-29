@@ -35,6 +35,11 @@ import (
 	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/deployments"
 )
 
+var (
+	errSSHAuthErr   = errors.New("authentication error")
+	errSSHNoKeysErr = errors.New("no keys loaded in the ssh-agent")
+)
+
 type Target struct {
 	target *deployments.Target
 	user   string
@@ -139,6 +144,17 @@ func (t *Target) initClient() error {
 		return err
 	}
 	agentClient := agent.NewClient(conn)
+
+	// check a precondition: there must be some SSH keys loaded in the ssh agent
+	keys, err := agentClient.List()
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		klog.Errorf("no keys have been loaded in the ssh-agent.")
+		return errSSHNoKeysErr
+	}
+
 	config := &ssh.ClientConfig{
 		User: t.user,
 		Auth: []ssh.AuthMethod{
@@ -148,6 +164,13 @@ func (t *Target) initClient() error {
 	}
 	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
 	if err != nil {
+		// crypto/ssh does not provide constants for some common errors, so we
+		// must "pattern match" the error strings in order to guess what failed
+		if strings.Contains(err.Error(), "unable to authenticate") {
+			klog.Errorf("ssh authentication error: please make sure you have added to "+
+				"your ssh-agent a ssh key that is authorized in %q.", t.target.Target)
+			return errSSHAuthErr
+		}
 		return err
 	}
 	return nil
