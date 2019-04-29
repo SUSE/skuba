@@ -35,7 +35,7 @@ Requires root privileges.
 # ...and other stuff with:  #require
 
 STAGE_NAMES = (
-    "info", "github_collaborator_check",
+    "info", "github_collaborator_check", "git_rebase",
     "initial_cleanup", "create_environment",
     "configure_environment",
     "bootstrap_environment", "grow_environment",
@@ -212,6 +212,27 @@ def github_collaborator_check():
     msg = "Test execution for unknown user {} NOT allowed".format(user)
     print(msg)
     raise Exception(msg)
+
+
+@timeout(90)
+@step()
+def git_rebase():
+    if conf.branch_name.lower() == "master":
+        print("Rebase not required for master.")
+        return
+
+    try:
+        shp("caaspctl", 'git -c "user.name=${CHANGE_AUTHOR}" -c "user.email=${CHANGE_AUTHOR_EMAIL}" rebase origin/master')
+    except subprocess.CalledProcessError as ex:
+        print(ex)
+        print("Rebase failed, manual rebase is required.")
+        shp("caaspctl", "git rebase --abort")
+        sys.exit(1)
+    except Exception as ex:
+        print(ex)
+        print("Unknown error exiting.")
+        sys.exit(2)
+
 
 @step()
 def fetch_openstack_terraform_output():
@@ -650,6 +671,7 @@ def parse_args():
     conf.podname = "default"
     conf.generate_pipeline = False
     conf.username = "sles"
+    conf.branch_name = "master"
 
     if '-h' in sys.argv or '--help' in sys.argv:
         print("Help:\n\n")
