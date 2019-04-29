@@ -2,6 +2,7 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
     environment {
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
+        REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
         PARAMS = "openrc=."
     }
     stages {
