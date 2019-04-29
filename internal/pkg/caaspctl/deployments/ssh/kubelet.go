@@ -54,6 +54,6 @@ func kubeletConfigure(t *Target, data interface{}) error {
 }
 
 func kubeletEnable(t *Target, data interface{}) error {
-	_, _, err := t.ssh("systemctl", "enable", "kubelet")
+	_, _, err := t.ssh("systemctl", "enable", "--now", "kubelet")
 	return err
 }
