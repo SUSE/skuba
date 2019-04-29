@@ -127,3 +127,10 @@ variable "password" {
   default = "linux"
   description = "Password for the cluster nodes"
 }
+
+# Extend disk size to 24G (JeOS-KVM default size) because we use
+# JeOS-OpenStack instead of JeOS-KVM image with libvirt provider
+variable "disk_size" {
+  default     = "25769803776"
+  description = "disk size (in bytes)"
+}
