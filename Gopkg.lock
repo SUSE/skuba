@@ -556,16 +556,16 @@
     "storage/v1beta1",
   ]
   pruneopts = "UT"
-  revision = "40a48860b5abbba9aa891b02b32da429b08d96a0"
-  version = "kubernetes-1.14.0"
+  revision = "6e4e0e4f393bf5e8bbff570acd13217aa5a770cd"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:fa65856d5086d5338e962b3bd409e09cd70cb0ceb110167cdf565edd6920ed2e"
   name = "k8s.io/apiextensions-apiserver"
   packages = ["pkg/features"]
   pruneopts = "UT"
-  revision = "53c4693659ed354d76121458fb819202dd1635fa"
-  version = "kubernetes-1.14.0"
+  revision = "727a075fdec8319bf095330e344b3ccc668abc73"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:530b73130f4bc8db5467fa901662755409d3652243e1f0ebd56cc7f6b8115920"
@@ -625,8 +625,8 @@
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
-  revision = "d7deff9243b165ee192f5551710ea4285dcfd615"
-  version = "kubernetes-1.14.0"
+  revision = "6a84e37a896db9780c75367af8d2ed2bb944022e"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:961abc41dfa5e1cebc786b794f74c5b4feb53ccd16e118b42ec115f50b2492af"
@@ -636,8 +636,8 @@
     "pkg/util/feature",
   ]
   pruneopts = "UT"
-  revision = "8b27c41bdbb11ff103caa673315e097bf0289171"
-  version = "kubernetes-1.14.0"
+  revision = "1ec86e4da56ce0573788fc12bb3a5530600c0e5d"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:1617a9d82f05ddcd88c9f3638359de6c12012f61f0fea110a37f5fc1861dc48b"
@@ -657,8 +657,8 @@
     "pkg/resource",
   ]
   pruneopts = "UT"
-  revision = "2899ed30580fdbc8286718edb4382b529463099d"
-  version = "kubernetes-1.14.0"
+  revision = "d644b00f3b79346b7627329269bb25f2135f941c"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:af9524355a7d1d6ed49a6f6f2450225482dfe7e56d20f9ccef0294794b9be936"
@@ -784,8 +784,8 @@
     "util/retry",
   ]
   pruneopts = "UT"
-  revision = "6ee68ca5fd8355d024d02f9db0b3b667e8357a0f"
-  version = "kubernetes-1.14.0"
+  revision = "1a26190bd76a9017e289958b9fba936430aa3704"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   branch = "master"
@@ -803,8 +803,8 @@
     "token/util",
   ]
   pruneopts = "UT"
-  revision = "50662da99b70008aa395937d09b9da52a9edd041"
-  version = "kubernetes-1.14.0"
+  revision = "027c502bb854826107abb5deb35cf79aca2d753e"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:670a26d47fa58c0438b6496079a444d77d08e1ed1f552121fb5c53e6e0828410"
@@ -815,8 +815,8 @@
     "config/v1alpha1",
   ]
   pruneopts = "UT"
-  revision = "4a91899592f42b2f5859587cc5a676a5b94d2ee3"
-  version = "kubernetes-1.14.0"
+  revision = "bd2732e5c3f7234ddbc412b170f56efab7f18611"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   digest = "1:72fd56341405f53c745377e0ebc4abeff87f1a048e0eea6568a20212650f5a82"
@@ -843,8 +843,8 @@
   name = "k8s.io/kube-proxy"
   packages = ["config/v1alpha1"]
   pruneopts = "UT"
-  revision = "4d735c31b05439ef4136b5ee8454e62e854fac1f"
-  version = "kubernetes-1.14.0"
+  revision = "31a8b9ae5776291e81319ff8bc554378e80b7df0"
+  version = "kubernetes-1.14.1"
 
 [[projects]]
   branch = "master"
@@ -980,8 +980,8 @@
     "pkg/version",
   ]
   pruneopts = "UT"
-  revision = "641856db18352033a0d96dbc99153fa3b27298e5"
-  version = "v1.14.0"
+  revision = "b7394102d6ef778017f2ca4046abbaa23b88c290"
+  version = "v1.14.1"
 
 [[projects]]
   branch = "master"
