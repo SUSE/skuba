@@ -55,19 +55,19 @@ type KubernetesVersion struct {
 }
 
 const (
-	CurrentVersion = "v1.14.0"
+	CurrentVersion = "v1.14.1"
 )
 
 var (
 	Versions = map[string]KubernetesVersion{
-		"v1.14.0": KubernetesVersion{
+		"v1.14.1": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				EtcdVersion:    "3.3.11",
 				CoreDNSVersion: "1.2.6",
 				PauseVersion:   "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
-				KubeletVersion: "1.14.0",
+				KubeletVersion: "1.14.1",
 			},
 			AddonsVersion: AddonsVersion{
 				CiliumVersion:  "1.4.2",
