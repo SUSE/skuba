@@ -13,6 +13,7 @@ pipeline {
 
     stages {
         stage('Git Clone') { steps {
+            deleteDir()
             checkout([$class: 'GitSCM',
                       branches: [[name: "*/${BRANCH_NAME}"], [name: '*/master']],
                       doGenerateSubmoduleConfigurations: false,
@@ -49,7 +50,11 @@ pipeline {
         always {
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=gather_logs ${PARAMS}", label: "Gather Logs")
             sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}", label: "Final Cleanup")
-            cleanWs()
+        }
+        cleanup {
+            dir("${WORKSPACE}") {
+                deleteDir()
+            }
         }
     }
 }
