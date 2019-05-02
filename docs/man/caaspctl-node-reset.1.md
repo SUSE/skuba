@@ -7,7 +7,7 @@ reset - Reset a node to a state prior to join or bootstrap
 **reset**
 [**--help**|**-h**] [**--target**|**-t**] [**--user**|**-u**]
 [**--sudo**|**-s**] [**--port**|**-p**] [**--ignore-preflight-errors**]
-*reset* *-t <fqdn>* [-hsp] [-u user] [-p port]
+*reset* *-t <fqdn>* [-hsp] [-u user] [-p port] [-v level]
 
 # DESCRIPTION
 **reset** is a command that enables you to reset a node 
@@ -17,6 +17,9 @@ to the state prior to join or bootstrap being run.
 
 **--help, -h**
   Print usage statement.
+
+**-v**
+  set verbosity level.
 
 **--target, -t**
   (required) IP or host name of the node to connect to using SSH
