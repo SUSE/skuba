@@ -11,6 +11,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 import requests
 
@@ -435,11 +436,32 @@ def bare_metal_cloud_init():
     shp("caaspctl/ci/infra/openstack", "cloud-init status")
     #shp("caaspctl/ci/infra/openstack", "cloud-init collect-logs ")
 
+
+@timeout(300)
+@step()
+def wait_for_cluster_ready():
+    ip_addrs = get_masters_ipaddrs() + get_workers_ipaddrs()
+
+    for ip_addr in ip_addrs:
+        count = 0
+        while count < 60:
+            try:
+                ssh(ip_addr, 'test -f /var/lib/cloud/instance/boot-finished')
+            except Exception as ex:
+                print(ex)
+                print('Cluster member {} is not ready'.format(ip_addr))
+            else:
+                break
+
+            time.sleep(1)
+
+
 @timeout(600)
 @step()
 def bootstrap_environment():
     """Bootstrap Environment"""
     setup_ssh()
+    wait_for_cluster_ready()
     caaspctl_cluster_init()
     kubeadm_reset()
     # bootstrap on the first master and then join the first worker. The other workers and masters are joined in `grow_environment`
