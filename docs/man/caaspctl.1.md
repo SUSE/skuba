@@ -4,7 +4,7 @@ caaspctl - tool to manage the full lifecycle of a Kubernetes cluster
 
 # SYNOPSIS
 **caaspctl**
-[**--help**|**-h**]
+[**--help**|**-h**] [**-v**]
 *command* [*args*]
 
 # DESCRIPTION
@@ -15,6 +15,9 @@ reconfiguration in an easy way.
 
 **--help, -h**
   Print usage statement.
+
+**-v**
+  set verbosity level.
 
 # COMMANDS
 
