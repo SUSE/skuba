@@ -27,29 +27,25 @@ pipeline {
         }}
 
         stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=info ${PARAMS}", label: "Info")
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=github_collaborator_check ${PARAMS}", label: "GitHub Collaborator Check")
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=git_rebase branch-name=${env.BRANCH_NAME} ${PARAMS}", label: "Git Rebase Check")
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=initial_cleanup ${PARAMS}", label: "Initial Cleanup")
+            sh(script: 'make -f caaspctl/ci/Makefile pre_deployment', label: 'Pre Deployment')
+            sh(script: 'make -f caaspctl/ci/Makefile pr_checks', label: 'PR Checks')
         } }
 
         stage('Cluster Deployment') { steps {
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=create_environment ${PARAMS}", label: "Create Environment")
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=configure_environment ${PARAMS}", label: "Configure Environment")
+            sh(script: 'make -f caaspctl/ci/Makefile deploy', label: 'Deploy')
         } }
 
         stage('Bootstrap Cluster') { steps {
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=bootstrap_environment ${PARAMS}", label: "Bootstrap Environment")
+            sh(script: 'make -f caaspctl/ci/Makefile bootstrap', label: 'Bootstrap')
         } }
 
-        stage('Add Nodes in Cluster') { steps {
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=grow_environment ${PARAMS}", label: "Grow Environment")
+        stage('Add Nodes to Cluster') { steps {
+            sh(script: 'make -f caaspctl/ci/Makefile add_nodes', label: 'Add Nodes')
         } }
     }
     post {
         always {
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=gather_logs ${PARAMS}", label: "Gather Logs")
-            sh(script: "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}", label: "Final Cleanup")
+            sh(script: 'make -f caaspctl/ci/Makefile post_run', label: 'Post Run')
         }
         cleanup {
             dir("${WORKSPACE}") {

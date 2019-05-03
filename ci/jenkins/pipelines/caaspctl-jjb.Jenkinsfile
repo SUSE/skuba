@@ -8,29 +8,24 @@ pipeline {
     }
     stages {
         stage('Info') { steps {
-            sh "caaspctl/ci/infra/testrunner/testrunner stage=info ${PARAMS}"
+            sh(script: "make -f ci/Makefile stage=info ${PARAMS}", label: 'Info')
         } }
         stage('Setup Environment') { steps {
-            sh "python3 -m venv venv"
-            sh "venv/bin/pip install jenkins-job-builder==2.10.0"
-            sh "cp ${JENKINS_JOB_CONFIG} caaspctl/ci/jenkins/jenkins_jobs.ini"
+            sh(script: 'python3 -m venv venv', label: 'Setup Python Virtualenv')
+            sh(script: 'venv/bin/pip install jenkins-job-builder==2.10.0', label: 'Install Dependencies')
         } }
         stage('Test Jobs') { steps {
-            dir('caaspctl/ci/jenkins') {
-                sh """
+            sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make test_jobs
-                """
-                zip archive: true, dir: 'jobs', zipFile: 'jenkins_jobs.zip'
-            }
+                   make -f ci/Makefile test_jenkins_jobs
+                """, label: 'Test Jenkins Jobs')
+            zip archive: true, dir: 'jobs', zipFile: 'jenkins_jobs.zip'
         } }
         stage('Update Jobs') { steps {
-            dir('caaspctl/ci/jenkins') {
-                sh """
+            sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make update_jobs
-                """
-            }
+                   make -f ci/Makefile update_jenkins_jobs
+                """, label: 'Update Jenkins Jobs')
         } }
     }
     post {
