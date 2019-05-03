@@ -6,6 +6,7 @@
     jobs:
         - '{name}-nightly'
         - '{name}-integration'
+        - '{name}-code-lint'
 
 - job:
     name: caasp-jobs/caasp-jjb
