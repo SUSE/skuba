@@ -1,0 +1,2 @@
+# Without disabling network cc would modify /etc/resolv.conf
+config: disabled
