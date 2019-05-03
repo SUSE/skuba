@@ -1,3 +1,4 @@
+// this pipeline update all jenkins pipelines via jenkins job builder plugin
 pipeline {
     agent { node { label 'caasp-team-private' } }
     environment {
