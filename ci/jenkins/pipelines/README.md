@@ -1,9 +1,8 @@
 # Jenkins pipelines caasp
 
-
 ## prs:
 
-This directory contain all pipeline used for GitHub PULL-Request validation.
+This directory contain all pipelines used for GitHub PULL-Request validation.
 
 
 ## others:

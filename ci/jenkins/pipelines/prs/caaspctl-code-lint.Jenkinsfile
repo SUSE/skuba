@@ -27,7 +27,7 @@ pipeline {
         } }
 
         stage('Running go vet') { steps {
-            sh(script: "make vet")
+            sh("make vet")
         } }
 
         // TODO: Add here golint later on
