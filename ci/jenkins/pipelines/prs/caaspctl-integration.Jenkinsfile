@@ -1,5 +1,5 @@
 /**
- * This pipeline verifies basic caaspctl deployment, bootstrapping, and adding nodes to a cluster.
+ * This pipeline verifies basic caaspctl deployment, bootstrapping, and adding nodes to a cluster on GitHub Pr
  */
 
 pipeline {
