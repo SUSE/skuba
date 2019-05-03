@@ -1,5 +1,5 @@
 - project:
-    name: caasp-jobs/caasp-vnext
+    name: caasp-jobs/caasp-v4
     repo-name: caaspctl
     repo-owner: SUSE
     repo-credentials: github-token
