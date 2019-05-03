@@ -1,7 +1,10 @@
 # CaaSP Jenkins Job Builder
 
-Copy the jenkins_jobs.ini.template to jenkins_jobs.ini fill 
-in the API token 
+1. Copy `ci/jenkins/jenkins_jobs.ini.template` to `ci/jenkins/jenkins_jobs.ini` 
+2. Fill in with the needed values.
 
-`make test_jobs`
-`make update_jobs`
+#### Run with:
+`make test_jenkins_jobs` to test that the jobs are created correctly 
+will output xml to ci/jenkins/jobs
+
+`make update_jenkins_jobs` to update the jobs in jenkins
