@@ -29,6 +29,7 @@ resource "libvirt_network" "network" {
 resource "libvirt_volume" "lb" {
   name           = "${var.name_prefix}lb.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
 }
 
@@ -44,10 +45,12 @@ data "template_file" "haproxy_backends_master" {
 data "template_file" "lb_cloud_init_user_data" {
   template = "${file("cloud-init/lb.cfg.tpl")}"
   vars = {
-    hostname = "${var.name_prefix}lb-${count.index}"
-    fqdn = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
-    backends = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
+    fqdn            = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
+    backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 }
 
@@ -56,6 +59,7 @@ resource "libvirt_cloudinit_disk" "lb" {
   pool      = "${var.pool}"
 
   user_data = "${data.template_file.lb_cloud_init_user_data.rendered}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "lb" {
@@ -114,6 +118,7 @@ data "template_file" "zypper_repositories" {
 resource "libvirt_volume" "master" {
   name           = "${var.name_prefix}master_${count.index}.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
   count          = "${var.master_count}"
 }
@@ -123,11 +128,12 @@ data "template_file" "master_cloud_init_user_data" {
   count    = "${var.master_count}"
   template = "${file("cloud-init/master.cfg.tpl")}"
   vars = {
-    hostname        = "${var.name_prefix}master-${count.index}"
     fqdn            = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 
   depends_on = ["libvirt_domain.lb"]
@@ -139,6 +145,7 @@ resource "libvirt_cloudinit_disk" "master" {
   name      = "${var.name_prefix}master_cloud_init_${count.index}.iso"
   pool      = "${var.pool}"
   user_data = "${element(data.template_file.master_cloud_init_user_data.*.rendered, count.index)}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "master" {
@@ -189,6 +196,7 @@ output "masters" {
 resource "libvirt_volume" "worker" {
   name           = "${var.name_prefix}worker_${count.index}.qcow2"
   pool           = "${var.pool}"
+  size           = "${var.disk_size}"
   base_volume_id = "${libvirt_volume.img.id}"
   count          = "${var.worker_count}"
 }
@@ -198,11 +206,12 @@ data "template_file" "worker_cloud_init_user_data" {
   count    = "${var.worker_count}"
   template = "${file("cloud-init/worker.cfg.tpl")}"
   vars = {
-    hostname        = "${var.name_prefix}worker-${count.index}"
     fqdn            = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.zypper_repositories.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    username        = "${var.username}"
+    password        = "${var.password}"
   }
 
   depends_on = ["libvirt_domain.lb"]
@@ -214,6 +223,7 @@ resource "libvirt_cloudinit_disk" "worker" {
   name      = "${var.name_prefix}worker_cloud_init_${count.index}.iso"
   pool      = "${var.pool}"
   user_data = "${element(data.template_file.worker_cloud_init_user_data.*.rendered, count.index)}"
+  network_config = "${file("cloud-init/network.cfg")}"
 }
 
 resource "libvirt_domain" "worker" {

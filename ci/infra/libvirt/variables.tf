@@ -104,6 +104,33 @@ variable "authorized_keys" {
 
 variable "packages" {
   type = "list"
-  default = []
+  default = [
+    "kubernetes-kubeadm",
+    "kubernetes-kubelet",
+    "kubernetes-client",
+    "cri-o",
+    "cni-plugins",
+    "-docker",
+    "-containerd",
+    "-docker-runc",
+    "-docker-libnetwork",
+  ]
   description = "list of additional packages to install"
+}
+
+variable "username" {
+  default = "opensuse"
+  description = "Username for the cluster nodes"
+}
+
+variable "password" {
+  default = "linux"
+  description = "Password for the cluster nodes"
+}
+
+# Extend disk size to 24G (JeOS-KVM default size) because we use
+# JeOS-OpenStack instead of JeOS-KVM image with libvirt provider
+variable "disk_size" {
+  default     = "25769803776"
+  description = "disk size (in bytes)"
 }

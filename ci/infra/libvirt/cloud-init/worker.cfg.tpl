@@ -6,15 +6,14 @@ locale: en_GB.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# Set hostname and FQDN
-hostname: ${hostname}
+# Set FQDN
 fqdn: ${fqdn}
 
 # set root password
 chpasswd:
   list: |
     root:linux
-    opensuse:linux
+    ${username}:${password}
   expire: False
 
 ssh_authorized_keys:
@@ -33,15 +32,6 @@ ${repositories}
 # cloud image because they conflict with the kubic- ones that are pulled by
 # the kubernetes packages
 packages:
-  - kubernetes-kubeadm
-  - kubernetes-kubelet
-  - kubernetes-client
-  - cri-o
-  - cni-plugins
-  - "-docker"
-  - "-containerd"
-  - "-docker-runc"
-  - "-docker-libnetwork"
 ${packages}
 
 bootcmd:
