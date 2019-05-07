@@ -2,6 +2,16 @@
  * This pipeline verifies basic caaspctl deployment, bootstrapping, and adding nodes to a cluster on GitHub Pr
  */
 
+void setBuildStatus(String context, String message, String state) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/SUSE/caaspctl.git"],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+  ]);
+}
+
 pipeline {
     agent { node { label 'caasp-team-private' } }
 
@@ -51,6 +61,12 @@ pipeline {
             dir("${WORKSPACE}") {
                 deleteDir()
             }
+        }
+        failure {
+            setBuildStatus("jenkins/caaspctl-integration", "failed", "FAILURE")
+        }
+        success {
+            setBuildStatus("jenkins/caaspctl-integration", "success", "SUCCESS")
         }
     }
 }
