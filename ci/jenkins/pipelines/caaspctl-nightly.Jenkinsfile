@@ -6,14 +6,14 @@ pipeline {
    agent { node { label 'caasp-team-private' } }
 
    environment {
-        OPENRC = "/srv/ci/ecp.openrc"
-        GITHUB_TOKEN = readFile("/srv/ci/github-token").trim()
+        OPENRC = credentials('ecp-openrc')
+        GITHUB_TOKEN = credentials('github-token')
         PARAMS = "stack-type=openstack-terraform"
    }
 
    stages {
         stage('Git Clone') { steps {
-            sh "rm ${WORKSPACE}/* -rf"
+            deleteDir()
             sh "git clone https://${GITHUB_TOKEN}@github.com/SUSE/caaspctl"
         } }
 
@@ -36,7 +36,11 @@ pipeline {
    post {
        always {
            sh(script: 'make -f caaspctl/ci/Makefile post_run', label: 'Post Run')
-           cleanWs()
+       }
+       cleanup {
+           dir("${WORKSPACE}") {
+               deleteDir()
+           }
        }
     }
 }
