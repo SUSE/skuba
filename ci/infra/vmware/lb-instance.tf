@@ -17,8 +17,7 @@ data "template_file" "haproxy_backends_master" {
   }
 }
 
-
-data "template_file" "lb-cloud-init" {
+data "template_file" "lb_cloud-init-userdata" {
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
@@ -29,6 +28,21 @@ data "template_file" "lb-cloud-init" {
     username = "${var.username}"
     password = "${var.password}"
   }
+}
+
+resource "null_resource" "local_gen-cc-lb-iso" {
+  provisioner "local-exec" {
+    command = "./gen-cloud-init-iso.py lb '${data.template_file.lb_cloud-init-userdata.rendered}' '${local.cloud-init-metadata}' '${local.cloud-init-netconfig}'"
+  }
+}
+
+resource "vsphere_file" "upload_cc_lb_iso" {
+  datacenter       = "${data.vsphere_datacenter.dc.name}"
+  datastore        = "${data.vsphere_datastore.datastore.name}"
+  source_file      = "./cc-lb.iso"
+  create_directories = true
+  destination_file = "${var.stack_name}/cc-lb.iso"
+  depends_on = ["null_resource.local_gen-cc-lb-iso"]
 }
 
 resource "vsphere_virtual_machine" "lb" {
@@ -49,6 +63,7 @@ resource "vsphere_virtual_machine" "lb" {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     size = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
+
   cdrom {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     path = "${var.stack_name}/cc-lb.iso"
@@ -57,8 +72,8 @@ resource "vsphere_virtual_machine" "lb" {
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
-  depends_on = ["vsphere_file.upload_cc_lb_iso"]
 
+  depends_on = ["vsphere_file.upload_cc_lb_iso"]
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
@@ -74,19 +89,4 @@ resource "null_resource" "lb_wait_cloudinit" {
       "cloud-init status --wait"
     ]
   }
-}
-
-resource "null_resource" "local_gen-cc-lb-iso" {
-  provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.sh lb '${data.template_file.lb-cloud-init.rendered}'"
-  }
-}
-
-resource "vsphere_file" "upload_cc_lb_iso" {
-  datacenter       = "${data.vsphere_datacenter.dc.name}"
-  datastore        = "${data.vsphere_datastore.datastore.name}"
-  source_file      = "./cc-lb.iso"
-  create_directories = true
-  destination_file = "${var.stack_name}/cc-lb.iso"
-  depends_on = ["null_resource.local_gen-cc-lb-iso"]
 }

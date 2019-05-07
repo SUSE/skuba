@@ -8,7 +8,7 @@ data "template_file" "master_repositories" {
   }
 }
 
-data "template_file" "master-cloud-init" {
+data "template_file" "master_cloud-init-userdata" {
   template = "${file("cloud-init/master.tpl")}"
 
   vars {
@@ -18,6 +18,21 @@ data "template_file" "master-cloud-init" {
     username = "${var.username}"
     password = "${var.password}"
   }
+}
+
+resource "null_resource" "local_gen-cc-master-iso" {
+  provisioner "local-exec" {
+    command = "./gen-cloud-init-iso.py master '${data.template_file.master_cloud-init-userdata.rendered}' '${local.cloud-init-metadata}' '${local.cloud-init-netconfig}'"
+  }
+}
+
+resource "vsphere_file" "upload_cc_master_iso" {
+  datacenter       = "${data.vsphere_datacenter.dc.name}"
+  datastore        = "${data.vsphere_datastore.datastore.name}"
+  source_file      = "./cc-master.iso"
+  create_directories = true
+  destination_file = "${var.stack_name}/cc-master.iso"
+  depends_on = ["null_resource.local_gen-cc-master-iso"]
 }
 
 resource "vsphere_virtual_machine" "master" {
@@ -38,6 +53,7 @@ resource "vsphere_virtual_machine" "master" {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     size = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
+
   cdrom {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     path = "${var.stack_name}/cc-master.iso"
@@ -46,37 +62,6 @@ resource "vsphere_virtual_machine" "master" {
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
+
   depends_on = ["vsphere_file.upload_cc_master_iso"]
-
-}
-
-resource "null_resource" "master_wait_cloudinit" {
-  count = "${var.masters}"
-  connection {
-    host     = "${element(vsphere_virtual_machine.master.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    password = "${var.password}"
-    type     = "ssh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cloud-init status --wait"
-    ]
-  }
-}
-
-resource "null_resource" "local_gen-cc-master-iso" {
-  provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.sh master '${data.template_file.master-cloud-init.rendered}'"
-  }
-}
-
-resource "vsphere_file" "upload_cc_master_iso" {
-  datacenter       = "${data.vsphere_datacenter.dc.name}"
-  datastore        = "${data.vsphere_datastore.datastore.name}"
-  source_file      = "./cc-master.iso"
-  create_directories = true
-  destination_file = "${var.stack_name}/cc-master.iso"
-  depends_on = ["null_resource.local_gen-cc-master-iso"]
 }

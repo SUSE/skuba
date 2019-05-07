@@ -8,7 +8,7 @@ data "template_file" "worker_repositories" {
   }
 }
 
-data "template_file" "worker-cloud-init" {
+data "template_file" "worker_cloud-init-userdata" {
   template = "${file("cloud-init/worker.tpl")}"
 
   vars {
@@ -19,6 +19,22 @@ data "template_file" "worker-cloud-init" {
     password = "${var.password}"
   }
 }
+
+resource "null_resource" "local_gen-cc-worker-iso" {
+  provisioner "local-exec" {
+    command = "./gen-cloud-init-iso.py worker '${data.template_file.worker_cloud-init-userdata.rendered}' '${local.cloud-init-metadata}' '${local.cloud-init-netconfig}'"
+  }
+}
+
+resource "vsphere_file" "upload_cc_worker_iso" {
+  datacenter       = "${data.vsphere_datacenter.dc.name}"
+  datastore        = "${data.vsphere_datastore.datastore.name}"
+  source_file      = "./cc-worker.iso"
+  create_directories = true
+  destination_file = "${var.stack_name}/cc-worker.iso"
+  depends_on = ["null_resource.local_gen-cc-worker-iso"]
+}
+
 
 resource "vsphere_virtual_machine" "worker" {
   count      = "${var.workers}"
@@ -38,6 +54,7 @@ resource "vsphere_virtual_machine" "worker" {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     size = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
+
   cdrom {
     datastore_id = "${data.vsphere_datastore.datastore.id}"
     path = "${var.stack_name}/cc-worker.iso"
@@ -46,8 +63,8 @@ resource "vsphere_virtual_machine" "worker" {
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
-  depends_on = ["vsphere_file.upload_cc_worker_iso"]
 
+  depends_on = ["vsphere_file.upload_cc_worker_iso"]
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
@@ -64,19 +81,4 @@ resource "null_resource" "worker_wait_cloudinit" {
       "cloud-init status --wait"
     ]
   }
-}
-
-resource "null_resource" "local_gen-cc-worker-iso" {
-  provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.sh worker '${data.template_file.worker-cloud-init.rendered}'"
-  }
-}
-
-resource "vsphere_file" "upload_cc_worker_iso" {
-  datacenter       = "${data.vsphere_datacenter.dc.name}"
-  datastore        = "${data.vsphere_datastore.datastore.name}"
-  source_file      = "./cc-worker.iso"
-  create_directories = true
-  destination_file = "${var.stack_name}/cc-worker.iso"
-  depends_on = ["null_resource.local_gen-cc-worker-iso"]
 }
