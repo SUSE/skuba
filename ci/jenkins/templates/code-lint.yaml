@@ -14,5 +14,4 @@
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
           discover-pr-origin: current
-          notification-context: continuous-integration/jenkins
-          filter-head-regex: ^(master|release\-\d\.\d|PR\-\d+)$
+          head-filter-regex: ^(master|release\-\d\.\d|PR\-\d+)$
