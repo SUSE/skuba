@@ -29,8 +29,10 @@ pipeline {
         } }
     }
     post {
-        always {
-            cleanWs()
+        cleanup {
+            dir("${WORKSPACE}") {
+                deleteDir()
+            }
         }
     }
 }
