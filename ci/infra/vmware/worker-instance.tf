@@ -8,7 +8,7 @@ data "template_file" "worker_repositories" {
   }
 }
 
-data "template_file" "worker_cloud-init-userdata" {
+data "template_file" "worker_cloud_init_userdata" {
   template = "${file("cloud-init/worker.tpl")}"
 
   vars {
@@ -20,9 +20,9 @@ data "template_file" "worker_cloud-init-userdata" {
   }
 }
 
-resource "null_resource" "local_gen-cc-worker-iso" {
+resource "null_resource" "local_gen_cc_worker_iso" {
   provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.py worker '${data.template_file.worker_cloud-init-userdata.rendered}' '${local.cloud-init-metadata}' '${local.cloud-init-netconfig}'"
+    command = "./gen_cloud_init_iso.py worker '${data.template_file.worker_cloud_init_userdata.rendered}' '${local.cloud_init_metadata}' '${local.cloud_init_netconfig}'"
   }
 }
 
@@ -32,7 +32,7 @@ resource "vsphere_file" "upload_cc_worker_iso" {
   source_file      = "./cc-worker.iso"
   create_directories = true
   destination_file = "${var.stack_name}/cc-worker.iso"
-  depends_on = ["null_resource.local_gen-cc-worker-iso"]
+  depends_on = ["null_resource.local_gen_cc_worker_iso"]
 }
 
 

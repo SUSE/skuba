@@ -17,7 +17,7 @@ data "template_file" "haproxy_backends_master" {
   }
 }
 
-data "template_file" "lb_cloud-init-userdata" {
+data "template_file" "lb_cloud_init_userdata" {
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
@@ -30,9 +30,9 @@ data "template_file" "lb_cloud-init-userdata" {
   }
 }
 
-resource "null_resource" "local_gen-cc-lb-iso" {
+resource "null_resource" "local_gen_cc_lb_iso" {
   provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.py lb '${data.template_file.lb_cloud-init-userdata.rendered}' '${local.cloud-init-metadata}' '${local.cloud-init-netconfig}'"
+    command = "./gen_cloud_init_iso.py lb '${data.template_file.lb_cloud_init_userdata.rendered}' '${local.cloud_init_metadata}' '${local.cloud_init_netconfig}'"
   }
 }
 
@@ -42,7 +42,7 @@ resource "vsphere_file" "upload_cc_lb_iso" {
   source_file      = "./cc-lb.iso"
   create_directories = true
   destination_file = "${var.stack_name}/cc-lb.iso"
-  depends_on = ["null_resource.local_gen-cc-lb-iso"]
+  depends_on = ["null_resource.local_gen_cc_lb_iso"]
 }
 
 resource "vsphere_virtual_machine" "lb" {
