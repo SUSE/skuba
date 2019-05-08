@@ -16,7 +16,7 @@ pipeline {
             sh "cp ${JENKINS_JOB_CONFIG} caaspctl/ci/jenkins/jenkins_jobs.ini"
         } }
         stage('Test Jobs') { steps {
-            dir('caaspctl/ci/jenkins') {
+            dir('ci/jenkins') {
                 sh """
                    source ${WORKSPACE}/venv/bin/activate
                    make test_jobs
@@ -25,7 +25,7 @@ pipeline {
             }
         } }
         stage('Update Jobs') { steps {
-            dir('caaspctl/ci/jenkins') {
+            dir('ci/jenkins') {
                 sh """
                    source ${WORKSPACE}/venv/bin/activate
                    make update_jobs

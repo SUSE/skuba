@@ -126,7 +126,7 @@ def chmod_id_shared():
 def locate_tfstate(platform):
     assert platform in ("openstack", "vmware")
     return os.path.join(conf.workspace,
-        "caaspctl/ci/infra/{}/terraform.tfstate".format(platform))
+        "ci/infra/{}/terraform.tfstate".format(platform))
 
 @step()
 def fetch_tfstate(platform, run_name):
@@ -222,11 +222,12 @@ def git_rebase():
         return
 
     try:
-        shp("caaspctl", 'git -c "user.name=${CHANGE_AUTHOR}" -c "user.email=${CHANGE_AUTHOR_EMAIL}" rebase origin/master')
+        sh('git -c "user.name=${CHANGE_AUTHOR}" -c "user.email=${CHANGE_AUTHOR_EMAIL}" fetch origin')
+        sh('git -c "user.name=${CHANGE_AUTHOR}" -c "user.email=${CHANGE_AUTHOR_EMAIL}" rebase origin/master')
     except subprocess.CalledProcessError as ex:
         print(ex)
         print("Rebase failed, manual rebase is required.")
-        shp("caaspctl", "git rebase --abort")
+        sh("git rebase --abort")
         sys.exit(1)
     except Exception as ex:
         print(ex)
@@ -236,7 +237,7 @@ def git_rebase():
 
 @step()
 def fetch_openstack_terraform_output():
-    shp("caaspctl/ci/infra/openstack", "source {}; "
+    shp("ci/infra/openstack", "source {}; "
         "terraform output -json > {}/tfout.json".format(
             conf.openrc, conf.workspace))
 
@@ -265,8 +266,8 @@ def boot_openstack():
     print("Wrote %s" % fn)
 
     print("Init terraform")
-    shp("caaspctl/ci/infra/openstack", "terraform init")
-    shp("caaspctl/ci/infra/openstack", "terraform version")
+    shp("ci/infra/openstack", "terraform init")
+    shp("ci/infra/openstack", "terraform version")
     print("------------------------")
     print()
     print("To clean up OpenStack manually, run:")
@@ -283,10 +284,10 @@ def boot_openstack():
         conf.openrc, conf.workspace))
     for retry in range(1, 5):
         print("Run terraform plan - execution n. %d" % retry)
-        shp("caaspctl/ci/infra/openstack", plan_cmd)
+        shp("ci/infra/openstack", plan_cmd)
         print("Running terraform apply - execution n. %d" % retry)
         try:
-            shp("caaspctl/ci/infra/openstack", apply_cmd)
+            shp("ci/infra/openstack", apply_cmd)
             push_tfstate("openstack", conf.run_name)
             break
 
@@ -320,11 +321,11 @@ def create_environment():
         boot_openstack()
 
     elif conf.stack_type == 'bare-metal':
-        shp("${WORKSPACE}/caaspctl/ci/infra/bare-metal/deployer",
+        shp("${WORKSPACE}/ci/infra/bare-metal/deployer",
             "./deployer ${JOB_NAME}-${BUILD_NUMBER} --deploy-nodes "
             "--master-count 1 --worker-count 1"
             " --conffile deployer.conf.json")
-        sh("cp ${WORKSPACE}/caaspctl/ci/infra/bare-metal/deployer/environment.json ${WORKSPACE}/")
+        sh("cp ${WORKSPACE}/ci/infra/bare-metal/deployer/environment.json ${WORKSPACE}/")
         bare_metal_cloud_init()
 
     elif conf.stack_type == 'vmware-terraform':
@@ -371,7 +372,7 @@ def configure_environment():
 
 
 def load_tfstate():
-    fn = ws_join("caaspctl/ci/infra/openstack/terraform.tfstate")
+    fn = ws_join("ci/infra/openstack/terraform.tfstate")
     print("Reading {}".format(fn))
     with open(fn) as f:
         return json.load(f)
@@ -397,7 +398,7 @@ def caaspctl_cluster_init():
         get_lb_ipaddr())
 
 def locate_id_shared():
-    return ws_join("caaspctl/ci/infra/id_shared")
+    return ws_join("ci/infra/id_shared")
 
 @step()
 def kubeadm_reset():
@@ -453,8 +454,8 @@ def setup_ssh():
 def bare_metal_cloud_init():
     #requirepkg cloud-init
     # TODO: move cloud-init outside of openstack dir
-    shp("caaspctl/ci/infra/openstack", "cloud-init status")
-    #shp("caaspctl/ci/infra/openstack", "cloud-init collect-logs ")
+    shp("ci/infra/openstack", "cloud-init status")
+    #shp("ci/infra/openstack", "cloud-init collect-logs ")
 
 @timeout(600)
 @step()
@@ -487,13 +488,13 @@ def grow_environment():
 @step()
 def create_environment_workers_bare_metal():
     # Warning: requires deployer.conf.json
-    shp('caaspctl/ci/infra/bare-metal/deployer',
+    shp('ci/infra/bare-metal/deployer',
         './deployer ${JOB_NAME}-${BUILD_NUMBER} --deploy-nodes --logsdir ${WORKSPACE}/logs'
         " --conffile deployer.conf.json")
-    shp('caaspctl/ci/infra/bare-metal/deployer',
+    shp('ci/infra/bare-metal/deployer',
         "cp environment.json ${WORKSPACE}/environment.json")
     # FIXME generate a new form of environment.json
-    shp('caaspctl/ci/infra/bare-metal/deployer',
+    shp('ci/infra/bare-metal/deployer',
         '${WORKSPACE}/automation/misc-tools/generate-ssh-config ${WORKSPACE}/environment.json')
     archive_artifacts('${WORKSPACE}', 'environment.json')
 
@@ -586,7 +587,7 @@ def _cleanup_openstack_terraform(run_name):
         " terraform destroy -auto-approve"
         " -var internal_net=net-{run}"
         " -var stack_name={run}").format(orc=conf.openrc, run=run_name)
-    shp("caaspctl/ci/infra/openstack", cmd)
+    shp("ci/infra/openstack", cmd)
 
 @step()
 def cleanup_openstack_terraform(clean_previous=True):
@@ -612,7 +613,7 @@ def cleanup_openstack_terraform(clean_previous=True):
 @timeout(40)
 @step()
 def cleanup_bare_metal():
-    shp('caaspctl/ci/infra/bare-metal/deployer',
+    shp('ci/infra/bare-metal/deployer',
         "./deployer --release {run} --conffile deployer.conf.json".format(
         run=conf.run_name))
 
@@ -738,15 +739,15 @@ pipeline {
    }
    post {
         unsuccessful {
-            sh "caaspctl/ci/infra/testrunner/testrunner stage=gather_logs ${PARAMS}"
-            sh "caaspctl/ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}"
+            sh "ci/infra/testrunner/testrunner stage=gather_logs ${PARAMS}"
+            sh "ci/infra/testrunner/testrunner stage=final_cleanup ${PARAMS}"
         }
     }
 }
     """
     stage_tpl = """
         stage('%s') { steps {
-            sh "caaspctl/ci/infra/testrunner/testrunner stage=%s ${PARAMS}"
+            sh "ci/infra/testrunner/testrunner stage=%s ${PARAMS}"
         } }
     """
 
@@ -809,7 +810,7 @@ def main():
     print("Testrunner v. {}".format(__version__))
     conf = parse_args()
     if conf.id_shared_fn is None:
-        conf.id_shared_fn = ws_join("caaspctl/ci/infra/id_shared")
+        conf.id_shared_fn = ws_join("ci/infra/id_shared")
 
     if conf.stack_type == 'openstack-terraform':
         assert conf.openrc, "An openrc env var or CLI param is required"
