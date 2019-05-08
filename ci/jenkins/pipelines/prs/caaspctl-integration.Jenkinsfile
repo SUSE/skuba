@@ -2,14 +2,15 @@
  * This pipeline verifies basic caaspctl deployment, bootstrapping, and adding nodes to a cluster on GitHub Pr
  */
 
-void setBuildStatus(String context, String message, String state) {
-  step([
-      $class: "GitHubCommitStatusSetter",
-      reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/SUSE/caaspctl.git"],
-      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
-      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-  ]);
+void setBuildStatus(String context, String description, String state) {
+    def body = "{\"state\": \"${state}\", " +
+               "\"target_url\": \"${BUILD_URL}/display/redirect\", " +
+               "\"description\": \"${description}\", " +
+               "\"context\": \"${context}\"}"
+    def headers = '-H "Content-Type: application/json" -H "Accept: application/vnd.github.v3+json"'
+    def url = "https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/statuses/${GIT_COMMIT}"
+
+    sh(script: "curl -X POST ${headers} ${url} -d '${body}'", label: "Sending commit status")
 }
 
 pipeline {
@@ -63,10 +64,10 @@ pipeline {
             }
         }
         failure {
-            setBuildStatus("jenkins/caaspctl-integration", "failed", "FAILURE")
+            setBuildStatus('jenkins/caaspctl-integration', 'failed', 'failure')
         }
         success {
-            setBuildStatus("jenkins/caaspctl-integration", "success", "SUCCESS")
+            setBuildStatus('jenkins/caaspctl-integration', 'success', 'success')
         }
     }
 }
