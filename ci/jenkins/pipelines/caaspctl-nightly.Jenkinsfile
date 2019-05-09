@@ -12,11 +12,6 @@ pipeline {
    }
 
    stages {
-        stage('Git Clone') { steps {
-            deleteDir()
-            sh "git clone https://${GITHUB_TOKEN}@github.com/SUSE/caaspctl"
-        } }
-
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f caaspctl/ci/Makefile pre_deployment', label: 'Pre Deployment')
         } }
