@@ -8,7 +8,7 @@ pipeline {
     }
     stages {
         stage('Info') { steps {
-            sh(script: "make -f caaspctl/ci/Makefile stage=info ${PARAMS}", label: 'Info')
+            sh(script: "make -f caaspctl/ci/Makefile info ${PARAMS}", label: 'Info')
         } }
         stage('Setup Environment') { steps {
             sh(script: 'python3 -m venv venv', label: 'Setup Python Virtualenv')
