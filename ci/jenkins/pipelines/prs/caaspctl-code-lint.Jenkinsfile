@@ -23,6 +23,10 @@ pipeline {
     }
 
     stages {
+        stage('Setting GitHub in-progress status') { steps {
+            setBuildStatus('jenkins/caaspctl-code-lint', 'in-progress', 'pending')
+        } }
+
         stage('Running go vet') { steps {
             sh(script: 'make vet', label: 'Go Vet')
         } }
