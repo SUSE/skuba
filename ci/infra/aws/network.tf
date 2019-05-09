@@ -1,11 +1,11 @@
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
-  enable_dns_hostnames = true
+  cidr_block                       = "10.0.0.0/16"
+  enable_dns_support               = true
+  enable_dns_hostnames             = true
   assign_generated_ipv6_cidr_block = false
 
   tags = {
-    Name = "${var.stack_name}"
+    Name        = "${var.stack_name}"
     Environment = "${var.stack_name}"
   }
 }
@@ -14,7 +14,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.main.id}"
 
   tags {
-    Name = "${var.stack_name}"
+    Name        = "${var.stack_name}"
     Environment = "${var.stack_name}"
   }
 }
@@ -28,7 +28,7 @@ resource "aws_route_table" "r" {
   }
 
   tags {
-    Name = "${var.stack_name}"
+    Name        = "${var.stack_name}"
     Environment = "${var.stack_name}"
   }
 }
@@ -41,7 +41,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "${var.stack_name}-az-${element(var.availability_zones, count.index)}"
+    Name        = "${var.stack_name}-az-${element(var.availability_zones, count.index)}"
     Environment = "${var.stack_name}"
   }
 }
