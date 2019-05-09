@@ -27,8 +27,8 @@ pipeline {
             setBuildStatus('jenkins/caaspctl-code-lint', 'in-progress', 'pending')
         } }
 
-        stage('Running go vet') { steps {
-            sh(script: 'make vet', label: 'Go Vet')
+        stage('Running make lint') { steps {
+            sh(script: 'make lint', label: 'make lint')
         } }
 
         // TODO: Add here golint later on

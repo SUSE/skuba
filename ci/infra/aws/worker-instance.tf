@@ -3,7 +3,7 @@ data "template_file" "worker-cloud-init" {
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repo_baseurl = "${var.repo_baseurl}"
+    repo_baseurl    = "${var.repo_baseurl}"
   }
 }
 

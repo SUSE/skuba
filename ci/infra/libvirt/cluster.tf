@@ -17,10 +17,10 @@ resource "libvirt_volume" "img" {
 # Networking #
 ##############
 resource "libvirt_network" "network" {
-    name      = "${var.name_prefix}net"
-    mode      = "${var.net_mode}"
-    domain    = "${var.name_prefix}${var.domain_name}"
-    addresses = ["${var.network}"]
+  name      = "${var.name_prefix}net"
+  mode      = "${var.net_mode}"
+  domain    = "${var.name_prefix}${var.domain_name}"
+  addresses = ["${var.network}"]
 }
 
 ######################
@@ -36,14 +36,16 @@ resource "libvirt_volume" "lb" {
 data "template_file" "haproxy_backends_master" {
   count    = "${var.master_count}"
   template = "${file("cloud-init/haproxy-backends.tpl")}"
+
   vars = {
     fqdn = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
-    ip = "${cidrhost("${var.network}", 512 + count.index)}"
+    ip   = "${cidrhost("${var.network}", 512 + count.index)}"
   }
 }
 
 data "template_file" "lb_cloud_init_user_data" {
   template = "${file("cloud-init/lb.cfg.tpl")}"
+
   vars = {
     fqdn            = "${var.name_prefix}lb-${count.index}.${var.name_prefix}${var.domain_name}"
     backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
@@ -55,10 +57,10 @@ data "template_file" "lb_cloud_init_user_data" {
 }
 
 resource "libvirt_cloudinit_disk" "lb" {
-  name      = "${var.name_prefix}lb_cloud_init.iso"
-  pool      = "${var.pool}"
+  name = "${var.name_prefix}lb_cloud_init.iso"
+  pool = "${var.pool}"
 
-  user_data = "${data.template_file.lb_cloud_init_user_data.rendered}"
+  user_data      = "${data.template_file.lb_cloud_init_user_data.rendered}"
   network_config = "${file("cloud-init/network.cfg")}"
 }
 
@@ -72,7 +74,6 @@ resource "libvirt_domain" "lb" {
   cpu {
     mode = "host-passthrough"
   }
-
 
   disk {
     volume_id = "${libvirt_volume.lb.id}"
@@ -127,6 +128,7 @@ data "template_file" "master_cloud_init_user_data" {
   # needed when 0 master nodes are defined
   count    = "${var.master_count}"
   template = "${file("cloud-init/master.cfg.tpl")}"
+
   vars = {
     fqdn            = "${var.name_prefix}master-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
@@ -141,10 +143,10 @@ data "template_file" "master_cloud_init_user_data" {
 
 resource "libvirt_cloudinit_disk" "master" {
   # needed when 0 master nodes are defined
-  count     = "${var.master_count}"
-  name      = "${var.name_prefix}master_cloud_init_${count.index}.iso"
-  pool      = "${var.pool}"
-  user_data = "${element(data.template_file.master_cloud_init_user_data.*.rendered, count.index)}"
+  count          = "${var.master_count}"
+  name           = "${var.name_prefix}master_cloud_init_${count.index}.iso"
+  pool           = "${var.pool}"
+  user_data      = "${element(data.template_file.master_cloud_init_user_data.*.rendered, count.index)}"
   network_config = "${file("cloud-init/network.cfg")}"
 }
 
@@ -182,7 +184,6 @@ resource "libvirt_domain" "master" {
     user     = "root"
     password = "linux"
   }
-
 }
 
 output "masters" {
@@ -205,6 +206,7 @@ data "template_file" "worker_cloud_init_user_data" {
   # needed when 0 worker nodes are defined
   count    = "${var.worker_count}"
   template = "${file("cloud-init/worker.cfg.tpl")}"
+
   vars = {
     fqdn            = "${var.name_prefix}worker-${count.index}.${var.name_prefix}${var.domain_name}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
@@ -219,10 +221,10 @@ data "template_file" "worker_cloud_init_user_data" {
 
 resource "libvirt_cloudinit_disk" "worker" {
   # needed when 0 worker nodes are defined
-  count     = "${var.worker_count}"
-  name      = "${var.name_prefix}worker_cloud_init_${count.index}.iso"
-  pool      = "${var.pool}"
-  user_data = "${element(data.template_file.worker_cloud_init_user_data.*.rendered, count.index)}"
+  count          = "${var.worker_count}"
+  name           = "${var.name_prefix}worker_cloud_init_${count.index}.iso"
+  pool           = "${var.pool}"
+  user_data      = "${element(data.template_file.worker_cloud_init_user_data.*.rendered, count.index)}"
   network_config = "${file("cloud-init/network.cfg")}"
 }
 
@@ -238,7 +240,6 @@ resource "libvirt_domain" "worker" {
   cpu {
     mode = "host-passthrough"
   }
-
 
   disk {
     volume_id = "${element(libvirt_volume.worker.*.id, count.index)}"

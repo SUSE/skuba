@@ -18,17 +18,19 @@ variable "pool" {
 
 ## fixme: see issue https://github.com/SUSE/avant-garde/issues/91
 variable "img_source_url" {
-  type        = "string"
-  default     = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.136.qcow2"
+  type    = "string"
+  default = "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/openSUSE-Leap-15.0-OpenStack.x86_64-0.0.4-Buildlp150.12.136.qcow2"
 }
 
 variable "repositories" {
-  type        = "list"
-  default     = [
+  type = "list"
+
+  default = [
     {
       caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
-    }
+    },
   ]
+
   description = "Urls of the repositories to mount via cloud-init"
 }
 
@@ -97,13 +99,14 @@ variable "network" {
 }
 
 variable "authorized_keys" {
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
   description = "ssh keys to inject into all the nodes"
 }
 
 variable "packages" {
   type = "list"
+
   default = [
     "kubernetes-kubeadm",
     "kubernetes-kubelet",
@@ -115,16 +118,17 @@ variable "packages" {
     "-docker-runc",
     "-docker-libnetwork",
   ]
+
   description = "list of additional packages to install"
 }
 
 variable "username" {
-  default = "opensuse"
+  default     = "opensuse"
   description = "Username for the cluster nodes"
 }
 
 variable "password" {
-  default = "linux"
+  default     = "linux"
   description = "Password for the cluster nodes"
 }
 

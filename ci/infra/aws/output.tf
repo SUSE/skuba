@@ -13,3 +13,4 @@ output "lb_dns_name" {
 #output "lb_ips" {
 #  value = ["${aws_eip.lb.*.public_ip}"]
 #}
+
