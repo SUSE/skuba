@@ -19,7 +19,7 @@ pipeline {
                    source ${WORKSPACE}/venv/bin/activate
                    make -f caaspctl/ci/Makefile test_jenkins_jobs
                 """, label: 'Test Jenkins Jobs')
-            zip archive: true, dir: 'jobs', zipFile: 'jenkins_jobs.zip'
+            zip archive: true, dir: 'caaspctl/ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
         } }
         stage('Update Jobs') { steps {
             sh(script: """
