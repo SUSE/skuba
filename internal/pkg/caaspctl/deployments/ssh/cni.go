@@ -18,8 +18,10 @@
 package ssh
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -41,6 +43,9 @@ func cniRender(t *Target, data interface{}) error {
 }
 
 func cniDeploy(t *Target, data interface{}) error {
+	fmt.Println(time.Now().UTC())
+	stdout, _, _ := t.ssh("date", "-u")
+	fmt.Println(stdout)
 	if err := cni.CreateCiliumSecret(); err != nil {
 		return errors.Wrap(err, "unable to create cilium secrets")
 	}
