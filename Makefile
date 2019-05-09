@@ -1,4 +1,6 @@
 GO ?= go
+GOFMT ?= gofmt
+TERRAFORM ?= $(shell which terraform 2>/dev/null || echo "true")
 GO_MD2MAN ?= go-md2man
 LN = ln
 RM = rm
@@ -46,6 +48,8 @@ staging:
 release:
 	make TAGS=release install
 
-.PHONY: vet
-vet:
+.PHONY: lint
+lint:
 	$(GO) tool vet ${CAASPCTL_SRCS}
+	test -z `$(GOFMT) -l $(CAASPCTL_SRCS)` || { $(GOFMT) -d $(CAASPCTL_SRCS) && false; }
+	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
