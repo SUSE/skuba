@@ -1,21 +1,29 @@
-access_key = "<from openbare>"
-secret_key = "<from openbare>"
+# prefix for resources
+stack_name = "my-k8s"
 
-# AWS region to be used - see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
-# region = ""
-
-# AWS availability zones to be used
-# availability_zones = []
-
-# identifier to make all your resources unique and avoid clashes with other users of this terraform project
-# stack_name = ""
-
-workers = 3
-masters = 3
-
-# ssh keys to inject into all the nodes
+# a SSH public key for accessing the machines
 authorized_keys = [
+  "ssh-rsa AAAAB3NzaC1yc2EA...",
 ]
 
-# define the base url of the repository to use
-# repo_baseurl = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+# AWS region
+aws_region = "eu-central-1"
+
+# AWS availability zone
+aws_az = "eu-central-1a"
+
+# access key for AWS services
+aws_access_key = "AKIXU..."
+
+# secret key used for AWS services
+aws_secret_key = "ORd..."
+
+## To register CaaSP product please use ONLY ONE of the following method
+# - register against SUSE Customer Service, with SUSE CaaSP Product Registration Code
+# - register against local SUSE Repository Mirroring Server
+#
+# SUSE CaaSP Product Registration Code:
+#caasp_registry_code = ""
+#
+# SUSE Repository Mirroring Server Name (FQDN):
+#rmt_server_name = "rmt.example.com"
