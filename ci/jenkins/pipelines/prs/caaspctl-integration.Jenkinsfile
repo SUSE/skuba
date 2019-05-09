@@ -39,6 +39,10 @@ pipeline {
                       userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
                                            credentialsId: 'github-token',
                                            url: 'https://github.com/SUSE/caaspctl']]])
+
+            dir("${WORKSPACE}/caaspctl") {
+                sh(script: "git checkout ${BRANCH_NAME}", label: "Checkout PR Branch")
+            }
         }}
 
         stage('Getting Ready For Cluster Deployment') { steps {
