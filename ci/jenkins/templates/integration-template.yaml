@@ -11,6 +11,7 @@
           repo-owner: '{repo-owner}'
           credentials-id: '{repo-credentials}'
           branch-discovery: no-pr
+          disable-pr-notifications: true
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
           discover-pr-origin: current

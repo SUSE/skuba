@@ -23,6 +23,10 @@ pipeline {
     }
 
     stages {
+        stage('Setting GitHub in-progress status') { steps {
+            setBuildStatus('jenkins/caaspctl-integration', 'in-progress', 'pending')
+        } }
+
         stage('Git Clone') { steps {
             deleteDir()
             checkout([$class: 'GitSCM',
