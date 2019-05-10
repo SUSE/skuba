@@ -65,6 +65,8 @@ resource "null_resource" "master_wait_cloudinit" {
     type     = "ssh"
   }
 
+  depends_on = ["openstack_compute_instance_v2.master"]
+
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait",
