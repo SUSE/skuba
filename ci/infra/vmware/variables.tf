@@ -15,10 +15,9 @@ variable "authorized_keys" {
   description = "ssh keys to inject into all the nodes"
 }
 
-variable "repositories" {
-  type        = "list"
-  default     = []
-  description = "Urls of the repositories to mount via cloud-init"
+variable "guest_id" {
+  default     = "sles12_64Guest"
+  description = "Guest ID of the virtual machine"
 }
 
 variable "ntp_servers" {
@@ -31,6 +30,12 @@ variable "packages" {
   type        = "list"
   default     = []
   description = "list of additional packages to install"
+}
+
+variable "repositories" {
+  type        = "list"
+  default     = []
+  description = "Urls of the repositories to mount via cloud-init"
 }
 
 variable "username" {

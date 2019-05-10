@@ -37,7 +37,7 @@ resource "vsphere_virtual_machine" "lb" {
   name             = "${var.stack_name}-lb-${count.index}"
   num_cpus         = "${var.lb_cpus}"
   memory           = "${var.lb_memory}"
-  guest_id         = "sles12_64Guest"
+  guest_id         = "${var.guest_id}"
   scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
   resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
   datastore_id     = "${data.vsphere_datastore.datastore.id}"
