@@ -1,6 +1,6 @@
 GO ?= go
 GOFMT ?= gofmt
-TERRAFORM ?= $(shell which terraform 2>/dev/null || echo "true")
+TERRAFORM ?= $(shell which terraform 2>/dev/null || which true 2>/dev/null)
 GO_MD2MAN ?= go-md2man
 LN = ln
 RM = rm
