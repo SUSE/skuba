@@ -53,10 +53,10 @@ func DrainNode(node *v1.Node) error {
 		"drain", "--delete-local-data=true", "--force=true", "--ignore-daemonsets=true", node.ObjectMeta.Name)
 
 	if err := cmd.Run(); err != nil {
-		klog.V(1).Infof("could not drain node %s, aborting (use --force if you want to ignore this error)\n", node.ObjectMeta.Name)
+		klog.V(1).Infof("could not drain node %s, aborting (use --force if you want to ignore this error)", node.ObjectMeta.Name)
 		return err
 	} else {
-		klog.V(1).Infof("node %s correctly drained\n", node.ObjectMeta.Name)
+		klog.V(1).Infof("node %s correctly drained", node.ObjectMeta.Name)
 	}
 
 	return nil

@@ -127,7 +127,7 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
 		if !silent {
-			klog.V(1).Infof("%s | %s\n", description, scanner.Text())
+			klog.V(1).Infof("%s | %s", description, scanner.Text())
 		}
 	}
 	outputChan <- result.String()
