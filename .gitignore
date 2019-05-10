@@ -18,3 +18,6 @@
 
 # Binary folder
 /bin
+
+# RPM files folder
+ci/packaging/suse/obs_files
