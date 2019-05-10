@@ -64,13 +64,13 @@ func CreateAndWaitForJob(name string, spec batchv1.JobSpec) error {
 		}
 		job, err := clientSet.BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 		if err != nil {
-			klog.V(1).Infof("failed to get status for job %s, continuing...\n", name)
+			klog.V(1).Infof("failed to get status for job %s, continuing...", name)
 		} else {
 			if job.Status.Active > 0 {
-				klog.V(1).Infof("job %s is active, waiting...\n", name)
+				klog.V(1).Infof("job %s is active, waiting...", name)
 			} else {
 				if job.Status.Succeeded > 0 {
-					klog.V(1).Infof("job %s executed successfully\n", name)
+					klog.V(1).Infof("job %s executed successfully", name)
 					return nil
 				}
 			}
