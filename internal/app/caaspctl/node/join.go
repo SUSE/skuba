@@ -52,7 +52,7 @@ func NewJoinCmd() *cobra.Command {
 			case "worker":
 				joinConfiguration.Role = deployments.WorkerRole
 			default:
-				klog.Fatalf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles\n", joinOptions.role)
+				klog.Fatalf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
 			}
 
 			err := node.Join(joinConfiguration,
@@ -65,7 +65,7 @@ func NewJoinCmd() *cobra.Command {
 				),
 			)
 			if err != nil {
-				klog.Fatalf("error joining node %s: %s\n", nodenames[0], err)
+				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},
 		Args: cobra.ExactArgs(1),

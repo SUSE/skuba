@@ -53,3 +53,11 @@ lint:
 	$(GO) tool vet ${CAASPCTL_SRCS}
 	test -z `$(GOFMT) -l $(CAASPCTL_SRCS)` || { $(GOFMT) -d $(CAASPCTL_SRCS) && false; }
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
+
+.PHONY: suse-package
+suse-package:
+	ci/packaging/suse/rpmfiles_maker.sh $(VERSION)
+
+.PHONY: suse-changelog
+suse-changelog:
+	ci/packaging/suse/changelog_maker.sh "$(CHANGES)"

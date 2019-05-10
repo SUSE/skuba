@@ -30,7 +30,7 @@ func NewRemoveCmd() *cobra.Command {
 		Short: "Removes a node from the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
 			if err := node.Remove(nodenames[0]); err != nil {
-				klog.Fatalf("error removing node %s: %s\n", nodenames[0], err)
+				klog.Fatalf("error removing node %s: %s", nodenames[0], err)
 			}
 		},
 		Args: cobra.ExactArgs(1),

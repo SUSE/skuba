@@ -38,12 +38,12 @@ func RemoveMember(node *v1.Node) error {
 	// Remove etcd member if target is a master
 	klog.V(1).Info("removing etcd member from the etcd cluster")
 	for _, masterNode := range masterNodes.Items {
-		klog.V(1).Infof("trying to remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+		klog.V(1).Infof("trying to remove etcd member from master node %s", masterNode.ObjectMeta.Name)
 		if err := RemoveMemberFrom(node, &masterNode); err == nil {
-			klog.V(1).Infof("etcd member for node %s removed from master node %s\n", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
+			klog.V(1).Infof("etcd member for node %s removed from master node %s", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
 			break
 		} else {
-			klog.V(1).Infof("could not remove etcd member from master node %s\n", masterNode.ObjectMeta.Name)
+			klog.V(1).Infof("could not remove etcd member from master node %s", masterNode.ObjectMeta.Name)
 		}
 	}
 
