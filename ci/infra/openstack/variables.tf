@@ -114,3 +114,9 @@ variable "password" {
   default = "linux"
   description = "Password for the cluster nodes"
 }
+
+variable "commands" {
+  type = "list"
+  default = []
+  description = "Commands to execute in cloud-final stage"
+}

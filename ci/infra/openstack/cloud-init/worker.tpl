@@ -34,4 +34,7 @@ ${packages}
 bootcmd:
   - ip link set dev eth0 mtu 1400
 
+runcmd:
+${commands}
+
 final_message: "The system is finally up, after $UPTIME seconds"

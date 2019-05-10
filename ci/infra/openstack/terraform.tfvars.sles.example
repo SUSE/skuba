@@ -8,7 +8,7 @@ stack_name = "testing"
 username = "sles"
 
 # define which image to use
-image_name = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default"
+image_name = "SLE-15-SP1-JeOS-GMC1"
 
 # Number of master nodes
 masters = 1
@@ -16,33 +16,30 @@ masters = 1
 # Number of worker nodes
 workers = 2
 
-# define the repositories to use
-repositories = [
-  {
-    caasp_40_devel_sle15sp1 = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/"
-  },
-  {
-    sle15sp1_pool = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
-  },
-  {
-    sle15sp1_update = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
-  },
-  {
-    sle15_pool = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
-  },
-  {
-    sle15_update = "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/"
-  },
-  {
-    suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
-  }
-]
+# Required repositories in case we don't register with cloud-init
+# suse_ca is required for registry.suse.de containers (devel|staging)
+# repositories = [
+#   { suse_ca       = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/" },
+#   { sle_server    = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Server-Applications-GMC1/x86_64/DVD1/"},
+#   { sle_base      = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Basesystem-GMC1/x86_64/DVD1/"},
+#   { sle_contaiers = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Containers-GMC1/x86_64/DVD1/"},
+#   { caasp_staging = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update:/Products:/CASP40/standard/" }
+# ]
 
-packages = [
-  "ca-certificates-suse",
-  "kubernetes-kubeadm",
-  "kubernetes-kubelet",
-  "kubernetes-client"
+# Required packages in case we don't register with cloud-init
+# ca-certificates-suse is required for registry.suse.de containers (devel|staging)
+# packages = [
+#   "ca-certificates-suse",
+#   "kubernetes-kubeadm",
+#   "kubernetes-client"
+# ]
+
+# Register using cloud-init if we want official repositories
+commands = [
+  "SUSEConnect -r <SLES_REG_KEY>",
+  "SUSEConnect -p sle-module-containers/15.1/x86_64",
+  "SUSEConnect -p caasp/4.0/x86_64 -r <CAASP_REG_KEY>",
+  "zypper -n install kubernetes-kubeadm kubernetes-client"
 ]
 
 # ssh keys to inject into all the nodes
