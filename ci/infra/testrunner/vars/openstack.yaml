@@ -1,0 +1,42 @@
+# Infra deployment engine
+platform: "openstack" # openstack, vmware, bare-metal, libvirt
+workspace: "" # The top folder where caaspctl is stored
+ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
+username: ""  # Fill your username
+nodeuser: "sles"  # Default node username
+
+openstack:
+  openrc: "" #os.getenv("OPENRC")
+
+git: # Used for Jenkins rebase
+  change_author: ""
+  change_author_email: ""
+  github_token: ""
+  branch_name: "master"
+
+jenkins:  # Used for Jenkins
+  build_number: 0 # os.getenv("BUILD_NUMBER")
+  job_name: null # os.getenv("JOB_NAME")
+
+# node settings
+lb:
+  count: 1
+  memory: 8192
+  cpu: 4
+
+master:
+  count: 3
+  memory: 4096
+  cpu: 4
+
+worker:
+  count: 3
+  memory: 4096
+  cpu: 2
+
+test:
+  replica_count: "5"  # not used
+  replicas_creation_interval_seconds: "5"  # not used
+  podname: "default"    # not used
+  no_destroy: False     # not used
+
