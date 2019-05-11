@@ -1,21 +1,24 @@
 #!/bin/bash
-set -eu
+
 echo "Starting $0 script"
 
-# Wrapper to testrunner.py to set up a virtualenv
-# It can be run manually on developer workstations or under Jenkins
-
 SDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+VENVDIR=${WORKSPACE:-~}/py3venv
+export VENVDIR=${VENVDIR}
 
-# TODO: allow venv dir override
-${SDIR}/../setup-python timeout-decorator
+setup_python_env() {
+    type python3 >/dev/null 2>&1 || sudo zypper install --no-confirm python3
 
-# Please track what components require each lib!
+    if [ ! -d $VENVDIR ]; then
+        echo "Creating Python 3 virtualenv"
+        python3 -m venv $VENVDIR
+    fi
+    source ${VENVDIR}/bin/activate
+    REQ_PATH="${SDIR}/utils/requirements.txt"
+    pip3 install -r "${REQ_PATH}" &>/dev/null
+    deactivate
+}
 
-# wait-for-velum
-${SDIR}/../setup-python requests
-
-export VENVDIR=${WORKSPACE:-~}/py3venv
-
+setup_python_env
 # use unbuffered output
 stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@

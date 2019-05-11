@@ -4,51 +4,45 @@ TEST_RUNNER := ${MKFILE_DIR}/infra/testrunner/testrunner
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 
-PARAMS ?= stack-type=openstack-terraform
-
 .PHONY: all
 all: deploy bootstrap
 
 # Steps
+.PHONY: add_master_nodes
+add_master_nodes:
+	${TEST_RUNNER} --add-nodes --master 2
+
+.PHONY: add_worker_nodes
+add_worker_nodes:
+	${TEST_RUNNER} --add-nodes --worker 1
+
 .PHONY: bootstrap_environment
 bootstrap_environment:
-	${TEST_RUNNER} stage=bootstrap_environment ${PARAMS}
+	${TEST_RUNNER} --bootstrap
 
-.PHONY: configure_environment
-configure_environment:
-	${TEST_RUNNER} stage=configure_environment ${PARAMS}
+.PHONY: create_caaspctl
+create_caaspctl:
+	${TEST_RUNNER} --create-caaspctl
 
 .PHONY: create_environment
 create_environment:
-	${TEST_RUNNER} stage=create_environment ${PARAMS}
+	${TEST_RUNNER} --terraform-apply
 
-.PHONY: final_cleanup
-final_cleanup:
-	${TEST_RUNNER} stage=final_cleanup ${PARAMS}
+.PHONY: cleanup
+cleanup:
+	${TEST_RUNNER} --cleanup
 
 .PHONY: gather_logs
 gather_logs:
-	${TEST_RUNNER} stage=gather_logs ${PARAMS}
+	${TEST_RUNNER} --log
 
 .PHONY: git_rebase_check
 git_rebase_check:
-	${TEST_RUNNER} stage=git_rebase branch-name=${BRANCH_NAME} ${PARAMS}
-
-.PHONY: github_collaborator_check
-github_collaborator_check:
-	${TEST_RUNNER} stage=github_collaborator_check ${PARAMS}
-
-.PHONY: grow_environment
-grow_environment:
-	${TEST_RUNNER} stage=grow_environment ${PARAMS}
+	${TEST_RUNNER} --git-rebase
 
 .PHONY: info
 info:
-	${TEST_RUNNER} stage=info ${PARAMS}
-
-.PHONY: initial_cleanup
-initial_cleanup:
-	${TEST_RUNNER} stage=initial_cleanup ${PARAMS}
+	${TEST_RUNNER} --info
 
 .PHONY: test_jenkins_jobs
 test_jenkins_jobs:
@@ -60,19 +54,19 @@ update_jenkins_jobs:
 
 # Stages
 .PHONY: pre_deployment
-pre_deployment: info initial_cleanup
+pre_deployment: info
 
 .PHONY: pr_checks
-pr_checks: github_collaborator_check git_rebase_check
+pr_checks: git_rebase_check
 
 .PHONY: deploy
-deploy: create_environment configure_environment
+deploy: create_environment create_caaspctl
 
 .PHONY: bootstrap
 bootstrap: bootstrap_environment
 
 .PHONY: add_nodes
-add_nodes: grow_environment
+add_nodes: add_master_nodes add_worker_nodes
 
 .PHONY: post_run
-post_run: gather_logs final_cleanup
+post_run: gather_logs cleanup
