@@ -8,7 +8,16 @@ data "template_file" "master_repositories" {
   }
 }
 
-data "template_file" "master-cloud-init" {
+data "template_file" "master_cloud_init_metadata" {
+  template = "${file("cloud-init/metadata.tpl")}"
+
+  vars {
+    network_config = "${base64gzip(data.local_file.network_cloud_init.content)}"
+    instance_id    = "${var.stack_name}-master"
+  }
+}
+
+data "template_file" "master_cloud_init_userdata" {
   template = "${file("cloud-init/master.tpl")}"
 
   vars {
@@ -31,8 +40,8 @@ resource "vsphere_virtual_machine" "master" {
   resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
   datastore_id     = "${data.vsphere_datastore.datastore.id}"
 
-  network_interface {
-    network_id = "${data.vsphere_network.network.id}"
+  clone {
+    template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
 
   disk {
@@ -41,16 +50,17 @@ resource "vsphere_virtual_machine" "master" {
     size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
 
-  cdrom {
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
-    path         = "${var.stack_name}/cc-master.iso"
+  extra_config {
+    "guestinfo.metadata" = "${base64gzip(data.template_file.master_cloud_init_metadata.rendered)}"
+    "guestinfo.metadata.encoding" = "gzip+base64"
+
+    "guestinfo.userdata" = "${base64gzip(data.template_file.master_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
-  clone {
-    template_uuid = "${data.vsphere_virtual_machine.template.id}"
+  network_interface {
+    network_id = "${data.vsphere_network.network.id}"
   }
-
-  depends_on = ["vsphere_file.upload_cc_master_iso"]
 }
 
 resource "null_resource" "master_wait_cloudinit" {
@@ -68,19 +78,4 @@ resource "null_resource" "master_wait_cloudinit" {
       "cloud-init status --wait",
     ]
   }
-}
-
-resource "null_resource" "local_gen-cc-master-iso" {
-  provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.sh master '${data.template_file.master-cloud-init.rendered}'"
-  }
-}
-
-resource "vsphere_file" "upload_cc_master_iso" {
-  datacenter         = "${data.vsphere_datacenter.dc.name}"
-  datastore          = "${data.vsphere_datastore.datastore.name}"
-  source_file        = "./cc-master.iso"
-  create_directories = true
-  destination_file   = "${var.stack_name}/cc-master.iso"
-  depends_on         = ["null_resource.local_gen-cc-master-iso"]
 }
