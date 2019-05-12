@@ -12,7 +12,7 @@ variable "authorized_keys" {
 }
 
 variable "guest_id" {
-  default     = "sles12_64Guest"
+  default     = "sles15_64Guest"
   description = "Guest ID of the virtual machine"
 }
 
