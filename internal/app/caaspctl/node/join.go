@@ -27,16 +27,13 @@ import (
 )
 
 type joinOptions struct {
-	target                string
-	user                  string
-	sudo                  bool
-	port                  int
 	role                  string
 	ignorePreflightErrors string
 }
 
 func NewJoinCmd() *cobra.Command {
 	joinOptions := joinOptions{}
+	target := ssh.Target{}
 
 	cmd := &cobra.Command{
 		Use:   "join <node-name>",
@@ -46,39 +43,19 @@ func NewJoinCmd() *cobra.Command {
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
 			}
 
-			switch joinOptions.role {
-			case "master":
-				joinConfiguration.Role = deployments.MasterRole
-			case "worker":
-				joinConfiguration.Role = deployments.WorkerRole
-			default:
-				klog.Fatalf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles", joinOptions.role)
-			}
+			joinConfiguration.Role = deployments.MustGetRoleFromString(joinOptions.role)
 
-			err := node.Join(joinConfiguration,
-				ssh.NewTarget(
-					nodenames[0],
-					joinOptions.target,
-					joinOptions.user,
-					joinOptions.sudo,
-					joinOptions.port,
-				),
-			)
-			if err != nil {
+			if err := node.Join(joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
 				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringVarP(&joinOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
-	cmd.Flags().StringVarP(&joinOptions.user, "user", "u", "root", "User identity used to connect to target")
-	cmd.Flags().BoolVarP(&joinOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
-	cmd.Flags().IntVarP(&joinOptions.port, "port", "p", 22, "Port to connect to using SSH")
+	cmd.Flags().AddFlagSet(target.GetFlags())
 	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")
 	cmd.Flags().StringVar(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
 
-	cmd.MarkFlagRequired("target")
 	cmd.MarkFlagRequired("role")
 
 	return cmd
