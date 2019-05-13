@@ -49,7 +49,7 @@ class Caaspctl:
 
     @step
     def caaspctl_node_bootstrap(self):
-        cmd = "node bootstrap --user {username} --sudo --target \
+        cmd = "node bootstrap --user {username} --sudo --target -v 1 \
                  {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
         self.utils.run_caaspctl(cmd)
         self._num_master += 1
@@ -65,7 +65,7 @@ class Caaspctl:
             raise("{}Error: there is not enough node to add {} node in cluster{}".format(
                 Constant.RED, role, Constant.RED_EXIT))
 
-        cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
+        cmd = "node join --role {role} --user {username} --sudo --target -v 1 {ip} my-{role}-{nr}".format(
             role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
             self.utils.run_caaspctl(cmd)
