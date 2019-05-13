@@ -19,7 +19,7 @@ pipeline {
     environment {
         OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
-        PARAMS = "stack-type=openstack-terraform no-collab-check"
+        PARAMS = "stack-type=openstack-terraform"
     }
 
     stages {
