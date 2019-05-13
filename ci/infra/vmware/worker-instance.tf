@@ -17,6 +17,7 @@ data "template_file" "worker-cloud-init" {
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
     username        = "${var.username}"
     password        = "${var.password}"
+    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
 
