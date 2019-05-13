@@ -14,21 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Ensure that all SUSE employees are using the correct email address.
-
 [[ ! -n ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN env variable must be set" && exit 1
-GIT_BRANCH=${GIT_BRANCH:-origin/master}
+[[ ! -n ${CHANGE_ID} ]] && echo "CHANGE_ID env variable must be set" && exit 1
 
-# Check all commits in PR for SUSE email address
-if ! git log --format=%ae --no-merges origin/master..HEAD | sort -n | uniq | grep -v -q '@suse\.\(com\|cz\|de\)'; then
-	echo "All commits are from SUSE employees. Skipping further author checks..."
-	exit 0
-fi
-
-for commit in $(git log --format=%H --no-merges ${GIT_BRANCH}..HEAD); do
-	author_email=$(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/commits/$commit | jq -cr '. | .author.login, .commit.author.email' | tr -d '"')
-	login=$(echo $author_email | awk '{print $1}')
-	author=$(echo $author_email | awk '{print $2}')
+# This for loop uses the GitHub API to fetch all commits in a PR and outputs the information in the following format
+# $sha,$github_username,$author_email_address. If the author is using a SUSE address, then no further checks are necessary and we
+# check the next commit. If the author is not using a SUSE email address, then we check if the user belongs to the SUSE organization.
+# If he/she does, then we exit with non-zero exit code to denote that the user must be using a SUSE email address if he/she is a
+# SUSE employee.
+for commit_author in $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID}/commits | jq -cr '.[] | [.sha, .author.login, .commit.author.email] | join(",")'); do
+	commit=$(echo $commit_author | awk -F, '{print $1}')
+	login=$(echo $commit_author | awk -F, '{print $2}')
+	author=$(echo $commit_author | awk -F, '{print $3}')
+	echo $author | grep -q '@suse\.\(com\|cz\|de\)' && echo "commit $commit is from SUSE employee $login($author). Moving on..." && continue
 	echo "Checking if $login($author) is part of the SUSE organization"
 	if curl -i -s https://${GITHUB_TOKEN}@api.github.com/orgs/SUSE/members/$login | grep Status | grep -q 204; then
 		echo "$login($author) is part of SUSE organization but a SUSE e-mail address was not used in commit: $commit"
