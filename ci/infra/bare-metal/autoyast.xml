@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+
+  <!--Add user to sudoers-->
+  <scripts>
+    <chroot-scripts config:type="list">
+      <script>
+        <chrooted config:type="boolean">true</chrooted>
+        <filename>add_sles_sudo_rule.sh</filename>
+        <interpreter>shell</interpreter>
+        <source>
+<![CDATA[
+#!/bin/sh
+echo "Defaults:sles !targetpw
+sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
+]]>
+          </source>
+      </script>
+    </chroot-scripts>
+  </scripts>
+  
+  <bootloader>
+    <global>
+      <generic_mbr>true</generic_mbr>
+      <gfxmode>auto</gfxmode>
+      <hiddenmenu>false</hiddenmenu>
+      <os_prober>false</os_prober>
+      <terminal>gfxterm</terminal>
+      <timeout config:type="integer">8</timeout>
+      <suse_btrfs config:type="boolean">true</suse_btrfs>
+    </global>
+  </bootloader>
+  <general>
+    <ask-list config:type="list"/>
+    <mode>
+      <confirm config:type="boolean">false</confirm>
+      <second_stage config:type="boolean">false</second_stage>
+      <self_update config:type="boolean">false</self_update>
+    </mode>
+    <proposals config:type="list"/>
+    <storage>
+      <partition_alignment config:type="symbol">align_optimal</partition_alignment>
+      <start_multipath config:type="boolean">false</start_multipath>
+    </storage>
+  </general>
+
+  <!-- configure local storage -->
+  <partitioning config:type="list">
+    <drive>
+      <use>all</use>
+      <partitions config:type="list">
+        <partition>
+          <mount>/boot/efi</mount>
+          <size>200mb</size>
+          <partition_id config:type="integer">1</partition_id>
+          <filesystem config:type="symbol">vfat</filesystem>
+        </partition>
+        <partition>
+          <filesystem config:type="symbol">btrfs</filesystem>
+          <mount>/</mount>
+          <size>30gb</size>
+        </partition>
+        <partition>
+          <filesystem config:type="symbol">xfs</filesystem>
+          <mount>/var/lib</mount>
+          <size>max</size>
+        </partition>
+      </partitions>
+    </drive>
+  </partitioning>
+
+  <!-- don't import any ssh configuration from previously-installed OS -->
+  <ssh_import>
+    <copy_config config:type="boolean">false</copy_config>
+    <import config:type="boolean">false</import>
+  </ssh_import>
+
+  <!-- configure language and timezone -->
+  <keyboard>
+    <keymap>english-us</keymap>
+  </keyboard>
+  <language>
+    <language>en_US</language>
+    <languages/>
+  </language>
+  <timezone>
+    <hwclock>UTC</hwclock>
+    <timezone>Etc/GMT</timezone>
+  </timezone>
+
+  <!-- set up networking -->
+  <networking>
+    <dhcp_options>
+      <dhclient_client_id/>
+      <dhclient_hostname_option>AUTO</dhclient_hostname_option>
+    </dhcp_options>
+    <dns>
+      <dhcp_hostname config:type="boolean">true</dhcp_hostname>
+      <resolv_conf_policy>auto</resolv_conf_policy>
+      <write_hostname config:type="boolean">false</write_hostname>
+    </dns>
+    <interfaces config:type="list">
+      <interface>
+        <bootproto>dhcp</bootproto>
+        <device>eth0</device>
+        <dhclient_set_default_route>yes</dhclient_set_default_route>
+        <startmode>auto</startmode>
+      </interface>
+      <interface>
+        <bootproto>static</bootproto>
+        <device>lo</device>
+        <firewall>no</firewall>
+        <ipaddr>127.0.0.1</ipaddr>
+        <netmask>255.0.0.0</netmask>
+        <network>127.0.0.0</network>
+        <prefixlen>8</prefixlen>
+        <startmode>nfsroot</startmode>
+        <usercontrol>no</usercontrol>
+      </interface>
+    </interfaces>
+    <ipv6 config:type="boolean">true</ipv6>
+    <keep_install_network config:type="boolean">true</keep_install_network>
+    <setup_before_proposal config:type="boolean">true</setup_before_proposal>
+    <managed config:type="boolean">false</managed>
+    <routing>
+      <ipv4_forward config:type="boolean">false</ipv4_forward>
+      <ipv6_forward config:type="boolean">false</ipv6_forward>
+    </routing>
+  </networking>
+
+  <!-- install required packages -->
+  <software>
+    <image/>
+    <products config:type="list">
+      <product>SLES</product>
+    </products>
+    <install_recommended config:type="boolean">false</install_recommended>
+    <instsource/>
+    <patterns config:type="list">
+      <pattern>base</pattern>    
+      <pattern>enhanced_base</pattern>
+      <pattern>minimal_base</pattern>
+      <pattern>basesystem</pattern>
+      <pattern>SUSE-CaaSP-Node</pattern>
+    </patterns>
+  </software>
+
+  <services-manager>
+    <default_target>multi-user</default_target>
+    <services>
+      <disable config:type="list">
+        <service>purge-kernels</service>
+      </disable>
+      <enable config:type="list">
+        <service>sshd</service>
+      </enable>
+    </services>
+  </services-manager>
+
+  <!-- disable root password and add ssh keys -->
+  <users config:type="list">
+    <user>
+      <username>root</username>
+      <user_password>!</user_password>
+      <encrypted config:type="boolean">true</encrypted>
+    </user>
+    <user>
+      <username>sles</username>
+      <user_password>!</user_password>
+      <encrypted config:type="boolean">true</encrypted>
+      <authorized_keys config:type="list">
+        <authorized_key><!-- replace this comment with a public ssh key --></authorized_key>
+      </authorized_keys>
+    </user>
+  </users>
+
+  <!-- register -->
+  <suse_register>
+    <do_registration config:type="boolean">true</do_registration>
+    <install_updates config:type="boolean">true</install_updates>
+    <email>[email]</email>
+    <reg_code>[sles-reg-code]</reg_code>
+    <slp_discovery config:type="boolean">false</slp_discovery>
+    <addons config:type="list">
+      <addon>
+        <name>sle-module-containers</name>
+        <version>15.1</version>
+        <arch>x86_64</arch>
+      </addon>
+      <addon>
+        <name>caasp</name>
+        <version>4.0</version>
+        <arch>x86_64</arch>
+        <reg_code>[caasp-reg-code]</reg_code>
+      </addon>
+    </addons>
+  </suse_register>
+</profile>
