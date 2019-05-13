@@ -9,6 +9,14 @@ timezone: Etc/UTC
 ssh_authorized_keys:
 ${authorized_keys}
 
+ntp:
+  enabled: true
+  ntp_client: chrony
+  config:
+    confpath: /etc/chrony.conf
+  servers:
+${ntp_servers}
+
 # need to disable gpg checks because the cloud image has an untrusted repo
 zypper:
   repos:

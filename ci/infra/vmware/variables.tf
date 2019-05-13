@@ -21,6 +21,12 @@ variable "repositories" {
   description = "Urls of the repositories to mount via cloud-init"
 }
 
+variable "ntp_servers" {
+  type        = "list"
+  default     = ["0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org"]
+  description = "list of ntp servers to configure"
+}
+
 variable "packages" {
   type        = "list"
   default     = []
