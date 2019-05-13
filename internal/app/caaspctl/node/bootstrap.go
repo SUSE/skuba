@@ -28,15 +28,12 @@ import (
 )
 
 type bootstrapOptions struct {
-	target                string
-	user                  string
-	sudo                  bool
-	port                  int
 	ignorePreflightErrors string
 }
 
 func NewBootstrapCmd() *cobra.Command {
 	bootstrapOptions := bootstrapOptions{}
+	target := ssh.Target{}
 
 	cmd := cobra.Command{
 		Use:   "bootstrap <node-name>",
@@ -46,29 +43,16 @@ func NewBootstrapCmd() *cobra.Command {
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
 			}
 
-			err := node.Bootstrap(bootstrapConfiguration,
-				ssh.NewTarget(
-					nodenames[0],
-					bootstrapOptions.target,
-					bootstrapOptions.user,
-					bootstrapOptions.sudo,
-					bootstrapOptions.port,
-				),
-			)
-			if err != nil {
+			d := target.GetDeployment(nodenames[0])
+			if err := node.Bootstrap(bootstrapConfiguration, d); err != nil {
 				klog.Fatalf("error bootstraping node: %s", err)
 			}
 		},
 		Args: cobra.ExactArgs(1),
 	}
 
-	cmd.Flags().StringVarP(&bootstrapOptions.target, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
-	cmd.Flags().StringVarP(&bootstrapOptions.user, "user", "u", "root", "User identity used to connect to target")
-	cmd.Flags().IntVarP(&bootstrapOptions.port, "port", "p", 22, "Port to connect to using SSH")
-	cmd.Flags().BoolVarP(&bootstrapOptions.sudo, "sudo", "s", false, "Run remote command via sudo")
+	cmd.Flags().AddFlagSet(target.GetFlags())
 	cmd.Flags().StringVar(&bootstrapOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
-
-	cmd.MarkFlagRequired("target")
 
 	return &cmd
 }
