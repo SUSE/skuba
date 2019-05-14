@@ -64,8 +64,8 @@ class BaseConfig:
     class Git:
         def __init__(self):
             super().__init__()
-            self.change_author = None
-            self.change_author_email = None
+            self.change_author = os.getenv('GIT_COMMITTER_NAME', 'CaaSP Jenkins')
+            self.change_author_email = os.getenv('GIT_COMMITTER_EMAIL', 'containers-bugowner@suse.de')
             self.github_token = None
             self.branch_name = "master"
 
