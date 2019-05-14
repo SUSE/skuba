@@ -3,7 +3,6 @@ import yaml, os
 
 class Constant:
     TERRAFORM_EXAMPLE="terraform.tfvars.sles.example"
-    TFSTATE_USER_HOST = "ci-tfstate@hpa6s10.caasp.suse.net"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "
     DOT = '\033[34m●\033[0m'
