@@ -318,6 +318,32 @@ spec:
         volumeMounts:
         - name: host-cni-bin
           mountPath: /host/opt/cni/bin/
+      - name: clean-cilium-state
+        image: {{.CiliumInitImage}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - cilium-init
+        env:
+        - name: CLEAN_CILIUM_STATE
+          valueFrom:
+            configMapKeyRef:
+              key: clean-cilium-state
+              name: cilium-config
+              optional: true
+        - name: CLEAN_CILIUM_BPF_STATE
+          valueFrom:
+            configMapKeyRef:
+              key: clean-cilium-bpf-state
+              name: cilium-config
+              optional: true
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+          privileged: true
+        volumeMounts:
+        - mountPath: /var/run/cilium
+          name: cilium-run
       containers:
       - image: {{.CiliumImage}}
         imagePullPolicy: IfNotPresent
@@ -421,7 +447,6 @@ spec:
         - name: cilium-etcd-secret-mount
           secret:
             secretName: cilium-secret
-
       restartPolicy: Always
       tolerations:
       - effect: NoSchedule
@@ -435,6 +460,186 @@ spec:
       - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.cilium/app: operator
+    name: cilium-operator
+  name: cilium-operator
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.cilium/app: operator
+      name: cilium-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.cilium/app: operator
+        name: cilium-operator
+    spec:
+      containers:
+      - args:
+        - --debug=$(CILIUM_DEBUG)
+        - --kvstore=etcd
+        - --kvstore-opt=etcd.config=/var/lib/etcd-config/etcd.config
+        command:
+        - cilium-operator
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: debug
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-name
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-id
+              name: cilium-config
+              optional: true
+        - name: CILIUM_DISABLE_ENDPOINT_CRD
+          valueFrom:
+            configMapKeyRef:
+              key: disable-endpoint-crd
+              name: cilium-config
+              optional: true
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: AWS_ACCESS_KEY_ID
+              name: cilium-aws
+              optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AWS_SECRET_ACCESS_KEY
+              name: cilium-aws
+              optional: true
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            secretKeyRef:
+              key: AWS_DEFAULT_REGION
+              name: cilium-aws
+              optional: true
+        image: {{.CiliumOperatorImage}}
+        imagePullPolicy: Always
+        name: cilium-operator
+        volumeMounts:
+        - mountPath: /var/lib/etcd-config
+          name: etcd-config-path
+          readOnly: true
+        - mountPath: /tmp/cilium-etcd
+          name: etcd-secrets
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      serviceAccount: cilium-operator
+      serviceAccountName: cilium-operator
+      volumes:
+      # To read the etcd config stored in config maps
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: etcd-config
+            path: etcd.config
+          name: cilium-config
+        name: etcd-config-path
+        # To read the k8s etcd secrets in case the user might want to use TLS
+      - name: etcd-secrets
+        secret:
+          secretName: cilium-secret
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium-operator
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cilium-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  # to get k8s version and status
+  - componentstatuses
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  # to automatically delete [core|kube]dns pods so that are starting to being
+  # managed by Cilium
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  # to automatically read from k8s and import the node's pod CIDR to cilium's
+  # etcd so all nodes know how to reach another pod running in in a different
+  # node.
+  - nodes
+  # to perform the translation of a CNP that contains ToGroup to its endpoints
+  - services
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cilium.io
+  resources:
+  - ciliumnetworkpolicies
+  - ciliumnetworkpolicies/status
+  - ciliumendpoints
+  - ciliumendpoints/status
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cilium-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium-operator
+subjects:
+- kind: ServiceAccount
+  name: cilium-operator
+  namespace: kube-system
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
