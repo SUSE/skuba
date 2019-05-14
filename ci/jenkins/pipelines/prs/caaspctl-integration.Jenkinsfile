@@ -19,7 +19,7 @@ pipeline {
     environment {
         OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
-        PARAMS = "stack-type=openstack-terraform"
+        PLATFORM = 'openstack'
     }
 
     stages {
@@ -52,6 +52,7 @@ pipeline {
 
         stage('Cluster Deployment') { steps {
             sh(script: 'make -f caaspctl/ci/Makefile deploy', label: 'Deploy')
+            archiveArtifacts("caaspctl/ci/infra/${PLATFORM}/terraform.tfstate")
         } }
 
         stage('Bootstrap Cluster') { steps {
