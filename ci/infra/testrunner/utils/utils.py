@@ -160,30 +160,3 @@ class Utils:
                   .format(Constant.RED, Constant.RED_EXIT))
         else:
             print('External IP addr: {}'.format(r.text))
-
-    @timeout(90)
-    @step
-    def github_collaborator_check(self):
-        print("Starting GitHub Collaborator Check")
-        org = "SUSE"
-        repo = 'caaspctl'
-        user = self.conf.git.change_author
-        token = os.getenv('GITHUB_TOKEN')
-        url = "https://api.github.com/repos/{}/{}/collaborators/{}"
-        url = url.format(org, repo, user)
-        if user is "":
-            return
-
-        headers = {
-            "Accept": "application/vnd.github.hellcat-preview+json",
-            "Authorization": "token {}".format(token),
-        }
-        r = requests.get(url, headers=headers)
-        # 204 yes, 404 no   :-/
-        if r.status_code == 204:
-            print("Test execution for collaborator {} allowed".format(user))
-            return
-
-        msg = "Test execution for unknown user {} NOT allowed".format(user)
-        print(msg)
-        raise Exception(msg)
