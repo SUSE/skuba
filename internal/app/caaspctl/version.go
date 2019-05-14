@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/SUSE/caaspctl/internal/pkg/caaspctl/kubernetes"
 	"github.com/SUSE/caaspctl/pkg/caaspctl"
 )
 
@@ -39,6 +40,7 @@ func NewVersionCmd() *cobra.Command {
 		Short: "Print version information",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(os.Stderr, "caaspctl version: %s (%s) %s %s %s\n", Version, caaspctl.BuildType, Commit, BuildDate, runtime.Version())
+			fmt.Fprintf(os.Stderr, "kubernetes version: %s\n", kubernetes.CurrentVersion)
 		},
 	}
 }
