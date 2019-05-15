@@ -82,8 +82,7 @@ class Openstack:
             except:
                 print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
-                    print("Last failed attempt, cleaning up and exiting")
-                    self._cleanup_openstack_deployment()
+                    print("Last failed attempt, exiting")
                     raise Exception("Failed OpenStack deploy")
 
             self.fetch_openstack_terraform_output()
