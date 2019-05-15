@@ -80,3 +80,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.8.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.5.0"
