@@ -12,11 +12,13 @@ if not "CONTROLPLANE" in os.environ:
   print("controlplane env var not defined, taking 10.17.1.0")
   os.environ['CONTROLPLANE'] = "10.17.1.0"
 
+
 # we will have here a set of core feature, actually only 1, where we setup the cluster with caaspctl init etc. this need to run first the rest of feature 
 # will be random and idempotent.
 
 # TODO-01: @dmaiocchi: setup first serial features
 
+subprocess.check_call("cd test && ginkgo --race --progress core-features", shell=True, env=dict(os.environ))
 
 
 ## TODO-02: this are parallel feature

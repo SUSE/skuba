@@ -65,4 +65,4 @@ suse-changelog:
 # tests
 .PHONY: test-e2e
 test-e2e:
-	./ci/tasks/e2e-tests.py 2> /dev/null
+	./ci/tasks/e2e-tests.py
