@@ -97,9 +97,8 @@ class BaseConfig:
     def get_var_dict(yaml_path):
         config_yaml_file_path = BaseConfig.get_yaml_path(yaml_path)
         if not os.path.isfile(config_yaml_file_path):
-            print("{}You have incorrect -v path for xml file  {}{}".format(Constant.RED,
+            raise FileNotFoundError("{}You have incorrect -v path for xml file  {}{}".format(Constant.RED,
                                                     config_yaml_file_path, Constant.RED_EXIT))
-            raise FileNotFoundError
 
         with open(config_yaml_file_path, 'r') as stream:
             _conf = yaml.safe_load(stream)
@@ -138,6 +137,16 @@ class BaseConfig:
         conf.workspace = os.path.expanduser(conf.workspace)
         conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
         conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
+
+        if not conf.workspace and conf.workspace == "":
+            raise ValueError("{}{}{}".format(Constant.RED,"You should setup workspace value in yaml file "
+                    "(caaspctl/ci/infra/testrunner/vars)",Constant.RED_EXIT))
+        if not os.path.exists(os.path.join(conf.workspace, "caaspctl")):
+            raise ValueError("{}caaspctl dir does not exist in {}.{} {}".format(Constant.RED, conf.workspace,
+                    "Check your working directory in yaml file from caaspctl/ci/infra/testrunner/vars", Constant.RED_EXIT))
+        if conf.platform == "openstack" and conf.openstack.openrc == "":
+            raise ValueError("{}{}{}".format(Constant.RED,"You should setup openrc path in yaml file "
+                    "(caaspctl/ci/infra/testrunner/vars)",Constant.RED_EXIT))
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username

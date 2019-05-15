@@ -68,19 +68,19 @@ def main():
     if conf.platform == "openstack":
         platform = Openstack(conf)
     elif conf.platform == "vmware":
-        # TODO platform = VMware(conf, utils)
+        # TODO platform = VMware(conf)
         print("Todo: VMware is not ready yet")
         sys.exit(0)
     elif conf.platform == "bare-metal":
-        # TODO platform = Bare_metal(conf, utils)
+        # TODO platform = Bare_metal(conf)
         print("Todo: bare-metal is not ready yet")
         sys.exit(0)
     elif conf.platform == "libvirt":
-        # TODO platform = Livbirt(conf, utils)
+        # TODO platform = Livbirt(conf)
         print("Todo: libvirt is not ready yet")
         sys.exit(0)
     else:
-        raise Exception('{}Platform Error: {} is not applicable.{}' \
+        raise ValueError('{}Platform Error: {} is not applicable.{}'
                         .format(Constant.RED, conf.platform, Constant.RED_EXIT))
 
     if options.ip_info:

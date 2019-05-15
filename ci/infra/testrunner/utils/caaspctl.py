@@ -42,6 +42,10 @@ class Caaspctl:
 
     @step
     def caaspctl_cluster_init(self):
+        caaspctl_bin_path = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
+        if not os.path.isfile(caaspctl_bin_path):
+            raise FileNotFoundError("{} You need to run 'testrunner --create-caaspctl' first "
+                                    "before run 'caaspctl --bootstrap' {}".format(Constant.RED, Constant.RED_EXIT))
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm {}/test-cluster -rf".format(self.conf.workspace))
         cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
@@ -62,7 +66,7 @@ class Caaspctl:
             else:
                 ip_addr = self._get_workers_ipaddrs()[nr]
         except:
-            raise("{}Error: there is not enough node to add {} node in cluster{}".format(
+            raise ValueError("{}Error: there is not enough node to add {} node in cluster{}".format(
                 Constant.RED, role, Constant.RED_EXIT))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
@@ -70,12 +74,12 @@ class Caaspctl:
         try:
             self.utils.run_caaspctl(cmd)
         except:
-            raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
+            raise RuntimeError("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
     @step
     def _caaspctl_node_remove(self, role="worker", nr=0):
         if nr <= 0:
-            raise ("{}Error: there is not enough node to remove {} node in cluster{}".format(
+            raise ValueError("{}Error: there is not enough node to remove {} node in cluster{}".format(
                 Constant.RED, role,Constant.RED_EXIT))
 
         if role == "master":
@@ -87,11 +91,11 @@ class Caaspctl:
         try:
             self.utils.run_caaspctl(cmd)
         except:
-            raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
+            raise RuntimeError("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
     @timeout(600)
     @step
-    def add_worker_in_cluster(self):
+    def _add_worker_in_cluster(self):
         try:
             self._caaspctl_node_join(role="worker", nr=self._num_worker)
             self._num_worker += 1
@@ -100,7 +104,7 @@ class Caaspctl:
 
     @timeout(600)
     @step
-    def add_master_in_cluster(self):
+    def _add_master_in_cluster(self):
         try:
             self._caaspctl_node_join(role="master", nr=self._num_master)
             self._num_master += 1
@@ -109,7 +113,7 @@ class Caaspctl:
 
     @timeout(600)
     @step
-    def remove_worker_in_cluster(self):
+    def _remove_worker_in_cluster(self):
         try:
             self._num_worker -= 1
             self._caaspctl_node_remove(role="worker", nr=self._num_worker)
@@ -119,7 +123,7 @@ class Caaspctl:
 
     @timeout(600)
     @step
-    def remove_master_in_cluster(self):
+    def _remove_master_in_cluster(self):
         try:
             self._num_master -= 1
             self._caaspctl_node_remove(role="master", nr=self._num_master)
@@ -128,13 +132,13 @@ class Caaspctl:
 
 
     @step
-    def add_nodes_in_cluster(self, num_master=1, num_worker=1):
+    def add_nodes_in_cluster(self, num_master=0, num_worker=1):
         cluster = Caaspctl(self.conf)
 
         for _ in range(num_worker):
-            cluster.add_worker_in_cluster()
+            cluster._add_worker_in_cluster()
         for _ in range(num_master):
-            cluster.add_master_in_cluster()
+            cluster._add_master_in_cluster()
 
         try:
             cluster.caaspctl_cluster_status()
@@ -146,9 +150,9 @@ class Caaspctl:
         cluster = Caaspctl(self.conf)
 
         for _ in range(num_worker):
-            cluster.remove_worker_in_cluster()
+            cluster._remove_worker_in_cluster()
         for _ in range(num_master):
-            cluster.remove_master_in_cluster()
+            cluster._remove_master_in_cluster()
 
         try:
             cluster.caaspctl_cluster_status()
