@@ -1,0 +1,27 @@
+- job-template:
+    name: '{name}-handle-pr'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    concurent: false
+    wrappers:
+        - timeout: '30'
+    triggers:
+        - timed: 'H * * * *'
+    parameters:
+        - string:
+            name: branch
+            default: '{branch}'
+            description: The branch to checkout
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://github.com/{repo-owner}/{repo-name}.git'
+                credentials-id: '{repo-credentials}'
+                branches:
+                    - '{branch}'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+                basedir: caaspctl
+        script-path: caaspctl/ci/jenkins/pipelines/caaspctl-handle-pr.Jenkinsfile
