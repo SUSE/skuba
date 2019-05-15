@@ -60,6 +60,12 @@ runcmd:
   # deadlock. Instead, we have to use the `--no-block-` flag.
   - [ systemctl, enable, --now, --no-block, haproxy ]
   - [ systemctl, disable, --now, --no-block, firewalld ]
+  # The template machine should have been cleaned up, so no machine-id exists
+  - [ dbus-uuidgen, --ensure ]
+  - [ systemd-machine-id-setup ]
+  # With a new machine-id generated the journald daemon will work and can be restarted
+  # Without a new machine-id it should be in a failed state
+  - [ systemctl, restart, systemd-journald ]
 
 bootcmd:
   # Hostnames from DHCP - otherwise localhost will be used
