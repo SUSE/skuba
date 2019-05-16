@@ -26,4 +26,4 @@ class Openstack(Terraform):
                    openrc=self.conf.openstack.openrc,
                    run=self.conf.jenkins.run_name))
 
-        self.utils.runshellcommandterraform(cmd)
+        self.runshellcommandterraform(cmd)
