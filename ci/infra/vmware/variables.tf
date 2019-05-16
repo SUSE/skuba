@@ -91,8 +91,7 @@ variable "lb_memory" {
 
 #### To be moved to separate vsphere.tf? ####
 
-provider "vsphere" {
-}
+provider "vsphere" {}
 
 data "vsphere_resource_pool" "pool" {
   name          = "${var.vsphere_resource_pool}"
