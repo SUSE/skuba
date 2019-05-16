@@ -38,7 +38,25 @@ class Caaspctl:
             self.caaspctl_cluster_status()
         except:
             pass
+ 
+    @step
+    def cleanup(self):
+        """Cleanup caaspctl working environment"""
+        # TODO: check why (and if) the following two commands are needed
+        cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
+        self.utils.runshellcommand(cmd)
 
+        cmd = 'chmod a+x {}'.format(self.conf.workspace)
+        self.utils.runshellcommand(cmd)
+
+        dirs = [os.path.join(self.conf.workspace, "test-cluster"),
+                os.path.join(self.conf.workspace, "go"),
+                os.path.join(self.conf.workspace, "logs"),
+                os.path.join(self.conf.workspace, "ssh-agent-sock"),
+                os.path.join(self.conf.workspace, "test-cluster")]
+
+        for dir in dirs:
+            self.utils.runshellcommand("rm -rf {}".format(dir))
 
     @step
     def caaspctl_cluster_init(self):
