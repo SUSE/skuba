@@ -23,8 +23,9 @@ username = "sles"
 #network = "172.30.0.0/22"
 #net_mode = "route"
 
-# Image url - can be local file downloaded in advance
-img_source_url = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default.qcow2"
+# Image url - can be local file downloaded in advance.
+# This build is for JeOS GMC2
+img_source_url = "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-Build35.28.qcow2"
 
 # Define the repositories to use.
 repositories = [
