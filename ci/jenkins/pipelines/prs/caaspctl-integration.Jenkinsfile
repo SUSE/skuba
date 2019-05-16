@@ -53,6 +53,7 @@ pipeline {
         stage('Cluster Deployment') { steps {
             sh(script: 'make -f caaspctl/ci/Makefile deploy', label: 'Deploy')
             archiveArtifacts("caaspctl/ci/infra/${PLATFORM}/terraform.tfstate")
+            archiveArtifacts("caaspctl/ci/infra/${PLATFORM}/terraform.tfvars")
         } }
 
         stage('Bootstrap Cluster') { steps {
