@@ -126,3 +126,8 @@ variable "password" {
   default     = "linux"
   description = "Password for the cluster nodes"
 }
+
+variable "caasp_registry_code" {
+  default     = ""
+  description = "SUSE CaaSP Product Registration Code"
+}
