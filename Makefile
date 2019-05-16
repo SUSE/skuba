@@ -24,7 +24,7 @@ all: install
 
 .PHONY: build
 build:
-	$(GO) install $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) build $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
 MANPAGES    := $(MANPAGES_MD:%.md=%)
@@ -36,9 +36,10 @@ docs/man/%.1: docs/man/%.1.md
 docs: $(MANPAGES)
 
 .PHONY: install
-install: build
-	  $(RM) -f $(GOBINPATH)/kubectl-caasp
-	  $(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
+install:
+	$(GO) install $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(RM) -f $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
 
 .PHONY: staging
 staging:
