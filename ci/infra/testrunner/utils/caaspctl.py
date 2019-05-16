@@ -187,11 +187,18 @@ class Caaspctl:
     @timeout(600)
     @step
     def gather_logs(self):
+        logging_error = False
 
-        ipaddrs = self._get_masters_ipaddrs() + self._get_workers_ipaddrs()
-        for ipa in ipaddrs:
-            print("--------------------------------------------------------------")
-            print("Gathering logs from {}".format(ipa))
-            self.utils.ssh_run(ipa, "cat /var/run/cloud-init/status.json")
-            print("--------------------------------------------------------------")
-            self.utils.ssh_run(ipa, "cat /var/log/cloud-init-output.log")
+        try:
+            ipaddrs = self._get_masters_ipaddrs() + self._get_workers_ipaddrs()
+            for ipa in ipaddrs:
+                print("--------------------------------------------------------------")
+                print("Gathering logs from {}".format(ipa))
+                self.utils.ssh_run(ipa, "cat /var/run/cloud-init/status.json")
+                print("--------------------------------------------------------------")
+                self.utils.ssh_run(ipa, "cat /var/log/cloud-init-output.log")
+        except Exception as ex:
+            print("Error while collecting logs from cluster \n {}".format(ex))
+
+        if logging_error:
+            raise Exception("Failure(s) while collecting logs")

@@ -29,18 +29,33 @@ class Openstack:
 
 
     def cleanup(self):
-        self._cleanup_openstack_deployment()
+        cleanup_failure = False
 
-        dirs =[os.path.join(self.conf.workspace, "test-cluster"),
-               os.path.join(self.conf.workspace, "go"),
-               os.path.join(self.conf.workspace, "logs"),
-               os.path.join(self.conf.workspace, "ssh-agent-sock"),
-               os.path.join(self.conf.workspace, "test-cluster"),
-               os.path.join(self.conf.workspace, "tfout"),
-               os.path.join(self.conf.workspace, "tfout.json")]
+        try:
+            self._cleanup_openstack_deployment()
+        except Exception as ex:
+            cleanup_failure = True
+            print("Received the following error {}".format(ex))
+            print("Attempting to finish cleanup")
 
-        for dir in dirs:
-            self.utils.runshellcommand("rm -rf {}".format(dir))
+        workspace_dirs = [os.path.join(self.conf.workspace, "test-cluster"),
+                          os.path.join(self.conf.workspace, "go"),
+                          os.path.join(self.conf.workspace, "logs"),
+                          os.path.join(self.conf.workspace, "ssh-agent-sock"),
+                          os.path.join(self.conf.workspace, "test-cluster"),
+                          os.path.join(self.conf.workspace, "tfout"),
+                          os.path.join(self.conf.workspace, "tfout.json")]
+
+        for workspace_dir in workspace_dirs:
+            try:
+                self.utils.runshellcommand("rm -rf {}".format(workspace_dir))
+            except Exception as ex:
+                cleanup_failure = True
+                print("Received the following error {}".format(ex))
+                print("Attempting to finish cleanup")
+
+        if cleanup_failure:
+            raise Exception("Failure(s) during cleanup")
 
 
     @step
@@ -67,8 +82,7 @@ class Openstack:
             except:
                 print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
-                    print("Last failed attempt, cleaning up and exiting")
-                    self._cleanup_openstack_deployment()
+                    print("Last failed attempt, exiting")
                     raise Exception("Failed OpenStack deploy")
 
             self.fetch_openstack_terraform_output()
