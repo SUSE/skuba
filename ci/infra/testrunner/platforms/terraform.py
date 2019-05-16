@@ -45,8 +45,8 @@ class Terraform:
     def apply_terraform(self):
         """ Create and apply terraform plan"""
         print("Init terraform")
-        self.utils.runshellcommandterraform("terraform init")
-        self.utils.runshellcommandterraform("terraform version")
+        self.runshellcommandterraform("terraform init")
+        self.runshellcommandterraform("terraform version")
         self.generate_tfvars_file()
         plan_cmd = ("{env_setup};"
                     " terraform plan "
@@ -61,10 +61,10 @@ class Terraform:
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
             print("Run terraform plan - execution n. %d" % retry)
-            self.utils.runshellcommandterraform(plan_cmd)
+            self.runshellcommandterraform(plan_cmd)
             print("Running terraform apply - execution n. %d" % retry)
             try:
-                self.utils.runshellcommandterraform(apply_cmd)
+                self.runshellcommandterraform(apply_cmd)
                 break
 
             except:
@@ -82,7 +82,7 @@ class Terraform:
                "{workspace}/tfout.json".format(
                    env_setup=self._env_setup_cmd(),
                    workspace=self.conf.workspace))
-        self.utils.runshellcommandterraform(cmd)
+        self.runshellcommandterraform(cmd)
 
     def generate_tfvars_file(self):
         """Generate terraform tfvars file"""
@@ -123,3 +123,9 @@ class Terraform:
 
         with open(dest_terraform, "w") as f:
             f.writelines(lines)
+
+    def runshellcommandterraform(self, cmd, env=None):
+        """Running terraform command in {workspace}/ci/infra/{platform}"""
+        cwd = self.conf.terraform_dir
+        print("$ {} > {}".format(cwd, cmd))
+        subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
