@@ -41,6 +41,15 @@ install:
 	$(RM) -f $(GOBINPATH)/kubectl-caasp
 	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
 
+.PHONY: clean
+clean:
+	$(GO) clean -i
+	$(RM) -f ./caaspctl
+
+.PHONY: distclean
+distclean: clean
+	$(GO) clean -i -cache -testcache -modcache
+
 .PHONY: staging
 staging:
 	make TAGS=staging install
