@@ -15,7 +15,7 @@
 # limitations under the License.
 
 [[ ! -n ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN env variable must be set" && exit 1
-[[ ! -n ${CHANGE_ID} ]] && echo "CHANGE_ID env variable must be set" && exit 1
+[[ ! -n ${CHANGE_ID} ]] && echo "CHANGE_ID env variable must be set" && exit 0
 
 # This for loop uses the GitHub API to fetch all commits in a PR and outputs the information in the following format
 # $sha,$github_username,$author_email_address. If the author is using a SUSE address, then no further checks are necessary and we
