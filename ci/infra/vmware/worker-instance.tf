@@ -8,7 +8,16 @@ data "template_file" "worker_repositories" {
   }
 }
 
-data "template_file" "worker-cloud-init" {
+data "template_file" "worker_cloud_init_metadata" {
+  template = "${file("cloud-init/metadata.tpl")}"
+
+  vars {
+    network_config = "${base64gzip(data.local_file.network_cloud_init.content)}"
+    instance_id    = "${var.stack_name}-worker"
+  }
+}
+
+data "template_file" "worker_cloud_init_userdata" {
   template = "${file("cloud-init/worker.tpl")}"
 
   vars {
@@ -26,13 +35,13 @@ resource "vsphere_virtual_machine" "worker" {
   name             = "${var.stack_name}-worker-${count.index}"
   num_cpus         = "${var.worker_cpus}"
   memory           = "${var.worker_memory}"
-  guest_id         = "sles12_64Guest"
-  scsi_type        = "lsilogic"
+  guest_id         = "${var.guest_id}"
+  scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
   resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
   datastore_id     = "${data.vsphere_datastore.datastore.id}"
 
-  network_interface {
-    network_id = "${data.vsphere_network.network.id}"
+  clone {
+    template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
 
   disk {
@@ -41,16 +50,17 @@ resource "vsphere_virtual_machine" "worker" {
     size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
 
-  cdrom {
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
-    path         = "${var.stack_name}/cc-worker.iso"
+  extra_config {
+    "guestinfo.metadata"          = "${base64gzip(data.template_file.worker_cloud_init_metadata.rendered)}"
+    "guestinfo.metadata.encoding" = "gzip+base64"
+
+    "guestinfo.userdata"          = "${base64gzip(data.template_file.worker_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
-  clone {
-    template_uuid = "${data.vsphere_virtual_machine.template.id}"
+  network_interface {
+    network_id = "${data.vsphere_network.network.id}"
   }
-
-  depends_on = ["vsphere_file.upload_cc_worker_iso"]
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
@@ -68,19 +78,4 @@ resource "null_resource" "worker_wait_cloudinit" {
       "cloud-init status --wait",
     ]
   }
-}
-
-resource "null_resource" "local_gen-cc-worker-iso" {
-  provisioner "local-exec" {
-    command = "./gen-cloud-init-iso.sh worker '${data.template_file.worker-cloud-init.rendered}'"
-  }
-}
-
-resource "vsphere_file" "upload_cc_worker_iso" {
-  datacenter         = "${data.vsphere_datacenter.dc.name}"
-  datastore          = "${data.vsphere_datastore.datastore.name}"
-  source_file        = "./cc-worker.iso"
-  create_directories = true
-  destination_file   = "${var.stack_name}/cc-worker.iso"
-  depends_on         = ["null_resource.local_gen-cc-worker-iso"]
 }
