@@ -12,24 +12,13 @@ if not "CONTROLPLANE" in os.environ:
   print("controlplane env var not defined, taking 10.17.1.0")
   os.environ['CONTROLPLANE'] = "10.17.1.0"
 
+if not "MASTER00" in os.environ:
+  print("master00 env var not defined, taking 10.17.2.0")
+  os.environ['MASTER00'] = "10.17.2.0"
 
-# we will have here a set of core feature, actually only 1, where we setup the cluster with caaspctl init etc. this need to run first the rest of feature 
-# will be random and idempotent.
+if not "WORKER00" in os.environ:
+  print("worker00 env var not defined, taking 10.17.3.0")
+  os.environ['WORKER00'] = "10.17.3.0"
 
-# TODO-01: @dmaiocchi: setup first serial features
 
 subprocess.check_call("cd test && ginkgo -v --race --trace --progress core-features", shell=True, env=dict(os.environ))
-
-
-## TODO-02: this are parallel feature
-## SECONDARY FEATURES:
-
-# idempotent features run in random order
-# this can be configured later. you can check the upstream doc. we have everything random here
-
-# debug mode
-#if os.environ.get('DEBUG')=='True':
-#    subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --trace --race --progress -v", shell=True, env=dict(os.environ))
-
-#else:
-#    subprocess.check_call("cd test && ginkgo -r --randomizeAllSpecs --randomizeSuites --race --progress", shell=True, env=dict(os.environ))
