@@ -23,9 +23,10 @@ __version__ = "0.0.3"
 
 def main():
     help = """
-    This script is meant to be run manually on test servers, developer desktops, or Jenkins.
-    This script supposed to run on python virtualenv from testrunner. Requires root privileges.
-    Warning: it removes docker containers, VMs, images, and network configuration.
+    This script supposed to run on python virtualenv from testrunner.
+    You need to set up openrc file and modify yaml file.
+    Default yaml file will be vars/openstack.yaml unless you specify in -v.
+    Warning: it may remove docker containers, VMs, images, and network configuration.
     """
     parser = ArgumentParser(help)
 
@@ -53,11 +54,11 @@ def main():
                         help='path for platform yaml file. \
                               Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner. \
                               eg) -v vars/myconfig.yaml')
-    parser.add_argument("-m", "--master", dest="num_master", type=int, default=1,
+    parser.add_argument("-m", "--master", dest="num_master", type=int, default=0,
                         help='number of masters to add or delete. It is dependening on \
                               number of deployed master nodes in your yaml file. Default value is 1. \
                               eg) -m 2')
-    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=1,
+    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=0,
                         help='number of workers to add or delete. It is dependening on \
                               number of deployed worker nodes in your yaml file. Default value is 1  \
                               eg) -w 2')
@@ -81,7 +82,7 @@ def main():
         sys.exit(0)
     else:
         raise ValueError('{}Platform Error: {} is not applicable.{}'
-                        .format(Constant.RED, conf.platform, Constant.RED_EXIT))
+                        .format(Constant.RED, conf.platform, Constant.COLOR_EXIT))
 
     if options.ip_info:
         Utils(conf).info()

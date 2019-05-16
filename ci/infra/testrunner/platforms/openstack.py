@@ -29,7 +29,10 @@ class Openstack:
 
 
     def cleanup(self):
-        self._cleanup_openstack_deployment()
+        try:
+            self._cleanup_openstack_deployment()
+        except:
+            pass
 
         dirs =[os.path.join(self.conf.workspace, "test-cluster"),
                os.path.join(self.conf.workspace, "go"),
@@ -37,7 +40,8 @@ class Openstack:
                os.path.join(self.conf.workspace, "ssh-agent-sock"),
                os.path.join(self.conf.workspace, "test-cluster"),
                os.path.join(self.conf.workspace, "tfout"),
-               os.path.join(self.conf.workspace, "tfout.json")]
+               os.path.join(self.conf.workspace, "tfout.json"),
+               os.path.join(self.conf.terraform_dir, "terraform.tfstate")]
 
         for dir in dirs:
             self.utils.runshellcommand("rm -rf {}".format(dir))
@@ -51,25 +55,29 @@ class Openstack:
         self.generate_tfvars_file()
         plan_cmd = ("source {openrc};"
                     " terraform plan "
-                    " -out {workspace}/tfout".format(openrc=self.conf.openstack.openrc, workspace=self.conf.workspace)
+                    " -out {tfout}".format(openrc=self.conf.openstack.openrc,
+                                           tfout=os.path.join(self.conf.workspace,"tfout"))
                     )
-        apply_cmd = ("source {openrc}; terraform apply -auto-approve {workspace}/tfout".format(
-            openrc=self.conf.openstack.openrc, workspace=self.conf.workspace))
+        apply_cmd = ("source {openrc};"
+                     "terraform apply -auto-approve"
+                     " {tfout}".format(openrc=self.conf.openstack.openrc,
+                                            tfout=os.path.join(self.conf.workspace,"tfout"))
+                    )
 
         for retry in range(1, 5):
-            print("Run terraform plan - execution n. %d" % retry)
+            print("{}Run terraform plan - execution n {}".format(Constant.BLUE, retry, Constant.COLOR_EXIT))
             self.utils.runshellcommandterraform(plan_cmd)
-            print("Running terraform apply - execution n. %d" % retry)
             try:
+                print("{}Run terraform apply - execution n {}".format(Constant.BLUE, retry, Constant.COLOR_EXIT))
                 self.utils.runshellcommandterraform(apply_cmd)
                 break
 
             except:
-                print("Failed terraform apply n. %d" % retry)
+                print("{}Failed terraform apply -n {}".format(Constant.BLUE, retry, Constant.COLOR_EXIT))
                 if retry == 4:
-                    print("Last failed attempt, cleaning up and exiting")
                     self._cleanup_openstack_deployment()
-                    raise RuntimeError("{}{}{}".format(Constant.RED, "Failed OpenStack deploy", Constant.RED_EXIT))
+                    raise RuntimeError("{}{}{}".format(Constant.RED, "Failed Openstack Terraform deployment "
+                                                       "and destroyed associated resources", Constant.COLOR_EXIT))
 
             self.fetch_openstack_terraform_output()
 

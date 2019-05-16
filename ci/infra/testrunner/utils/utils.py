@@ -14,7 +14,7 @@ def step(f):
         print("{} entering {} {}".format(Constant.DOT * _stepdepth, f.__name__,
                                   f.__doc__ or ""))
         r = f(*args, **kwargs)
-        print("{}  exiting {}".format(Constant.DOT_exit * _stepdepth, f.__name__))
+        print("{}  exiting {}".format(Constant.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
@@ -40,13 +40,16 @@ class Utils:
         if not os.path.isabs(cwd):
             cwd = os.path.join(self.conf.workspace, cwd)
 
-        print("$ {} > {}".format(cwd, cmd))
+        if not os.path.exists(cwd):
+            raise RuntimeError("{}Directoty {} does not exists {} ".format(Constant.RED, cwd, Constant.COLOR_EXIT))
+
+        print("{}$ {} > {}{}".format(Constant.BLUE, cwd, cmd, Constant.COLOR_EXIT))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def runshellcommandterraform(self, cmd, env=None):
         """Running terraform command in {workspace}/ci/infra/{platform}"""
         cwd = self.conf.terraform_dir
-        print("$ {} > {}".format(cwd, cmd))
+        print("{}$ {} > {}{}".format(Constant.BLUE, cwd, cmd, Constant.COLOR_EXIT))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def authorized_keys(self):
@@ -84,8 +87,10 @@ class Utils:
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
         binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
-        self.runshellcommand(binpath + " "+ cmd,  env=env) \
-              if init else self.runshellcommand( binpath + " " + cmd, cwd="test-cluster", env=env)
+        if init:
+            self.runshellcommand(binpath + " "+ cmd,  env=env)
+        else:
+            self.runshellcommand( binpath + " " + cmd, cwd="test-cluster", env=env)
 
     def ssh_run(self, ipaddr, cmd):
         key_fn = self.conf.ssh_key_option
@@ -94,13 +99,14 @@ class Utils:
         self.runshellcommand(cmd)
 
     def runshellcommand_withoutput(self, cmd, ignore_errors=True):
+        print("{}$ > {}{}".format(Constant.BLUE, cmd, Constant.COLOR_EXIT))
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = p.communicate()
         rc = p.returncode
         if not ignore_errors:
             if rc != 0:
                 print(err)
-                raise RuntimeError("{}Cannot run command {}{}\033[0m".format(Constant.RED, cmd ,Constant.RED_EXIT))
+                raise RuntimeError("{}Cannot run command {}{}".format(Constant.RED, cmd ,Constant.COLOR_EXIT))
         return output.decode()
 
     @timeout(60)
@@ -133,12 +139,12 @@ class Utils:
             self.runshellcommand(cmd, cwd="caaspctl")
         except subprocess.CalledProcessError as ex:
             print(ex)
-            print("{}Rebase failed, manual rebase is required.{}".format(Constant.RED, Constant.RED_EXIT))
+            print("{}Rebase failed, manual rebase is required.{}".format(Constant.RED, Constant.COLOR_EXIT))
             self.runshellcommand("git rebase --abort", cwd="caaspctl")
             sys.exit(1)
         except Exception as ex:
             print(ex)
-            print("{}Unknown error exiting.{}".format(Constant.RED, Constant.RED_EXIT))
+            print("{}Unknown error exiting.{}".format(Constant.RED, Constant.COLOR_EXIT))
             sys.exit(2)
 
     @timeout(30)
@@ -157,6 +163,6 @@ class Utils:
         except (requests.HTTPError, requests.Timeout) as err:
             print(err)
             print('{}Meta Data service unavailable could not get external IP addr{}'\
-                  .format(Constant.RED, Constant.RED_EXIT))
+                  .format(Constant.RED, Constant.COLOR_EXIT))
         else:
             print('External IP addr: {}'.format(r.text))
