@@ -1,7 +1,3 @@
-variable "VSPHERE_SERVER" {}
-variable "VSPHERE_USER" {}
-variable "VSPHERE_PASSWORD" {}
-variable "VSPHERE_ALLOW_UNVERIFIED_SSL" {}
 variable "template_name" {}
 variable "stack_name" {}
 variable "vsphere_datastore" {}
@@ -15,10 +11,9 @@ variable "authorized_keys" {
   description = "ssh keys to inject into all the nodes"
 }
 
-variable "repositories" {
-  type        = "list"
-  default     = []
-  description = "Urls of the repositories to mount via cloud-init"
+variable "guest_id" {
+  default     = "sles15_64Guest"
+  description = "Guest ID of the virtual machine"
 }
 
 variable "ntp_servers" {
@@ -31,6 +26,12 @@ variable "packages" {
   type        = "list"
   default     = []
   description = "list of additional packages to install"
+}
+
+variable "repositories" {
+  type        = "list"
+  default     = []
+  description = "Urls of the repositories to mount via cloud-init"
 }
 
 variable "username" {
@@ -90,12 +91,7 @@ variable "lb_memory" {
 
 #### To be moved to separate vsphere.tf? ####
 
-provider "vsphere" {
-  vsphere_server       = "${var.VSPHERE_SERVER}"
-  user                 = "${var.VSPHERE_USER}"
-  password             = "${var.VSPHERE_PASSWORD}"
-  allow_unverified_ssl = "${var.VSPHERE_ALLOW_UNVERIFIED_SSL}"
-}
+provider "vsphere" {}
 
 data "vsphere_resource_pool" "pool" {
   name          = "${var.vsphere_resource_pool}"
