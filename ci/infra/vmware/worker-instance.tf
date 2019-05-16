@@ -51,10 +51,10 @@ resource "vsphere_virtual_machine" "worker" {
   }
 
   extra_config {
-    "guestinfo.metadata" = "${base64gzip(data.template_file.worker_cloud_init_metadata.rendered)}"
+    "guestinfo.metadata"          = "${base64gzip(data.template_file.worker_cloud_init_metadata.rendered)}"
     "guestinfo.metadata.encoding" = "gzip+base64"
 
-    "guestinfo.userdata" = "${base64gzip(data.template_file.worker_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata"          = "${base64gzip(data.template_file.worker_cloud_init_userdata.rendered)}"
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 

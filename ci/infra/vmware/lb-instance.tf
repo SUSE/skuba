@@ -62,10 +62,10 @@ resource "vsphere_virtual_machine" "lb" {
   }
 
   extra_config {
-    "guestinfo.metadata" = "${base64gzip(data.template_file.lb_cloud_init_metadata.rendered)}"
+    "guestinfo.metadata"          = "${base64gzip(data.template_file.lb_cloud_init_metadata.rendered)}"
     "guestinfo.metadata.encoding" = "gzip+base64"
 
-    "guestinfo.userdata" = "${base64gzip(data.template_file.lb_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata"          = "${base64gzip(data.template_file.lb_cloud_init_userdata.rendered)}"
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
