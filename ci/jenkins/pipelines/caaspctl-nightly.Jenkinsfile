@@ -31,7 +31,7 @@ pipeline {
    }
    post {
        always {
-           sh(script: 'make -f caaspctl/ci/Makefile post_run', label: 'Post Run')
+           sh(script: 'make --keep-going -f caaspctl/ci/Makefile post_run', label: 'Post Run')
        }
        cleanup {
            dir("${WORKSPACE}") {
