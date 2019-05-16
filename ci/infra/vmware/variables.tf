@@ -89,6 +89,11 @@ variable "lb_memory" {
   description = "Amount of memory used on load-balancer node"
 }
 
+variable "caasp_registry_code" {
+  default     = ""
+  description = "SUSE CaaSP Product Registration Code"
+}
+
 #### To be moved to separate vsphere.tf? ####
 
 provider "vsphere" {}

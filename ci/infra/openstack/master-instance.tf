@@ -8,13 +8,32 @@ data "template_file" "master_repositories" {
   }
 }
 
+data "template_file" "master_registration" {
+  template = "${file("cloud-init/registration.tpl")}"
+  count    = "${var.caasp_registry_code == "" ? 0 : 1}"
+
+  vars {
+    caasp_registry_code = "${var.caasp_registry_code}"
+    packages            = "${join(", ", var.packages)}"
+  }
+}
+
+data "template_file" "master_commands" {
+  template = "${file("cloud-init/commands.tpl")}"
+
+  vars {
+    packages = "${join(", ", var.packages)}"
+  }
+}
+
 data "template_file" "master-cloud-init" {
   template = "${file("cloud-init/master.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.master_repositories.*.rendered)}"
-    packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    registration    = "${join("\n", data.template_file.master_registration.*.rendered)}"
+    commands        = "${join("\n", data.template_file.master_commands.*.rendered)}"
     username        = "${var.username}"
     password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
