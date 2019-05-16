@@ -18,7 +18,7 @@ if not "CONTROLPLANE" in os.environ:
 
 # TODO-01: @dmaiocchi: setup first serial features
 
-subprocess.check_call("cd test && ginkgo --race --trace --progress core-features", shell=True, env=dict(os.environ))
+subprocess.check_call("cd test && ginkgo -v --race --trace --progress core-features", shell=True, env=dict(os.environ))
 
 
 ## TODO-02: this are parallel feature

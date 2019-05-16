@@ -33,17 +33,21 @@ var _ = Describe("Create Caaspctl Cluster", func() {
 		command := exec.Command(caaspctl, "cluster", "init", "--control-plane", controlPlaneIP, clusterName)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
                 fmt.Println(session.Out)
-		Expect(err).ShouldNot(HaveOccurred())
-                Eventually(session.Out).Should(gbytes.Say("This is a BETA release and NOT intended for production usage"))
+		Eventually(session.Out).Should(gbytes.Say(".*configuration files written to"))
+                Expect(session).Should(gexec.Exit(), "configuration was not created")
+                Expect(err).To(BeNil(), "configuration was not created")
                 // change to created caaspctl directory
                 err = os.Chdir(clusterName)
                 if err != nil {
                   panic(err)
                 }
                 // add master
-		command = exec.Command(caaspctl, "node", "bootstrap", "--user", username, "--sudo", "--target", master00IP, master00Name)
-		_, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Ω(err).ShouldNot(HaveOccurred())
+         	command = exec.Command(caaspctl, "node", "bootstrap", "--user", username, "--sudo", "--target", master00IP, master00Name)
+		session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
+                // cmd should be execute without error
+                Expect(session).Should(gexec.Exit(), "caaspctl adding master00 failed")
+                Expect(err).To(BeNil(), "caaspctl adding master00 failed")	
+	//Expect(err).ShouldNot(HaveOccurred())
 
        	})
 
