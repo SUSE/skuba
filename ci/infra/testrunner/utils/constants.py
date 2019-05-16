@@ -39,10 +39,13 @@ class BaseConfig:
             BaseConfig.Openstack,
         )
 
-        #Object-values will be replaced values from yaml file
+        #vars get the values from yaml file
         vars = BaseConfig.get_var_dict(yaml_path)
-        return BaseConfig.inject_attrs_from_yaml(obj, vars, config_classes)
-
+        #conf.objects will be overriden by the values from vars and matching ENV variables
+        conf = BaseConfig.inject_attrs_from_yaml(obj, vars, config_classes)
+        # Final mofification for conf variables
+        conf = BaseConfig.finalize(conf)
+        return conf
 
     class NodeConfig:
         def __init__(self, count=1, memory=4096, cpu=4):
@@ -129,6 +132,24 @@ class BaseConfig:
 
         return obj
 
+    @staticmethod
+    def finalize(conf):
+        conf.workspace = os.path.expanduser(conf.workspace)
+        conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
+        conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
 
+        if not conf.jenkins.job_name:
+            conf.jenkins.job_name = conf.username
+        conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
+
+        if conf.ssh_key_option == "id_shared":
+            conf.ssh_key_option = os.path.join(conf.caaspctl_dir, "ci/infra/id_shared")
+        elif conf.ssh_key_option == "id_rsa":
+            conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+
+        conf.git.change_author = os.getenv('GIT_COMMITTER_NAME', 'CaaSP Jenkins')
+        conf.git.change_author_email = os.getenv('GIT_COMMITTER_EMAIL', 'containers-bugowner@suse.de')
+
+        return conf
 #if __name__ == '__main__':
 #    _conf = BaseConfig()

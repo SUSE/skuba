@@ -63,21 +63,7 @@ def main():
                               eg) -w 2')
 
     options = parser.parse_args()
-
     conf = BaseConfig(options.yaml_path)
-    conf.workspace =  os.path.expanduser(conf.workspace)
-    conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
-    conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
-
-    if not conf.jenkins.job_name:
-        conf.jenkins.job_name = conf.username
-    conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
-
-    if conf.ssh_key_option == "id_shared":
-        conf.ssh_key_option = os.path.join(conf.caaspctl_dir, "ci/infra/id_shared")
-    elif conf.ssh_key_option == "id_rsa":
-        conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
-
 
     if conf.platform == "openstack":
         platform = Openstack(conf)
