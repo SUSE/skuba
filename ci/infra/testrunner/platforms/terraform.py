@@ -20,6 +20,7 @@ class Terraform:
 
     def cleanup(self):
         """ Clean up """
+        cleanup_failure = False
         try:
             self._cleanup_platform()
         except Exception as ex:
