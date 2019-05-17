@@ -2,7 +2,6 @@ import os, sys, pprint
 from shutil import copyfile
 from timeout_decorator import timeout
 from utils import step
-from caaspctl import Caaspctl
 from utils import Utils
 from constants import Constant
 
@@ -44,7 +43,8 @@ class Openstack:
                           os.path.join(self.conf.workspace, "ssh-agent-sock"),
                           os.path.join(self.conf.workspace, "test-cluster"),
                           os.path.join(self.conf.workspace, "tfout"),
-                          os.path.join(self.conf.workspace, "tfout.json")]
+                          os.path.join(self.conf.workspace, "tfout.json"),
+                          os.path.join(self.conf.terraform_dir, "terraform.tfstate")]
 
         for workspace_dir in workspace_dirs:
             try:
@@ -61,41 +61,44 @@ class Openstack:
     @step
     def apply_terraform(self):
         print("Init terraform")
+        self._check_tf_deployed()
         self.utils.runshellcommandterraform("terraform init")
         self.utils.runshellcommandterraform("terraform version")
-        self.generate_tfvars_file()
+        self._generate_tfvars_file()
         plan_cmd = ("source {openrc};"
                     " terraform plan "
-                    " -out {workspace}/tfout".format(openrc=self.conf.openstack.openrc, workspace=self.conf.workspace)
+                    " -out {tfout}".format(openrc=self.conf.openstack.openrc,
+                                           tfout=os.path.join(self.conf.workspace, "tfout"))
                     )
-        apply_cmd = ("source {openrc}; terraform apply -auto-approve {workspace}/tfout".format(
-            openrc=self.conf.openstack.openrc, workspace=self.conf.workspace))
-
+        apply_cmd = ("source {openrc};"
+                     "terraform apply -auto-approve"
+                     " {tfout}".format(openrc=self.conf.openstack.openrc,
+                                       tfout=os.path.join(self.conf.workspace, "tfout"))
+                     )
         for retry in range(1, 5):
-            print("Run terraform plan - execution n. %d" % retry)
+            print("{}Run terraform plan - execution # {}".format(Constant.BLUE, retry, Constant.COLOR_EXIT))
             self.utils.runshellcommandterraform(plan_cmd)
-            print("Running terraform apply - execution n. %d" % retry)
             try:
+                print("{}Run terraform apply - execution # {}".format(Constant.BLUE, retry, Constant.COLOR_EXIT))
                 self.utils.runshellcommandterraform(apply_cmd)
                 break
 
             except:
-                print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
-                    print("Last failed attempt, exiting")
-                    raise Exception("Failed OpenStack deploy")
+                    raise RuntimeError("{}{}{}".format(Constant.RED, "Failed Openstack Terraform deployment "
+                                                       "and destroyed associated resources", Constant.COLOR_EXIT))
 
-            self.fetch_openstack_terraform_output()
+        self._fetch_openstack_terraform_output()
 
 
     @step
-    def fetch_openstack_terraform_output(self):
-        cmd = "source {}; terraform output -json > {}/tfout.json".format(
-                                self.conf.openstack.openrc, self.conf.workspace)
+    def _fetch_openstack_terraform_output(self):
+        cmd = "source {orc}; terraform output -json > {json_f}".format(
+                                orc=self.conf.openstack.openrc, json_f=os.path.join(self.conf.workspace,"tfout.json"))
         self.utils.runshellcommandterraform(cmd)
 
 
-    def generate_tfvars_file(self):
+    def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(self.conf.workspace,
                             "caaspctl/ci/infra/{}/{}".format(
@@ -130,3 +133,7 @@ class Openstack:
         with open(dest_terraform, "w") as f:
             f.writelines(lines)
 
+    def _check_tf_deployed(self):
+        if os.path.exists(os.path.join(os.path.join(self.conf.workspace, "tfout.json"))):
+            raise RuntimeError("{}You need to run \"testrunner --cleanup first"
+                               " before running \"testrunner --terraform\" commands\"{}".format(Constant.RED, Constant.COLOR_EXIT))

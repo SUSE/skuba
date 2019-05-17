@@ -15,7 +15,7 @@ git: # Used for Jenkins rebase
   branch_name: "master"
 
 jenkins:  # Used for Jenkins
-  build_number: 0 # os.getenv("BUILD_NUMBER")
+  build_number: 1 # os.getenv("BUILD_NUMBER")
   job_name: null # os.getenv("JOB_NAME")
 
 # node settings
@@ -25,12 +25,12 @@ lb:
   cpu: 4
 
 master:
-  count: 3
+  count: 1
   memory: 4096
   cpu: 4
 
 worker:
-  count: 3
+  count: 1
   memory: 4096
   cpu: 2
 
