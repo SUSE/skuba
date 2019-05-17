@@ -89,6 +89,7 @@ def main():
         Utils(conf).git_rebase()
     elif options.cleanup:
         platform.cleanup()
+        Caaspctl(conf).cleanup()
     elif options.apply_terraform:
         platform.apply_terraform()
     elif options.create_caaspctl:
