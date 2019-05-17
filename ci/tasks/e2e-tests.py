@@ -20,5 +20,4 @@ if not "WORKER00" in os.environ:
   print("worker00 env var not defined, taking 10.17.3.0")
   os.environ['WORKER00'] = "10.17.3.0"
 
-
 subprocess.check_call("cd test && ginkgo -v --race --trace --progress core-features", shell=True, env=dict(os.environ))
