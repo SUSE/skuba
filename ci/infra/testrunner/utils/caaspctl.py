@@ -198,6 +198,7 @@ class Caaspctl:
                 print("--------------------------------------------------------------")
                 self.utils.ssh_run(ipa, "cat /var/log/cloud-init-output.log")
         except Exception as ex:
+            logging_error = True
             print("Error while collecting logs from cluster \n {}".format(ex))
 
         if logging_error:
