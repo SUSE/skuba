@@ -20,5 +20,23 @@ setup_python_env() {
 }
 
 setup_python_env
+
+testrunner() {
+    stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@
+}
 # use unbuffered output
-stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@
+
+pylint() {
+    source ${VENVDIR}/bin/activate
+    #find . -type f -name "*.py" | xargs pylint --errors-only
+    find . -type f -name "*.py" | xargs pylint --errors-only
+    ret=$?
+    deactivate
+    exit $ret
+}
+
+if [ "$1" == "pylint" ]; then
+    pylint
+else
+    testrunner $@
+fi
