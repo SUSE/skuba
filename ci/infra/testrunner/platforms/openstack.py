@@ -5,10 +5,10 @@ from terraform import Terraform
 class Openstack(Terraform):
     def __init__(self, conf):
         self.osconf = conf.openstack
-        Terraform.__init__(self, conf)
+        super().__init__(conf)
 
     def _env_setup_cmd(self):
-        return "source {openrc}".format(openrc=self.conf.openstack.openrc)
+        return "source {openrc}".format(openrc=self.osconf.openrc)
 
     @timeout(600)
     def _cleanup_platform(self):
