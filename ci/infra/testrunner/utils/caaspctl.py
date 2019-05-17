@@ -56,7 +56,15 @@ class Caaspctl:
                 os.path.join(self.conf.workspace, "test-cluster")]
 
         for dir in dirs:
-            self.utils.runshellcommand("rm -rf {}".format(dir))
+            try: 
+                self.utils.runshellcommand("rm -rf {}".format(dir))
+            except Exception as ex:
+                cleanup_failure = True
+                print("Received the following error {}".format(ex))
+                print("Attempting to finish cleaup")
+
+        if cleanup_failure:
+            raise Exception("Failure(s) during cleanup")
 
     @step
     def caaspctl_cluster_init(self):
