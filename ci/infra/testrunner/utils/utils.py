@@ -14,7 +14,7 @@ def step(f):
         print("{} entering {} {}".format(Constant.DOT * _stepdepth, f.__name__,
                                   f.__doc__ or ""))
         r = f(*args, **kwargs)
-        print("{}  exiting {}".format(Constant.DOT_exit * _stepdepth, f.__name__))
+        print("{}  exiting {}".format(Constant.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
@@ -40,7 +40,10 @@ class Utils:
         if not os.path.isabs(cwd):
             cwd = os.path.join(self.conf.workspace, cwd)
 
-        print("$ {} > {}".format(cwd, cmd))
+        if not os.path.exists(cwd):
+            raise RuntimeError("{}Directoty {} does not exists {} ".format(Constant.RED, cwd, Constant.COLOR_EXIT))
+
+        print("{}$ {} > {}{}".format(Constant.BLUE, cwd, cmd, Constant.COLOR_EXIT))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def authorized_keys(self):
@@ -94,8 +97,7 @@ class Utils:
         rc = p.returncode
         if not ignore_errors:
             if rc != 0:
-                print(err)
-                raise RuntimeError("{}Cannot run command {}{}\033[0m".format(Constant.RED, cmd ,Constant.RED_EXIT))
+                raise RuntimeError("{}{}\nCannot run command {}{}".format(Constant.RED, err, cmd,Constant.COLOR_EXIT))
         return output.decode()
 
     @timeout(60)
@@ -132,8 +134,7 @@ class Utils:
             self.runshellcommand("git rebase --abort", cwd="caaspctl")
             sys.exit(1)
         except Exception as ex:
-            print(ex)
-            print("{}Unknown error exiting.{}".format(Constant.RED, Constant.RED_EXIT))
+            print("{}{}\nRebase failed, manual rebase is required.{}".format(Constant.RED, ex, Constant.COLOR_EXIT))
             sys.exit(2)
 
     @timeout(30)
@@ -152,6 +153,6 @@ class Utils:
         except (requests.HTTPError, requests.Timeout) as err:
             print(err)
             print('{}Meta Data service unavailable could not get external IP addr{}'\
-                  .format(Constant.RED, Constant.RED_EXIT))
+                  .format(Constant.RED, Constant.COLOR_EXIT))
         else:
             print('External IP addr: {}'.format(r.text))

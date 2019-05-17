@@ -23,8 +23,9 @@ __version__ = "0.0.3"
 
 def main():
     help = """
-    This script is meant to be run manually on test servers, developer desktops, or Jenkins.
-    This script supposed to run on python virtualenv from testrunner. Requires root privileges.
+    This script supposed to run on python virtualenv from testrunner.
+    You need to set up openrc file and modify yaml file.
+    Default yaml file will be vars/openstack.yaml unless you specify in -v.
     Warning: it removes docker containers, VMs, images, and network configuration.
     """
     parser = ArgumentParser(help)
@@ -45,21 +46,21 @@ def main():
     parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
                         help="check K8s cluster status")
     parser.add_argument("-a", "--add-nodes", dest="add_nodes", action="store_true",
-                        help="add nodes in k8s cluster. Default values are -m=1, -w=1")
+                        help="add nodes in k8s cluster. Default values are -m=0, -w=0")
     parser.add_argument("-r", "--remove-nodes", dest="remove_nodes", action="store_true",
-                        help="remove nodes in k8s cluster. default values are -m=1, -w=1")
+                        help="remove nodes in k8s cluster. default values are -m=0, -w=0")
     parser.add_argument("-l", "--log", dest="log", action="store_true", help="gather logs from nodes")
     parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
                         help='path for platform yaml file. \
                               Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner. \
                               eg) -v vars/myconfig.yaml')
-    parser.add_argument("-m", "--master", dest="num_master", type=int, default=1,
+    parser.add_argument("-m", "--master", dest="num_master", type=int, default=0,
                         help='number of masters to add or delete. It is dependening on \
-                              number of deployed master nodes in your yaml file. Default value is 1. \
+                              number of deployed master nodes in your yaml file. Default value is 0. \
                               eg) -m 2')
-    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=1,
+    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=0,
                         help='number of workers to add or delete. It is dependening on \
-                              number of deployed worker nodes in your yaml file. Default value is 1  \
+                              number of deployed worker nodes in your yaml file. Default value is 0.  \
                               eg) -w 2')
 
     options = parser.parse_args()
@@ -81,7 +82,7 @@ def main():
         sys.exit(0)
     else:
         raise Exception('{}Platform Error: {} is not applicable.{}' \
-                        .format(Constant.RED, conf.platform, Constant.RED_EXIT))
+                        .format(Constant.RED, conf.platform, Constant.COLOR_EXIT))
 
     if options.ip_info:
         Utils(conf).info()

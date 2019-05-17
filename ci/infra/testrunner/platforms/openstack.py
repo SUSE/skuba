@@ -1,7 +1,6 @@
 from timeout_decorator import timeout
 from terraform import Terraform
 
-
 class Openstack(Terraform):
     def __init__(self, conf):
         self.osconf = conf.openstack
