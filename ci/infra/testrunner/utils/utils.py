@@ -64,24 +64,6 @@ class Utils:
 
         self.runshellcommand(cmd, cwd="go/src/github.com/SUSE/caaspctl", env=env)
 
-    def run_caaspctl(self, cmd, init=False):
-        """Running caaspctl command in {workspace}/test-cluster if init == false
-        Running caaspctl command in {workspace} if init == true this is because
-        if init, caaspctl cluster init will cretae directory in {workspace}
-        eg) {workspace}/go/bin/caaspctl cluster init --control-plane {lb_ip} test-cluste
-        Otherwise, caaspctl will run inside test-cluster folder after "caaspctl node init" command
-        """
-        env = {
-            'GOPATH': os.path.join(self.conf.workspace, 'go'),
-            'PATH': os.environ['PATH']
-        }
-
-        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
-
-        binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
-        self.runshellcommand(binpath + " "+ cmd,  env=env) \
-              if init else self.runshellcommand( binpath + " " + cmd, cwd="test-cluster", env=env)
-
     def ssh_run(self, ipaddr, cmd):
         key_fn = self.conf.ssh_key_option
         cmd = "ssh " + Constant.SSH_OPTS + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(

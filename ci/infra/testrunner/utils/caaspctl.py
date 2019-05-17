@@ -61,13 +61,13 @@ class Caaspctl:
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm {}/test-cluster -rf".format(self.conf.workspace))
         cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
-        self.utils.run_caaspctl(cmd, init=True)
+        self._run_caaspctl(cmd, init=True)
 
     @step
     def node_bootstrap(self):
         cmd = "node bootstrap --user {username} --sudo --target \
                  {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
-        self.utils.run_caaspctl(cmd)
+        self._run_caaspctl(cmd)
 
     @step
     def node_join(self, role="worker", nr=0):
@@ -83,7 +83,7 @@ class Caaspctl:
         cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
             role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
-            self.utils.run_caaspctl(cmd)
+            self._run_caaspctl(cmd)
         except:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
@@ -100,12 +100,12 @@ class Caaspctl:
 
         cmd = "node remove my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
-            self.utils.run_caaspctl(cmd)
+            self._run_caaspctl(cmd)
         except:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
     def cluster_status(self):
-        self.utils.run_caaspctl("cluster status")
+        self._run_caaspctl("cluster status")
 
     def num_of_nodes(self):
         try:
@@ -152,3 +152,22 @@ class Caaspctl:
 
         if logging_error:
             raise Exception("Failure(s) while collecting logs")
+
+    def _run_caaspctl(self, cmd, init=False):
+        """Running caaspctl command in {workspace}/test-cluster if init == false
+        Running caaspctl command in {workspace} if init == true this is because
+        if init, caaspctl cluster init will cretae directory in {workspace}
+        eg) {workspace}/go/bin/caaspctl cluster init --control-plane {lb_ip} test-cluste
+        Otherwise, caaspctl will run inside test-cluster folder after "caaspctl node init" command
+        """
+        env = {
+            'GOPATH': os.path.join(self.conf.workspace, 'go'),
+            'PATH': os.environ['PATH']
+        }
+
+        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
+
+        binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
+        self.utils.runshellcommand(binpath + " "+ cmd,  env=env) \
+              if init else self.utils.runshellcommand( binpath + " " + cmd, cwd="test-cluster", env=env)
+
