@@ -55,6 +55,7 @@ class Caaspctl:
                 os.path.join(self.conf.workspace, "ssh-agent-sock"),
                 os.path.join(self.conf.workspace, "test-cluster")]
 
+        cleanup_failure = False
         for dir in dirs:
             try: 
                 self.utils.runshellcommand("rm -rf {}".format(dir))
