@@ -10,6 +10,7 @@ class Caaspctl:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.state = self._load_tfstate()
+        self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
     @timeout(600)
     @step
@@ -59,9 +60,11 @@ class Caaspctl:
     @step
     def cluster_init(self):
         print("Cleaning up any previous test-cluster dir")
-        self.utils.runshellcommand("rm {}/test-cluster -rf".format(self.conf.workspace))
+        self.utils.runshellcommand("rm -rf {}".format(self.cwd))
         cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
-        self._run_caaspctl(cmd, init=True)
+        # Override work directory, because init must run in the parent directory of the
+        # cluster directory
+        self._run_caaspctl(cmd, cwd=self.conf.workspace)
 
     @step
     def node_bootstrap(self):
@@ -153,13 +156,14 @@ class Caaspctl:
         if logging_error:
             raise Exception("Failure(s) while collecting logs")
 
-    def _run_caaspctl(self, cmd, init=False):
-        """Running caaspctl command in {workspace}/test-cluster if init == false
-        Running caaspctl command in {workspace} if init == true this is because
-        if init, caaspctl cluster init will cretae directory in {workspace}
-        eg) {workspace}/go/bin/caaspctl cluster init --control-plane {lb_ip} test-cluste
-        Otherwise, caaspctl will run inside test-cluster folder after "caaspctl node init" command
+    def _run_caaspctl(self, cmd, cwd=None):
+        """Running caaspctl command in cwd.
+        The cwd defautls to {workspace}/test-cluster but can be overrided
+        for example, for the init command that must run in {workspace}
         """
+        if cwd is None:
+           cwd=self.cwd
+
         env = {
             'GOPATH': os.path.join(self.conf.workspace, 'go'),
             'PATH': os.environ['PATH']
@@ -168,6 +172,5 @@ class Caaspctl:
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
         binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
-        self.utils.runshellcommand(binpath + " "+ cmd,  env=env) \
-              if init else self.utils.runshellcommand( binpath + " " + cmd, cwd="test-cluster", env=env)
+        self.utils.runshellcommand(binpath + " "+ cmd, cwd=cwd, env=env)
 
