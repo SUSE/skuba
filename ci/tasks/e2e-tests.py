@@ -5,19 +5,22 @@
 
 import subprocess
 import os
+import json
+# we support 2 ways:
 
-# control-plane is --> caaspctl-init --controlplane var flag.
-# if the ENV variable isn't set set it by default to "10.17.1.0", which is what a libvirt deployment set
-if not "CONTROLPLANE" in os.environ:
-  print("controlplane env var not defined, taking 10.17.1.0")
-  os.environ['CONTROLPLANE'] = "10.17.1.0"
+# 1) set all IPS variable individually ( with the env. variables)
+# 2) read this IPS from a tfstate which will set the env. variables.
 
-if not "MASTER00" in os.environ:
-  print("master00 env var not defined, taking 10.17.2.0")
-  os.environ['MASTER00'] = "10.17.2.0"
+if os.environ.get('IP_FROM_TF_STATE') == 'True' or 'TRUE':
+  # we need to know which provider is beeing used to read the tfstates.
+  if not "PLATFORM" in os.environ:
+    raise("you need to set PLATFORM ENV. variable with LOAD_IP_FROM_TF_STATE env var")
 
-if not "WORKER00" in os.environ:
-  print("worker00 env var not defined, taking 10.17.3.0")
-  os.environ['WORKER00'] = "10.17.3.0"
+  tf = os.path.join("ci/infra/{0}".format(os.environ['PLATFORM'].lower()), "terraform.tfstate")
+  with open(tf) as f:
+    tf_state = json.load(f)
+  os.environ['CONTROLPLANE'] = tf_state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
+  os.environ['MASTER00'] = tf_state["modules"][0]["outputs"]["ip_masters"]["value"][0]
+  os.environ['WORKER00'] = tf_state["modules"][0]["outputs"]["ip_workers"]["value"][0]
 
 subprocess.check_call("cd test && ginkgo -v --race --trace --progress core-features", shell=True, env=dict(os.environ))
