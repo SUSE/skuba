@@ -3,6 +3,8 @@ import yaml, os
 
 class Constant:
     TERRAFORM_EXAMPLE="terraform.tfvars.sles.example"
+    TERRAFORM_JSON_OUT="tfout.json"
+    TERRAFORM_OUT="tfout"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "
     DOT = '\033[34m●\033[0m'
@@ -19,6 +21,9 @@ class BaseConfig:
         obj.workspace = None
         obj.caaspctl_dir = None
         obj.terraform_dir = None
+        obj.terraform_json_path = None
+        obj.terraform_out_path = None
+
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
@@ -139,6 +144,8 @@ class BaseConfig:
         conf.workspace = os.path.expanduser(conf.workspace)
         conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
         conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
+        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
+        conf.terraform_out_path = os.path.join(conf.workspace, Constant.TERRAFORM_OUT)
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username

@@ -12,7 +12,7 @@ class Caaspctl:
         self._num_master, self._num_worker = 0, 0
 
     def _verify_tf_dependency(self):
-        if not os.path.exists(os.path.join(os.path.join(self.conf.workspace, "tfout.json"))):
+        if not os.path.exists(self.conf.terraform_json_path):
             raise RuntimeError("{}You need to run \"testrunner --terraform first"
                                " before running any caaspctl commands\"{}".format(Constant.RED, Constant.COLOR_EXIT))
 
