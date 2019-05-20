@@ -35,12 +35,12 @@ variable "repositories" {
 }
 
 variable "username" {
-  default     = "sles"
+  default     = ""
   description = "Username for the cluster nodes"
 }
 
 variable "password" {
-  default     = "sles"
+  default     = ""
   description = "Password for the cluster nodes"
 }
 
