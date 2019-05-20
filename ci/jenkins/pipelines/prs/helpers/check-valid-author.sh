@@ -20,10 +20,10 @@
 # We only expect PRs to come from forked repositories instead of branches from the main repo
 # so we need to check that before moving forward to examine the individual commits
 if [[ $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID} | \
-	jq -rc '.| if (.head.repo.full_name == .base.repo.full_name) then true else false end') == true ]]; then
-	echo "PR-${CHANGE_ID} is coming from a branch in the target repository. This is not allowed!"
-	echo "Please send your PR from a forked repository instead."
-	exit 1
+    jq -rc '.| if (.head.repo.full_name == .base.repo.full_name) then true else false end') == true ]]; then
+    echo "PR-${CHANGE_ID} is coming from a branch in the target repository. This is not allowed!"
+    echo "Please send your PR from a forked repository instead."
+    exit 1
 fi
 
 # This for loop uses the GitHub API to fetch all commits in a PR and outputs the information in the following format
@@ -32,13 +32,13 @@ fi
 # If he/she does, then we exit with non-zero exit code to denote that the user must be using a SUSE email address if he/she is a
 # SUSE employee.
 for commit_author in $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID}/commits | jq -cr '.[] | [.sha, .author.login, .commit.author.email] | join(",")'); do
-	commit=$(echo $commit_author | awk -F, '{print $1}')
-	login=$(echo $commit_author | awk -F, '{print $2}')
-	author=$(echo $commit_author | awk -F, '{print $3}')
-	echo $author | grep -q '@suse\.\(com\|cz\|de\)' && echo "commit $commit is from SUSE employee $login($author). Moving on..." && continue
-	echo "Checking if $login($author) is part of the SUSE organization"
-	if curl -i -s https://${GITHUB_TOKEN}@api.github.com/orgs/SUSE/members/$login | grep Status | grep -q 204; then
-		echo "$login($author) is part of SUSE organization but a SUSE e-mail address was not used in commit: $commit"
-		exit 1
-	fi
+    commit=$(echo $commit_author | awk -F, '{print $1}')
+    login=$(echo $commit_author | awk -F, '{print $2}')
+    author=$(echo $commit_author | awk -F, '{print $3}')
+    echo $author | grep -q '@suse\.\(com\|cz\|de\)' && echo "commit $commit is from SUSE employee $login($author). Moving on..." && continue
+    echo "Checking if $login($author) is part of the SUSE organization"
+    if curl -i -s https://${GITHUB_TOKEN}@api.github.com/orgs/SUSE/members/$login | grep Status | grep -q 204; then
+        echo "$login($author) is part of SUSE organization but a SUSE e-mail address was not used in commit: $commit"
+        exit 1
+    fi
 done
