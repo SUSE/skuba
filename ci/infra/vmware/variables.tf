@@ -18,7 +18,7 @@ variable "guest_id" {
 
 variable "ntp_servers" {
   type        = "list"
-  default     = ["0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org"]
+  default     = []
   description = "list of ntp servers to configure"
 }
 
