@@ -18,3 +18,6 @@ stack_name = "testing"
 authorized_keys = [
   ""
 ]
+
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
