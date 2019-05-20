@@ -6,12 +6,14 @@ pipeline {
    agent { node { label 'caasp-team-private' } }
 
    environment {
-        GITHUB_TOKEN = credentials('github-token')
+       GITHUB_TOKEN = credentials('github-token')
+       JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
+       PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
    }
 
    stages {
         stage('Examining PRs to merge') { steps {
-            sh(script: 'ci/jenkins/pipelines/prs/helpers/handle-prs.sh', label: 'Checking ready PRs')
+            sh(script: "${PR_MANAGER} merge-prs --config ${JENKINS_JOB_CONFIG}", label: 'Checking ready PRs')
         } }
 
    }

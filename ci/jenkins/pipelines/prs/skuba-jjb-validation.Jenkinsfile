@@ -1,26 +1,17 @@
 // this pipeline update all jenkins pipelines via jenkins job builder plugin
 
-void setBuildStatus(String context, String description, String state) {
-    def body = "{\"state\": \"${state}\", " +
-            "\"target_url\": \"${BUILD_URL}/display/redirect\", " +
-            "\"description\": \"${description}\", " +
-            "\"context\": \"${context}\"}"
-    def headers = '-H "Content-Type: application/json" -H "Accept: application/vnd.github.v3+json"'
-    def url = "https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/skuba/statuses/${GIT_COMMIT}"
-
-    sh(script: "curl -X POST ${headers} ${url} -d '${body}'", label: "Sending commit status")
-}
-
 pipeline {
     agent { node { label 'caasp-team-private' } }
     environment {
         GITHUB_TOKEN = credentials('github-token')
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
+        PR_CONTEXT = 'jenkins/skuba-jjb-validation'
+        PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
     }
     stages {
         stage('Setting GitHub in-progress status') { steps {
-            setBuildStatus('jenkins/skuba-jjb-validation', 'in-progress', 'pending')
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
 
         stage('Git Clone') { steps {
@@ -61,10 +52,10 @@ pipeline {
             }
         }
         failure {
-            setBuildStatus('jenkins/skuba-jjb-validation', 'failed', 'failure')
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            setBuildStatus('jenkins/skuba-jjb-validation', 'success', 'success')
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }
