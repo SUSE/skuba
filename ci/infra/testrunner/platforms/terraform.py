@@ -28,8 +28,8 @@ class Terraform:
             print("Received the following error {}".format(ex))
             print("Attempting to finish cleaup")
 
-        dirs = [os.path.join(self.conf.workspace, "tfout"),
-                os.path.join(self.conf.workspace, "tfout.json"),
+        dirs = [self.conf.terraform_out_path,
+                self.conf.terraform_json_path,
                 os.path.join(self.conf.terraform_dir, "terraform.tfstate")]
 
         for dir in dirs:
@@ -55,11 +55,11 @@ class Terraform:
                     " terraform plan "
                     " -out {tfout}".format(
                         env_setup=self._env_setup_cmd(),
-                        tfout=os.path.join(self.conf.workspace, "tfout")))
+                        tfout=self.conf.terraform_out_path))
         apply_cmd = ("{env_setup};"
                      "terraform apply -auto-approve {tfout}".format(
                         env_setup=self._env_setup_cmd(),
-                        tfout=os.path.join(self.conf.workspace, "tfout")))
+                        tfout=self.conf.terraform_out_path))
 
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
@@ -70,9 +70,9 @@ class Terraform:
                 self.runshellcommandterraform(apply_cmd)
                 break
 
-            except:
+            except Exception as ex:
                 if retry == 4:
-                    raise RuntimeError("{}{}{}".format(Constant.RED,
+                    raise RuntimeError("{}{}\n{}{}".format(Constant.RED, ex,
                           "Failed Openstack Terraform deployment and destroyed associated resources",
                           Constant.COLOR_EXIT))
             finally:
@@ -84,7 +84,7 @@ class Terraform:
                "terraform output -json >"
                "{json_f}".format(
                    env_setup=self._env_setup_cmd(),
-                   json_f=os.path.join(self.conf.workspace, "tfout.json")))
+                   json_f=self.conf.terraform_json_path))
         self.runshellcommandterraform(cmd)
 
     def generate_tfvars_file(self):
@@ -138,7 +138,7 @@ class Terraform:
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def _check_tf_deployed(self):
-        if os.path.exists(os.path.join(os.path.join(self.conf.workspace, "tfout.json"))):
+        if os.path.exists(self.conf.terraform_json_path):
             raise RuntimeError("{}You need to run \"testrunner --cleanup first"
                                " before running \"testrunner --terraform\" commands\"{}".format(Constant.RED,
                                                                                                 Constant.COLOR_EXIT))
