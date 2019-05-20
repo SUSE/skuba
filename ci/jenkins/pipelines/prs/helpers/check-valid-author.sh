@@ -17,6 +17,15 @@
 [[ ! -n ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN env variable must be set" && exit 1
 [[ ! -n ${CHANGE_ID} ]] && echo "CHANGE_ID env variable must be set" && exit 0
 
+# We only expect PRs to come from forked repositories instead of branches from the main repo
+# so we need to check that before moving forward to examine the individual commits
+if [[ $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID} | \
+	jq -rc '.| if (.head.repo.full_name == .base.repo.full_name) then true else false end') == true ]]; then
+	echo "PR-${CHANGE_ID} is coming from a branch in the target repository. This is not allowed!"
+	echo "Please send your PR from a forked repository instead."
+	exit 1
+fi
+
 # This for loop uses the GitHub API to fetch all commits in a PR and outputs the information in the following format
 # $sha,$github_username,$author_email_address. If the author is using a SUSE address, then no further checks are necessary and we
 # check the next commit. If the author is not using a SUSE email address, then we check if the user belongs to the SUSE organization.
@@ -33,5 +42,3 @@ for commit_author in $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE
 		exit 1
 	fi
 done
-
-
