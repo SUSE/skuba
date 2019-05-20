@@ -6,8 +6,16 @@
 import subprocess
 import os
 import json
+import sys
+
 # we support 2 ways:
 
+try:
+  subprocess.check_call("ginkgo")
+except (subprocess.CalledProcessError, NotADirectoryError)  as ex:
+  print("Please install - ginkgo - before!")
+  sys.exit(1)
+  
 # 1) set all IPS variable individually ( with the env. variables)
 # 2) read this IPS from a tfstate which will set the env. variables.
 
