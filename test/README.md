@@ -5,6 +5,7 @@ The test can be run locally or in CI.
 # Requirements:
 
 - the infrastructure need to be already deployed. 
+- `go get -u github.com/onsi/ginkgo/ginkgo`
 
 # HOW TO RUN:
 
