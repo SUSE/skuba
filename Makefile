@@ -8,7 +8,7 @@ RM = rm
 GOBINPATH    := $(shell $(GO) env GOPATH)/bin
 VERSION      := $(shell cat VERSION)
 COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
-BUILD_DATE   := $(shell date +%Y%m%d-%H:%M:%S)
+BUILD_DATE   := $(shell date +%Y%m%d)
 TAGS         := development
 CAASPCTL_LDFLAGS = -ldflags "-X=github.com/SUSE/caaspctl/internal/app/caaspctl.Version=$(VERSION) \
                              -X=github.com/SUSE/caaspctl/internal/app/caaspctl.Commit=$(COMMIT) \
@@ -24,7 +24,7 @@ all: install
 
 .PHONY: build
 build:
-	$(GO) install $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) build $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
 MANPAGES    := $(MANPAGES_MD:%.md=%)
@@ -36,9 +36,19 @@ docs/man/%.1: docs/man/%.1.md
 docs: $(MANPAGES)
 
 .PHONY: install
-install: build
-	  $(RM) -f $(GOBINPATH)/kubectl-caasp
-	  $(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
+install:
+	$(GO) install $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(RM) -f $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
+
+.PHONY: clean
+clean:
+	$(GO) clean -i
+	$(RM) -f ./caaspctl
+
+.PHONY: distclean
+distclean: clean
+	$(GO) clean -i -cache -testcache -modcache
 
 .PHONY: staging
 staging:
