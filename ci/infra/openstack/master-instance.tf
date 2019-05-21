@@ -14,7 +14,6 @@ data "template_file" "master_registration" {
 
   vars {
     caasp_registry_code = "${var.caasp_registry_code}"
-    packages            = "${join(", ", var.packages)}"
   }
 }
 

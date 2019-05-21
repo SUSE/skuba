@@ -88,16 +88,8 @@ variable "ntp_servers" {
 }
 
 variable "packages" {
-  type = "list"
-
-  default = [
-    "kernel-default",
-    "-kernel-default-base",
-    "kubernetes-kubeadm",
-    "kubernetes-kubelet",
-    "kubernetes-client",
-  ]
-
+  type        = "list"
+  default     = []
   description = "list of additional packages to install"
 }
 

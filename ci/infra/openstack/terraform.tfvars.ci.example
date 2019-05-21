@@ -77,7 +77,7 @@ packages = [
   "kubernetes-kubeadm",
   "kubernetes-kubelet",
   "kubernetes-client",
-  "ca-certificates-suse",
+  "ca-certificates-suse"
 ]
 
 # ssh keys to inject into all the nodes
