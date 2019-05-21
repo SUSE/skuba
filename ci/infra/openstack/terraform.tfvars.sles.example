@@ -8,7 +8,7 @@ stack_name = "testing"
 username = "sles"
 
 # define which image to use
-image_name = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default"
+image_name = "SLE-15-SP1-JeOS-GMC"
 
 # Number of master nodes
 masters = 1
@@ -39,6 +39,8 @@ repositories = [
 ]
 
 packages = [
+  "kernel-default",
+  "-kernel-default-base",
   "ca-certificates-suse",
   "kubernetes-kubeadm",
   "kubernetes-kubelet",
