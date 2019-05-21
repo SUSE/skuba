@@ -57,6 +57,7 @@ pipeline {
 
         stage('Run end-to-end tests') { steps {
             dir("caaspctl") {
+              sh(script: "echo $PATH")
               sh(script: "go get -v -u github.com/onsi/ginkgo/ginkgo")
               sh(script: 'IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e', label: 'End-to-end tests')
              } } }
