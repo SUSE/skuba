@@ -53,7 +53,7 @@ require (
 	k8s.io/klog v0.2.0
 	k8s.io/kube-proxy v0.0.0-20190314002154-4d735c31b054 // indirect
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325 // indirect
-	k8s.io/kubernetes v1.14.0
+	k8s.io/kubernetes v1.14.1
 	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect
 	vbom.ml/util v0.0.0-20180919145318-efcd4e0f9787 // indirect
 )
