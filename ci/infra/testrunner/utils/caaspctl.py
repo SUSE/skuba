@@ -164,11 +164,6 @@ class Caaspctl:
         if cwd is None:
            cwd=self.cwd
 
-        env = {
-            'GOPATH': os.path.join(self.conf.workspace, 'go'),
-            'PATH': os.environ['PATH']
-        }
-
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
         binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
