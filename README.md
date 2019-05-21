@@ -7,6 +7,7 @@ Tool to manage the full lifecycle of a cluster.
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [CI](/ci/README.md)
+- [Test](test/README.md)
 
 ## Prerequisites
 
