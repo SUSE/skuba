@@ -122,6 +122,10 @@ class Terraform:
             if line.startswith("authorized_keys"):
                 lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
 
+            # Switch to US mirror if running on CI
+            if "download.suse.de" in line and os.environ.get('JENKINS_URL'):
+                lines[i]=line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
+
         with open(dest_terraform, "w") as f:
             f.writelines(lines)
 
