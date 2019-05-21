@@ -13,19 +13,18 @@ class Caaspctl:
 
     def _verify_tf_dependency(self):
         if not os.path.exists(self.conf.terraform_json_path):
-            raise RuntimeError("{}You need to run \"testrunner --terraform first"
-                               " before running any caaspctl commands\"{}".format(Constant.RED, Constant.COLOR_EXIT))
+            raise Exception("{}tf file not found. Please run terraform and try again{}".format(Constant.RED, Constant.COLOR_EXIT))
 
     def _verify_caaspctl_bin_dependency(self):
         caaspctl_bin_path = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
         if not os.path.isfile(caaspctl_bin_path):
-            raise FileNotFoundError("{} You need to run 'testrunner --create-caaspctl' first ".format(
+            raise FileNotFoundError("{}caaspctl not found. Please run create-caaspctl and try again".format(
                 Constant.RED, Constant.COLOR_EXIT))
 
-    def _verify_boostrap_dependency(self):
+    def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise RuntimeError("{}Dir test-cluster does not exists. You need to run \"testrunner --bootstrap\""
-                               " first {} ".format(Constant.RED, Constant.COLOR_EXIT))
+            raise Exception("{}test-cluster not found. Please run bootstrap and try again{}".format(
+                Constant.RED, Constant.COLOR_EXIT))
 
     @timeout(600)
     @step
@@ -106,7 +105,7 @@ class Caaspctl:
         try:
             self.utils.run_caaspctl(cmd)
         except:
-            raise RuntimeError("{}Error: {}{}".format(Constant.RED, cmd, Constant.COLOR_EXIT))
+            raise Exception("{}Error: {}{}".format(Constant.RED, cmd, Constant.COLOR_EXIT))
 
     @step
     def _caaspctl_node_remove(self, role="worker", nr=0):
@@ -119,19 +118,18 @@ class Caaspctl:
         try:
             self.utils.run_caaspctl(cmd)
         except:
-            raise RuntimeError("{}Error: {}{}".format(Constant.RED, cmd, Constant.COLOR_EXIT))
+            raise Exception("{}Error: {}{}".format(Constant.RED, cmd, Constant.COLOR_EXIT))
+
 
     def _add_worker_in_cluster(self):
         available_workers = len(self._get_workers_ipaddrs())
         if self._num_worker >= available_workers:
             raise ValueError("{}Error: there is no available worker node left in cluster{}".format(
                 Constant.RED, Constant.COLOR_EXIT))
-        try:
-            self._caaspctl_node_join(role="worker", nr=self._num_worker)
-            self._num_worker += 1
-        except:
-            self._num_worker -= 1
-            raise
+
+        self._caaspctl_node_join(role="worker", nr=self._num_worker)
+        self._num_worker += 1
+
 
 
     def _add_master_in_cluster(self):
@@ -139,12 +137,10 @@ class Caaspctl:
         if self._num_master >= available_masters:
             raise ValueError("{}Error: there is no available master node left in cluster{}".format(
                 Constant.RED, Constant.COLOR_EXIT))
-        try:
-            self._caaspctl_node_join(role="master", nr=self._num_master)
-            self._num_master += 1
-        except:
-            self._num_master -= 1
-            raise
+
+        self._caaspctl_node_join(role="master", nr=self._num_master)
+        self._num_master += 1
+
 
 
     def _remove_worker_in_cluster(self):
@@ -152,12 +148,9 @@ class Caaspctl:
         if self._num_worker < 0:
             raise ValueError("{}Error: there is not enough worker node to remove in cluster{}".format(
                 Constant.RED, Constant.COLOR_EXIT))
-        try:
-            self._num_worker -= 1
-            self._caaspctl_node_remove(role="worker", nr=self._num_worker)
-        except:
-            self._num_worker += 1
-            raise
+
+        self._caaspctl_node_remove(role="worker", nr=self._num_worker)
+
 
 
     def _remove_master_in_cluster(self):
@@ -165,17 +158,15 @@ class Caaspctl:
         if self._num_master <= 0:
             raise ValueError("{}Error: there is only one master node left in cluster{}".format(
                 Constant.RED, Constant.COLOR_EXIT))
-        try:
-            self._num_master -= 1
-            self._caaspctl_node_remove(role="master", nr=self._num_master)
-        except:
-            self._num_master += 1
+
+        self._caaspctl_node_remove(role="master", nr=self._num_master)
+
 
     @timeout(600)
     @step
     def add_nodes_in_cluster(self, num_master=0, num_worker=0):
         self._verify_caaspctl_bin_dependency()
-        self._verify_boostrap_dependency()
+        self._verify_bootstrap_dependency()
         self._load_num_of_nodes()
         for _ in range(num_worker):
             self._add_worker_in_cluster()
@@ -186,7 +177,7 @@ class Caaspctl:
     @step
     def remove_nodes_in_cluster(self, num_master=0, num_worker=1):
         self._verify_caaspctl_bin_dependency()
-        self._verify_boostrap_dependency()
+        self._verify_bootstrap_dependency()
         self._load_num_of_nodes()
 
         for _ in range(num_worker):
@@ -196,7 +187,7 @@ class Caaspctl:
 
     def caaspctl_cluster_status(self):
         self._verify_caaspctl_bin_dependency()
-        self._verify_boostrap_dependency()
+        self._verify_bootstrap_dependency()
         self.utils.run_caaspctl("cluster status")
 
     def _load_num_of_nodes(self):

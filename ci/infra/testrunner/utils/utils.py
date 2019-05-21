@@ -41,7 +41,7 @@ class Utils:
             cwd = os.path.join(self.conf.workspace, cwd)
 
         if not os.path.exists(cwd):
-            raise RuntimeError("{}Directoty {} does not exists {} ".format(Constant.RED, cwd, Constant.COLOR_EXIT))
+            raise Exception("{}Directory {} does not exists {} ".format(Constant.RED, cwd, Constant.COLOR_EXIT))
 
         print("{}$ {} > {}{}".format(Constant.BLUE, cwd, cmd, Constant.COLOR_EXIT))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)

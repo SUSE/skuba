@@ -72,7 +72,7 @@ class Terraform:
 
             except Exception as ex:
                 if retry == 4:
-                    raise RuntimeError("{}{}\n{}{}".format(Constant.RED, ex,
+                    raise Exception("{}{}\n{}{}".format(Constant.RED, ex,
                           "Failed Openstack Terraform deployment and destroyed associated resources",
                           Constant.COLOR_EXIT))
             finally:
@@ -139,6 +139,5 @@ class Terraform:
 
     def _check_tf_deployed(self):
         if os.path.exists(self.conf.terraform_json_path):
-            raise RuntimeError("{}You need to run \"testrunner --cleanup first"
-                               " before running \"testrunner --terraform\" commands\"{}".format(Constant.RED,
-                                                                                                Constant.COLOR_EXIT))
+            raise Exception("{}tf file found. Please run cleanup and try again{}".format(Constant.RED,
+                                                                                            Constant.COLOR_EXIT))
