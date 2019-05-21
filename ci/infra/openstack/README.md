@@ -42,3 +42,8 @@ exposed by a load balancer managed by OpenStack.
 
 Copy the `terraform.tfvars.example` to `terraform.tfvars` and
 provide reasonable values.
+
+## Variables
+
+`caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in 
+`registration.auto.tfvars` file to register product against official repositories
