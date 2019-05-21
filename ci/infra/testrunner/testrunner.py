@@ -55,11 +55,11 @@ def main():
                               Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner. \
                               eg) -v vars/myconfig.yaml')
     parser.add_argument("-m", "--master", dest="num_master", type=int, default=0,
-                        help='number of masters to add or delete. It is dependening on \
+                        help='number of masters to add or delete. It is depending on \
                               number of deployed master nodes in your yaml file. Default value is 0. \
                               eg) -m 2')
     parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=0,
-                        help='number of workers to add or delete. It is dependening on \
+                        help='number of workers to add or delete. It is depending on \
                               number of deployed worker nodes in your yaml file. Default value is 0.  \
                               eg) -w 2')
 

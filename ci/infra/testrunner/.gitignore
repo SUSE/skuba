@@ -1,3 +1,2 @@
 *.pyc
 .idea
-vars/openstack.yaml
