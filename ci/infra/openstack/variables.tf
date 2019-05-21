@@ -93,6 +93,12 @@ variable "authorized_keys" {
   description = "ssh keys to inject into all the nodes"
 }
 
+variable "ntp_servers" {
+  type        = "list"
+  default     = []
+  description = "list of ntp servers to configure"
+}
+
 variable "packages" {
   type = "list"
 
