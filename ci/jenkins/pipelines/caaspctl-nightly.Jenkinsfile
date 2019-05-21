@@ -22,13 +22,10 @@ pipeline {
             archiveArtifacts("caaspctl/ci/infra/${PLATFORM}/terraform.tfvars")
         } }
 
-        stage('Bootstrap Cluster') { steps {
-            sh(script: 'make -f caaspctl/ci/Makefile bootstrap', label: 'Bootstrap')
-        } }
+       stage('Run end-to-end tests') { steps {
+           sh(script: 'IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e', label: 'End-to-end tests')
+       } }
 
-        stage('Add Nodes to Cluster') { steps {
-            sh(script: 'make -f caaspctl/ci/Makefile add_nodes', label: 'Add Nodes')
-        } }
    }
    post {
        always {
