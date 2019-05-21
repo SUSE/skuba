@@ -38,7 +38,34 @@ class Caaspctl:
             self.caaspctl_cluster_status()
         except:
             pass
+ 
+    @step
+    def cleanup(self):
+        """Cleanup caaspctl working environment"""
+        # TODO: check why (and if) the following two commands are needed
+        cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
+        self.utils.runshellcommand(cmd)
 
+        cmd = 'chmod a+x {}'.format(self.conf.workspace)
+        self.utils.runshellcommand(cmd)
+
+        dirs = [os.path.join(self.conf.workspace, "test-cluster"),
+                os.path.join(self.conf.workspace, "go"),
+                os.path.join(self.conf.workspace, "logs"),
+                os.path.join(self.conf.workspace, "ssh-agent-sock"),
+                os.path.join(self.conf.workspace, "test-cluster")]
+
+        cleanup_failure = False
+        for dir in dirs:
+            try: 
+                self.utils.runshellcommand("rm -rf {}".format(dir))
+            except Exception as ex:
+                cleanup_failure = True
+                print("Received the following error {}".format(ex))
+                print("Attempting to finish cleaup")
+
+        if cleanup_failure:
+            raise Exception("Failure(s) during cleanup")
 
     @step
     def caaspctl_cluster_init(self):
@@ -198,6 +225,7 @@ class Caaspctl:
                 print("--------------------------------------------------------------")
                 self.utils.ssh_run(ipa, "cat /var/log/cloud-init-output.log")
         except Exception as ex:
+            logging_error = True
             print("Error while collecting logs from cluster \n {}".format(ex))
 
         if logging_error:

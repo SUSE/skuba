@@ -16,6 +16,9 @@ workers = 3
 masters = 3
 load-balancers = 1
 
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
+
 repositories = [
   { caasp_sle15_sp1 = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update:/Products:/CASP40/standard/"},
   { basesystem_module_sle15_sp1 = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Basesystem-RC2/x86_64/DVD1/" },

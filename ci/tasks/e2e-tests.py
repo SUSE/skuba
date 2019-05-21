@@ -8,6 +8,12 @@ import os
 import json
 import sys
 
+<<<<<<< HEAD
+=======
+# add gopath to system PATH
+os.environ["PATH"] += os.environ["GOPATH"] + "BIN"
+
+>>>>>>> f2fd51745c2868fd19e3cc96c41fc751661412f3
 try:
   subprocess.check_call("ginkgo")
 except (subprocess.CalledProcessError, NotADirectoryError)  as ex:

@@ -43,12 +43,6 @@ class Utils:
         print("$ {} > {}".format(cwd, cmd))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
-    def runshellcommandterraform(self, cmd, env=None):
-        """Running terraform command in {workspace}/ci/infra/{platform}"""
-        cwd = self.conf.terraform_dir
-        print("$ {} > {}".format(cwd, cmd))
-        subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
-
     def authorized_keys(self):
         public_key_path = self.conf.ssh_key_option + ".pub"
         key_fn = self.conf.ssh_key_option
