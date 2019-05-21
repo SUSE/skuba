@@ -80,3 +80,8 @@ suse-package:
 .PHONY: suse-changelog
 suse-changelog:
 	ci/packaging/suse/changelog_maker.sh "$(CHANGES)"
+
+# tests
+.PHONY: test-e2e
+test-e2e:
+	./ci/tasks/e2e-tests.py
