@@ -36,10 +36,16 @@ ${repositories}
 # need to remove the standard docker packages that are pre-installed on the
 # cloud image because they conflict with the kubic- ones that are pulled by
 # the kubernetes packages
-packages:
-${packages}
+# WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registraion
+# Code is provided. In this case repositories will be added in runcmd module
+# with SUSEConnect command after packages module is ran
+#packages:
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
+
+runcmd:
+${registration}
+${commands}
 
 final_message: "The system is finally up, after $UPTIME seconds"

@@ -29,8 +29,10 @@ ${repositories}
 # need to remove the standard docker packages that are pre-installed on the
 # cloud image because they conflict with the kubic- ones that are pulled by
 # the kubernetes packages
-packages:
-${packages}
+# WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registraion
+# Code is provided. In this case repositories will be added in runcmd module
+# with SUSEConnect command after packages module is ran
+#packages:
 
 runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
@@ -43,6 +45,8 @@ runcmd:
   # With a new machine-id generated the journald daemon will work and can be restarted
   # Without a new machine-id it should be in a failed state
   - [ systemctl, restart, systemd-journald ]
+${registration}
+${commands}
 
 bootcmd:
   # Hostnames from DHCP - otherwise `localhost` will be used
