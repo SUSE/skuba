@@ -82,6 +82,20 @@ suse-changelog:
 	ci/packaging/suse/changelog_maker.sh "$(CHANGES)"
 
 # tests
+BUILD_PATH := $(shell pwd)/build
+BUILD_BIN_PATH := ${BUILD_PATH}/bin
+GINKGO := ${BUILD_BIN_PATH}/ginkgo
+
+define go-build
+	$(shell cd `pwd` && $(GO) build -o ${BUILD_BIN_PATH}/${1} ${2})
+endef
+
+${BUILD_BIN_PATH}:
+	mkdir -p ${BUILD_BIN_PATH}
+
+${GINKGO}: ${BUILD_BIN_PATH}
+	$(call go-build,ginkgo,./vendor/github.com/onsi/ginkgo/ginkgo)
+
 .PHONY: test-e2e
-test-e2e:
+test-e2e: ${GINKGO}
 	./ci/tasks/e2e-tests.py
