@@ -9,6 +9,7 @@
         - '{name}-code-lint'
         - '{name}-code-author'
         - '{name}-handle-pr'
+        - '{name}-jjb-validation'
 
 - job:
     name: caasp-jobs/caasp-jjb
