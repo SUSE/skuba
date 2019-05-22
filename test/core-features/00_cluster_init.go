@@ -26,7 +26,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 
 	// Use an RPM binary provided by env variable otherwise use devel mode
 	var caaspctl string
-	caaspctl = os.Getenv("CAASPCTL-BIN")
+	caaspctl = os.Getenv("CAASPCTL_BIN_PATH")
 	if len(caaspctl) == 0 {
 		// use devel binary from gopath
 		caaspctl = os.Getenv("GOPATH") + "/bin/caaspctl"

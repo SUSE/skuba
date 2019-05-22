@@ -25,6 +25,8 @@ Boths methods are convenients: 1) method is usefull when we don't have the terra
 
 # Env. Variable:
 
+As guideline use `_` underscores for separating words and use UPPERCASE for naming.
+
 ### Currenlty supported:
 
 ### IPs:
@@ -48,7 +50,7 @@ SEE 2) example in HOW TO RUN
 
 ## Binary Localtion (optional)
 
-- `CAASPCTL-BIN` for specify the full path of a caaspctl binary. ( e.g if you use an RPM)
+- `CAASPCTL_BIN_PATH` for specify the full path of a caaspctl binary. ( e.g if you use an RPM)
 - `GINKGO_BIN_PATH` use this var for passing a fullpath to a ginkgo bin which will be used by tests.
 
 By default this variable point to GOPATH for devel purposes.
