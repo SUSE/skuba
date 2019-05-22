@@ -25,7 +25,6 @@ pipeline {
        stage('Run end-to-end tests') { steps {
            dir("caaspctl") {
              sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             # we known that ginko is builded in caaspctl dir
              sh(script: "GINKGO_BIN_PATH="${WORKSPACE}/caaspctl/ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
        } } }
  
