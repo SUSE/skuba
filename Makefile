@@ -61,7 +61,7 @@ release:
 
 .PHONY: lint
 lint:
-	$(GO) tool vet ${CAASPCTL_SRCS}
+	$(GO) vet ./...
 	test -z `$(GOFMT) -l $(CAASPCTL_SRCS)` || { $(GOFMT) -d $(CAASPCTL_SRCS) && false; }
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
 	find ci -type f -name "*.sh" | xargs bashate
