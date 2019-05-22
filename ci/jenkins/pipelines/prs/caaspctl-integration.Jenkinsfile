@@ -57,8 +57,10 @@ pipeline {
         } }
 
         stage('Run end-to-end tests') { steps {
-           sh(script: 'IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e', label: 'End-to-end tests')
-       } }
+           dir("caaspctl") {
+             sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
+             sh(script: 'GINKGO_BIN_PATH="./ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e', label: 'End-to-end tests')
+       } } }
     }
     post {
         always {
