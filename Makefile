@@ -13,6 +13,9 @@ GO_MD2MAN ?= go-md2man
 LN = ln
 RM = rm
 
+BUILD_PATH := $(shell pwd)/build
+BUILD_BIN_PATH := ${BUILD_PATH}/bin
+
 GOBINPATH    := $(shell $(GO) env GOPATH)/bin
 VERSION      := $(shell cat VERSION)
 COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
@@ -26,6 +29,21 @@ CAASPCTL_DIRS    = cmd pkg internal test
 
 # go source files, ignore vendor directory
 CAASPCTL_SRCS = $(shell find $(CAASPCTL_DIRS) -type f -name '*.go')
+
+# tests variables
+GINKGO := ${BUILD_BIN_PATH}/ginkgo
+
+define go-build
+	$(shell cd `pwd` && $(GO) build -o ${BUILD_BIN_PATH}/${1} ${2})
+endef
+
+# this variable are used for building the vendored ginkgo
+${BUILD_BIN_PATH}:
+	mkdir -p ${BUILD_BIN_PATH}
+
+${GINKGO}: ${BUILD_BIN_PATH}
+	$(call go-build,ginkgo,./vendor/github.com/onsi/ginkgo/ginkgo)
+
 
 .PHONY: all
 all: install
@@ -82,20 +100,6 @@ suse-changelog:
 	ci/packaging/suse/changelog_maker.sh "$(CHANGES)"
 
 # tests
-BUILD_PATH := $(shell pwd)/build
-BUILD_BIN_PATH := ${BUILD_PATH}/bin
-GINKGO := ${BUILD_BIN_PATH}/ginkgo
-
-define go-build
-	$(shell cd `pwd` && $(GO) build -o ${BUILD_BIN_PATH}/${1} ${2})
-endef
-
-${BUILD_BIN_PATH}:
-	mkdir -p ${BUILD_BIN_PATH}
-
-${GINKGO}: ${BUILD_BIN_PATH}
-	$(call go-build,ginkgo,./vendor/github.com/onsi/ginkgo/ginkgo)
-
 .PHONY: test-e2e
 test-e2e: ${GINKGO}
 	./ci/tasks/e2e-tests.py
