@@ -21,3 +21,7 @@
 
 # RPM files folder
 ci/packaging/suse/obs_files
+
+# ignore ginkgo binary
+
+./ginkgo 
