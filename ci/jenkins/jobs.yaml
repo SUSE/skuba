@@ -8,6 +8,7 @@
         - '{name}-integration'
         - '{name}-code-lint'
         - '{name}-code-author'
+        - '{name}-handle-pr'
 
 - job:
     name: caasp-jobs/caasp-jjb
