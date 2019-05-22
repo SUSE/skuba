@@ -4,8 +4,7 @@ The test can be run locally or in CI.
 
 # Requirements:
 
-- the infrastructure need to be already deployed. 
-- `go get -u github.com/onsi/ginkgo/ginkgo`
+- the infrastructure is already deployed. 
 
 # HOW TO RUN:
 
@@ -23,9 +22,24 @@ This method will read the tfstate file and read the IPs of host and pass them to
 
 Boths methods are convenients: 1) method is usefull when we don't have the terraform state.
 
+3) Use a custom ginkgo binary:
+
+`~/go/src/github.com/SUSE/caaspctl> GINKGO_BIN_PATH="$PWD/ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e`
+In the following example we assume you have builded ginkgo from vendor.
+
 # Env. Variable:
 
-As guideline use `_` underscores for separating words and use UPPERCASE for naming.
+## Guidelines:
+
+Syntax: use `_` underscores for separating words and use UPPERCASE for naming.
+
+Adding NEW variables:
+
+- IPs of nodes when needed can be added in the python and golang code.
+
+In general adding new behaviour variable should be discussed within the team, since we need to keep the variable minimalist as possible.
+
+All needed variable should have been already implemented, only the NODE ips variable should be added. 
 
 ### Currenlty supported:
 
