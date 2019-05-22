@@ -41,14 +41,15 @@ As showed, in future we will have `WORKER01`, `MASTER01`, `MASTER02` etc.
 
 Read from a tfstate file, you need both variable passed
 
-`IP_FROM_TF_STATE`: if set to `TRUE` this will read terraform states.
-`PLATFORM`: this specify the provider used. (libvirt, openstack, vmware, etc)
+- `IP_FROM_TF_STATE`: if set to `TRUE` this will read terraform states.
+- `PLATFORM`: this specify the provider used. (libvirt, openstack, vmware, etc)
 
 SEE 2) example in HOW TO RUN
 
 ## Binary Localtion (optional)
 
-Use `CAASPCTL-BIN` for specify the full path of a caaspctl binary. ( e.g if you use an RPM)
+- `CAASPCTL-BIN` for specify the full path of a caaspctl binary. ( e.g if you use an RPM)
+- `GINKGO_BIN_PATH` use this var for passing a fullpath to a ginkgo bin which will be used by tests.
 
 By default this variable point to GOPATH for devel purposes.
 
