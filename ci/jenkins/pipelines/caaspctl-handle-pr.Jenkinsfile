@@ -11,7 +11,7 @@ pipeline {
 
    stages {
         stage('Examining PRs to merge') { steps {
-            sh(script: 'ci/jenkins/pipelines/prs/helpers/handle-pr.sh', label: 'Checking ready PRs')
+            sh(script: 'ci/jenkins/pipelines/prs/helpers/handle-prs.sh', label: 'Checking ready PRs')
         } }
 
    }
