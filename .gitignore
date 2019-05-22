@@ -23,5 +23,4 @@
 ci/packaging/suse/obs_files
 
 # ignore ginkgo binary
-
-./ginkgo 
+ginkgo
