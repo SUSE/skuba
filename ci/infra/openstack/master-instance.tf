@@ -27,7 +27,7 @@ data "template_file" "master_commands" {
 }
 
 data "template_file" "master-cloud-init" {
-  template = "${file("cloud-init/master.tpl")}"
+  template = "${file("cloud-init/common.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"

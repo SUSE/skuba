@@ -36,7 +36,7 @@ data "template_file" "master_cloud_init_metadata" {
 }
 
 data "template_file" "master_cloud_init_userdata" {
-  template = "${file("cloud-init/master.tpl")}"
+  template = "${file("cloud-init/common.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
