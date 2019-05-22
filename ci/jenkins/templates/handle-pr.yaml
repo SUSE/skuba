@@ -6,7 +6,9 @@
     branch: master
     concurrent: false
     wrappers:
-        - timeout: '30'
+        - timeout:
+            timeout: 30
+            fail: true
     triggers:
         - timed: 'H * * * *'
     parameters:
