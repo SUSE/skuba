@@ -90,7 +90,7 @@ resource "null_resource" "master_wait_cloudinit" {
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
-      "sudo shutdown -r +0",
+      "sudo reboot&",
     ]
   }
 }
