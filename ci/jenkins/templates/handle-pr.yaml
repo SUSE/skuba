@@ -4,7 +4,7 @@
     number-to-keep: 30
     days-to-keep: 30
     branch: master
-    concurent: false
+    concurrent: false
     wrappers:
         - timeout: '30'
     triggers:
