@@ -19,6 +19,18 @@ setup_python_env() {
     deactivate
 }
 
+lint() {
+    source ${VENVDIR}/bin/activate
+    if [ "$#" -ne 1 ]; then
+        find . -type f -name "*.py" | xargs pylint
+        ret=$?
+    else
+        pylint $@
+        ret=$?
+     fi
+    deactivate
+    exit $ret
+}
+
 setup_python_env
-# use unbuffered output
-stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@
+lint $@

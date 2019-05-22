@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := all
 MKFILE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 TEST_RUNNER := ${MKFILE_DIR}/infra/testrunner/testrunner
+LINT := ${MKFILE_DIR}/pylint
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 
@@ -70,3 +71,7 @@ add_nodes: add_master_nodes add_worker_nodes
 
 .PHONY: post_run
 post_run: gather_logs cleanup
+
+.PHONY: lint
+lint:
+	${LINT}

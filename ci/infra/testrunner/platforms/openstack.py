@@ -13,7 +13,7 @@ class Openstack(Terraform):
     @timeout(600)
     def _cleanup_platform(self):
         # TODO: this command is here because is passes two openstack
-        # specific vars to terraform. Find a way to move the command to 
+        # specific vars to terraform. Find a way to move the command to
         # Terraform class and pass the variables from Openstack class.
         cmd = ("source {openrc};"
                " terraform destroy -auto-approve"
