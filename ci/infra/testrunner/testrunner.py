@@ -1,22 +1,28 @@
 #!/usr/bin/env python3 -Wd -b
 
 """
-    Runs end-to-end product tests for v4+.
-    This script can be run from Jenkins or manually, on developer desktops or servers.
+    Builds infrastructures on platforms for v4+.
+    This script can be run from Jenkins or developer desktops.
+    The configuration for dev machine is imported from vars/
 """
 
-import sys, os
+import sys
+import os
 from argparse import ArgumentParser
 
-testrunner_path = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(testrunner_path,"utils"))
-sys.path.append(os.path.join(testrunner_path,"platforms"))
+TESTRUNNER_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(TESTRUNNER_PATH, "utils"))
+sys.path.append(os.path.join(TESTRUNNER_PATH, "platforms"))
 
 from constants import BaseConfig
 from constants import Constant
 from utils import Utils
 from caaspctl import Caaspctl
 from openstack import Openstack
+
+TESTRUNNER_PATH = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(TESTRUNNER_PATH, "utils"))
+sys.path.append(os.path.join(TESTRUNNER_PATH, "platforms"))
 
 __version__ = "0.0.3"
 
@@ -30,40 +36,77 @@ def main():
     """
     parser = ArgumentParser(comment)
 
-    parser.add_argument("-z", "--git-rebase", dest="git_rebase", action="store_true",
+    parser.add_argument("-z", "--git-rebase",
+                        dest="git_rebase",
+                        action="store_true",
                         help="git rebase to master")
-    parser.add_argument("-i", "--info", dest="ip_info", action='store_true', help='ip info')
-    parser.add_argument("-x", "--cleanup", dest="cleanup", action='store_true',
+    parser.add_argument("-i", "--info",
+                        dest="ip_info",
+                        action='store_true', help='ip info')
+    parser.add_argument("-x", "--cleanup",
+                        dest="cleanup",
+                        action='store_true',
                         help="cleanup created caaspctl environment")
-    parser.add_argument("-t", "--terraform-apply", dest="apply_terraform", action="store_true",
-                        help="deploy nodes for cluster in your configured platform"
-                        "e.g) openstack, vmware, ..")
-    parser.add_argument("-c", "--create-caaspctl", dest="create_caaspctl", action="store_true",
+    parser.add_argument("-t", "--terraform-apply",
+                        dest="apply_terraform",
+                        action="store_true",
+                        help="deploy nodes for cluster in your"
+                             " configured platform"
+                             " e.g) openstack, vmware, ..")
+    parser.add_argument("-c", "--create-caaspctl",
+                        dest="create_caaspctl",
+                        action="store_true",
                         help="create caaspctl environment"
-                        "{workspace}/go/src/github.com/SUSE/caaspctl"
-                        " and build caaspctl in that directory")
-    parser.add_argument("-b", "--bootstrap", dest="boostrap", action="store_true",
-                        help="bootstrap k8s cluster with deployed nodes in your platform")
-    parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
+                             " {workspace}/go/src/github.com/SUSE/"
+                             "caaspctl and build caaspctl in that"
+                             " directory")
+    parser.add_argument("-b", "--bootstrap",
+                        dest="boostrap",
+                        action="store_true",
+                        help="bootstrap k8s cluster")
+    parser.add_argument("-k", "--status",
+                        dest="cluster_status",
+                        action="store_true",
                         help="check K8s cluster status")
-    parser.add_argument("-a", "--add-nodes", dest="add_nodes", action="store_true",
-                        help="add nodes in k8s cluster. Default values are -m=1, -w=1")
-    parser.add_argument("-r", "--remove-nodes", dest="remove_nodes", action="store_true",
-                        help="remove nodes in k8s cluster. default values are -m=1, -w=1")
-    parser.add_argument("-l", "--log", dest="log", action="store_true",
+    parser.add_argument("-a", "--add-nodes",
+                        dest="add_nodes",
+                        action="store_true",
+                        help="add nodes in k8s cluster."
+                             "Default values are -m=1, -w=1")
+    parser.add_argument("-r", "--remove-nodes",
+                        dest="remove_nodes",
+                        action="store_true",
+                        help="remove nodes in k8s cluster."
+                             "default values are -m=1, -w=1")
+    parser.add_argument("-l", "--log",
+                        dest="log",
+                        action="store_true",
                         help="gather logs from nodes")
-    parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
+    parser.add_argument("-v", "--vars",
+                        dest="yaml_path",
+                        default="vars/openstack.yaml",
                         help="path for platform yaml file."
-                        " Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner."
+                        " Default is vars/openstack.yaml in"
+                        " {workspace}/ci/infra/testrunner."
                         " eg) -v vars/myconfig.yaml")
-    parser.add_argument("-m", "--master", dest="num_master", type=int, default=1,
-                        help="number of masters to add or delete. It is dependening on"
-                        " number of deployed master nodes in your yaml file. Default value is 1."
-                        " eg) -m 2")
-    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=1,
-                        help="number of workers to add or delete. It is dependening on"
-                        " number of deployed worker nodes in your yaml file. Default value is 1"
-                        " eg) -w 2")
+    parser.add_argument("-m", "--master",
+                        dest="num_master",
+                        type=int,
+                        default=1,
+                        help="number of masters to add or delete."
+                             "It is dependening on"
+                             " number of deployed master nodes in"
+                             " your yaml file. Default value is 1."
+                             " eg) -m 2")
+    parser.add_argument("-w", "--worker",
+                        dest="num_worker",
+                        type=int,
+                        default=1,
+                        help="number of workers to add or delete."
+                             " It is dependening on number of deployed"
+                             " worker nodes in your yaml file."
+                             " Default value is 1"
+                             " eg) -w 2")
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
@@ -84,7 +127,8 @@ def main():
         sys.exit(0)
     else:
         raise Exception('{}Platform Error: {} is not applicable.{}' \
-                        .format(Constant.RED, conf.platform, Constant.RED_EXIT))
+                        .format(Constant.RED, conf.platform,
+                                Constant.RED_EXIT))
 
     if options.ip_info:
         Utils(conf).info()
@@ -102,11 +146,13 @@ def main():
     elif options.cluster_status:
         Caaspctl(conf).caaspctl_cluster_status()
     elif options.add_nodes:
-        Caaspctl(conf).add_nodes_in_cluster(num_master=options.num_master,
-                                            num_worker=options.num_worker)
+        Caaspctl(conf).add_nodes_in_cluster(
+            num_master=options.num_master,
+            num_worker=options.num_worker)
     elif options.remove_nodes:
-        Caaspctl(conf).remove_nodes_in_cluster(num_master=options.num_master,
-                                               num_worker=options.num_worker)
+        Caaspctl(conf).remove_nodes_in_cluster(
+            num_master=options.num_master,
+            num_worker=options.num_worker)
     elif options.log:
         Caaspctl(conf).gather_logs()
 

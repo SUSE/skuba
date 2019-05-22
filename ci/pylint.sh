@@ -19,6 +19,13 @@ setup_python_env() {
     deactivate
 }
 
+lint() {
+    source ${VENVDIR}/bin/activate
+    find . -type f -name "*.py" | grep -v bare-metal | xargs pylint --rcfile="${SDIR}/.pylintrc"
+    ret=$?
+    deactivate
+    exit $ret
+}
+
 setup_python_env
-# use unbuffered output
-stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@
+lint

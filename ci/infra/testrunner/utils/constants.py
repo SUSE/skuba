@@ -1,10 +1,11 @@
-import yaml, os
-
+import os
+import yaml
 
 class Constant:
-    TERRAFORM_EXAMPLE="terraform.tfvars.ci.example"
-    SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
-           "-oConnectTimeout=60 -oBatchMode=yes "
+    TERRAFORM_EXAMPLE = "terraform.tfvars.ci.example"
+    SSH_OPTS = "-oStrictHostKeyChecking=no" + \
+               " -oUserKnownHostsFile=/dev/null" + \
+               " -oConnectTimeout=60 -oBatchMode=yes"
     DOT = '\033[34m●\033[0m'
     DOT_exit = '\033[32m●\033[0m'
     RED = '\033[31m'
@@ -39,10 +40,12 @@ class BaseConfig:
             BaseConfig.Openstack,
         )
 
-        #vars get the values from yaml file
-        vars = BaseConfig.get_var_dict(yaml_path)
-        #conf.objects will be overriden by the values from vars and matching ENV variables
-        conf = BaseConfig.inject_attrs_from_yaml(obj, vars, config_classes)
+        #yaml_vars get the values from yaml file
+        yaml_vars = BaseConfig.get_var_dict(yaml_path)
+        #conf.objects will be overriden by the values from yaml_vars
+        # and matching ENV variables
+        conf = BaseConfig.inject_attrs_from_yaml(obj, yaml_vars,
+                                                 config_classes)
         # Final mofification for conf variables
         conf = BaseConfig.finalize(conf)
         return conf
@@ -96,8 +99,9 @@ class BaseConfig:
     def get_var_dict(yaml_path):
         config_yaml_file_path = BaseConfig.get_yaml_path(yaml_path)
         if not os.path.isfile(config_yaml_file_path):
-            print("{}You have incorrect -v path for xml file  {}{}".format(Constant.RED,
-                                                    config_yaml_file_path, Constant.RED_EXIT))
+            print("{}You have incorrect -v path for xml file  {}{}".
+                  format(Constant.RED, config_yaml_file_path,
+                         Constant.RED_EXIT))
             raise FileNotFoundError
 
         with open(config_yaml_file_path, 'r') as stream:
@@ -105,11 +109,12 @@ class BaseConfig:
         return _conf
 
     @staticmethod
-    def inject_attrs_from_yaml(obj, vars, config_classes):
+    def inject_attrs_from_yaml(obj, yaml_vars, config_classes):
         for key, value in obj.__dict__.items():
 
-            if key in vars and isinstance(value, config_classes):
-                BaseConfig.inject_attrs_from_yaml(value, vars[key], config_classes)
+            if key in yaml_vars and isinstance(value, config_classes):
+                BaseConfig.inject_attrs_from_yaml(value, yaml_vars[key],
+                                                  config_classes)
                 continue
 
             new_key = key.upper()
@@ -119,8 +124,8 @@ class BaseConfig:
                 new_value = os.getenv(new_key)
 
             # if env variable does not exist, store
-            if not new_value and key in vars:
-                obj.__dict__[key] = vars[key]
+            if not new_value and key in yaml_vars:
+                obj.__dict__[key] = yaml_vars[key]
 
             # if username env variable exist but do not update username
             if new_value:
@@ -128,27 +133,35 @@ class BaseConfig:
 
             # username should get from xml config file
             if key == "username":
-                obj.__dict__[key] = vars[key]
+                obj.__dict__[key] = yaml_vars[key]
 
         return obj
 
     @staticmethod
     def finalize(conf):
         conf.workspace = os.path.expanduser(conf.workspace)
-        conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
-        conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
+        conf.caaspctl_dir = os.path.realpath(
+            os.path.join(conf.workspace, "caaspctl"))
+        conf.terraform_dir = os.path.join(
+            conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
-        conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
+        conf.jenkins.run_name = "{}-{}".format(
+            conf.jenkins.job_name, str(conf.jenkins.build_number))
 
         if conf.ssh_key_option == "id_shared":
-            conf.ssh_key_option = os.path.join(conf.caaspctl_dir, "ci/infra/id_shared")
+            conf.ssh_key_option = os.path.join(conf.caaspctl_dir,
+                                               "ci/infra/id_shared")
         elif conf.ssh_key_option == "id_rsa":
-            conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+            conf.ssh_key_option = os.path.join(os.path.expanduser("~"),
+                                               ".ssh/id_rsa")
 
-        conf.git.change_author = os.getenv('GIT_COMMITTER_NAME', 'CaaSP Jenkins')
-        conf.git.change_author_email = os.getenv('GIT_COMMITTER_EMAIL', 'containers-bugowner@suse.de')
+        conf.git.change_author = os.getenv('GIT_COMMITTER_NAME',
+                                           'CaaSP Jenkins')
+        conf.git.change_author_email = \
+            os.getenv('GIT_COMMITTER_EMAIL',
+                      'containers-bugowner@suse.de')
 
         return conf
 #if __name__ == '__main__':

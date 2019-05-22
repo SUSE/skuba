@@ -2,7 +2,7 @@
 init-hook="import os,sys;testrunner_path=os.path.dirname(os.path.abspath(__file__));sys.path.append(os.path.join(testrunner_path,'utils'));sys.path.append(os.path.join(testrunner_path,'platforms'));"
 
 [TYPECHECK]
-ignored-classes=BaseConfig,missing-docstring
+ignored-classes=BaseConfig
 
 
 [MISCELLANEOUS]
@@ -13,17 +13,23 @@ notes=
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=110
+max-line-length=72
 
 [MESSAGES CONTROL]
+
 #enable-msg=
-disable-msg=C0112
+disable=C0111,C0112,W0603,W0703,R0201,C0413
+#C0111: *Missing-docstring*
 #C0112: *Empty docstring*
+#W0603: *Global-statement*
+#W0703: *Broad-except*
+#R0201: *No-self-use*
+#C0413: *Wrong-import-position*
 
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=5
+max-args=10
 
 # Maximum number of locals for function / method body
 max-locals=15
@@ -44,7 +50,8 @@ max-parents=7
 max-attributes=7
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=5
+# due to Constants class
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20

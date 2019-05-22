@@ -1,4 +1,4 @@
-import os, sys
+import os
 from shutil import copyfile
 import subprocess
 
@@ -12,36 +12,29 @@ class Terraform:
         self.conf = conf
         self.utils = Utils(conf)
 
+
     def _env_setup_cmd(self):
-        """Returns the command for setting up the platform environment"""
+        """Returns the command for setting up
+        the platform environment
+        """
         return ""
 
     def _cleanup_platform(self):
-        """Platform specific cleanup. Expected to be overriden by platforms"""
+        """Platform specific cleanup. Expected
+        to be overriden by platforms
+        """
 
     def cleanup(self):
         """ Clean up """
-        cleanup_failure = False
         try:
             self._cleanup_platform()
-        except Exception as ex:
-            cleanup_failure = True
-            print("Received the following error {}".format(ex))
+        except Exception:
             print("Attempting to finish cleaup")
-
-        dirs = [os.path.join(self.conf.workspace, "tfout"),
-                os.path.join(self.conf.workspace, "tfout.json")]
-
-        for dir in dirs:
-            try:
-                self.utils.runshellcommand("rm -rf {}".format(dir))
-            except Exception as ex:
-                cleanup_failure = True
-                print("Received the following error {}".format(ex))
-                print("Attempting to finish cleaup")
-
-        if cleanup_failure:
             raise Exception("Failure(s) during cleanup")
+        finally:
+            _dirs = [os.path.join(self.conf.workspace, "tfout"),
+                     os.path.join(self.conf.workspace, "tfout.json")]
+            self.utils.cleanup(_dirs)
 
     @step
     def apply_terraform(self):
@@ -56,11 +49,12 @@ class Terraform:
                         env_setup=self._env_setup_cmd(),
                         workspace=self.conf.workspace))
         apply_cmd = ("{env_setup};"
-                     "terraform apply -auto-approve {workspace}/tfout".format(
-                        env_setup=self._env_setup_cmd(),
-                        workspace=self.conf.workspace))
+                     "terraform apply -auto-approve {workspace}/tfout"\
+            .format(env_setup=self._env_setup_cmd(),
+                    workspace=self.conf.workspace))
 
-        # TODO: define the number of retries as a configuration parameter
+        # TODO: define the number of retries as a
+        #  configuration parameter
         for retry in range(1, 5):
             print("Run terraform plan - execution n. %d" % retry)
             self.runshellcommandterraform(plan_cmd)
@@ -69,7 +63,7 @@ class Terraform:
                 self.runshellcommandterraform(apply_cmd)
                 break
 
-            except:
+            except Exception:
                 print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
                     print("Last failed attempt, exiting")
@@ -89,27 +83,27 @@ class Terraform:
     def generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(
-                            self.conf.workspace,
-                            "caaspctl/ci/infra/{}/{}".format(
-                                self.conf.platform,
-                                Constant.TERRAFORM_EXAMPLE)
-                        )
+            self.conf.workspace,
+            "caaspctl/ci/infra/{}/{}".format(
+                self.conf.platform, Constant.TERRAFORM_EXAMPLE))
 
-        dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
-        dest_terraform = os.path.join(dir, tfvars)
+        _dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
+        dest_terraform = os.path.join(_dir, tfvars)
         copyfile(src_terraform, dest_terraform)
 
-        with open(dest_terraform) as f:
-            lines = f.readlines()
+        with open(dest_terraform) as file:
+            lines = file.readlines()
 
         for i, line in enumerate(lines):
             # TODO: internal_net and stack_name are openstack variables
             #       should move to the Openstack class
             if line.startswith("internal_net"):
-                lines[i] = 'internal_net = "{}"'.format(self.conf.jenkins.run_name)
+                lines[i] = 'internal_net = "{}"'\
+                    .format(self.conf.jenkins.run_name)
 
             if line.startswith("stack_name"):
-                lines[i] = 'stack_name = "{}"'.format(self.conf.jenkins.run_name)
+                lines[i] = 'stack_name = "{}"'\
+                    .format(self.conf.jenkins.run_name)
 
             if line.startswith("username"):
                 lines[i] = 'username = "{}"'.format(self.conf.nodeuser)
@@ -121,17 +115,22 @@ class Terraform:
                 lines[i] = 'workers = {}'.format(self.conf.worker.count)
 
             if line.startswith("authorized_keys"):
-                lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
+                lines[i] = 'authorized_keys = [ "{}" ,' \
+                    .format(self.utils.authorized_keys())
 
             # Switch to US mirror if running on CI
-            if "download.suse.de" in line and os.environ.get('JENKINS_URL'):
-                lines[i]=line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
+            if "download.suse.de" in line and \
+                    os.environ.get('JENKINS_URL'):
+                lines[i] = line.replace('download.suse.de',
+                                        'ibs-mirror.prv.suse.net')
 
-        with open(dest_terraform, "w") as f:
-            f.writelines(lines)
+        with open(dest_terraform, "w") as file:
+            file.writelines(lines)
 
     def runshellcommandterraform(self, cmd, env=None):
-        """Running terraform command in {workspace}/ci/infra/{platform}"""
+        """Running terraform command
+        in {workspace}/ci/infra/{platform}
+        """
         cwd = self.conf.terraform_dir
         print("$ {} > {}".format(cwd, cmd))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
