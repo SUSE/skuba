@@ -87,6 +87,6 @@ test-e2e:
 	./ci/tasks/e2e-tests.py
 
 # build ginkgo executables from vendor
-.PHONY: ginkgo-build
-ginkgo-build:
+.PHONY: build-ginkgo
+build-ginkgo:
 	$(GO) build -o ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo

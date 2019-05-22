@@ -8,6 +8,16 @@ import os
 import json
 import sys
 
+## ginkgobinary:
+# assume the user as an installed binary from system if the env var isn't set
+ginkgo_binary = "ginkgo"
+
+# we override the binary path by env variable. This is used by CI when we build ginkgo from vendor dir
+#  see pipilines for more doc. IT can be used also locally
+if "GINKGO_BIN_PATH" in os.environ:
+  ginkgo_binary = os.environ['GINKGO_BIN_PATH']
+
+
 # 1) set all IPS variable individually ( with the env. variables)
 # 2) read this IPS from a tfstate which will set the env. variables.
 
@@ -24,7 +34,7 @@ if os.environ.get('IP_FROM_TF_STATE') == 'True' or 'TRUE':
   os.environ['WORKER00'] = tf_state["modules"][0]["outputs"]["ip_workers"]["value"][0]
 
 try:
-  subprocess.check_call("cd test && ginkgo -v --race --trace --progress core-features", shell=True, env=dict(os.environ))
+  subprocess.check_call("cd test && {0} -v --race --trace --progress core-features".format(ginkgo_binary), shell=True, env=dict(os.environ))
 except Exception as ex:
      print(ex)
      sys.exit(2)
