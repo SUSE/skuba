@@ -1,5 +1,12 @@
 GOMOD ?= on
 GO ?= GO111MODULE=$(GOMOD) go
+
+#Don't enable mod=vendor when GOMOD is off or else go build/install will fail
+GOMODFLAG ?=-mod=vendor
+ifeq ($(GOMOD), off)
+GOMODFLAG=
+endif
+
 GOFMT ?= gofmt
 TERRAFORM ?= $(shell which terraform 2>/dev/null || which true 2>/dev/null)
 GO_MD2MAN ?= go-md2man
@@ -25,7 +32,7 @@ all: install
 
 .PHONY: build
 build:
-	$(GO) build $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) build $(GOMODFLAG) $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
 MANPAGES    := $(MANPAGES_MD:%.md=%)
@@ -38,7 +45,7 @@ docs: $(MANPAGES)
 
 .PHONY: install
 install:
-	$(GO) install $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) install $(GOMODFLAG) $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
 	$(RM) -f $(GOBINPATH)/kubectl-caasp
 	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
 
