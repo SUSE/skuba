@@ -55,7 +55,8 @@ class Utils:
         """Running go command in {workspace}/go/src/github.com/SUSE/caaspctl"""
         env = {
             'GOPATH': os.path.join(self.conf.workspace,'go'),
-            'PATH': os.environ['PATH']
+            'PATH': os.environ['PATH'],
+            'HOME': os.environ['HOME']
         }
 
         if extra_env:
