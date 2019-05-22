@@ -64,5 +64,11 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 `authorized_keys` - A list of ssh public keys that will be installed on all nodes
 `repositories` - Additional repositories that will be added on all nodes
 `packages` - Additional packages that will be installed on all nodes
+
+Please use one from the following options:
+
 `caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in
 `registration.auto.tfvars` file to register product against official repositories
+
+`rmt_server_name` - Provide SUSE Repository Mirroring Tool Server Name in
+￼ `registration.auto.tfvars` file to register product against official repositories

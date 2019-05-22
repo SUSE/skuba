@@ -113,3 +113,8 @@ variable "caasp_registry_code" {
   default     = ""
   description = "SUSE CaaSP Product Registration Code"
 }
+
+variable "rmt_server_name" {
+  default     = ""
+  description = "SUSE Repository Mirroring Server Name"
+}
