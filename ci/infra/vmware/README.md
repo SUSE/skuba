@@ -59,7 +59,7 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 `vsphere_datacenter` - Provide the datacenter to use on the vSphere server
 `vsphere_network` - Provide the network to use on the vSphere server - this network must be able to access the ntp servers and the nodes must be able to reach each other
 `vsphere_resource_ppol` - Provide the resource pool the machines will be running in
-`template_name` - The template name the machines will be spawned from
+`template_name` - The template name the machines will be copied from
 `stack_name` - A prefix that all of the booted machines will use
 `authorized_keys` - A list of ssh public keys that will be installed on all nodes
 `repositories` - Additional repositories that will be added on all nodes
