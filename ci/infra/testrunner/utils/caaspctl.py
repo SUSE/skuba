@@ -9,7 +9,6 @@ class Caaspctl:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(self.conf)
-        self.state = self._load_tfstate()
         self._num_master, self._num_worker = 0, 0
 
     def _verify_tf_dependency(self):
