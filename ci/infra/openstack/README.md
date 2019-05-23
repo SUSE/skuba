@@ -45,5 +45,11 @@ provide reasonable values.
 
 ## Variables
 
+`image_name` - Name of the image to use
+`internal_net` - Name of the internal network to be created
+`stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project
+`authorized_keys` - A list of ssh public keys that will be installed on all nodes
+`repositories` - Additional repositories that will be added on all nodes
+`packages` - Additional packages that will be installed on all nodes
 `caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in 
 `registration.auto.tfvars` file to register product against official repositories
