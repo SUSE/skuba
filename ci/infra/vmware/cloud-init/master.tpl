@@ -1,17 +1,10 @@
 #cloud-config
 
 # set locale
-locale: en_GB.UTF-8
+locale: en_US.UTF-8
 
 # set timezone
 timezone: Etc/UTC
-
-# set root password
-chpasswd:
-  list: |
-    root:linux
-    ${username}:${password}
-  expire: False
 
 ssh_authorized_keys:
 ${authorized_keys}
@@ -41,11 +34,22 @@ ${repositories}
 # with SUSEConnect command after packages module is ran
 #packages:
 
-bootcmd:
-  - ip link set dev eth0 mtu 1400
-
 runcmd:
+  # Since we are currently inside of the cloud-init systemd unit, trying to
+  # start another service by either `enable --now` or `start` will create a
+  # deadlock. Instead, we have to use the `--no-block-` flag.
+  - [ systemctl, disable, --now, --no-block, firewalld ]
+  # The template machine should have been cleaned up, so no machine-id exists
+  - [ dbus-uuidgen, --ensure ]
+  - [ systemd-machine-id-setup ]
+  # With a new machine-id generated the journald daemon will work and can be restarted
+  # Without a new machine-id it should be in a failed state
+  - [ systemctl, restart, systemd-journald ]
 ${registration}
 ${commands}
+
+bootcmd:
+  # Hostnames from DHCP - otherwise `localhost` will be used
+  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"no\"#DHCLIENT_SET_HOSTNAME=\"yes\"#" /etc/sysconfig/network/dhcp
 
 final_message: "The system is finally up, after $UPTIME seconds"

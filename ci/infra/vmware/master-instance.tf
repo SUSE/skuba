@@ -26,7 +26,16 @@ data "template_file" "master_commands" {
   }
 }
 
-data "template_file" "master-cloud-init" {
+data "template_file" "master_cloud_init_metadata" {
+  template = "${file("cloud-init/metadata.tpl")}"
+
+  vars {
+    network_config = "${base64gzip(data.local_file.network_cloud_init.content)}"
+    instance_id    = "${var.stack_name}-master"
+  }
+}
+
+data "template_file" "master_cloud_init_userdata" {
   template = "${file("cloud-init/master.tpl")}"
 
   vars {
@@ -40,57 +49,52 @@ data "template_file" "master-cloud-init" {
   }
 }
 
-resource "openstack_compute_instance_v2" "master" {
-  count      = "${var.masters}"
-  name       = "caasp-master-${var.stack_name}-${count.index}"
-  image_name = "${var.image_name}"
+resource "vsphere_virtual_machine" "master" {
+  count            = "${var.masters}"
+  name             = "${var.stack_name}-master-${count.index}"
+  num_cpus         = "${var.master_cpus}"
+  memory           = "${var.master_memory}"
+  guest_id         = "${var.guest_id}"
+  scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
+  resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
+  datastore_id     = "${data.vsphere_datastore.datastore.id}"
 
-  depends_on = [
-    "openstack_networking_network_v2.network",
-    "openstack_networking_subnet_v2.subnet",
-  ]
-
-  flavor_name = "${var.master_size}"
-
-  network {
-    name = "${var.internal_net}"
+  clone {
+    template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
 
-  security_groups = [
-    "${openstack_compute_secgroup_v2.secgroup_base.name}",
-    "${openstack_compute_secgroup_v2.secgroup_master.name}",
-  ]
+  disk {
+    label        = "disk0"
+    datastore_id = "${data.vsphere_datastore.datastore.id}"
+    size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
+  }
 
-  user_data = "${data.template_file.master-cloud-init.rendered}"
-}
+  extra_config {
+    "guestinfo.metadata"          = "${base64gzip(data.template_file.master_cloud_init_metadata.rendered)}"
+    "guestinfo.metadata.encoding" = "gzip+base64"
 
-resource "openstack_networking_floatingip_v2" "master_ext" {
-  count = "${var.masters}"
-  pool  = "${var.external_net}"
-}
+    "guestinfo.userdata"          = "${base64gzip(data.template_file.master_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata.encoding" = "gzip+base64"
+  }
 
-resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
-  count       = "${var.masters}"
-  floating_ip = "${element(openstack_networking_floatingip_v2.master_ext.*.address, count.index)}"
-  instance_id = "${element(openstack_compute_instance_v2.master.*.id, count.index)}"
+  network_interface {
+    network_id = "${data.vsphere_network.network.id}"
+  }
 }
 
 resource "null_resource" "master_wait_cloudinit" {
   count = "${var.masters}"
 
   connection {
-    host     = "${element(openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip, count.index)}"
+    host     = "${element(vsphere_virtual_machine.master.*.guest_ip_addresses.0, count.index)}"
     user     = "${var.username}"
     password = "${var.password}"
     type     = "ssh"
   }
 
-  depends_on = ["openstack_compute_instance_v2.master"]
-
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait > /dev/null",
-      "sudo reboot&",
+      "cloud-init status --wait",
     ]
   }
 }
