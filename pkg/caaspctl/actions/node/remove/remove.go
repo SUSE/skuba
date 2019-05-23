@@ -59,7 +59,7 @@ func Remove(target string) error {
 	}
 
 	if err := kubernetes.DisarmKubelet(node); err != nil {
-		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...", err)
+		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...\n", err)
 	}
 
 	if isMaster {
@@ -72,7 +72,7 @@ func Remove(target string) error {
 		}
 
 		if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(); err != nil {
-			fmt.Printf("[remove-node] could not annonate cilium daemonset: %v", err)
+			fmt.Printf("[remove-node] could not annonate cilium daemonset: %v\n", err)
 		}
 	}
 
