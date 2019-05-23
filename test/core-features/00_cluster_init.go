@@ -32,11 +32,11 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		caaspctl = os.Getenv("GOPATH") + "/bin/caaspctl"
 	}
 
-	// wait 30 minutes max as timeout for completing command
+	// wait 10 minutes max as timeout for completing command
 	// the default timeout provided by ginkgo is 1 sec which is to low for us.
-	gomega.SetDefaultEventuallyTimeout(1800 * time.Second)
+	gomega.SetDefaultEventuallyTimeout(600 * time.Second)
 	gomega.SetDefaultEventuallyPollingInterval(5 * time.Second)
-	gomega.SetDefaultConsistentlyDuration(1800 * time.Second)
+	gomega.SetDefaultConsistentlyDuration(600 * time.Second)
 	gomega.SetDefaultConsistentlyPollingInterval(5 * time.Second)
 
 	ginkgo.BeforeEach(func() {
