@@ -33,7 +33,8 @@ setup_credentials() {
     # It's not pretty but it will get the job done
     cat > "${token_file}" <<EOF
 #!/bin/bash
-echo ${GITHUB_TOKEN}
+# If the GITHUB_TOKEN is a user:token pair, then we only want the token part of it
+echo ${GITHUB_TOKEN} | cut -d ':' -f 2
 EOF
     chmod a+x "${token_file}"
     export GIT_ASKPASS="${token_file}"
