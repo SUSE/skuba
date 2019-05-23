@@ -10,9 +10,9 @@ import sys
 subprocess.check_call("chmod 400 ci/infra/id_shared", shell=True)
 print("Starting ssh-agent ")
 # use a dedicated agent to minimize stateful components
-sock_fn = "ssh-agent-sock"
+sock_fn = "/tmp/ssh-agent-sock"
 try:
-    subprocess.check_call("rm ssh-agent-sock", shell=True)
+    subprocess.check_call("rm " + sock_fn, shell=True)
     subprocess.check_call("pkill -f 'ssh-agent -a {}'".format(sock_fn), shell=True)
     print("Killed previous instance of ssh-agent")
 except:

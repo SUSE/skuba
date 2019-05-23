@@ -58,9 +58,8 @@ pipeline {
 
         stage('Run end-to-end tests') { steps {
            dir("caaspctl") {
-             sh(script: "make setup-ssh")
              sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "CAASPCTL_BIN_PATH=\"${WORKSPACE}/go/bin/caaspctl\" GINKGO_BIN_PATH=\"${WORKSPACE}/caaspctl/ginkgo\" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
+             sh(script: "make setup-ssh && CAASPCTL_BIN_PATH=\"${WORKSPACE}/go/bin/caaspctl\" GINKGO_BIN_PATH=\"${WORKSPACE}/caaspctl/ginkgo\" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
        } } }
     }
     post {
