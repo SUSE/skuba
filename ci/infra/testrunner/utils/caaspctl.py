@@ -24,7 +24,7 @@ class Caaspctl:
             pass
         self.utils.gorun("go version")
         print("Building caaspctl")
-        self.utils.gorun("make")
+        self.utils.gorun("make build")
 
     @step
     def cleanup(self):
