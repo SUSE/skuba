@@ -54,10 +54,7 @@ class Caaspctl:
         cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
         self.utils.runshellcommand(cmd)
 
-        # This is pretty aggressive but modules are also present
-        # in workspace and they lack the 'w' bit so just set
-        # everything so we can do whatever we want during cleanup
-        cmd = 'chmod -R 777 {}'.format(self.conf.workspace)
+        cmd = 'chmod -R a+wx {}'.format(self.conf.workspace)
         self.utils.runshellcommand(cmd)
 
         dirs = [os.path.join(self.conf.workspace, "test-cluster"),
