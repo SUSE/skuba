@@ -68,7 +68,8 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		command = exec.Command(caaspctl, "node", "bootstrap", "-v3", "--user", username, "--sudo", "--target", master00IP, master00Name)
 		session, err = gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
-		gomega.Expect(session.Wait().Out.Contents()).Should(gomega.ContainSubstring("kubeadm.init applied successfully"))
+		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
+		fmt.Println(session.Wait().Out.Contents())
 		gomega.Expect(session).Should(gexec.Exit(), "caaspctl adding master00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl adding master00 failed")
 
@@ -84,7 +85,8 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		command = exec.Command(caaspctl, "node", "join", "-v3", "--role", "worker", "--user", username, "--sudo", "--target", worker00IP, worker00Name)
 		session, err = gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
-		gomega.Eventually(session.Out).Should(gbytes.Say(".*state kubeadm.join applied successfully"))
+		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
+		fmt.Println(session.Wait().Out.Contents())
 		gomega.Expect(session).Should(gexec.Exit(), "caaspctl adding worker00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl adding worker00 failed")
 

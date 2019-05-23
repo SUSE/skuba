@@ -12,6 +12,10 @@ import sys
 # assume the user as an installed binary from system if the env var isn't set
 ginkgo_binary = "ginkgo"
 
+# set ssh env
+# the socket is setup with make setup-ssh, see setup-ssh.py
+os.environ['SSH_AUTH_SOCK'] = "/tmp/ssh-agent-sock"
+
 # we override the binary path by env variable. This is used by CI when we build ginkgo from vendor dir
 #  see pipilines for more doc. IT can be used also locally
 if "GINKGO_BIN_PATH" in os.environ:
