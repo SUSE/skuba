@@ -11,6 +11,10 @@ class Skuba:
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
+    def _verify_tf_dependency(self):
+        if not os.path.exists(self.conf.terraform_json_path):
+            raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
+
     def _verify_skuba_bin_dependency(self):
         skuba_bin_path = os.path.join(self.conf.workspace, 'go/bin/skuba')
         if not os.path.isfile(skuba_bin_path):

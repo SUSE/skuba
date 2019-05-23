@@ -3,6 +3,7 @@ from format import Format
 
 class Constant:
     TERRAFORM_EXAMPLE="terraform.tfvars.ci.example"
+    TERRAFORM_JSON_OUT = "tfout.json"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "
 
@@ -15,6 +16,7 @@ class BaseConfig:
         obj.workspace = None
         obj.skuba_dir = None
         obj.terraform_dir = None
+        obj.terraform_json_path = None
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
@@ -134,6 +136,7 @@ class BaseConfig:
         conf.workspace = os.path.expanduser(conf.workspace)
         conf.skuba_dir = os.path.realpath(os.path.join(conf.workspace, "skuba"))
         conf.terraform_dir = os.path.join(conf.skuba_dir, "ci/infra/{}".format(conf.platform))
+        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
@@ -153,11 +156,11 @@ class BaseConfig:
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
-                                           "before using testrunner (caaspctl/ci/infra/testrunner/vars)"))
+                                           "before using testrunner (skuba/ci/infra/testrunner/vars)"))
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
             raise ValueError(Format.alert("workspace should not be your home directory"))
-        if not os.path.exists(os.path.join(conf.workspace, "caaspctl")):
-            raise ValueError(Format.alert("Your working directory, {} does not include \"caaspctl\" directory.\n\t    "
+        if not os.path.exists(os.path.join(conf.workspace, "skuba")):
+            raise ValueError(Format.alert("Your working directory, {} does not include \"skuba\" directory.\n\t    "
                                 "Check your working directory in a configured yaml file".format(conf.workspace)))
         if conf.platform == "openstack" and not os.path.isfile(conf.openstack.openrc):
             raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
