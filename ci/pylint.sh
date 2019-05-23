@@ -21,7 +21,8 @@ setup_python_env() {
 
 lint() {
     source ${VENVDIR}/bin/activate
-    find . -type f -name "*.py" | grep -v bare-metal | xargs pylint --rcfile="${SDIR}/.pylintrc"
+    find . -type f -name "*.py" | grep -v bare-metal | \
+            xargs pylint --rcfile="${SDIR}/.pylintrc"
     ret=$?
     deactivate
     exit $ret

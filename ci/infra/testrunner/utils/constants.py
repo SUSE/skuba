@@ -3,7 +3,7 @@ import yaml
 
 class Constant:
     TERRAFORM_EXAMPLE = "terraform.tfvars.ci.example"
-    SSH_OPTS = "-oStrictHostKeyChecking=no" + \
+    SSH_OPTS = " -oStrictHostKeyChecking=no" + \
                " -oUserKnownHostsFile=/dev/null" + \
                " -oConnectTimeout=60 -oBatchMode=yes"
     DOT = '\033[34m●\033[0m'

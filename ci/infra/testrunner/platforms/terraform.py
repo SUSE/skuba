@@ -121,6 +121,7 @@ class Terraform:
             # Switch to US mirror if running on CI
             if "download.suse.de" in line and \
                     os.environ.get('JENKINS_URL'):
+
                 lines[i] = line.replace('download.suse.de',
                                         'ibs-mirror.prv.suse.net')
 
