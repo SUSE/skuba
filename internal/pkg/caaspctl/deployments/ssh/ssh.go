@@ -41,7 +41,7 @@ import (
 )
 
 // defKnowHosts is the default `known_hosts` file
-const defKnowHosts = "~/.ssh/known_hosts"
+const defKnowHosts = "known_hosts"
 
 // trustHostMessage is the message printed when we don't know about a host
 // fingerprint.
@@ -83,15 +83,12 @@ var (
 )
 
 type Target struct {
-	target            *deployments.Target
-	user              string
-	targetName        string
-	sudo              bool
-	port              int
-	confirmHosts      bool
-	knownHosts        string
-	addConfirmedHosts bool
-	client            *ssh.Client
+	target     *deployments.Target
+	user       string
+	targetName string
+	sudo       bool
+	port       int
+	client     *ssh.Client
 }
 
 // GetFlags adds init flags bound to the config to the specified flagset
@@ -100,9 +97,6 @@ func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet.StringVarP(&t.user, "user", "u", "root", "User identity used to connect to target")
 	flagSet.BoolVarP(&t.sudo, "sudo", "s", false, "Run remote command via sudo")
 	flagSet.IntVarP(&t.port, "port", "p", 22, "Port to connect to using SSH")
-	flagSet.BoolVar(&t.confirmHosts, "known-hosts-confirm-new", false, "Ask for confirmation about SSH IDs for unknown hosts")
-	flagSet.StringVar(&t.knownHosts, "known-hosts", defKnowHosts, "SSH known-hosts file")
-	flagSet.BoolVar(&t.addConfirmedHosts, "known-hosts-auto-add", true, "Automatically add confirmed hosts ID to the known-hosts file")
 	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
 
 	cobra.MarkFlagRequired(flagSet, "target")
@@ -255,19 +249,19 @@ func (t *Target) initClient() error {
 // mismatch (or the key has been rejected), it returns an error.
 func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 	// make sure the filename exists from the start
-	err := os.MkdirAll(path.Dir(t.knownHosts), 0700)
+	err := os.MkdirAll(path.Dir(defKnowHosts), 0700)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := os.OpenFile(t.knownHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	out, err := os.OpenFile(defKnowHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	hostKeyCallback, err := knownhosts.New(t.knownHosts)
+	hostKeyCallback, err := knownhosts.New(defKnowHosts)
 	if err != nil {
-		klog.Errorf("could not create callback function for checking hosts fingerprints: ", err)
+		klog.Errorf("could not create callback function for checking hosts fingerprints: %s", err)
 		return nil, errSSHNoKeysErr
 	}
 
@@ -288,7 +282,7 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 			// text after replacing some vars...
 			replaceMessage := func(tmpl *template.Template) string {
 				buf := bytes.Buffer{}
-				err = tmpl.Execute(&buf, struct {
+				if err := tmpl.Execute(&buf, struct {
 					Algorithm   string
 					Address     string
 					Fingerprint string
@@ -297,10 +291,9 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 					algoStr,
 					remote.String(),
 					keyFingerprintStr,
-					t.knownHosts,
-				})
-				if err != nil {
-					panic(err) // programmer's error: just panic
+					defKnowHosts,
+				}); err != nil {
+					klog.Fatal("could not perform replacements in template")
 				}
 				return buf.String()
 			}
@@ -310,44 +303,21 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 			// unknown. If Want is non-empty, there was a mismatch, which
 			// can signify a MITM attack.
 			if len(ke.Want) == 0 {
-				klog.Errorf(replaceMessage(trustHostMessage))
-				if t.confirmHosts {
-					klog.Error("Are you sure you want to continue connecting (yes/no)?")
-					if !askYesOrNo() {
-						klog.Errorf("rejecting SSH key")
-						return ke
-					}
-				}
+				klog.Warning(replaceMessage(trustHostMessage))
 				klog.Infof("accepting SSH key for %q", hostname)
-
-				if t.addConfirmedHosts {
-					klog.Infof("adding fingerprint for %q to %q", hostname, t.knownHosts)
-					line := knownhosts.Line([]string{remote.String()}, key)
-					if _, err = out.WriteString(line + "\n"); err != nil {
-						return err
-					}
+				klog.Infof("adding fingerprint for %q to %q", hostname, defKnowHosts)
+				line := knownhosts.Line([]string{remote.String()}, key)
+				if _, err := out.WriteString(line + "\n"); err != nil {
+					return err
 				}
-
 				return nil
 			} else {
 				// fingerprint mismatch: print a big warning and return an error
-				klog.Errorf(replaceMessage(fingerprintMismatchMessage))
+				klog.Error(replaceMessage(fingerprintMismatchMessage))
 			}
 		}
 		return err
 	}), nil
-}
-
-// askYesOrNo prompts the user about Yes or No
-func askYesOrNo() (res bool) {
-	var ans string
-	fmt.Scanf("%s\n", &ans)
-	ans = strings.ToLower(ans)
-	switch ans {
-	case "yes", "y", "true", "1":
-		res = true
-	}
-	return
 }
 
 // md5String returns a formatted string representing the given md5Sum in hex
