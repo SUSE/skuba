@@ -4,15 +4,33 @@ internal_net = "testing"
 # identifier to make all your resources unique and avoid clashes with other users of this terraform project
 stack_name = "testing"
 
+# instance user name
+username = "sles"
+
 # define which image to use
-# image_name = ""
+image_name = "SLE-15-SP1-JeOS-GMC"
+
+# Number of master nodes
+masters = 1
+
+# Number of worker nodes
+workers = 2
 
 # define the repositories to use
+# EXAMPLE:
 # repositories = [
-#   {
-#     caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
-#   }
+#   { repository1 = "http://example.my.repo.com/repository1/" },
+#   { repository2 = "http://example.my.repo.com/repository2/" }
 # ]
+repositories = []
+
+packages = [
+  "kernel-default",
+  "-kernel-default-base",
+  "kubernetes-kubeadm",
+  "kubernetes-kubelet",
+  "kubernetes-client"
+]
 
 # ssh keys to inject into all the nodes
 authorized_keys = [
