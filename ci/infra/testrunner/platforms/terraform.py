@@ -29,6 +29,7 @@ class Terraform:
             print("Attempting to finish cleaup")
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
+                self.conf.terraform_json_path,
                 os.path.join(self.conf.workspace, "tfout.json")]
 
         for dir in dirs:
@@ -46,6 +47,7 @@ class Terraform:
     def apply_terraform(self):
         """ Create and apply terraform plan"""
         print("Init terraform")
+        self._check_tf_deployed()
         self.runshellcommandterraform("terraform init")
         self.runshellcommandterraform("terraform version")
         self.generate_tfvars_file()
@@ -76,13 +78,14 @@ class Terraform:
 
             self.fetch_terraform_output()
 
+
     @step
     def fetch_terraform_output(self):
         cmd = ("{env_setup};"
                "terraform output -json >"
-               "{workspace}/tfout.json".format(
+               "{json_f}".format(
                    env_setup=self._env_setup_cmd(),
-                   workspace=self.conf.workspace))
+                   json_f=self.conf.terraform_json_path))
         self.runshellcommandterraform(cmd)
 
     def generate_tfvars_file(self):
@@ -134,3 +137,7 @@ class Terraform:
         cwd = self.conf.terraform_dir
         print("$ {} > {}".format(cwd, cmd))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
+
+    def _check_tf_deployed(self):
+        if os.path.exists(self.conf.terraform_json_path):
+            raise Exception(Format.alert("tf file found. Please run cleanup and try again{}"))
