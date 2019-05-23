@@ -1,0 +1,2 @@
+  - [ zypper, -n, install, ${packages} ]
+

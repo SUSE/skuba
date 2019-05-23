@@ -13,6 +13,7 @@ output "ip_workers" {
 output "ip_internal_load_balancer" {
   value = "${openstack_lb_loadbalancer_v2.lb.vip_address}"
 }
+
 output "ip_ext_load_balancer" {
   value = "${openstack_networking_floatingip_v2.lb_ext.address}"
 }

@@ -1,6 +1,6 @@
 resource "openstack_compute_secgroup_v2" "secgroup_base" {
   name        = "caasp-base-${var.stack_name}"
-  description = "Basic security group for AG"
+  description = "Basic security group"
 
   rule {
     from_port   = -1
@@ -33,7 +33,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
 
 resource "openstack_compute_secgroup_v2" "secgroup_master" {
   name        = "caasp-master-${var.stack_name}"
-  description = "AG security group for masters"
+  description = "security group for masters"
 
   rule {
     from_port   = 2380
@@ -73,7 +73,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
 
 resource "openstack_compute_secgroup_v2" "secgroup_worker" {
   name        = "caasp-worker-${var.stack_name}"
-  description = "AG security group for workers"
+  description = "security group for workers"
 
   rule {
     from_port   = 80
@@ -141,7 +141,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
 
 resource "openstack_compute_secgroup_v2" "secgroup_master_lb" {
   name        = "caasp-master-lb-${var.stack_name}"
-  description = "AG security group for master load balancers"
+  description = "security group for master load balancers"
 
   rule {
     from_port   = 6443
