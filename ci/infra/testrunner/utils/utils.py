@@ -14,7 +14,7 @@ def step(f):
         print("{} entering {} {}".format(Constant.DOT * _stepdepth, f.__name__,
                                   f.__doc__ or ""))
         r = f(*args, **kwargs)
-        print("{}  exiting {}".format(Constant.DOT_exit * _stepdepth, f.__name__))
+        print("{}  exiting {}".format(Constant.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
@@ -40,7 +40,10 @@ class Utils:
         if not os.path.isabs(cwd):
             cwd = os.path.join(self.conf.workspace, cwd)
 
-        print("$ {} > {}".format(cwd, cmd))
+        if not os.path.exists(cwd):
+            raise Exception("{}Directory {} does not exists {} ".format(Constant.RED, cwd, Constant.RED_EXIT))
+
+        print("{}$ {} > {}{}".format(Constant.RED, cwd, cmd, Constant.RED_EXIT))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def authorized_keys(self):
