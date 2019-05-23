@@ -25,6 +25,20 @@ status_url="${api_url}/statuses"
 commit_url="${api_url}/commits"
 ci_integration_job="https://ci.suse.de/view/CaaSP/job/caasp-jobs/job/caasp-v4-integration/job"
 
+# setup_credentials: Prepares the GIT_ASKPASS variable
+setup_credentials() {
+    local token_file="${WORKSPACE:-$(pwd)}/token.sh"
+
+    # GIT_ASKPASS needs the name of the script which returns the credential we are going to use.
+    # It's not pretty but it will get the job done
+    cat > "${token_file}" <<EOF
+#!/bin/bash
+echo ${GITHUB_TOKEN}
+EOF
+    chmod a+x "${token_file}"
+    export GIT_ASKPASS="${token_file}"
+}
+
 # cleanup_pr: Removes PR artifacts from GitHub
 # $1: The PR number to remove
 # $2: The testing CI branch on GitHub
@@ -119,16 +133,6 @@ check_job_result() {
 ci_update_pr() {
     local pr=${1} pr_branch="ci-test-pr-${1}" base_ref=${2}
 
-    # We currently have the PR code checked out so we just need to update it on top of current master
-    # GIT_ASKPASS needs the name of the script which returns the credential we are going to use. It's not
-    # pretty but it will get the job done
-    cat > token.sh <<EOF
-#!/bin/bash
-echo ${GITHUB_TOKEN}
-EOF
-    chmod a+x token.sh
-    export GIT_ASKPASS="./token.sh"
-
     # Clean up some leftovers from before
     git branch -D ${pr_branch} || :
     git rebase --abort || :
@@ -172,6 +176,9 @@ need_sleep() {
     # we can improve that through API polling or something.
     sleep ${1}
 }
+
+# Prepare git credentials
+setup_credentials
 
 # Ensure git repo is configured correctly
 git config user.email containers-bugowner@suse.de
