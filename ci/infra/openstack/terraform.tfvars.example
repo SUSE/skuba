@@ -1,20 +1,72 @@
+# Name of the image to use
+# EXAMPLE:
+# image_name = "SLE-15-SP1-JeOS-GMC"
+image_name = ""
+
 # Name of the internal network to be created
-internal_net = "testing"
+# EXAMPLE:
+# internal_net = "testing"
+internal_net = ""
 
-# identifier to make all your resources unique and avoid clashes with other users of this terraform project
-stack_name = "testing"
+# Name of the external network to be used, the one used to allocate floating IPs
+# EXAMPLE:
+# external_net = "floating"
+external_net = ""
 
-# instance user name
-username = "sles"
+# Identifier to make all your resources unique and avoid clashes with other users of this terraform project
+stack_name = "my-caasp-cluster"
 
-# define which image to use
-image_name = "SLE-15-SP1-JeOS-GMC"
+# CIDR of the subnet for the internal network
+# EXAMPLE:
+# subnet_cidr = "172.28.0.0/24"
+subnet_cidr = ""
+
+# DNS servers for the nodes
+# EXAMPLE:
+# "dns_nameservers" = [
+#     "172.28.0.2",
+#     "8.8.8.8"
+# ]
+"dns_nameservers" = []
 
 # Number of master nodes
 masters = 1
 
 # Number of worker nodes
 workers = 2
+
+# Size of the master nodes
+# EXAMPLE:
+# master_size = "m1.medium"
+master_size = ""
+
+# Size of the worker nodes
+# EXAMPLE:
+# worker_size = "m1.medium"
+worker_size = ""
+
+# Attach persistent volumes to workers
+workers_vol_enabled = 0
+
+# Size of the worker volumes in GB
+workers_vol_size = 5
+
+# Name of DNS domain
+# dnsdomain = "my.domain.com"
+dnsdomain = ""
+
+# Set DNS Entry (0 is false, 1 is true)
+dnsentry = 0
+
+# Username for the cluster nodes
+# EXAMPLE:
+# username = "sles"
+username = ""
+
+# Password for the cluster nodes
+# EXAMPLE:
+# password = "linux"
+password = ""
 
 # define the repositories to use
 # EXAMPLE:
@@ -24,6 +76,8 @@ workers = 2
 # ]
 repositories = []
 
+# Minimum required packages. Do not remove them.
+# Feel free to add more packages
 packages = [
   "kernel-default",
   "-kernel-default-base",
@@ -33,6 +87,10 @@ packages = [
 ]
 
 # ssh keys to inject into all the nodes
+# EXAMPLE:
+# authorized_keys = [
+#  "ssh-rsa <key-content>"
+# ]
 authorized_keys = [
   ""
 ]

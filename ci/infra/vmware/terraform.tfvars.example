@@ -1,23 +1,47 @@
-vsphere_datastore = "3PAR"
-vsphere_datacenter = "PROVO"
-vsphere_network = "VM Network"
-vsphere_resource_pool = "CaaSP_RP"
-template_name = "SLES15-SP1-JeOS-cloud-init"
+# datastore to use on the vSphere server
+# EXAMPLE:
+# vsphere_datastore = "STORAGE-0"
+vsphere_datastore = ""
 
+# datacenter to use on the vSphere server
+# EXAMPLE:
+# vsphere_datacenter = "DATACENTER"
+vsphere_datacenter = ""
+
+# network to use on the vSphere server
+# EXAMPLE:
+# vsphere_network = "VM Network"
+vsphere_network = ""
+
+# resource pool the machines will be running in
+# EXAMPLE:
+# vsphere_resource_pool = "CaaSP_RP"
+vsphere_resource_pool = ""
+
+# template name the machines will be copied from
+# EXAMPLE:
+# template_name = "SLES15-SP1-cloud-init"
+template_name = ""
+
+# prefix that all of the booted machines will use
 # IMPORTANT, please enter unique identifier bellow as value of stack_name variable to not interfere with other deployments
 stack_name = "caasp-v4"
 
-# ssh keys to inject into all the nodes
-authorized_keys = [
-  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2G7k0zGAjd+0LzhbPcGLkdJrJ/LbLrFxtXe+LPAkrphizfRxdZpSC7Dvr5Vewrkd/kfYObiDc6v23DHxzcilVC2HGLQUNeUer/YE1mL4lnXC1M3cb4eU+vJ/Gyr9XVOOReDRDBCwouaL7IzgYNCsm0O5v2z/w9ugnRLryUY180/oIGeE/aOI1HRh6YOsIn7R3Rv55y8CYSqsbmlHWiDC6iZICZtvYLYmUmCgPX2Fg2eT+aRbAStUcUERm8h246fs1KxywdHHI/6o3E1NNIPIQ0LdzIn5aWvTCd6D511L4rf/k5zbdw/Gql0AygHBR/wnngB5gSDERLKfigzeIlCKf Unsafe Shared Key"
-]
+# Number of master nodes
+masters = 1
 
-workers = 3
-masters = 3
-load-balancers = 1
+# Number of worker nodes
+workers = 2
 
-# IMPORTANT: Replace these ntp servers with ones from your infrastructure
-ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
+# Username for the cluster nodes
+# EXAMPLE:
+# username = "sles"
+username = ""
+
+# Password for the cluster nodes
+# EXAMPLE:
+# password = "linux"
+password = ""
 
 # define the repositories to use
 # EXAMPLE:
@@ -25,13 +49,24 @@ ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.
 #   { repository1 = "http://example.my.repo.com/repository1/" },
 #   { repository2 = "http://example.my.repo.com/repository2/" }
 # ]
-repositories = [
-]
+repositories = []
 
+# Minimum required packages. Do not remove them.
+# Feel free to add more packages
 packages = [
     "kubernetes-kubeadm",
     "kubernetes-kubelet",
     "kubernetes-client",
     "cri-o",
-    "cni-plugins",
+    "cni-plugins"
 ]
+
+# ssh keys to inject into all the nodes
+# EXAMPLE: 
+# authorized_keys = [
+#   "ssh-rsa <key-content>"
+# ]
+authorized_keys = []
+
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]

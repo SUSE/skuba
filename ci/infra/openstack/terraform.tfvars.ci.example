@@ -1,14 +1,24 @@
+# Name of the image to use
+image_name = "SLE-15-SP1-JeOS-GMC"
+
 # Name of the internal network to be created
 internal_net = "testing"
 
-# identifier to make all your resources unique and avoid clashes with other users of this terraform project
+# Name of the external network to be used, the one used to allocate floating IPs
+external_net = "floating"
+
+# Identifier to make all your resources unique and avoid clashes with other users of this terraform project
 stack_name = "testing"
 
-# instance user name
-username = "sles"
+# CIDR of the subnet for the internal network
+subnet_cidr = "172.28.0.0/24"
 
-# define which image to use
-image_name = "SLE-15-SP1-JeOS-GMC"
+# DNS servers for the nodes
+"dns_nameservers" = [
+    "172.28.0.2",
+    "8.8.8.8",
+    "8.8.8.4"
+]
 
 # Number of master nodes
 masters = 1
@@ -16,7 +26,30 @@ masters = 1
 # Number of worker nodes
 workers = 2
 
-# define the repositories to use
+# Size of the master nodes
+master_size = "m1.medium"
+
+# Size of the worker nodes
+worker_size = "m1.medium"
+
+# Attach persistent volumes to workers
+workers_vol_enabled = 0
+
+# Size of the worker volumes in GB
+workers_vol_size = 5
+
+# Name of DNS domain
+dnsdomain = "testing.qa.caasp.suse.net"
+
+# Set DNS Entry (0 is false, 1 is true)
+dnsentry = 0
+
+# Username for the cluster nodes
+username = "sles"
+
+# Password for the cluster nodes
+password = "linux"
+
 repositories = [
   {
     caasp_40_devel_sle15sp1 = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/"
@@ -41,10 +74,10 @@ repositories = [
 packages = [
   "kernel-default",
   "-kernel-default-base",
-  "ca-certificates-suse",
   "kubernetes-kubeadm",
   "kubernetes-kubelet",
-  "kubernetes-client"
+  "kubernetes-client",
+  "ca-certificates-suse",
 ]
 
 # ssh keys to inject into all the nodes
