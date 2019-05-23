@@ -34,6 +34,11 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		caaspctl = os.Getenv("GOPATH") + "/bin/caaspctl"
 	}
 
+	// check binary exists
+	if _, err := os.Stat(caaspctl); os.IsNotExist(err) {
+		panic("caaspctl binary not found in GOPATH or ENV. variable!")
+	}
+
 	// wait 10 minutes max as timeout for completing command
 	// the default timeout provided by ginkgo is 1 sec which is to low for us.
 	gomega.SetDefaultEventuallyTimeout(600 * time.Second)
