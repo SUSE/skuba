@@ -193,7 +193,7 @@ cleanup_stale_prs
 # $pr_number, $remote_repo, $remote_ref, $remote_sha, $base_repo, $base_ref
 for pr_info in $(curl -s -X GET -H "Content-Type: application/json" -d '{"state":"open"}' ${pull_url} \
     | jq '[ .[] | select(.labels == [] or ((.labels | contains([{name: "wip"}]) | not) and (.labels | contains([{name: "do not merge"}]) | not))) ]' \
-    | jq -rc '. | unique_by(.url)[] | [.number, .head.repo.full_name, .head.ref, .head.sha, .base.repo.full_name, .base.ref] | join(",")'); do
+    | jq -rc '. | unique_by(.url)[] | [(.number | tostring), .head.repo.full_name, .head.ref, .head.sha, .base.repo.full_name, .base.ref] | join(",")'); do
     pr=$(echo $pr_info | awk -F, '{print $1}')
     head_repo=$(echo $pr_info | awk -F, '{print $2}')
     head_ref=$(echo $pr_info | awk -F, '{print $3}')
