@@ -19,13 +19,13 @@ load-balancers = 1
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
 ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
 
+# define the repositories to use
+# EXAMPLE:
+# repositories = [
+#   { repository1 = "http://example.my.repo.com/repository1/" },
+#   { repository2 = "http://example.my.repo.com/repository2/" }
+# ]
 repositories = [
-  { caasp_sle15_sp1 = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update:/Products:/CASP40/standard/"},
-  { basesystem_module_sle15_sp1 = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Basesystem-RC2/x86_64/DVD1/" },
-  { containers_module_sle15_sp1 = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Containers-RC2/x86_64/DVD1/" },
-  { server_applications_module_sle15_sp1 = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Server-Applications-RC2/x86_64/DVD1/" },
-  { suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/" },
-  { ha_module_sle15_sp1 = "http://download.suse.de/install/SLP/SLE-15-SP1-Product-HA-RC2/x86_64/DVD1/" }
 ]
 
 packages = [
@@ -34,5 +34,4 @@ packages = [
     "kubernetes-client",
     "cri-o",
     "cni-plugins",
-    "ca-certificates-suse",
 ]
