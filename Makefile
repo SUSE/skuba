@@ -86,6 +86,11 @@ suse-changelog:
 test-e2e:
 	./ci/tasks/e2e-tests.py
 
+.PHONY: setup-ssh
+setup-ssh:
+	./ci/tasks/setup-ssh.py
+
+
 # build ginkgo executables from vendor
 .PHONY: build-ginkgo
 build-ginkgo:
