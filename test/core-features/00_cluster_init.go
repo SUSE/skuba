@@ -8,6 +8,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -30,13 +31,13 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 	caaspctl = os.Getenv("CAASPCTL_BIN_PATH")
 	if len(caaspctl) == 0 {
 		// use devel binary from gopath
-		fmt.Println("taking caaspctl from GOPATH")
-		caaspctl = os.Getenv("GOPATH") + "/bin/caaspctl"
+		fmt.Println("Caaspctl binary path not specified: taking caaspctl from GOPATH")
+		filepath.Join(os.Getenv("GOPATH"), "/bin/caaspctl")
 	}
 
 	// check binary exists
 	if _, err := os.Stat(caaspctl); os.IsNotExist(err) {
-		panic("caaspctl binary not found in GOPATH or ENV. variable!")
+		panic("caaspctl binary not found in GOPATH and ENV. variable: CAASPCTL_BIN_PATH !")
 	}
 
 	// wait 10 minutes max as timeout for completing command

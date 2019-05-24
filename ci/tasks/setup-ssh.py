@@ -4,8 +4,6 @@
 
 import subprocess
 import os
-import json
-import sys
 
 subprocess.check_call("chmod 400 ci/infra/id_shared", shell=True)
 print("Starting ssh-agent ")
