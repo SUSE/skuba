@@ -27,7 +27,7 @@ data "template_file" "worker_commands" {
 }
 
 data "template_file" "worker-cloud-init" {
-  template = "${file("cloud-init/worker.tpl")}"
+  template = "${file("cloud-init/common.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
