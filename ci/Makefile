@@ -70,3 +70,14 @@ add_nodes: add_master_nodes add_worker_nodes
 
 .PHONY: post_run
 post_run: gather_logs cleanup
+
+
+# this target are called from caaspctl dir mainly not from CI dir
+# build ginkgo executables from vendor (used in CI)
+.PHONY: build-ginkgo
+build-ginkgo:
+	$(GO) build -o ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo
+
+.PHONY: setup-ssh
+setup-ssh:
+	./ci/tasks/setup-ssh.py
