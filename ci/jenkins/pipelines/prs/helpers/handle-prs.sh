@@ -214,13 +214,8 @@ for pr_info in $(curl -s -X GET -H "Content-Type: application/json" -d '{"state"
     # blocked: The PR either failed the CI tests or it does not have enough approvals
     # dirty: The PR has conflicts that need manual resolving
     case ${merge_status} in
-        clean)
-            echo "PR-${pr} is now being merged..."
-            merge_pr ${pr}
-            need_sleep 10
-            ;;
-        behind)
-            echo "PR-${pr} is outdated. Rebasing..."
+        behind|clean)
+            echo "PR-${pr} is now being rebased and merged..."
             ci_update_pr ${pr} ${base_ref}
             need_sleep 10
             ;;
