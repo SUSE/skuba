@@ -2,14 +2,15 @@ package corefeatures
 
 import (
 	"fmt"
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
 )
 
 var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
@@ -32,7 +33,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 	if len(caaspctl) == 0 {
 		// use devel binary from gopath
 		fmt.Println("Caaspctl binary path not specified: taking caaspctl from GOPATH")
-		filepath.Join(os.Getenv("GOPATH"), "/bin/caaspctl")
+		caaspctl = filepath.Join(os.Getenv("GOPATH"), "/bin/caaspctl")
 	}
 
 	// check binary exists
@@ -71,7 +72,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 
 		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
 		fmt.Println(session.Wait().Out.Contents())
-		gomega.Expect(session).Should(gexec.Exit(), "caaspctl adding master00 failed")
+		gomega.Expect(session).Should(gexec.Exit(0), "caaspctl adding master00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl adding master00 failed")
 
 		ginkgo.By("verify master00 with caaspctl status")
@@ -79,7 +80,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		session, err = gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + master00Name))
-		gomega.Expect(session).Should(gexec.Exit(), "caaspctl status verify master00 failed")
+		gomega.Expect(session).Should(gexec.Exit(0), "caaspctl status verify master00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl status verify master00 failed")
 
 		ginkgo.By("add a worker00 to the cluster")
@@ -88,7 +89,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 
 		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
 		fmt.Println(session.Wait().Out.Contents())
-		gomega.Expect(session).Should(gexec.Exit(), "caaspctl adding worker00 failed")
+		gomega.Expect(session).Should(gexec.Exit(0), "caaspctl adding worker00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl adding worker00 failed")
 
 		ginkgo.By("verify worker00 with caaspctl status")
@@ -96,7 +97,7 @@ var _ = ginkgo.Describe("Create Caaspctl Cluster", func() {
 		session, err = gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + worker00Name))
-		gomega.Expect(session).Should(gexec.Exit(), "caaspctl status verify worker00 failed")
+		gomega.Expect(session).Should(gexec.Exit(0), "caaspctl status verify worker00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "caaspctl status verify worker00 failed")
 
 	})
