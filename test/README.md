@@ -41,13 +41,15 @@ In general adding new behaviour variable should be discussed within the team, si
 
 All needed variable should have been already implemented, only the NODE ips variable should be added. 
 
+When you create a var specify also the behaviour and the usage: mandatory/optional and default value if any.
+
 ### Currenlty supported:
 
 ### IPs:
 
-- CONTROLPLANE = IP of host which will be the controlplane
-- MASTER00 = IP of 1st master
-- WORKER00 = IP of 1st worker
+- `CONTROLPLANE`: - mandatory - IP of host which will be the controlplane
+- `MASTER00`: - mandatory - IP of 1st master
+- `WORKER00`: - mandatory - IP of 1st worker
 
 SEE 1) example in HOW TO RUN
 
@@ -55,19 +57,13 @@ As showed, in future we will have `WORKER01`, `MASTER01`, `MASTER02` etc.
 
 ### Behaviour variables:
 
-Read from a tfstate file, you need both variable passed
-
-- `IP_FROM_TF_STATE`: if set to `TRUE` this will read terraform states.
-- `PLATFORM`: this specify the provider used. (libvirt, openstack, vmware, etc)
+- `IP_FROM_TF_STATE`: - optional - if set to `TRUE` this will read terraform states. Default: false
+- `PLATFORM`: - optional - this specify the provider used. (libvirt, openstack, vmware, etc). Default: None.
+- `CAASPCTL_BIN_PATH`: - optional - for specify the full path of a caaspctl binary. ( e.g if you use an RPM). Default: GOPATH
+- `GINKGO_BIN_PATH`: - optional -  use this var for passing a fullpath to a ginkgo bin which will be used by tests. Default: your Path
 
 SEE 2) example in HOW TO RUN
 
-## Binary Localtion (optional)
-
-- `CAASPCTL_BIN_PATH` for specify the full path of a caaspctl binary. ( e.g if you use an RPM)
-- `GINKGO_BIN_PATH` use this var for passing a fullpath to a ginkgo bin which will be used by tests.
-
-By default this variable point to GOPATH for devel purposes.
 
 # Internal Development:
 
