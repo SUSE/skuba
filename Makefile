@@ -86,12 +86,12 @@ suse-changelog:
 test-e2e:
 	./ci/tasks/e2e-tests.py
 
-.PHONY: setup-ssh
-setup-ssh:
-	./ci/tasks/setup-ssh.py
-
-
-# build ginkgo executables from vendor
+# this target are called from caaspctl dir mainly not from CI dir
+# build ginkgo executables from vendor (used in CI)
 .PHONY: build-ginkgo
 build-ginkgo:
 	$(GO) build -o ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo
+
+.PHONY: setup-ssh
+setup-ssh:
+	./ci/tasks/setup-ssh.py

@@ -4,7 +4,7 @@ The test can be run locally or in CI.
 
 # Requirements:
 
-- the infrastructure is already deployed. 
+- the infrastructure is already deployed. ( Terraform is not necessary a requirement, only the ips)
 
 # HOW TO RUN:
 

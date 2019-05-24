@@ -24,7 +24,7 @@ if "GINKGO_BIN_PATH" in os.environ:
 # 1) set all IPS variable individually ( with the env. variables)
 # 2) read this IPS from a tfstate which will set the env. variables.
 
-if os.environ.get('IP_FROM_TF_STATE') == 'True' or 'TRUE':
+if os.environ.get('IP_FROM_TF_STATE') == 'True' or os.environ.get('IP_FROM_TF_STATE') == 'TRUE':
   # we need to know which provider is beeing used to read the tfstates.
   if not "PLATFORM" in os.environ:
     raise(Exception("you need to set PLATFORM ENV. variable with LOAD_IP_FROM_TF_STATE env var"))
