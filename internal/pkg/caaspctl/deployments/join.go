@@ -17,12 +17,30 @@
 
 package deployments
 
+import (
+	"strings"
+
+	"k8s.io/klog"
+)
+
 type Role uint
 
 const (
 	MasterRole Role = iota
 	WorkerRole Role = iota
 )
+
+func MustGetRoleFromString(s string) (role Role) {
+	switch strings.ToLower(s) {
+	case "master":
+		role = MasterRole
+	case "worker":
+		role = WorkerRole
+	default:
+		klog.Fatalf("[join] invalid role provided: %q, 'master' or 'worker' are the only accepted roles", s)
+	}
+	return
+}
 
 type JoinConfiguration struct {
 	Role             Role
