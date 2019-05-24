@@ -11,12 +11,14 @@ from argparse import ArgumentParser
 testrunner_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(testrunner_path,"utils"))
 sys.path.append(os.path.join(testrunner_path,"platforms"))
+sys.path.append(os.path.join(testrunner_path,"tests"))
 
 from constants import BaseConfig
 from constants import Constant
 from utils import Utils
 from caaspctl import Caaspctl
 from openstack import Openstack
+from tests import Tests
 
 __version__ = "0.0.3"
 
@@ -95,13 +97,13 @@ def main():
     elif options.create_caaspctl:
         Caaspctl(conf).create_caaspctl()
     elif options.boostrap:
-        Caaspctl(conf).bootstrap_environment()
+        Tests(conf).bootstrap_environment()
     elif options.cluster_status:
-        Caaspctl(conf).caaspctl_cluster_status()
+        Caaspctl(conf).cluster_status()
     elif options.add_nodes:
-        Caaspctl(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
+        Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.remove_nodes:
-        Caaspctl(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
+        Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.log:
         Caaspctl(conf).gather_logs()
 
