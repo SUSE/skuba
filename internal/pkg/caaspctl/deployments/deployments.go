@@ -36,10 +36,10 @@ type TargetCache struct {
 }
 
 type Target struct {
-	Target     string
-	Nodename   string
-	Actionable Actionable
-	Cache      TargetCache
+	Actionable
+	Target   string
+	Nodename string
+	Cache    TargetCache
 }
 
 func (t *Target) Apply(data interface{}, states ...string) error {
