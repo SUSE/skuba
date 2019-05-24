@@ -6,7 +6,6 @@
 import subprocess
 import os
 import json
-import sys
 
 ## ginkgobinary:
 # assume the user as an installed binary from system if the env var isn't set
@@ -37,8 +36,4 @@ if os.environ.get('IP_FROM_TF_STATE') == 'True' or 'TRUE':
   os.environ['MASTER00'] = tf_state["modules"][0]["outputs"]["ip_masters"]["value"][0]
   os.environ['WORKER00'] = tf_state["modules"][0]["outputs"]["ip_workers"]["value"][0]
 
-try:
-  subprocess.check_call("{0} -v --trace --progress test/core-features".format(ginkgo_binary), shell=True, env=dict(os.environ))
-except Exception as ex:
-     print(ex)
-     sys.exit(2)
+subprocess.check_call("{0} -v --trace --progress test/core-features".format(ginkgo_binary), shell=True, env=dict(os.environ))

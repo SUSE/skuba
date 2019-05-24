@@ -5,5 +5,4 @@ CI tasks should be used as bridge between local development and remote CI.
 
 # e2e-tests
 
-This script is used in CI also for local development. IT is called by makefile.
-
+This script is used in CI also for local development. It is called by makefile.
