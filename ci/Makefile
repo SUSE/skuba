@@ -10,11 +10,11 @@ all: deploy bootstrap
 # Steps
 .PHONY: add_master_nodes
 add_master_nodes:
-	${TEST_RUNNER} --add-nodes --master 2
+	${TEST_RUNNER} --add-nodes --master 2 --worker 0
 
 .PHONY: add_worker_nodes
 add_worker_nodes:
-	${TEST_RUNNER} --add-nodes --worker 1
+	${TEST_RUNNER} --add-nodes --worker 1 --master 0
 
 .PHONY: bootstrap_environment
 bootstrap_environment:
