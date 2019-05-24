@@ -10,7 +10,7 @@ class Caaspctl:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.state = self._load_tfstate()
-        self._num_master, self._num_worker = self._load_num_of_nodes()
+        self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
     @timeout(600)
     @step
@@ -26,19 +26,6 @@ class Caaspctl:
         print("Building caaspctl")
         self.utils.gorun("make")
 
-    @timeout(600)
-    @step
-    def bootstrap_environment(self):
-        """Bootstrap Environment"""
-        self.utils.setup_ssh()
-        self.caaspctl_cluster_init()
-        self.caaspctl_node_bootstrap()
-        self.add_worker_in_cluster()
-        try:
-            self.caaspctl_cluster_status()
-        except:
-            pass
- 
     @step
     def cleanup(self):
         """Cleanup caaspctl working environment"""
@@ -71,21 +58,22 @@ class Caaspctl:
             raise Exception("Failure(s) during cleanup")
 
     @step
-    def caaspctl_cluster_init(self):
+    def cluster_init(self):
         print("Cleaning up any previous test-cluster dir")
-        self.utils.runshellcommand("rm {}/test-cluster -rf".format(self.conf.workspace))
+        self.utils.runshellcommand("rm -rf {}".format(self.cwd))
         cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
-        self.utils.run_caaspctl(cmd, init=True)
+        # Override work directory, because init must run in the parent directory of the
+        # cluster directory
+        self._run_caaspctl(cmd, cwd=self.conf.workspace)
 
     @step
-    def caaspctl_node_bootstrap(self):
+    def node_bootstrap(self):
         cmd = "node bootstrap --user {username} --sudo --target \
                  {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
-        self.utils.run_caaspctl(cmd)
-        self._num_master += 1
+        self._run_caaspctl(cmd)
 
     @step
-    def _caaspctl_node_join(self, role="worker", nr=0):
+    def node_join(self, role="worker", nr=0):
         try:
             if role == "master":
                 ip_addr = self._get_masters_ipaddrs()[nr]
@@ -98,12 +86,12 @@ class Caaspctl:
         cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
             role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
-            self.utils.run_caaspctl(cmd)
+            self._run_caaspctl(cmd)
         except:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
     @step
-    def _caaspctl_node_remove(self, role="worker", nr=0):
+    def node_remove(self, role="worker", nr=0):
         if nr <= 0:
             raise ("{}Error: there is not enough node to remove {} node in cluster{}".format(
                 Constant.RED, role,Constant.RED_EXIT))
@@ -115,80 +103,14 @@ class Caaspctl:
 
         cmd = "node remove my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
-            self.utils.run_caaspctl(cmd)
+            self._run_caaspctl(cmd)
         except:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
-    @timeout(600)
-    @step
-    def add_worker_in_cluster(self):
-        try:
-            self._caaspctl_node_join(role="worker", nr=self._num_worker)
-            self._num_worker += 1
-        except:
-            self._num_worker -= 1
+    def cluster_status(self):
+        self._run_caaspctl("cluster status")
 
-    @timeout(600)
-    @step
-    def add_master_in_cluster(self):
-        try:
-            self._caaspctl_node_join(role="master", nr=self._num_master)
-            self._num_master += 1
-        except:
-            self._num_master -= 1
-
-    @timeout(600)
-    @step
-    def remove_worker_in_cluster(self):
-        try:
-            self._num_worker -= 1
-            self._caaspctl_node_remove(role="worker", nr=self._num_worker)
-        except:
-            self._num_worker += 1
-
-
-    @timeout(600)
-    @step
-    def remove_master_in_cluster(self):
-        try:
-            self._num_master -= 1
-            self._caaspctl_node_remove(role="master", nr=self._num_master)
-        except:
-            self._num_master += 1
-
-
-    @step
-    def add_nodes_in_cluster(self, num_master=1, num_worker=1):
-        cluster = Caaspctl(self.conf)
-
-        for _ in range(num_worker):
-            cluster.add_worker_in_cluster()
-        for _ in range(num_master):
-            cluster.add_master_in_cluster()
-
-        try:
-            cluster.caaspctl_cluster_status()
-        except:
-            pass
-
-    @step
-    def remove_nodes_in_cluster(self, num_master=0, num_worker=1):
-        cluster = Caaspctl(self.conf)
-
-        for _ in range(num_worker):
-            cluster.remove_worker_in_cluster()
-        for _ in range(num_master):
-            cluster.remove_master_in_cluster()
-
-        try:
-            cluster.caaspctl_cluster_status()
-        except:
-            pass
-
-    def caaspctl_cluster_status(self):
-        self.utils.run_caaspctl("cluster status")
-
-    def _load_num_of_nodes(self):
+    def num_of_nodes(self):
         try:
             test_cluster = os.path.join(self.conf.workspace, "test-cluster")
             binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
@@ -233,3 +155,17 @@ class Caaspctl:
 
         if logging_error:
             raise Exception("Failure(s) while collecting logs")
+
+    def _run_caaspctl(self, cmd, cwd=None):
+        """Running caaspctl command in cwd.
+        The cwd defautls to {workspace}/test-cluster but can be overrided
+        for example, for the init command that must run in {workspace}
+        """
+        if cwd is None:
+           cwd=self.cwd
+
+        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
+
+        binpath = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
+        self.utils.runshellcommand(binpath + " "+ cmd, cwd=cwd, env=env)
+
