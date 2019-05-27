@@ -9,8 +9,18 @@ class Skuba:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(self.conf)
-        self.state = self._load_tfstate()
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
+
+    def _verify_caaspctl_bin_dependency(self):
+        caaspctl_bin_path = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
+        if not os.path.isfile(caaspctl_bin_path):
+            raise FileNotFoundError("{}caaspctl not found at {}. Please run create-caaspctl and try again".format(
+                Constant.RED, caaspctl_bin_path, Constant.RED_EXIT))
+
+    def _verify_bootstrap_dependency(self):
+        if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
+            raise Exception("{}test-cluster not found. Please run bootstrap and try again{}".format(
+                Constant.RED, Constant.RED_EXIT))
 
     @timeout(600)
     @step
@@ -59,6 +69,8 @@ class Skuba:
 
     @step
     def cluster_init(self):
+        self._load_tfstate()
+
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
         cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
@@ -68,12 +80,18 @@ class Skuba:
 
     @step
     def node_bootstrap(self):
+        self._load_tfstate()
+        self._verify_bootstrap_dependency()
+
         cmd = "node bootstrap --user {username} --sudo --target \
                  {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
         self._run_skuba(cmd)
 
     @step
     def node_join(self, role="worker", nr=0):
+        self._load_tfstate()
+        self._verify_bootstrap_dependency()
+        
         try:
             if role == "master":
                 ip_addr = self._get_masters_ipaddrs()[nr]
@@ -92,6 +110,9 @@ class Skuba:
 
     @step
     def node_remove(self, role="worker", nr=0):
+        self._load_tfstate()
+        self._verify_bootstrap_dependency()
+
         if nr <= 0:
             raise ("{}Error: there is not enough node to remove {} node in cluster{}".format(
                 Constant.RED, role,Constant.RED_EXIT))
@@ -108,6 +129,7 @@ class Skuba:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
 
     def cluster_status(self):
+        self._verify_bootstrap_dependency()
         self._run_skuba("cluster status")
 
     def num_of_nodes(self):
@@ -124,7 +146,7 @@ class Skuba:
         fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
         print("Reading {}".format(fn))
         with open(fn) as f:
-            return json.load(f)
+            self.state= json.load(f)
 
     def _get_lb_ipaddr(self):
         return self.state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
@@ -139,6 +161,8 @@ class Skuba:
     @timeout(600)
     @step
     def gather_logs(self):
+        self._load_tfstate()
+
         logging_error = False
 
         try:
@@ -161,6 +185,8 @@ class Skuba:
         The cwd defautls to {workspace}/test-cluster but can be overrided
         for example, for the init command that must run in {workspace}
         """
+        self._verify_caaspctl_bin_dependency()
+
         if cwd is None:
            cwd=self.cwd
 
