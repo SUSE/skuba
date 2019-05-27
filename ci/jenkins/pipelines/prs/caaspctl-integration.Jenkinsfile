@@ -56,13 +56,11 @@ pipeline {
             archiveArtifacts("caaspctl/ci/infra/${PLATFORM}/terraform.tfvars")
         } }
 
-        stage('Bootstrap Cluster') { steps {
-            sh(script: 'make -f caaspctl/ci/Makefile bootstrap', label: 'Bootstrap')
-        } }
-
-        stage('Add Nodes to Cluster') { steps {
-            sh(script: 'make -f caaspctl/ci/Makefile add_nodes', label: 'Add Nodes')
-        } }
+        stage('Run end-to-end tests') { steps {
+           dir("caaspctl") {
+             sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
+             sh(script: "make setup-ssh && CAASPCTL_BIN_PATH=\"${WORKSPACE}/go/bin/caaspctl\" GINKGO_BIN_PATH=\"${WORKSPACE}/caaspctl/ginkgo\" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
+       } } }
     }
     post {
         always {
