@@ -19,10 +19,7 @@ class Tests:
         self.skuba.node_bootstrap()
         self._num_master = 1
         self.add_worker_in_cluster()
-        try:
-            self.skuba.cluster_status()
-        except:
-            pass
+        self.skuba.cluster_status()
 
     @timeout(600)
     @step
@@ -69,10 +66,7 @@ class Tests:
         for _ in range(num_master):
             self.add_master_in_cluster()
 
-        try:
-            self.skuba.cluster_status()
-        except:
-            pass
+        self.skuba.cluster_status()
 
     @step
     def remove_nodes_in_cluster(self, num_master=0, num_worker=1):
@@ -82,7 +76,4 @@ class Tests:
         for _ in range(num_master):
             self.remove_master_in_cluster()
 
-        try:
-            self.skuba.cluster_status()
-        except:
-            pass
+        self.skuba.cluster_status()
