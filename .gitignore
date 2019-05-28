@@ -22,6 +22,6 @@
 # RPM files folder
 ci/packaging/suse/obs_files
 
-# ignore ginkgo and caaspctl
+# ignore ginkgo and skuba
 ginkgo
-caaspctl 
+skuba

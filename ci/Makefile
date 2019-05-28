@@ -20,9 +20,9 @@ add_worker_nodes:
 bootstrap_environment:
 	${TEST_RUNNER} --bootstrap
 
-.PHONY: create_caaspctl
-create_caaspctl:
-	${TEST_RUNNER} --create-caaspctl
+.PHONY: create_skuba
+create_skuba:
+	${TEST_RUNNER} --create-skuba
 
 .PHONY: create_environment
 create_environment:
@@ -60,7 +60,7 @@ pre_deployment: info
 pr_checks: git_rebase_check
 
 .PHONY: deploy
-deploy: create_environment create_caaspctl
+deploy: create_environment create_skuba
 
 .PHONY: bootstrap
 bootstrap: bootstrap_environment

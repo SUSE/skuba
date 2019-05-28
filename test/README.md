@@ -1,4 +1,4 @@
-# End to End tests for caaspctl
+# End to End tests for skuba
 
 The test can be run locally or in CI.
 
@@ -24,7 +24,7 @@ Boths methods are convenients: 1) method is usefull when we don't have the terra
 
 3) Use a custom ginkgo binary:
 
-`~/go/src/github.com/SUSE/caaspctl> GINKGO_BIN_PATH="$PWD/ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e`
+`~/go/src/github.com/SUSE/skuba> GINKGO_BIN_PATH="$PWD/ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e`
 In the following example we assume you have builded ginkgo from vendor.
 
 # Env. Variable:
@@ -59,7 +59,7 @@ As showed, in future we will have `WORKER01`, `MASTER01`, `MASTER02` etc.
 
 - `IP_FROM_TF_STATE`: - optional - if set to `TRUE` this will read terraform states. Default: false
 - `PLATFORM`: - optional - this specify the provider used. (libvirt, openstack, vmware, etc). Default: None.
-- `CAASPCTL_BIN_PATH`: - optional - for specify the full path of a caaspctl binary. ( e.g if you use an RPM). Default: GOPATH
+- `SKUBA_BIN_PATH`: - optional - for specify the full path of a skuba binary. ( e.g if you use an RPM). Default: GOPATH
 - `GINKGO_BIN_PATH`: - optional -  use this var for passing a fullpath to a ginkgo bin which will be used by tests. Default: your Path
 
 SEE 2) example in HOW TO RUN

@@ -3,7 +3,7 @@
 dashes="-------------------------------------------------------------------"
 header="${dashes}%n%cd - %an <%ae>"
 datef="%a %b %e %H:%M:%S %Z %Y"
-changes=${1:-caaspctl.changes.append}
+changes=${1:-skuba.changes.append}
 
 [ -f "${changes}" ] && rm "${changes}"
 

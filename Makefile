@@ -18,21 +18,21 @@ VERSION      := $(shell cat VERSION)
 COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE   := $(shell date +%Y%m%d)
 TAGS         := development
-CAASPCTL_LDFLAGS = -ldflags "-X=github.com/SUSE/caaspctl/internal/app/caaspctl.Version=$(VERSION) \
-                             -X=github.com/SUSE/caaspctl/internal/app/caaspctl.Commit=$(COMMIT) \
-                             -X=github.com/SUSE/caaspctl/internal/app/caaspctl.BuildDate=$(BUILD_DATE)"
+SKUBA_LDFLAGS = -ldflags "-X=github.com/SUSE/skuba/internal/app/skuba.Version=$(VERSION) \
+                          -X=github.com/SUSE/skuba/internal/app/skuba.Commit=$(COMMIT) \
+                          -X=github.com/SUSE/skuba/internal/app/skuba.BuildDate=$(BUILD_DATE)"
 
-CAASPCTL_DIRS    = cmd pkg internal test
+SKUBA_DIRS    = cmd pkg internal test
 
 # go source files, ignore vendor directory
-CAASPCTL_SRCS = $(shell find $(CAASPCTL_DIRS) -type f -name '*.go')
+SKUBA_SRCS = $(shell find $(SKUBA_DIRS) -type f -name '*.go')
 
 .PHONY: all
 all: install
 
 .PHONY: build
 build:
-	$(GO) build $(GOMODFLAG) $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) build $(GOMODFLAG) $(SKUBA_LDFLAGS) -tags $(TAGS) ./cmd/...
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
 MANPAGES    := $(MANPAGES_MD:%.md=%)
@@ -45,14 +45,14 @@ docs: $(MANPAGES)
 
 .PHONY: install
 install:
-	$(GO) install $(GOMODFLAG) $(CAASPCTL_LDFLAGS) -tags $(TAGS) ./cmd/...
+	$(GO) install $(GOMODFLAG) $(SKUBA_LDFLAGS) -tags $(TAGS) ./cmd/...
 	$(RM) -f $(GOBINPATH)/kubectl-caasp
-	$(LN) -s $(GOBINPATH)/caaspctl $(GOBINPATH)/kubectl-caasp
+	$(LN) -s $(GOBINPATH)/skuba $(GOBINPATH)/kubectl-caasp
 
 .PHONY: clean
 clean:
 	$(GO) clean -i
-	$(RM) -f ./caaspctl
+	$(RM) -f ./skuba
 
 .PHONY: distclean
 distclean: clean
@@ -69,7 +69,7 @@ release:
 .PHONY: lint
 lint:
 	$(GO) vet ./...
-	test -z `$(GOFMT) -l $(CAASPCTL_SRCS)` || { $(GOFMT) -d $(CAASPCTL_SRCS) && false; }
+	test -z `$(GOFMT) -l $(SKUBA_SRCS)` || { $(GOFMT) -d $(SKUBA_SRCS) && false; }
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
 	find ci -type f -name "*.sh" | xargs bashate
 
@@ -86,7 +86,7 @@ suse-changelog:
 test-e2e:
 	./ci/tasks/e2e-tests.py
 
-# this target are called from caaspctl dir mainly not from CI dir
+# this target are called from skuba dir mainly not from CI dir
 # build ginkgo executables from vendor (used in CI)
 .PHONY: build-ginkgo
 build-ginkgo:

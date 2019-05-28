@@ -4,7 +4,7 @@
     periodic-folder-trigger: 5m
     number-to-keep: 30
     days-to-keep: 30
-    script-path: ci/jenkins/pipelines/prs/caaspctl-code-lint.Jenkinsfile
+    script-path: ci/jenkins/pipelines/prs/skuba-code-lint.Jenkinsfile
     scm:
       - github:
           repo: '{repo-name}'

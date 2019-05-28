@@ -9,5 +9,5 @@ import (
 
 func TestCoreFeatures(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Core-features caaspctl Suite")
+	RunSpecs(t, "Core-features skuba Suite")
 }

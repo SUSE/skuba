@@ -1,6 +1,6 @@
 - project:
     name: caasp-jobs/caasp-v4
-    repo-name: caaspctl
+    repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
     jobs:
@@ -21,11 +21,11 @@
     pipeline-scm:
         scm:
             - git:
-                url: 'https://github.com/SUSE/caaspctl.git'
+                url: 'https://github.com/SUSE/skuba.git'
                 credentials-id: github-token
                 branches:
                     - master
                 browser: auto
                 suppress-automatic-scm-triggering: true
-                basedir: caaspctl
-        script-path: caaspctl/ci/jenkins/pipelines/caaspctl-jjb.Jenkinsfile
+                basedir: skuba
+        script-path: skuba/ci/jenkins/pipelines/skuba-jjb.Jenkinsfile

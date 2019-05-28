@@ -1,6 +1,6 @@
-# Contributing to skuba (formerly caaspctl)
+# Contributing to skuba
 
-The following is a set of guidelines for contributing to this project, hosted by [SUSE](https://github.com/suse/caaspctl).
+The following is a set of guidelines for contributing to this project, hosted by [SUSE](https://github.com/suse/skuba).
 If you have a suggestion to these guidelines feel free to propose changes in a pull request.
 
 
