@@ -1,4 +1,4 @@
-# caaspctl
+# skuba
 
 Tool to manage the full lifecycle of a cluster.
 
@@ -13,7 +13,7 @@ Tool to manage the full lifecycle of a cluster.
 
 The required infrastructure for deploying CaaSP needs to exist beforehand, it's
 required for you to have SSH access to these machines from the machine that you
-are running `caaspctl` from. `caaspctl` requires you to have added your SSH
+are running `skuba` from. `skuba` requires you to have added your SSH
 keys to the SSH agent on this machine, e.g:
 
 ```sh
@@ -34,7 +34,7 @@ The terraform based deployments are taking care of fulfilling these requirements
 ## Installation
 
 ```sh
-go get -d github.com/SUSE/caaspctl
+go get -d github.com/SUSE/skuba
 ```
 
 ### Development
@@ -84,7 +84,7 @@ nothing to tweak in the general case, but you can go through the generated
 configurations and check if everything is fine for your taste.
 
 ```
-caaspctl cluster init --control-plane load-balancer.example.com company-cluster
+skuba cluster init --control-plane load-balancer.example.com company-cluster
 ```
 
 This command will have generated a basic project scaffold in the `company-cluster`
@@ -97,10 +97,10 @@ You need to bootstrap your first master node of the cluster. For this purpose
 you have to be inside the `company-cluster` folder.
 
 ```
-caaspctl node bootstrap --user opensuse --sudo --target <IP/fqdn> my-master
+skuba node bootstrap --user opensuse --sudo --target <IP/fqdn> my-master
 ```
 
-You can check `caaspctl node bootstrap --help` for further options, but the
+You can check `skuba node bootstrap --help` for further options, but the
 previous command means:
 
 * Bootstrap node using a SSH connection to target `<IP/fqdn>`
@@ -144,7 +144,7 @@ This command will join a new master node to the cluster. This will also increase
 member count by one.
 
 ```
-caaspctl node join --role master --user opensuse --sudo --target <IP/fqdn> second-master
+skuba node join --role master --user opensuse --sudo --target <IP/fqdn> second-master
 ```
 
 #### worker node join
@@ -152,7 +152,7 @@ caaspctl node join --role master --user opensuse --sudo --target <IP/fqdn> secon
 This command will join a new worker node to the cluster.
 
 ```
-caaspctl node join --role worker --user opensuse --sudo --target <IP/fqdn> my-worker
+skuba node join --role worker --user opensuse --sudo --target <IP/fqdn> my-worker
 ```
 
 ## Shrinking a cluster
@@ -175,19 +175,19 @@ the target node will be performed automatically:
 For removing a node you only need to provide the name of the node known to Kubernetes:
 
 ```
-caaspctl node remove my-worker
+skuba node remove my-worker
 ```
 
 Or, if you want to remove a master node:
 
 ```
-caaspctl node remove second-master
+skuba node remove second-master
 ```
 
 ## kubectl-caasp
 
-This project also comes with a kubectl plugin that has the same layout as `caaspctl`. You can
-call to the same commands presented in `caaspctl` as `kubectl caasp` when installing the
+This project also comes with a kubectl plugin that has the same layout as `skuba`. You can
+call to the same commands presented in `skuba` as `kubectl caasp` when installing the
 `kubectl-caasp` binary in your path.
 
 The purpose of the tool is to provide a quick way to see if nodes have pending
@@ -220,5 +220,5 @@ Videos:
 The videos are uncut, as you will see the whole deployment takes around 7 minutes:
 4 minutes for the infrastructure, 3 minutes for the actual cluster.
 
-The demo uses a small script to automate the sequential invocations of `caaspctl`.
+The demo uses a small script to automate the sequential invocations of `skuba`.
 Anything can be used to do that, including bash.

@@ -1,4 +1,4 @@
-from caaspctl import Caaspctl
+from skuba import Skuba
 from utils import step
 from utils import Utils
 from timeout_decorator import timeout
@@ -7,20 +7,20 @@ class Tests:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(self.conf)
-        self.caaspctl = Caaspctl(conf)
-        self._num_master, self._num_worker = self.caaspctl.num_of_nodes()
+        self.skuba = Skuba(conf)
+        self._num_master, self._num_worker = self.skuba.num_of_nodes()
 
     @timeout(600)
     @step
     def bootstrap_environment(self):
         """Bootstrap Environment"""
         self.utils.setup_ssh()
-        self.caaspctl.cluster_init()
-        self.caaspctl.node_bootstrap()
+        self.skuba.cluster_init()
+        self.skuba.node_bootstrap()
         self._num_master = 1
         self.add_worker_in_cluster()
         try:
-            self.caaspctl.cluster_status()
+            self.skuba.cluster_status()
         except:
             pass
 
@@ -28,7 +28,7 @@ class Tests:
     @step
     def add_worker_in_cluster(self):
         try:
-            self.caaspctl.node_join(role="worker", nr=self._num_worker)
+            self.skuba.node_join(role="worker", nr=self._num_worker)
             self._num_worker += 1
         except:
             self._num_worker -= 1
@@ -37,7 +37,7 @@ class Tests:
     @step
     def add_master_in_cluster(self):
         try:
-            self.caaspctl.node_join(role="master", nr=self._num_master)
+            self.skuba.node_join(role="master", nr=self._num_master)
             self._num_master += 1
         except:
             self._num_master -= 1
@@ -47,7 +47,7 @@ class Tests:
     def remove_worker_in_cluster(self):
         try:
             self._num_worker -= 1
-            self.caaspctl.node_remove(role="worker", nr=self._num_worker)
+            self.skuba.node_remove(role="worker", nr=self._num_worker)
         except:
             self._num_worker += 1
 
@@ -57,7 +57,7 @@ class Tests:
     def remove_master_in_cluster(self):
         try:
             self._num_master -= 1
-            self.caaspctl.node_remove(role="master", nr=self._num_master)
+            self.skuba.node_remove(role="master", nr=self._num_master)
         except:
             self._num_master += 1
 
@@ -70,7 +70,7 @@ class Tests:
             self.add_master_in_cluster()
 
         try:
-            self.caaspctl.cluster_status()
+            self.skuba.cluster_status()
         except:
             pass
 
@@ -83,6 +83,6 @@ class Tests:
             self.remove_master_in_cluster()
 
         try:
-            self.caaspctl.cluster_status()
+            self.skuba.cluster_status()
         except:
             pass

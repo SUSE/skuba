@@ -18,7 +18,7 @@
 [[ ! -n ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN env variable must be set" \
     && exit 1
 
-api_url="https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl"
+api_url="https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/skuba"
 pull_url="${api_url}/pulls"
 issue_url="${api_url}/issues"
 status_url="${api_url}/statuses"

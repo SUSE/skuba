@@ -89,7 +89,7 @@ class Terraform:
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(
                             self.conf.workspace,
-                            "caaspctl/ci/infra/{}/{}".format(
+                            "skuba/ci/infra/{}/{}".format(
                                 self.conf.platform,
                                 Constant.TERRAFORM_EXAMPLE)
                         )

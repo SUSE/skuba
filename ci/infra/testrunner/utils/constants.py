@@ -16,7 +16,7 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
-        obj.caaspctl_dir = None
+        obj.skuba_dir = None
         obj.terraform_dir = None
         obj.ssh_key_option = None
         obj.username = None
@@ -135,15 +135,15 @@ class BaseConfig:
     @staticmethod
     def finalize(conf):
         conf.workspace = os.path.expanduser(conf.workspace)
-        conf.caaspctl_dir = os.path.realpath(os.path.join(conf.workspace, "caaspctl"))
-        conf.terraform_dir = os.path.join(conf.caaspctl_dir, "ci/infra/{}".format(conf.platform))
+        conf.skuba_dir = os.path.realpath(os.path.join(conf.workspace, "skuba"))
+        conf.terraform_dir = os.path.join(conf.skuba_dir, "ci/infra/{}".format(conf.platform))
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
         conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
 
         if conf.ssh_key_option == "id_shared":
-            conf.ssh_key_option = os.path.join(conf.caaspctl_dir, "ci/infra/id_shared")
+            conf.ssh_key_option = os.path.join(conf.skuba_dir, "ci/infra/id_shared")
         elif conf.ssh_key_option == "id_rsa":
             conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
 

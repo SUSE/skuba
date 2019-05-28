@@ -25,4 +25,4 @@
                     - '{branch}'
                 browser: auto
                 suppress-automatic-scm-triggering: true
-        script-path: ci/jenkins/pipelines/caaspctl-handle-pr.Jenkinsfile
+        script-path: ci/jenkins/pipelines/skuba-handle-pr.Jenkinsfile

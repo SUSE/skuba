@@ -1,4 +1,4 @@
-# Caaspctl Continous Integration , Deployment and Infrastructure.
+# Skuba Continous Integration , Deployment and Infrastructure.
 
 ## Infrastructure deployments
 

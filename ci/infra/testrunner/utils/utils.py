@@ -26,7 +26,7 @@ class Utils:
 
     def runshellcommand(self, cmd, cwd=None, env=None):
         """Running shell command in {workspace} if cwd == None
-           Eg) cwd is "caaspctl", cmd will run shell in {workspace}/caaspctl/
+           Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
                cwd is None, cmd will run in {workspace}
                cwd is abs path, cmd will run in cwd
         Keyword arguments:
@@ -52,7 +52,7 @@ class Utils:
         return pubkey
 
     def gorun(self, cmd=None, extra_env=None):
-        """Running go command in {workspace}/go/src/github.com/SUSE/caaspctl"""
+        """Running go command in {workspace}/go/src/github.com/SUSE/skuba"""
         env = {
             'GOPATH': os.path.join(self.conf.workspace,'go'),
             'PATH': os.environ['PATH'],
@@ -62,7 +62,7 @@ class Utils:
         if extra_env:
             env.update(extra_env)
 
-        self.runshellcommand(cmd, cwd="go/src/github.com/SUSE/caaspctl", env=env)
+        self.runshellcommand(cmd, cwd="go/src/github.com/SUSE/skuba", env=env)
 
     def ssh_run(self, ipaddr, cmd):
         key_fn = self.conf.ssh_key_option
@@ -107,11 +107,11 @@ class Utils:
         try:
             cmd = 'git -c "user.name={}" -c "user.email={}" \
                            rebase origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
-            self.runshellcommand(cmd, cwd="caaspctl")
+            self.runshellcommand(cmd, cwd="skuba")
         except subprocess.CalledProcessError as ex:
             print(ex)
             print("{}Rebase failed, manual rebase is required.{}".format(Constant.RED, Constant.RED_EXIT))
-            self.runshellcommand("git rebase --abort", cwd="caaspctl")
+            self.runshellcommand("git rebase --abort", cwd="skuba")
             sys.exit(1)
         except Exception as ex:
             print(ex)

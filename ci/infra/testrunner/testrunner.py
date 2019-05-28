@@ -16,7 +16,7 @@ sys.path.append(os.path.join(testrunner_path,"tests"))
 from constants import BaseConfig
 from constants import Constant
 from utils import Utils
-from caaspctl import Caaspctl
+from skuba import Skuba
 from openstack import Openstack
 from tests import Tests
 
@@ -35,13 +35,13 @@ def main():
                         help="git rebase to master")
     parser.add_argument("-i", "--info", dest="ip_info", action='store_true', help='ip info')
     parser.add_argument("-x", "--cleanup", dest="cleanup", action='store_true',
-                          help="cleanup created caaspctl environment")
+                          help="cleanup created skuba environment")
     parser.add_argument("-t", "--terraform-apply", dest="apply_terraform", action="store_true",
                         help="deploy nodes for cluster in your configured platform \
                               e.g) openstack, vmware, ..")
-    parser.add_argument("-c", "--create-caaspctl", dest="create_caaspctl", action="store_true",
-                        help="create caaspctl environment {workspace}/go/src/github.com/SUSE/caaspctl\
-                              and build caaspctl in that directory")
+    parser.add_argument("-c", "--create-skuba", dest="create_skuba", action="store_true",
+                        help="create skuba environment {workspace}/go/src/github.com/SUSE/skuba\
+                              and build skuba in that directory")
     parser.add_argument("-b", "--bootstrap", dest="boostrap", action="store_true",
                         help="bootstrap k8s cluster with deployed nodes in your platform")
     parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
@@ -91,21 +91,21 @@ def main():
         Utils(conf).git_rebase()
     elif options.cleanup:
         platform.cleanup()
-        Caaspctl(conf).cleanup()
+        Skuba(conf).cleanup()
     elif options.apply_terraform:
         platform.apply_terraform()
-    elif options.create_caaspctl:
-        Caaspctl(conf).create_caaspctl()
+    elif options.create_skuba:
+        Skuba(conf).create_skuba()
     elif options.boostrap:
         Tests(conf).bootstrap_environment()
     elif options.cluster_status:
-        Caaspctl(conf).cluster_status()
+        Skuba(conf).cluster_status()
     elif options.add_nodes:
         Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.remove_nodes:
         Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.log:
-        Caaspctl(conf).gather_logs()
+        Skuba(conf).gather_logs()
 
     sys.exit(0)
 

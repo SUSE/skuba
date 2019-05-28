@@ -19,7 +19,7 @@
 
 # We only expect PRs to come from forked repositories instead of branches from the main repo
 # so we need to check that before moving forward to examine the individual commits
-if [[ $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID} | \
+if [[ $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID} | \
     jq -rc '.| if (.head.repo.full_name == .base.repo.full_name) then true else false end') == true ]]; then
     echo "PR-${CHANGE_ID} is coming from a branch in the target repository. This is not allowed!"
     echo "Please send your PR from a forked repository instead."
@@ -31,7 +31,7 @@ fi
 # check the next commit. If the author is not using a SUSE email address, then we check if the user belongs to the SUSE organization.
 # If he/she does, then we exit with non-zero exit code to denote that the user must be using a SUSE email address if he/she is a
 # SUSE employee.
-for commit_author in $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/caaspctl/pulls/${CHANGE_ID}/commits | jq -cr '.[] | [.sha, .author.login, .commit.author.email] | join(",")'); do
+for commit_author in $(curl -s https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}/commits | jq -cr '.[] | [.sha, .author.login, .commit.author.email] | join(",")'); do
     commit=$(echo $commit_author | awk -F, '{print $1}')
     login=$(echo $commit_author | awk -F, '{print $2}')
     author=$(echo $commit_author | awk -F, '{print $3}')

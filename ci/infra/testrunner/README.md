@@ -19,7 +19,7 @@ export OS_PASSWORD="YOUR PASSWORD"
 ```
 4. Edit ci/infra/testrunner/openstack.yaml
 ```
-workspace: "" # The top folder where caaspctl is stored
+workspace: "" # The top folder where skuba is stored
 username: "" 
 openrc: "" 
 ```
@@ -40,14 +40,14 @@ optional arguments:
   -h, --help            show this help message and exit
   -z, --git-rebase      git rebase to master
   -i, --info            ip info
-  -x, --cleanup         cleanup created caaspctl environment
+  -x, --cleanup         cleanup created skuba environment
   -t, --terraform-apply
                         deploy nodes for cluster in your configured platform
                         e.g) openstack, vmware, ..
-  -c, --create-caaspctl
-                        create caaspctl environment
-                        {workspace}/go/src/github.com/SUSE/caaspctl and build
-                        caaspctl in that directory
+  -c, --create-skuba
+                        create skuba environment
+                        {workspace}/go/src/github.com/SUSE/skuba and build
+                        skuba in that directory
   -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
                         platform
   -k, --status          check K8s cluster status
@@ -93,7 +93,7 @@ As default, Jenkins has WORKSPACE environment variable so that workspace will be
 ```ci/infra/testrunner testrunner -x ``` 
 2. Deploy nodes in openstack  
 ```ci/infra/testrunner testrunner -t ```  
-3. Create caaspctl env and Build caaspctl and store in go bin dir
+3. Create skuba env and Build skuba and store in go bin dir
 ```ci/infra/testrunner testrunner -t ```  
 4. Bootstraping a cluster  
  1 Loadbalancer, 1 master and 1 worker will be availble once bootstrapping is done for the cluster. And you are ready to use K8s cluster.

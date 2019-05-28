@@ -1,6 +1,6 @@
 # Infra deployment engine
 platform: "openstack" # openstack, vmware, bare-metal, libvirt
-workspace: "~/go/src/ghithub.com/" # The top folder where caaspctl is stored
+workspace: "~/go/src/ghithub.com/" # The top folder where skuba is stored
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: "USERNAME"  # Fill your username
 nodeuser: "sles"  # Default node username
