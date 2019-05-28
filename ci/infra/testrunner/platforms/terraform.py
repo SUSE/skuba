@@ -4,6 +4,7 @@ import subprocess
 from utils import step
 from utils import Utils
 from constants import Constant
+from format import Format
 
 
 class Terraform:
@@ -25,7 +26,7 @@ class Terraform:
             self._cleanup_platform()
         except Exception as ex:
             cleanup_failure = True
-            print("Received the following error {}".format(ex))
+            print(Format.alert("Received the following error {}".format(ex)))
             print("Attempting to finish cleaup")
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
@@ -41,7 +42,7 @@ class Terraform:
                 print("Attempting to finish cleaup")
 
         if cleanup_failure:
-            raise Exception("Failure(s) during cleanup")
+            raise Exception(Format.alert("Failure(s) during cleanup"))
 
     @step
     def apply_terraform(self):
@@ -63,9 +64,9 @@ class Terraform:
 
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
-            print("Run terraform plan - execution n. %d" % retry)
+            print(Format.alert("Run terraform plan - execution # {}".format(retry)))
             self.runshellcommandterraform(plan_cmd)
-            print("Running terraform apply - execution n. %d" % retry)
+            print(Format.alert("Run terraform apply - execution # {}".format(retry)))
             try:
                 self.runshellcommandterraform(apply_cmd)
                 break
@@ -73,11 +74,10 @@ class Terraform:
             except:
                 print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
-                    print("Last failed attempt, exiting")
-                    raise Exception("Failed Terraform deployment")
-
-            self.fetch_terraform_output()
-
+                    print(Format.alert("Failed Openstack Terraform deployment"))
+                    raise
+            finally:
+                self.fetch_terraform_output()
 
     @step
     def fetch_terraform_output(self):
@@ -135,7 +135,7 @@ class Terraform:
     def runshellcommandterraform(self, cmd, env=None):
         """Running terraform command in {workspace}/ci/infra/{platform}"""
         cwd = self.conf.terraform_dir
-        print("$ {} > {}".format(cwd, cmd))
+        print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def _check_tf_deployed(self):

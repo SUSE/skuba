@@ -11,6 +11,8 @@ class Skuba:
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
+    # TODO: this function is currently not used. Identify points where it should
+    # be invoked
     def _verify_tf_dependency(self):
         if not os.path.exists(self.conf.terraform_json_path):
             raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
