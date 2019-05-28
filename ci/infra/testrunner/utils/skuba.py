@@ -11,11 +11,11 @@ class Skuba:
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
-    def _verify_caaspctl_bin_dependency(self):
-        caaspctl_bin_path = os.path.join(self.conf.workspace, 'go/bin/caaspctl')
-        if not os.path.isfile(caaspctl_bin_path):
-            raise FileNotFoundError("{}caaspctl not found at {}. Please run create-caaspctl and try again".format(
-                Constant.RED, caaspctl_bin_path, Constant.RED_EXIT))
+    def _verify_skuba_bin_dependency(self):
+        skuba_bin_path = os.path.join(self.conf.workspace, 'go/bin/skuba')
+        if not os.path.isfile(skuba_bin_path):
+            raise FileNotFoundError("{}skuba not found at {}. Please run create-skuba and try again".format(
+                Constant.RED, skuba_bin_path, Constant.RED_EXIT))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
@@ -26,12 +26,15 @@ class Skuba:
     @step
     def create_skuba(self):
         """Configure Environment"""
-        try:
-            self.utils.runshellcommand("rm -fr go")
-            self.utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-            self.utils.runshellcommand("cp -a skuba go/src/github.com/SUSE/")
-        except:
-            pass
+        self.utils.runshellcommand("rm -fr go")
+        self.utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
+        self.utils.runshellcommand("cp -a skuba go/src/github.com/SUSE/")
+        self.utils.gorun("go version")
+        print("Building skuba")
+        self.utils.gorun("make")
+
+    @step
+    def cleanup(self):
         self.utils.gorun("go version")
         print("Building skuba")
         self.utils.gorun("make")
@@ -133,13 +136,16 @@ class Skuba:
         self._run_skuba("cluster status")
 
     def num_of_nodes(self):
-        try:
-            test_cluster = os.path.join(self.conf.workspace, "test-cluster")
-            binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
-            cmd = "cd " + test_cluster + "; " +binpath + " cluster status"
-            output = self.utils.runshellcommand_withoutput(cmd)
-        except:
-            return 0, 0
+        
+        test_cluster = os.path.join(self.conf.workspace, "test-cluster")
+        binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
+        cmd = "cd " + test_cluster + "; " +binpath + " cluster status"
+        output = self.utils.runshellcommand_withoutput(cmd)
+        return output.count("master"), output.count("worker")
+
+    def _load_tfstate(self):
+        fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
+        print("Reading {}".format(fn))
         return output.count("master"), output.count("worker")
 
     def _load_tfstate(self):
@@ -156,7 +162,6 @@ class Skuba:
 
     def _get_workers_ipaddrs(self):
         return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
-
 
     @timeout(600)
     @step
@@ -185,7 +190,7 @@ class Skuba:
         The cwd defautls to {workspace}/test-cluster but can be overrided
         for example, for the init command that must run in {workspace}
         """
-        self._verify_caaspctl_bin_dependency()
+        self._verify_skuba_bin_dependency()
 
         if cwd is None:
            cwd=self.cwd
