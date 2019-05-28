@@ -15,6 +15,7 @@ sys.path.append(os.path.join(testrunner_path,"tests"))
 
 from constants import BaseConfig
 from constants import Constant
+from format import Format
 from utils import Utils
 from skuba import Skuba
 from openstack import Openstack
@@ -82,8 +83,7 @@ def main():
         print("Todo: libvirt is not ready yet")
         sys.exit(0)
     else:
-        raise Exception('{}Platform Error: {} is not applicable.{}' \
-                        .format(Constant.RED, conf.platform, Constant.RED_EXIT))
+        raise Exception(Format.alert("Platform Error: {} is not applicable".format(conf.platform)))
 
     if options.ip_info:
         Utils(conf).info()

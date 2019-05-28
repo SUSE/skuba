@@ -1,14 +1,11 @@
 import yaml, os
-
+from format import Format
 
 class Constant:
     TERRAFORM_EXAMPLE="terraform.tfvars.ci.example"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "
-    DOT = '\033[34m●\033[0m'
-    DOT_EXIT = '\033[32m●\033[0m'
-    RED = '\033[31m'
-    RED_EXIT = '\033[0m'
+
 
 class BaseConfig:
 
@@ -97,8 +94,7 @@ class BaseConfig:
     def get_var_dict(yaml_path):
         config_yaml_file_path = BaseConfig.get_yaml_path(yaml_path)
         if not os.path.isfile(config_yaml_file_path):
-            print("{}You have incorrect -v path for xml file  {}{}".format(Constant.RED,
-                                                    config_yaml_file_path, Constant.RED_EXIT))
+            print(Format.alert("You have incorrect -v path for xml file: {}".format(config_yaml_file_path)))
             raise FileNotFoundError
 
         with open(config_yaml_file_path, 'r') as stream:
@@ -156,20 +152,16 @@ class BaseConfig:
     @staticmethod
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
-            raise ValueError("{}{}{}".format(Constant.RED, "You should setup workspace value in a configured yaml file "
-                                                           "before using testrunner (caaspctl/ci/infra/testrunner/vars)",
-                                             Constant.RED_EXIT))
+            raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
+                                           "before using testrunner (caaspctl/ci/infra/testrunner/vars)"))
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
-            raise ValueError("{}{}{}".format(Constant.RED, "workspace should not be your home directory",
-                                             Constant.RED_EXIT))
+            raise ValueError(Format.alert("workspace should not be your home directory"))
         if not os.path.exists(os.path.join(conf.workspace, "caaspctl")):
-            raise ValueError("{}Your working directory, {} does not include \"caaspctl\" directory.\n\t    "
-                             "Check your working directory in a configured yaml file".format(Constant.RED,
-                              conf.workspace, Constant.RED_EXIT))
+            raise ValueError(Format.alert("Your working directory, {} does not include \"caaspctl\" directory.\n\t    "
+                                "Check your working directory in a configured yaml file".format(conf.workspace)))
         if conf.platform == "openstack" and not os.path.isfile(conf.openstack.openrc):
-            raise ValueError("{}Your openrc file path \"{}\" does not exist.\n\t    "
-                             "Check your openrc file path in a configured yaml file".format(Constant.RED,
-                              conf.openstack.openrc, Constant.RED_EXIT))
+            raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
+                                 "Check your openrc file path in a configured yaml file".format(conf.openstack.openrc)))
         return conf
 #if __name__ == '__main__':
 #    _conf = BaseConfig()
