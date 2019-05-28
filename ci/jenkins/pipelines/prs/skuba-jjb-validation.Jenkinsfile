@@ -14,6 +14,7 @@ void setBuildStatus(String context, String description, String state) {
 pipeline {
     agent { node { label 'caasp-team-private' } }
     environment {
+        GITHUB_TOKEN = credentials('github-token')
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
     }
@@ -21,6 +22,20 @@ pipeline {
         stage('Setting GitHub in-progress status') { steps {
             setBuildStatus('jenkins/skuba-jjb-validation', 'in-progress', 'pending')
         } }
+
+        stage('Git Clone') { steps {
+            deleteDir()
+            checkout([$class: 'GitSCM',
+                      branches: [[name: "*/${BRANCH_NAME}"]],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions: [[$class: 'LocalBranch'],
+                                   [$class: 'WipeWorkspace'],
+                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
+                      submoduleCfg: [],
+                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
+                                           credentialsId: 'github-token',
+                                           url: 'https://github.com/SUSE/skuba']]])
+        }}
 
         stage('Info') { steps {
             sh(script: "make -f skuba/ci/Makefile info", label: 'Info')
