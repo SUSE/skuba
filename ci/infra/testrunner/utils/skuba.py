@@ -1,8 +1,8 @@
 import os, json
 from timeout_decorator import timeout
+from format import Format
 from utils import step
 from utils import Utils
-from utils import Constant
 
 class Skuba:
 
@@ -14,13 +14,11 @@ class Skuba:
     def _verify_skuba_bin_dependency(self):
         skuba_bin_path = os.path.join(self.conf.workspace, 'go/bin/skuba')
         if not os.path.isfile(skuba_bin_path):
-            raise FileNotFoundError("{}skuba not found at {}. Please run create-skuba and try again".format(
-                Constant.RED, skuba_bin_path, Constant.RED_EXIT))
+            raise FileNotFoundError(Format.alert("skuba not found at {}. Please run create-skuba and try again".format(skuba_bin_path)))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise Exception("{}test-cluster not found. Please run bootstrap and try again{}".format(
-                Constant.RED, Constant.RED_EXIT))
+            raise Exception(Format.alert("test-cluster not found. Please run bootstrap and try again"))
 
     @timeout(600)
     @step
@@ -101,15 +99,14 @@ class Skuba:
             else:
                 ip_addr = self._get_workers_ipaddrs()[nr]
         except:
-            raise("{}Error: there is not enough node to add {} node in cluster{}".format(
-                Constant.RED, role, Constant.RED_EXIT))
+            raise Format.alert("Error: there is not enough node to add {} node in cluster".format(role))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
             role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
             self._run_skuba(cmd)
         except:
-            raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
+            raise Format.alert("Error: {}".format(cmd))
 
     @step
     def node_remove(self, role="worker", nr=0):
@@ -117,8 +114,7 @@ class Skuba:
         self._verify_bootstrap_dependency()
 
         if nr <= 0:
-            raise ("{}Error: there is not enough node to remove {} node in cluster{}".format(
-                Constant.RED, role,Constant.RED_EXIT))
+            raise Format.alert("Error: there is not enough node to remove {} node in cluster".format(role))
 
         if role == "master":
             ip_addr = self._get_masters_ipaddrs()[nr]
@@ -129,7 +125,7 @@ class Skuba:
         try:
             self._run_skuba(cmd)
         except:
-            raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
+            raise Format.alert("Error: {}".format(cmd))
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()
