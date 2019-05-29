@@ -44,7 +44,6 @@ data "template_file" "worker-cloud-init" {
     register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
     username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
@@ -100,10 +99,9 @@ resource "null_resource" "worker_wait_cloudinit" {
   count = "${var.workers}"
 
   connection {
-    host     = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
-    user     = "${var.username}"
-    password = "${var.password}"
-    type     = "ssh"
+    host = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
+    user = "${var.username}"
+    type = "ssh"
   }
 
   depends_on = ["openstack_compute_instance_v2.worker"]

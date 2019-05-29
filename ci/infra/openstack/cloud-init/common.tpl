@@ -6,15 +6,18 @@ locale: en_GB.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# set root password
-chpasswd:
-  list: |
-    root:linux
-    ${username}:${password}
-  expire: False
+# Add groups to the system
+groups:
+  - users
 
-ssh_authorized_keys:
-${authorized_keys}
+# Add users to the system (users are added after groups are added)
+users:
+  - name: ${username}
+    groups: users
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+    ssh-authorized-keys:
+      ${authorized_keys}
 
 ntp:
   enabled: true

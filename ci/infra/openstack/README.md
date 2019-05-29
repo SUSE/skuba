@@ -30,8 +30,12 @@ terraform apply
 It is important to have your public ssh key within the `authorized_keys`,
 this is done by `cloud-init` through a terraform variable called `authorized_keys`.
 
-All the instances have a `root` and a `opensuse` user. The `opensuse` user can
+All the instances have a `root` and the user of your choice. The normal user user can
 perform `sudo` without specifying a password.
+
+Neither root nor the normal user will have password. Both `terraform` and `skuba`
+are using SSH key-based authentication. You can always set a password after the
+creation of the machines using `passwd` (for normal user) or `sudo passwd` (for root)
 
 ## Load balancer
 
