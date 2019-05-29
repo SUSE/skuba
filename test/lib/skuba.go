@@ -62,12 +62,10 @@ func NewSkubaFromEnv() (*Skuba, error) {
 		return nil, errors.New("Env variable 'CONTROLPLANE' is required")
 	}
 
-	//TODO: add CLUSTERNAME as an env variable to documentation
 	clusterName := getEnvWithDefault("CLUSTERNAME", "e2e-cluster")
 
 	username := getEnvWithDefault("SKUBA_USERNAME", "sles")
 
-	//TODO: add SKUBA_DEBUG as an env variable to documentation
 	debugLevel := getEnvWithDefault("SKUBA_DEBUG", "3")
 
 	skuba, err := getSkubaPath()
