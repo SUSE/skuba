@@ -27,6 +27,10 @@ $ source .env3/bin/activate
 # Install development dependencies
 $ pip install -r dev-requirements.txt
 
+# We need the shellcheck utility. You can install it from the package manager
+# you might be using.
+$ sudo zypper install ShellCheck
+
 # Run tests and code style checks
 $ tox
 ```
