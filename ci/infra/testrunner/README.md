@@ -17,11 +17,11 @@ export OS_USERNAME="YOUR USERNAME"
 #export OS_PASSWORD=$OS_PASSWORD_INPUT
 export OS_PASSWORD="YOUR PASSWORD"
 ```
-4. Edit ci/infra/testrunner/openstack.yaml
+4. Edit and update `ci/infra/testrunner/vars/openstack.yaml`
 ```
 workspace: "" # The top folder where skuba is stored
-username: "" 
-openrc: "" 
+username: "" # User deployed stack name
+openrc: "" # Path to openrc.sh file
 ```
 
 5. Use testrunner
@@ -88,17 +88,22 @@ As default, Jenkins has WORKSPACE environment variable so that workspace will be
 ```
 
 
-### Step to create K8s Cluster and start to use K8s cluster
-1. Cleanup before deploying nodes  
-```ci/infra/testrunner testrunner -x ``` 
+### Step to create K8s Cluster and start to use K8s cluster 
+1. Cleanup before deploying nodes
+```ci/infra/testrunner/testrunner -x ``` 
 2. Deploy nodes in openstack  
-```ci/infra/testrunner testrunner -t ```  
+```ci/infra/testrunner/testrunner -t ```  
 3. Create skuba env and Build skuba and store in go bin dir
-```ci/infra/testrunner testrunner -t ```  
-4. Bootstraping a cluster  
- 1 Loadbalancer, 1 master and 1 worker will be availble once bootstrapping is done for the cluster. And you are ready to use K8s cluster.
- If you want to extend the cluster, you can add more node with "ci/infra/testrunner testrunner -a -m 2 -w 2" with depending on your yaml configuratrion of your resource pool.
-5. Use K8s   
+```ci/infra/testrunner/testrunner -c ```
+4. Bootstraping a cluster
+```ci/infra/testrunner/testrunner -b ```
+
+Once bootstrapping is done you will be ready to use K8s cluster.
+
+5. To extend the cluster, you can add more node with 
+```ci/infra/testrunner/testrunner -a -m 2 -w 2 ```
+
+6. Use K8s
 Once your nodes are bootstrapped, {worksapce}/test-cluster folder will be created. Inside test-cluster, Your kubeconfig file will be located in with the name of admin.conf in test-cluster folder.
 ```
 chang@~/Workspace/vNext/test-cluster$ kubectl get pods --all-namespaces --kubeconfig=./admin.conf
@@ -113,4 +118,4 @@ kube-system   kube-controller-manager-my-master-0   1/1       Running   0       
 kube-system   kube-proxy-782z2                      1/1       Running   0          4m
 kube-system   kube-proxy-kf7g5                      1/1       Running   0          3m
 kube-system   kube-scheduler-my-master-0            1/1       Running   0          3m
-```  
+```
