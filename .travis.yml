@@ -1,0 +1,16 @@
+language: python
+branches:
+  except:
+  - gh-pages
+matrix:
+  include:
+  - python: 3.6
+    env: TOXENV=py36,check
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install -y git
+install:
+- pip install --upgrade pip
+- pip install tox
+script:
+- tox
