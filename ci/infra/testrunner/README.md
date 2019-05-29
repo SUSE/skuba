@@ -48,9 +48,6 @@ optional arguments:
                         create skuba environment
                         {workspace}/go/src/github.com/SUSE/skuba and build
                         skuba in that directory
-  -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
-                        platform
-  -k, --status          check K8s cluster status
   -a, --add-nodes       add nodes in k8s cluster. Default values are -m=1,
                         -w=1
   -r, --remove-nodes    remove nodes in k8s cluster. default values are -m=1,
@@ -95,8 +92,6 @@ As default, Jenkins has WORKSPACE environment variable so that workspace will be
 ```ci/infra/testrunner/testrunner -t ```  
 3. Create skuba env and Build skuba and store in go bin dir
 ```ci/infra/testrunner/testrunner -c ```
-4. Bootstraping a cluster
-```ci/infra/testrunner/testrunner -b ```
 
 Once bootstrapping is done you will be ready to use K8s cluster.
 

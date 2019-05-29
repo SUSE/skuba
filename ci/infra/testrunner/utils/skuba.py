@@ -58,21 +58,6 @@ class Skuba:
             raise Exception("Failure(s) during cleanup")
 
     @step
-    def cluster_init(self):
-        print("Cleaning up any previous test-cluster dir")
-        self.utils.runshellcommand("rm -rf {}".format(self.cwd))
-        cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
-        # Override work directory, because init must run in the parent directory of the
-        # cluster directory
-        self._run_skuba(cmd, cwd=self.conf.workspace)
-
-    @step
-    def node_bootstrap(self):
-        cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
-        self._run_skuba(cmd)
-
-    @step
     def node_join(self, role="worker", nr=0):
         try:
             if role == "master":
@@ -106,9 +91,6 @@ class Skuba:
             self._run_skuba(cmd)
         except:
             raise ("{}Error: {}{}".format(Constant.RED, cmd, Constant.RED_EXIT))
-
-    def cluster_status(self):
-        self._run_skuba("cluster status")
 
     def num_of_nodes(self):
         try:
