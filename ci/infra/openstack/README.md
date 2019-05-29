@@ -30,8 +30,12 @@ terraform apply
 It is important to have your public ssh key within the `authorized_keys`,
 this is done by `cloud-init` through a terraform variable called `authorized_keys`.
 
-All the instances have a `root` and a `opensuse` user. The `opensuse` user can
+All the instances have a `root` and `sles` user. The normal 'sles' user user can
 perform `sudo` without specifying a password.
+
+Neither root nor the normal `sles` user will have password. Both `terraform` and `skuba`
+are using SSH key-based authentication. You can always set a password after the
+creation of the machines using `sudo passwd sles` (for normal user) or `sudo passwd` (for root).
 
 ## Load balancer
 
@@ -52,7 +56,7 @@ provide reasonable values.
 `repositories` - Additional repositories that will be added on all nodes
 `packages` - Additional packages that will be installed on all nodes
 
-Please use one from the following options:
+Please use **one** from the following options:
 `caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in 
 `registration.auto.tfvars` file to register product against official repositories
 

@@ -105,12 +105,7 @@ variable "packages" {
 
 variable "username" {
   default     = "sles"
-  description = "Username for the cluster nodes"
-}
-
-variable "password" {
-  default     = "linux"
-  description = "Password for the cluster nodes"
+  description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
 variable "caasp_registry_code" {

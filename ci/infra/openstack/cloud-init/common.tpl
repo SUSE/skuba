@@ -6,13 +6,7 @@ locale: en_US.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# set root password
-chpasswd:
-  list: |
-    root:linux
-    ${username}:${password}
-  expire: False
-
+# Inject the public keys
 ssh_authorized_keys:
 ${authorized_keys}
 
@@ -47,6 +41,11 @@ bootcmd:
 runcmd:
   # workaround for bsc#1119397 . If this is not called, /etc/resolv.conf is empty
   - netconfig -f update
+  # Workaround for bsc#1138557 . Disable root and password SSH login
+  - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - systemctl restart sshd
 ${register_scc}
 ${register_rmt}
 ${commands}
