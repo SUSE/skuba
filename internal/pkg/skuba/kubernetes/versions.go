@@ -27,6 +27,7 @@ type Component string
 const (
 	Cilium  Addon = "cilium"
 	Tooling Addon = "tooling"
+	Kured   Addon = "kured"
 
 	Etcd    Component = "etcd"
 	CoreDNS Component = "coredns"
@@ -46,6 +47,7 @@ type ComponentsVersion struct {
 type AddonsVersion struct {
 	CiliumVersion  string
 	ToolingVersion string
+	KuredVersion   string
 }
 
 type KubernetesVersion struct {
@@ -72,6 +74,7 @@ var (
 			AddonsVersion: AddonsVersion{
 				CiliumVersion:  "1.4.2",
 				ToolingVersion: "0.1.0",
+				KuredVersion:   "1.2.0",
 			},
 		},
 	}
@@ -98,6 +101,8 @@ func CurrentAddonVersion(addon Addon) string {
 		return currentKubernetesVersion.AddonsVersion.ToolingVersion
 	case Cilium:
 		return currentKubernetesVersion.AddonsVersion.CiliumVersion
+	case Kured:
+		return currentKubernetesVersion.AddonsVersion.KuredVersion
 	}
 	log.Fatalf("unknown addon %q", addon)
 	panic("unreachable")
