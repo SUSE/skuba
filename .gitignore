@@ -35,3 +35,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# RPM files folder
+ci/packaging/suse/obs_files
