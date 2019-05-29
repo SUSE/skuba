@@ -54,5 +54,10 @@ var (
 			Location: skuba.PspPrivManifestFile(),
 			Content:  pspPrivManifest,
 		},
+		{
+			Location:    skuba.KuredManifestFile(),
+			Content:     kuredManifest,
+			DoNotRender: true,
+		},
 	}
 )

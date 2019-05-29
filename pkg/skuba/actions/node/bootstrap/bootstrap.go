@@ -77,6 +77,8 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kubelet.enable",
 		"kubeadm.init",
 		"psp.deploy",
+		"kured.render",
+		"kured.deploy",
 	)
 
 	if err != nil {

@@ -34,7 +34,7 @@ func init() {
 }
 
 func cniRender(t *Target, data interface{}) error {
-	if err := cni.FillCiliumManifestFile(t.target.Target, skuba.CiliumManifestFile()); err != nil {
+	if err := cni.FillCiliumManifestFile(); err != nil {
 		return err
 	}
 	return nil
