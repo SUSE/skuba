@@ -90,3 +90,11 @@ func KubeConfigAdminFile() string {
 func PkiDir() string {
 	return "pki"
 }
+
+func KuredDir() string {
+	return filepath.Join(AddonsDir(), "kured")
+}
+
+func KuredManifestFile() string {
+	return filepath.Join(KuredDir(), "kured.yaml")
+}
