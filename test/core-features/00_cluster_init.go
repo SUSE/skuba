@@ -11,6 +11,10 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
 var _ = ginkgo.Describe("Create Skuba Cluster", func() {
@@ -100,6 +104,33 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba status verify worker00 failed")
 		gomega.Expect(err).To(gomega.BeNil(), "skuba status verify worker00 failed")
 
+		ginkgo.By("verify all system pods are running")
+		client, err := kubernetes.GetAdminClientSet()
+		if err != nil {
+			panic(err)
+		}
+		// We need to wait a little bit after a node has joined for pods to start on it. It normally
+		// needs a couple of minutes for all containers to be pulled in and started.
+		var podList *v1.PodList
+		timeout := time.After(180 * time.Second)
+		// Calling the k8s API takes a bit of time anyway
+		tick := time.Tick(5 * time.Second)
+	GetPods:
+		for {
+			select {
+			case <-tick:
+				podList, err = client.CoreV1().Pods("kube-system").List(metav1.ListOptions{FieldSelector: "status.phase!=Running"})
+				if err != nil {
+					panic(err)
+				}
+				if len(podList.Items) == 0 {
+					break GetPods
+				}
+			case <-timeout:
+				break GetPods
+			}
+		}
+		gomega.Expect(len(podList.Items)).To(gomega.BeZero(), "Some system pods are not in 'running' state")
 	})
 
 })
