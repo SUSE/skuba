@@ -178,7 +178,7 @@ func CreateOrUpdateCiliumConfigMap() error {
 	return nil
 }
 
-func FillCiliumManifestFile(target, file string) error {
+func FillCiliumManifestFile() error {
 	ciliumImage := images.GetGenericImage(skuba.ImageRepository, "cilium",
 		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
 	ciliumInitImage := images.GetGenericImage(skuba.ImageRepository, "cilium-init",
