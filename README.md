@@ -1,4 +1,4 @@
-# skuba-update
+# skuba-update [![Build Status](https://travis-ci.org/SUSE/skuba-update.svg?branch=master)](https://travis-ci.org/SUSE/skuba-update)
 
 Utility to automatically refresh and update a SUSE CaaSP cluster. As it is
 right now, it only works for the zypper package manager.
