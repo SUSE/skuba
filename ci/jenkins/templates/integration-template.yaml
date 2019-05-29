@@ -15,4 +15,4 @@
           discover-pr-forks-strategy: current
           discover-pr-forks-trust: contributors
           discover-pr-origin: current
-          head-filter-regex: ^(master|release\-\d\.\d|PR\-\d+|ci\-test\-pr\-\d+)$
+          head-filter-regex: ^(master|release\-\d\.\d|PR\-\d+)$
