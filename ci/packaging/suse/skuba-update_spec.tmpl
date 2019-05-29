@@ -28,7 +28,7 @@ Group:          System/Management
 Url:            https://github.com/SUSE/skuba-update
 Source0:        %{name}.tar.gz
 BuildRequires:  python3-setuptools
-Requires:       python3
+Requires:       python3-setuptools
 Requires:       zypper >= 1.14
 BuildArch:      noarch
 
@@ -41,12 +41,12 @@ __DESCRIPTION__
 %build
 
 %install
-python3 setup.py install --root %{buildroot}
+python3 setup.py install --root %{buildroot} --install-script %{_sbindir}
 
 %files
 %defattr(-,root,root)
 %license LICENSE
-%{_bindir}/%{name}
+%{_sbindir}/%{name}
 %{python3_sitelib}/*
 
 %changelog
