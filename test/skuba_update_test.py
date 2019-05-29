@@ -87,7 +87,8 @@ def test_main(mock_subprocess, mock_geteuid):
         call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
         call(['zypper', 'ref', '-s'], env=ANY),
         call([
-            'zypper', '--non-interactive-include-reboot-patches', 'patch'
+            'zypper', '--non-interactive',
+            '--non-interactive-include-reboot-patches', 'patch'
         ], env=ANY),
         call([
             'zypper', '--non-interactive-include-reboot-patches', 'patch-check'
@@ -109,13 +110,15 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
         call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
         call(['zypper', 'ref', '-s'], env=ANY),
         call([
-            'zypper', '--non-interactive-include-reboot-patches', 'patch'
+            'zypper', '--non-interactive',
+            '--non-interactive-include-reboot-patches', 'patch'
         ], env=ANY),
         call([
             'zypper', '--non-interactive-include-reboot-patches', 'patch-check'
         ], env=ANY),
         call([
-            'zypper', '--non-interactive-include-reboot-patches', 'patch'
+            'zypper', '--non-interactive',
+            '--non-interactive-include-reboot-patches', 'patch'
         ], env=ANY)
     ]
 

@@ -39,16 +39,18 @@ def main():
         raise Exception('root privileges are required to run this tool')
 
     run_zypper_command(['zypper', 'ref', '-s'])
-    run_zypper_command(
-        ['zypper', '--non-interactive-include-reboot-patches', 'patch']
-    )
+    run_zypper_command([
+        'zypper', '--non-interactive',
+        '--non-interactive-include-reboot-patches', 'patch'
+    ])
     code = run_zypper_command(
         ['zypper', '--non-interactive-include-reboot-patches', 'patch-check']
     )
     if are_patches_available(code):
-        run_zypper_command(
-            ['zypper', '--non-interactive-include-reboot-patches', 'patch']
-        )
+        run_zypper_command([
+            'zypper', '--non-interactive',
+            '--non-interactive-include-reboot-patches', 'patch'
+        ])
 
 
 def is_zypper_error(code):
