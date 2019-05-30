@@ -1,11 +1,15 @@
+from format import Format
+import os
 from timeout_decorator import timeout
 from terraform import Terraform
 
-
 class Openstack(Terraform):
     def __init__(self, conf):
-        self.osconf = conf.openstack
         super().__init__(conf)
+        if  not os.path.isfile(conf.openstack.openrc):
+            raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
+                                 "Check your openrc file path in a configured yaml file".format(conf.openstack.openrc)))
+        self.osconf = conf.openstack
 
     def _env_setup_cmd(self):
         return "source {openrc}".format(openrc=self.osconf.openrc)

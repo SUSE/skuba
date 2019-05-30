@@ -162,9 +162,6 @@ class BaseConfig:
         if not os.path.exists(os.path.join(conf.workspace, "skuba")):
             raise ValueError(Format.alert("Your working directory, {} does not include \"skuba\" directory.\n\t    "
                                 "Check your working directory in a configured yaml file".format(conf.workspace)))
-        if conf.platform == "openstack" and not os.path.isfile(conf.openstack.openrc):
-            raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
-                                 "Check your openrc file path in a configured yaml file".format(conf.openstack.openrc)))
         return conf
 #if __name__ == '__main__':
 #    _conf = BaseConfig()
