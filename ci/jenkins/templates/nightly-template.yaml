@@ -4,6 +4,10 @@
     number-to-keep: 30
     days-to-keep: 30
     branch: master
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
     triggers:
         - timed: 'H H(3-5) * * *'
     parameters:
