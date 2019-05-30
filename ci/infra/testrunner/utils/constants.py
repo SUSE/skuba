@@ -17,7 +17,6 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
-        obj.skuba_dir = None
         obj.terraform_dir = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None
@@ -85,6 +84,7 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.binpath = None
+            self.srcpath = None
 
     class Test:
         def __init__(self):
@@ -117,6 +117,11 @@ class BaseConfig:
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
 
+            # FIXME: If key is the yaml file and is a config class, but has no subelements 
+            # the logic fails. This happens if we comment all values under the key, for example:
+            # key:
+            # # subkey: value  #commented!
+            #  
             if key in vars and isinstance(value, config_classes):
                 BaseConfig.inject_attrs_from_yaml(value, vars[key], config_classes)
                 continue
@@ -144,19 +149,24 @@ class BaseConfig:
     @staticmethod
     def finalize(conf):
         conf.workspace = os.path.expanduser(conf.workspace)
-        conf.skuba_dir = os.path.realpath(os.path.join(conf.workspace, "skuba"))
-        conf.terraform_dir = os.path.join(conf.skuba_dir, "ci/infra/{}".format(conf.platform))
-        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
         if not conf.skuba.binpath:
             conf.skuba.binpath = os.path.join(conf.workspace, 'go/bin/skuba')
+
+        if not conf.skuba.srcpath:
+            conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
+
+        # TODO: add terraform dir as a configuration parameter
+        # and set to default if not specified
+        conf.terraform_dir = os.path.join(conf.skuba.srcpath, "ci/infra/{}".format(conf.platform))
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
         conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
 
+        #TODO: add the path to shared ssh credentials as a configuration parameter
         if conf.ssh_key_option == "id_shared":
-            conf.ssh_key_option = os.path.join(conf.skuba_dir, "ci/infra/id_shared")
+            conf.ssh_key_option = os.path.join(conf.skuba.srcpath, "ci/infra/id_shared")
         elif conf.ssh_key_option == "id_rsa":
             conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
 

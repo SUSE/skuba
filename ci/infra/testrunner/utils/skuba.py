@@ -12,6 +12,7 @@ class Skuba:
     def __init__(self, conf):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
+        self.srcpath = self.conf.skuba.srcpath
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
@@ -33,16 +34,10 @@ class Skuba:
     @timeout(600)
     @step
     def create_skuba(self):
-        """Configure Environment"""
+        """Buids skuba from source"""
         self.utils.runshellcommand("rm -fr go")
         self.utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-        self.utils.runshellcommand("cp -a skuba go/src/github.com/SUSE/")
-        self.utils.gorun("go version")
-        print("Building skuba")
-        self.utils.gorun("make")
-
-    @step
-    def cleanup(self):
+        self.utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(self.srcpath))
         self.utils.gorun("go version")
         print("Building skuba")
         self.utils.gorun("make")
@@ -60,10 +55,13 @@ class Skuba:
         cmd = 'chmod -R 777 {}'.format(self.conf.workspace)
         self.utils.runshellcommand(cmd)
 
+        # TODO: appending workspace is not necessary as runshellcommand has it as workdirectory
         dirs = [os.path.join(self.conf.workspace, "test-cluster"),
                 os.path.join(self.conf.workspace, "go"),
                 os.path.join(self.conf.workspace, "logs"),
+                #TODO: move this to utils as ssh_cleanup
                 os.path.join(self.conf.workspace, "ssh-agent-sock"),
+                #TODO: duplicated. Remove
                 os.path.join(self.conf.workspace, "test-cluster")]
 
         cleanup_failure = False
