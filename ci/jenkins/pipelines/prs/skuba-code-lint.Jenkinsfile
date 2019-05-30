@@ -2,29 +2,19 @@
  * This pipeline perform basic checks on Pull-requests. (go vet) etc
  */
 
-void setBuildStatus(String context, String description, String state) {
-    def body = "{\"state\": \"${state}\", " +
-               "\"target_url\": \"${BUILD_URL}/display/redirect\", " +
-               "\"description\": \"${description}\", " +
-               "\"context\": \"${context}\"}"
-    def headers = '-H "Content-Type: application/json" -H "Accept: application/vnd.github.v3+json"'
-    def url = "https://${GITHUB_TOKEN}@api.github.com/repos/SUSE/skuba/statuses/${GIT_COMMIT}"
-
-    sh(script: "curl -X POST ${headers} ${url} -d '${body}'", label: "Sending commit status")
-}
-
 pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
         OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
-        PARAMS = "stack-type=openstack-terraform"
+        PR_CONTEXT = 'jenkins/skuba-code-lint'
+        PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
     }
 
     stages {
         stage('Setting GitHub in-progress status') { steps {
-            setBuildStatus('jenkins/skuba-code-lint', 'in-progress', 'pending')
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
 
         stage('Running make lint') { steps {
@@ -41,10 +31,10 @@ pipeline {
             }
         }
         failure {
-            setBuildStatus('jenkins/skuba-code-lint', 'failed', 'failure')
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            setBuildStatus('jenkins/skuba-code-lint', 'success', 'success')
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }
