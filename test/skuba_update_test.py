@@ -3,7 +3,10 @@ from mock import patch, call, Mock, ANY
 from skuba_update.skuba_update import (
     main,
     run_command,
-    run_zypper_command
+    run_zypper_command,
+    REBOOT_NEEDED_PATH,
+    ZYPPER_EXIT_INF_UPDATE_NEEDED,
+    ZYPPER_EXIT_INF_REBOOT_NEEDED
 )
 
 
@@ -130,7 +133,7 @@ def test_run_zypper_command(mock_subprocess):
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     assert run_zypper_command(['zypper', 'patch']) == 0
-    mock_process.returncode = 100
+    mock_process.returncode = ZYPPER_EXIT_INF_UPDATE_NEEDED
     mock_subprocess.return_value = mock_process
     assert run_zypper_command(['zypper', 'patch']) == 100
 
@@ -147,4 +150,20 @@ def test_run_zypper_command_failure(mock_subprocess):
     except Exception as e:
         exception = True
         assert '"zypper patch" failed' in str(e)
+    assert exception
+
+
+@patch('subprocess.Popen')
+def test_run_zypper_command_creates_file_on_102(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (None, None)
+    mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
+    mock_subprocess.return_value = mock_process
+    exception = False
+    try:
+        run_zypper_command(['zypper', 'patch']) == 'stdout'
+    except PermissionError as e:
+        exception = True
+        msg = 'Permission denied: \'{0}\''.format(REBOOT_NEEDED_PATH)
+        assert msg in str(e)
     assert exception

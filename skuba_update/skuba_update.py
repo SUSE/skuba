@@ -17,11 +17,22 @@ import subprocess
 import re
 from collections import namedtuple
 from datetime import datetime
+from pathlib import Path
 
 # Since zypper 1.14.0, it will automatically create a /var/run/reboot-required
 # text file whenever one of the applied patches requires the system to be
 # rebooted. This will be used later on by kured.
 REQUIRED_ZYPPER_VERSION = (1, 14, 0)
+
+# The path to the reboot-needed file. This is the file that kured will be
+# looking at.
+REBOOT_NEEDED_PATH = '/var/run/reboot-required'
+
+# Exit codes as defined by zypper.
+
+ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
+ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
+ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
 
 
 def main():
@@ -68,7 +79,17 @@ def are_patches_available(code):
     patches available.
     """
 
-    return code == 100 or code == 101
+    return code == ZYPPER_EXIT_INF_UPDATE_NEEDED or \
+        code == ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED
+
+
+def is_reboot_needed(code):
+    """
+    Returns true of the given code is defined by zypper to mean that reboot is
+    needed.
+    """
+
+    return code == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
 def log(message):
@@ -97,6 +118,13 @@ def run_zypper_command(command):
     process.communicate()
     if is_zypper_error(process.returncode):
         raise Exception('"{0}" failed'.format(' '.join(command)))
+
+    # We trust the exit code of zypper over the presence of certain files.
+    # Thus, we will make sure that the `REBOOT_NEEDED_PATH` is present
+    # depending on some exit codes.
+    if is_reboot_needed(process.returncode):
+        Path(REBOOT_NEEDED_PATH).touch()
+
     return process.returncode
 
 
