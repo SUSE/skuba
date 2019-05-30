@@ -17,7 +17,7 @@
 set -xe
 
 RPMBUILD=/root/rpmbuild
-PACKAGEDIR=/suse
+PACKAGEDIR=/suse/specs
 OUTPUTDIR=/suse/artifacts
 
 build_init() {

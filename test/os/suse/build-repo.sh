@@ -41,7 +41,7 @@ initialize_repo() {
 }
 
 add_erratum_to_repository() {
-    cp /suse/"$REPONAME".xml "$REPOPATH"/repodata/updateinfo.xml
+    cp /suse/repos/"$REPONAME".xml "$REPOPATH"/repodata/updateinfo.xml
     updateinfosha256=$(sha256sum "$REPOPATH"/repodata/updateinfo.xml | awk '{print $1}')
     updateinfosize=$(du -b "$REPOPATH"/repodata/updateinfo.xml | awk '{print $1}')
     gzip "$REPOPATH"/repodata/updateinfo.xml
