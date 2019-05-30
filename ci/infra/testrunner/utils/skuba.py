@@ -11,6 +11,7 @@ class Skuba:
 
     def __init__(self, conf):
         self.conf = conf
+        self.binpath = self.conf.skuba.binpath
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
@@ -148,10 +149,6 @@ class Skuba:
         output = self.utils.runshellcommand_withoutput(cmd)
         return output.count("master"), output.count("worker")
 
-    def _load_tfstate(self):
-        fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
-        print("Reading {}".format(fn))
-        return output.count("master"), output.count("worker")
 
     def _load_tfstate(self):
         fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
@@ -202,6 +199,5 @@ class Skuba:
 
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
-        binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
-        self.utils.runshellcommand(binpath + " "+ cmd, cwd=cwd, env=env)
+        self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
 

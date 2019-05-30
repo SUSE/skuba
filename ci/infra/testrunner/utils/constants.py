@@ -27,6 +27,7 @@ class BaseConfig:
         obj.openstack = BaseConfig.Openstack()
         obj.jenkins = BaseConfig.Jenkins()
         obj.git = BaseConfig.Git()
+        obj.skuba = BaseConfig.Skuba()
 
         obj.lb = BaseConfig.NodeConfig()
         obj.master = BaseConfig.NodeConfig()
@@ -39,6 +40,7 @@ class BaseConfig:
             BaseConfig.Test,
             BaseConfig.Git,
             BaseConfig.Openstack,
+            BaseConfig.Skuba,
         )
 
         #vars get the values from yaml file
@@ -78,6 +80,11 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.openrc = None
+
+    class Skuba:
+        def __init__(self):
+            super().__init__()
+            self.binpath = None
 
     class Test:
         def __init__(self):
@@ -140,6 +147,9 @@ class BaseConfig:
         conf.skuba_dir = os.path.realpath(os.path.join(conf.workspace, "skuba"))
         conf.terraform_dir = os.path.join(conf.skuba_dir, "ci/infra/{}".format(conf.platform))
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
+
+        if not conf.skuba.binpath:
+            conf.skuba.binpath = os.path.join(conf.workspace, 'go/bin/skuba')
 
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
