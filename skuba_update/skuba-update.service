@@ -1,0 +1,10 @@
+[Unit]
+Description=Update the system
+Wants=network.target
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/skuba-update
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
