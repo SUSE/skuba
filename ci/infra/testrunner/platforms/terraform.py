@@ -1,10 +1,8 @@
 import os
-from shutil import copyfile
 import subprocess
-from utils import step
-from utils import Utils
-from constants import Constant
-from format import Format
+from shutil import copyfile
+
+from utils import (Constant, Format, step, Utils)
 
 
 class Terraform:

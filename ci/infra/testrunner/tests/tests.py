@@ -1,7 +1,7 @@
-from skuba import Skuba
-from utils import step
-from utils import Utils
 from timeout_decorator import timeout
+
+from utils import (Skuba, step, Utils)
+
 
 class Tests:
     def __init__(self, conf):
