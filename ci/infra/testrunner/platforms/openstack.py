@@ -1,7 +1,9 @@
-from format import Format
 import os
 from timeout_decorator import timeout
-from terraform import Terraform
+
+from platforms.terraform import Terraform
+from utils import Format
+
 
 class Openstack(Terraform):
     def __init__(self, conf):

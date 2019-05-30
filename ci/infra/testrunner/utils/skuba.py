@@ -1,8 +1,11 @@
-import os, json
+import json
+import os
+
 from timeout_decorator import timeout
-from format import Format
-from utils import step
-from utils import Utils
+
+from utils.format import Format
+from utils.utils import (step, Utils)
+
 
 class Skuba:
 
@@ -98,7 +101,7 @@ class Skuba:
     def node_join(self, role="worker", nr=0):
         self._load_tfstate()
         self._verify_bootstrap_dependency()
-        
+
         try:
             if role == "master":
                 ip_addr = self._get_masters_ipaddrs()[nr]
@@ -138,7 +141,7 @@ class Skuba:
         self._run_skuba("cluster status")
 
     def num_of_nodes(self):
-        
+
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
         cmd = "cd " + test_cluster + "; " +binpath + " cluster status"

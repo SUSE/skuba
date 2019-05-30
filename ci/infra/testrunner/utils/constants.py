@@ -1,5 +1,8 @@
-import yaml, os
-from format import Format
+import os
+import yaml
+
+from utils.format import Format
+
 
 class Constant:
     TERRAFORM_EXAMPLE="terraform.tfvars.ci.example"

@@ -1,11 +1,18 @@
 
-import subprocess, os, sys, requests
+import os
+import subprocess
+import sys
 from functools import wraps
+
+import requests
 from timeout_decorator import timeout
-from constants import Constant
-from format import Format
+
+from utils.format import Format
+from utils.constants import Constant
 
 _stepdepth = 0
+
+
 def step(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
@@ -21,7 +28,7 @@ def step(f):
 
 
 class Utils:
-    
+
     def __init__(self, conf):
         self.conf = conf
 
