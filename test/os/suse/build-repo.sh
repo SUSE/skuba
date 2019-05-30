@@ -27,10 +27,7 @@ populate_repo() {
         base)
             cp /suse/artifacts/caasp-test-1-1.noarch.rpm "$REPOPATH"
             ;;
-        update-with-reboot-suggested)
-            cp /suse/artifacts/caasp-test-2-1.noarch.rpm "$REPOPATH"
-            ;;
-        update-without-reboot-suggested)
+        update-*)
             cp /suse/artifacts/caasp-test-2-1.noarch.rpm "$REPOPATH"
             ;;
         *)

@@ -32,6 +32,14 @@ install_package() {
     zypper -n in -r "${1:-base}" "${2:-caasp-test}"
 }
 
+zypper_show_patch() {
+    zypper --no-refresh info -r "$1" -t patch "$2"
+}
+
+check_patch_type_interactivity() {
+    [ "$(zypper_show_patch "$1" "$2" | grep -Poh '(?<=Interactive : )([^\s]+)')" == "$3" ]
+}
+
 zypper_patch() {
     zypper --no-refresh --non-interactive-include-reboot-patches patch -r "$1" -y
 }
