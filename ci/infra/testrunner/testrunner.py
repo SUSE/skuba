@@ -15,6 +15,7 @@ sys.path.append(os.path.join(testrunner_path,"tests"))
 
 from constants import BaseConfig
 from constants import Constant
+from format import Format
 from utils import Utils
 from skuba import Skuba
 from openstack import Openstack
@@ -67,6 +68,31 @@ def main():
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
 
+    if options.ip_info:
+        Utils(conf).info()
+    if options.git_rebase:
+        Utils(conf).git_rebase()
+    elif options.cleanup:
+        get_platform(conf).cleanup()
+        Skuba(conf).cleanup()
+    elif options.apply_terraform:
+        get_platform(conf).apply_terraform()
+    elif options.create_skuba:
+        Skuba(conf).create_skuba()
+    elif options.boostrap:
+        Tests(conf).bootstrap_environment()
+    elif options.cluster_status:
+        Skuba(conf).cluster_status()
+    elif options.add_nodes:
+        Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
+    elif options.remove_nodes:
+        Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
+    elif options.log:
+        Skuba(conf).gather_logs()
+
+    sys.exit(0)
+
+def get_platform(conf):
     if conf.platform == "openstack":
         platform = Openstack(conf)
     elif conf.platform == "vmware":
@@ -82,32 +108,9 @@ def main():
         print("Todo: libvirt is not ready yet")
         sys.exit(0)
     else:
-        raise Exception('{}Platform Error: {} is not applicable.{}' \
-                        .format(Constant.RED, conf.platform, Constant.RED_EXIT))
+        raise Exception(Format.alert("Platform Error: {} is not applicable".format(conf.platform)))
 
-    if options.ip_info:
-        Utils(conf).info()
-    if options.git_rebase:
-        Utils(conf).git_rebase()
-    elif options.cleanup:
-        platform.cleanup()
-        Skuba(conf).cleanup()
-    elif options.apply_terraform:
-        platform.apply_terraform()
-    elif options.create_skuba:
-        Skuba(conf).create_skuba()
-    elif options.boostrap:
-        Tests(conf).bootstrap_environment()
-    elif options.cluster_status:
-        Skuba(conf).cluster_status()
-    elif options.add_nodes:
-        Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
-    elif options.remove_nodes:
-        Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
-    elif options.log:
-        Skuba(conf).gather_logs()
-
-    sys.exit(0)
+    return platform
 
 if __name__ == '__main__':
     main()
