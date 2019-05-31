@@ -182,9 +182,7 @@ class BaseConfig:
                                            "before using testrunner (skuba/ci/infra/testrunner/vars)"))
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
             raise ValueError(Format.alert("workspace should not be your home directory"))
-        if not os.path.exists(os.path.join(conf.workspace, "skuba")):
-            raise ValueError(Format.alert("Your working directory, {} does not include \"skuba\" directory.\n\t    "
-                                "Check your working directory in a configured yaml file".format(conf.workspace)))
+
         return conf
 #if __name__ == '__main__':
 #    _conf = BaseConfig()
