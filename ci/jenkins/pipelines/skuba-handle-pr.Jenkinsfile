@@ -9,6 +9,7 @@ pipeline {
        GITHUB_TOKEN = credentials('github-token')
        JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
        PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
+       REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
    }
 
    stages {
