@@ -68,6 +68,8 @@ release:
 
 .PHONY: lint
 lint:
+	# exclicitly enable GO111MODULE otherwise go mod will fail
+	GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor && GO111MODULE=on go mod verify
 	$(GO) vet ./...
 	test -z `$(GOFMT) -l $(SKUBA_SRCS)` || { $(GOFMT) -d $(SKUBA_SRCS) && false; }
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
