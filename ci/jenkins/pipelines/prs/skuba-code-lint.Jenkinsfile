@@ -20,6 +20,9 @@ pipeline {
         stage('Running make lint') { steps {
             sh(script: 'make lint', label: 'make lint')
         } }
+        stage('Checking status of git tree') { steps {
+            sh(script: 'test -z $(git status --porcelain go.mod go.sum vendor/) || { echo "there are uncommitted changes. This should never happen"; exit 1; }', label: 'git tree status')
+        } }
 
         // TODO: Add here golint later on
 
