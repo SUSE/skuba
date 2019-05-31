@@ -65,11 +65,11 @@ def main():
         Utils(conf).git_rebase()
     elif options.cleanup:
         get_platform(conf).cleanup()
-        Skuba(conf).cleanup()
+        Skuba.cleanup(conf)
     elif options.apply_terraform:
         get_platform(conf).apply_terraform()
     elif options.create_skuba:
-        Skuba(conf).create_skuba()
+        Skuba.build(conf)
     elif options.boostrap:
         Tests(conf).bootstrap_environment()
     elif options.cluster_status:

@@ -12,7 +12,6 @@ class Skuba:
     def __init__(self, conf):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
-        self.srcpath = self.conf.skuba.srcpath
         self.utils = Utils(self.conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
@@ -30,43 +29,42 @@ class Skuba:
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
             raise Exception(Format.alert("test-cluster not found. Please run bootstrap and try again"))
 
-    @timeout(600)
-    @step
-    def create_skuba(self):
+    @staticmethod
+    def build(conf):
         """Buids skuba from source"""
-        self.utils.runshellcommand("rm -fr go")
-        self.utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-        self.utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(self.srcpath))
-        self.utils.gorun("go version")
+        utils = Utils(conf)
+        utils.runshellcommand("rm -fr go")
+        utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
+        utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
+        utils.gorun("go version")
         print("Building skuba")
-        self.utils.gorun("make")
+        utils.gorun("make")
 
-    @step
-    def cleanup(self):
+    @staticmethod
+    def cleanup(conf):
         """Cleanup skuba working environment"""
+        utils = Utils(conf)
         # TODO: check why (and if) the following two commands are needed
-        cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
-        self.utils.runshellcommand(cmd)
+        cmd = 'mkdir -p {}/logs'.format(conf.workspace)
+        utils.runshellcommand(cmd)
 
         # This is pretty aggressive but modules are also present
         # in workspace and they lack the 'w' bit so just set
         # everything so we can do whatever we want during cleanup
-        cmd = 'chmod -R 777 {}'.format(self.conf.workspace)
-        self.utils.runshellcommand(cmd)
+        cmd = 'chmod -R 777 {}'.format(conf.workspace)
+        utils.runshellcommand(cmd)
 
         # TODO: appending workspace is not necessary as runshellcommand has it as workdirectory
-        dirs = [os.path.join(self.conf.workspace, "test-cluster"),
-                os.path.join(self.conf.workspace, "go"),
-                os.path.join(self.conf.workspace, "logs"),
+        dirs = [os.path.join(conf.workspace, "test-cluster"),
+                os.path.join(conf.workspace, "go"),
+                os.path.join(conf.workspace, "logs"),
                 #TODO: move this to utils as ssh_cleanup
-                os.path.join(self.conf.workspace, "ssh-agent-sock"),
-                #TODO: duplicated. Remove
-                os.path.join(self.conf.workspace, "test-cluster")]
+                os.path.join(conf.workspace, "ssh-agent-sock")]
 
         cleanup_failure = False
         for dir in dirs:
             try: 
-                self.utils.runshellcommand("rm -rf {}".format(dir))
+                utils.runshellcommand("rm -rf {}".format(dir))
             except Exception as ex:
                 cleanup_failure = True
                 print("Received the following error {}".format(ex))
