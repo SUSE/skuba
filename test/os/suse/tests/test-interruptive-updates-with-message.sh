@@ -14,24 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -xe
+source "$(dirname "$0")/../suse.sh"
 
-RPMBUILD=/root/rpmbuild
-PACKAGEDIR=/suse/specs
-OUTPUTDIR=/suse/artifacts
+UPDATE_REPO="update-with-message"
 
-build_init() {
-    rpm_setuptree
-}
+add_repository "base"
+install_package "base" "caasp-test"
 
-rpm_setuptree() {
-    rpmdev-setuptree
-}
+check_test_package_version "1"
 
-build_package() {
-    rpmbuild -ba $PACKAGEDIR/"${1:-caasp-test-1-1.noarch}".spec
-}
+add_repository "$UPDATE_REPO"
+zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
+check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "message"
+zypper_patch "$UPDATE_REPO"
 
-copy_packages() {
-    find $RPMBUILD/RPMS -type f -name "*.rpm" -exec cp {} $OUTPUTDIR \;
-}
+check_test_package_version "1"
+check_reboot_needed_absent

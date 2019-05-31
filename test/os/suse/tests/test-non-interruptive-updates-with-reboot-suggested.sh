@@ -14,21 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Non-interruptive updates are those that are not reported as a reboot suggested in the
-# update metadata. Zypper will flag a 0 return code in this case, and will
-# write the /var/run/reboot-needed sentinel file.
+source "$(dirname "$0")/../suse.sh"
 
-source "$(dirname "$0")/suse.sh"
+UPDATE_REPO="update-with-reboot-suggested"
 
 add_repository "base"
 install_package "base" "caasp-test"
 
 check_test_package_version "1"
 
-add_package_to_need_reboot "caasp-test"
+add_repository "$UPDATE_REPO"
+set +e
+zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
+check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "reboot"
+zypper_patch "$UPDATE_REPO"
+zypper_retval=$?
+set -e
 
-add_repository "update-without-reboot-suggested"
-zypper_patch "update-without-reboot-suggested"
+if [[ $zypper_retval -ne 102 ]]; then
+    echo "unexpected return value ($zypper_retval) from zypper patch (expected ZYPPER_EXIT_INF_REBOOT_NEEDED: 102)"
+    exit 1
+fi
 
 check_test_package_version "2"
-check_reboot_needed_present
+check_reboot_needed_absent

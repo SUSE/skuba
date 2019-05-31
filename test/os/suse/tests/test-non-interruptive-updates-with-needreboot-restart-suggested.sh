@@ -14,11 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Interruptive updates are those that are reported as a reboot suggested in the
-# update metadata. Zypper will flag a 102 return code in this case, and will
-# write the /var/run/reboot-needed sentinel file.
+source "$(dirname "$0")/../suse.sh"
 
-source "$(dirname "$0")/suse.sh"
+UPDATE_REPO="update-with-restart-suggested"
 
 add_repository "base"
 install_package "base" "caasp-test"
@@ -27,14 +25,16 @@ check_test_package_version "1"
 
 add_package_to_need_reboot "caasp-test"
 
-add_repository "update-with-reboot-suggested"
+add_repository "$UPDATE_REPO"
 set +e
-zypper_patch "update-with-reboot-suggested"
+zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
+check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "restart"
+zypper_patch "$UPDATE_REPO"
 zypper_retval=$?
 set -e
 
-if [[ $zypper_retval -ne 102 ]]; then
-    echo "unexpected return value ($zypper_retval) from zypper patch (expected ZYPPER_EXIT_INF_REBOOT_NEEDED: 102)"
+if [[ $zypper_retval -ne 103 ]]; then
+    echo "unexpected return value ($zypper_retval) from zypper patch (expected ZYPPER_EXIT_INF_RESTART_NEEDED: 103)"
     exit 1
 fi
 

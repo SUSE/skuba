@@ -14,19 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Non-interruptive updates are those that are not reported as a reboot suggested in the
-# update metadata. Zypper will flag a 0 return code in this case, and will not
-# write the /var/run/reboot-needed sentinel file.
+set -xe
 
-source "$(dirname "$0")/suse.sh"
+WORKDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-add_repository "base"
-install_package "base" "caasp-test"
-
-check_test_package_version "1"
-
-add_repository "update-without-reboot-suggested"
-zypper_patch "update-without-reboot-suggested"
-
-check_test_package_version "2"
-check_reboot_needed_absent
+for testname in "$WORKDIR"/tests/*.sh
+do
+    docker run --rm -v "$WORKDIR":/suse -it "$1" /suse/tests/"$(basename "$testname")"
+done
