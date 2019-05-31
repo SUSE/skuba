@@ -5,6 +5,10 @@
     number-to-keep: 30
     days-to-keep: 30
     script-path: ci/jenkins/pipelines/prs/skuba-validate-pr-author.Jenkinsfile
+    wrappers:
+      - timeout:
+          timeout: 10
+          fail: true
     scm:
       - github:
           repo: '{repo-name}'
