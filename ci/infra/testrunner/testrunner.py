@@ -8,7 +8,7 @@
 import sys
 from argparse import ArgumentParser
 
-from platforms import (Openstack, VMware)
+from platforms import (Openstack, Platform, VMware)
 from tests import Tests
 from utils import (BaseConfig, Format, Skuba, Utils)
 
@@ -64,10 +64,10 @@ def main():
     if options.git_rebase:
         Utils(conf).git_rebase()
     elif options.cleanup:
-        get_platform(conf).cleanup()
+        Platform.get_platform(conf).cleanup()
         Skuba.cleanup(conf)
     elif options.apply_terraform:
-        get_platform(conf).apply_terraform()
+        Platform.get_platform(conf).apply_terraform()
     elif options.create_skuba:
         Skuba.build(conf)
     elif options.boostrap:
@@ -82,24 +82,6 @@ def main():
         Skuba(conf).gather_logs()
 
     sys.exit(0)
-
-def get_platform(conf):
-    if conf.platform == "openstack":
-        platform = Openstack(conf)
-    elif conf.platform == "vmware":
-        platform = VMware(conf)
-    elif conf.platform == "bare-metal":
-        # TODO platform = Bare_metal(conf, utils)
-        print("Todo: bare-metal is not ready yet")
-        sys.exit(0)
-    elif conf.platform == "libvirt":
-        # TODO platform = Livbirt(conf, utils)
-        print("Todo: libvirt is not ready yet")
-        sys.exit(0)
-    else:
-        raise Exception(Format.alert("Platform Error: {} is not applicable".format(conf.platform)))
-
-    return platform
 
 if __name__ == '__main__':
     main()
