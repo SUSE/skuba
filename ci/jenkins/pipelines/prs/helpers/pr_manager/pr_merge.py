@@ -1,6 +1,7 @@
 import time
 
 import jenkins
+from github import GithubException
 
 
 class PrMerge:
@@ -13,14 +14,17 @@ class PrMerge:
 
         for mergeable_pr in mergeable_prs:
             if self._passed_integration_tests(mergeable_pr):
-                PrMerge._merge_pr(mergeable_pr)
+                try:
+                    PrMerge._merge_pr(mergeable_pr)
+                except GithubException as ex:
+                    print(f'Merging PR-{mergeable_pr.number} failed due to:\n{ex}')
 
             # Give GitHub a break
             time.sleep(5)
 
     def _passed_integration_tests(self, pull_request):
         job_name = f'caasp-jobs/caasp-v4-integration/PR-{pull_request.number}'
-        wait_count = 6
+        wait_count = 15
         server = jenkins.Jenkins(self.jenkins_config['jenkins']['url'],
                                  username=self.jenkins_config['jenkins']['user'],
                                  password=self.jenkins_config['jenkins']['password'])
@@ -34,22 +38,28 @@ class PrMerge:
 
         # Wait for job to start
         while wait_count > 0:
-            time.sleep(10)
+            time.sleep(60)
             try:
                 next_build_info = server.get_build_info(job_name, next_build_number)
             except jenkins.JenkinsException as ex:
                 print(ex)
-                wait_count -= 1
+                print('Job waiting to start...')
             else:
                 break
+
+            wait_count -= 1
 
         if next_build_info is None:
             raise Exception("Job still hasn't started exiting!")
 
+        print('Job started waiting for it to finish...')
+
         # Wait for job to finish
-        while next_build_info['result'] is None:
+        while next_build_info['building']:
             time.sleep(10)
             next_build_info = server.get_build_info(job_name, next_build_number)
+
+        print(f'Job finished with result {next_build_info["result"]}')
 
         return next_build_info['result'] == 'SUCCESS'
 
