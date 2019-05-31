@@ -3,7 +3,7 @@ import subprocess, os, sys, requests
 from functools import wraps
 from timeout_decorator import timeout
 from constants import Constant
-
+from format import Format
 
 _stepdepth = 0
 def step(f):
@@ -11,16 +11,17 @@ def step(f):
     def wrapped(*args, **kwargs):
         global _stepdepth
         _stepdepth += 1
-        print("{} entering {} {}".format(Constant.DOT * _stepdepth, f.__name__,
+        print("{} entering {} {}".format(Format.DOT * _stepdepth, f.__name__,
                                   f.__doc__ or ""))
         r = f(*args, **kwargs)
-        print("{}  exiting {}".format(Constant.DOT_exit * _stepdepth, f.__name__))
+        print("{}  exiting {}".format(Format.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
 
 
 class Utils:
+    
     def __init__(self, conf):
         self.conf = conf
 
@@ -40,7 +41,10 @@ class Utils:
         if not os.path.isabs(cwd):
             cwd = os.path.join(self.conf.workspace, cwd)
 
-        print("$ {} > {}".format(cwd, cmd))
+        if not os.path.exists(cwd):
+            raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
+
+        print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def authorized_keys(self):
@@ -77,7 +81,7 @@ class Utils:
         if not ignore_errors:
             if rc != 0:
                 print(err)
-                raise RuntimeError("{}Cannot run command {}{}\033[0m".format(Constant.RED, cmd ,Constant.RED_EXIT))
+                raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
         return output.decode()
 
     @timeout(60)
@@ -110,12 +114,12 @@ class Utils:
             self.runshellcommand(cmd, cwd="skuba")
         except subprocess.CalledProcessError as ex:
             print(ex)
-            print("{}Rebase failed, manual rebase is required.{}".format(Constant.RED, Constant.RED_EXIT))
+            print(Format.alert("Rebase failed, manual rebase is required."))
             self.runshellcommand("git rebase --abort", cwd="skuba")
             sys.exit(1)
         except Exception as ex:
             print(ex)
-            print("{}Unknown error exiting.{}".format(Constant.RED, Constant.RED_EXIT))
+            print(Format.alert("Unknown error exiting."))
             sys.exit(2)
 
     @timeout(30)
@@ -133,7 +137,6 @@ class Utils:
             r.raise_for_status()
         except (requests.HTTPError, requests.Timeout) as err:
             print(err)
-            print('{}Meta Data service unavailable could not get external IP addr{}'\
-                  .format(Constant.RED, Constant.RED_EXIT))
+            print(Format.alert('Meta Data service unavailable could not get external IP addr{}'))
         else:
             print('External IP addr: {}'.format(r.text))
