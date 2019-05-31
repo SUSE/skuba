@@ -18,9 +18,10 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache License 2.0',
         'Operating System :: POSIX :: Linux',
-    ],
-    #data_files={'ci/packaging/suse/skuba-update_spec.tmpl'},
-    entry_points = {
+    ], data_files={
+        'skuba_update/skuba-update.timer',
+        'skuba_update/skuba-update.service'
+    }, entry_points = {
         'console_scripts': [
             'skuba-update = skuba_update.skuba_update:main'
         ]

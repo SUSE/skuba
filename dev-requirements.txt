@@ -1,3 +1,4 @@
+-r requirements.txt
 coverage
 flake8
 pytest
@@ -6,4 +7,3 @@ tox
 mock
 bumpversion
 tox
-setuptools
