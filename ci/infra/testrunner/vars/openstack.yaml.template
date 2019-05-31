@@ -10,6 +10,10 @@ skuba:
   binpath: "" # path to skuba binary
   srcpath: "" # path to skuba source
 
+terraform:
+  tfdir: ""  # path to terraform templates
+  tfvars: "" # terraform vars
+
 openstack:
   openrc: "PATH TO YOUR OPENRC FILE" #os.getenv("OPENRC")
 
