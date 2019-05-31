@@ -25,6 +25,10 @@ openrc: ""    # Path to openrc.sh file
 skuba:        # skuba locations
   srcpath:    # Path to skuba srch project (defaults to `./skuba`)
   binpath     # Path to skuba bin directory (defaults to `<workspace>/go/bin/`)
+terraform:
+  tfdir:      # Path to the directory with terraform templates (defaults to <skuba.srcpath>/ci/infra/`)
+              # under this directory there must be a subdirectory per platform (openstack, vmware, baremetal)
+  tfvars:     # name of the tfvars file to be used (defatuls to `terraform.tfvars.ci.example`)
 ```
 
 ### Local Dev Machine Setup For VMware

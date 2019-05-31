@@ -17,12 +17,12 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
-        obj.terraform_dir = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
 
+        obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
         obj.jenkins = BaseConfig.Jenkins()
@@ -40,6 +40,7 @@ class BaseConfig:
             BaseConfig.Test,
             BaseConfig.Git,
             BaseConfig.Openstack,
+            BaseConfig.Terraform,
             BaseConfig.Skuba,
             BaseConfig.VMware
         )
@@ -81,6 +82,12 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.openrc = None
+
+    class Terraform:
+        def __init__(self):
+            super().__init__()
+            self.tfdir = None
+            self.tfvars = Constant.TERRAFORM_EXAMPLE 
 
     class Skuba:
         def __init__(self):
@@ -136,6 +143,8 @@ class BaseConfig:
             new_key = key.upper()
             new_value = None
 
+            # FIXME: the env variables must be looked as CLASS_KEY to prevent name collitions
+            # with well known variables (e.g. PATH) or between classes
             if os.getenv(new_key):
                 new_value = os.getenv(new_key)
 
@@ -163,9 +172,8 @@ class BaseConfig:
         if not conf.skuba.srcpath:
             conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
 
-        # TODO: add terraform dir as a configuration parameter
-        # and set to default if not specified
-        conf.terraform_dir = os.path.join(conf.skuba.srcpath, "ci/infra/{}".format(conf.platform))
+        if not conf.terraform.tfdir:
+           conf.terraform.tfdir= os.path.join(conf.skuba.srcpath, "ci/infra/")
 
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 

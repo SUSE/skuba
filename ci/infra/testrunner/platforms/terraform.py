@@ -10,7 +10,8 @@ class Terraform:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(conf)
-        self.state = self._load_tfstate()
+        self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
+        self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
 
     def _env_setup_cmd(self):
         """Returns the command for setting up the platform environment"""
@@ -30,8 +31,7 @@ class Terraform:
             print("Attempting to finish cleaup")
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
-                self.conf.terraform_json_path,
-                os.path.join(self.conf.workspace, "tfout.json")]
+                self.tfjson_path]
 
         for dir in dirs:
             try:
@@ -79,18 +79,21 @@ class Terraform:
                 self._fetch_terraform_output()
 
     def _load_tfstate(self):
-        fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
+        fn = os.path.join(self.tfdir, "terraform.tfstate")
         print("Reading {}".format(fn))
         with open(fn) as f:
-            self.state= json.load(f)
+            return json.load(f)
 
     def get_lb_ipaddr(self):
+        self.state = self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
 
     def get_masters_ipaddrs(self):
+        self.state = self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
 
     def get_workers_ipaddrs(self):
+        self.state = self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
 
     @step
@@ -99,14 +102,14 @@ class Terraform:
                "terraform output -json >"
                "{json_f}".format(
                    env_setup=self._env_setup_cmd(),
-                   json_f=self.conf.terraform_json_path))
+                   json_f=self.tfjson_path))
         self._runshellcommandterraform(cmd)
 
     def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(
-                           self.conf.terraform_dir,
-                           Constant.TERRAFORM_EXAMPLE)
+                            self.tfdir,
+                            self.conf.terraform.tfvars)
 
         dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
         dest_terraform = os.path.join(dir, tfvars)
@@ -144,23 +147,17 @@ class Terraform:
             f.writelines(lines)
 
     def _runshellcommandterraform(self, cmd, env=None):
-        """Running terraform command in {workspace}/ci/infra/{platform}"""
-        cwd = self.conf.terraform_dir
-        # Terraform needs PATH and SSH_AUTH_SOCK
-        sock_fn = self.utils.ssh_sock_fn()
-        env = {
-            "SSH_AUTH_SOCK": sock_fn,
-            'PATH': os.environ['PATH']
-        }
+        """Running terraform command in {terraform.tfdir}/{platform}"""
+        cwd = self.tfdir
         print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def _check_tf_deployed(self):
-        if os.path.exists(self.conf.terraform_json_path):
+        if os.path.exists(self.tfjson_path):
             raise Exception(Format.alert("tf file found. Please run cleanup and try again{}"))
 
     # TODO: this function is currently not used. Identify points where it should
     # be invoked
     def _verify_tf_dependency(self):
-        if not os.path.exists(self.conf.terraform_json_path):
+        if not os.path.exists(self.tfjson_path):
             raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
