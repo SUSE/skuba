@@ -5,21 +5,12 @@
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
-import os, sys
+import sys
 from argparse import ArgumentParser
 
-testrunner_path = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(testrunner_path,"utils"))
-sys.path.append(os.path.join(testrunner_path,"platforms"))
-sys.path.append(os.path.join(testrunner_path,"tests"))
-
-from constants import BaseConfig
-from constants import Constant
-from format import Format
-from utils import Utils
-from skuba import Skuba
-from openstack import Openstack
+from platforms import Openstack
 from tests import Tests
+from utils import (BaseConfig, Format, Skuba, Utils)
 
 __version__ = "0.0.3"
 
