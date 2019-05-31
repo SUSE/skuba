@@ -1,10 +1,13 @@
 package lib
 
 import (
-	"errors"
 	"fmt"
+	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
+	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -113,4 +116,13 @@ func (s *Skuba) Status() (*gexec.Session, error) {
 
 func (s *Skuba) ClusterName() string {
 	return s.clusterName
+}
+
+// GetClient returns a Client for the cluster
+func (s *Skuba) GetClient() (*clientset.Clientset, error) {
+	client, err := kubeconfigutil.ClientSetFromFile(s.clusterName + "/" + skuba.KubeConfigAdminFile())
+	if err != nil {
+		return nil, errors.Wrap(err, "could not load admin kubeconfig file")
+	}
+	return client, nil
 }

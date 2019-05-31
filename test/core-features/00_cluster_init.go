@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	testlib "github.com/SUSE/skuba/test/lib"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -84,7 +83,7 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "skuba status verify worker00 failed")
 
 		ginkgo.By("verify all system pods are running")
-		client, err := kubernetes.GetAdminClientSet()
+		client, err := skuba.GetClient()
 		if err != nil {
 			panic(err)
 		}
