@@ -1,6 +1,6 @@
 [Unit]
 Description=Daily update of the system
-After=network.target local-fs.target
+After=network-online.target local-fs.target
 
 [Timer]
 OnCalendar=daily
