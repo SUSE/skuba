@@ -83,7 +83,8 @@ packages = [
   "-kernel-default-base",
   "kubernetes-kubeadm",
   "kubernetes-kubelet",
-  "kubernetes-client"
+  "kubernetes-client",
+  "skuba-update",
 ]
 
 # ssh keys to inject into all the nodes
