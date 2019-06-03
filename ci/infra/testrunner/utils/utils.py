@@ -91,23 +91,6 @@ class Utils:
                 raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
         return output.decode()
 
-    @timeout(60)
-    @step
-    def setup_ssh(self):
-
-        self.runshellcommand("chmod 400 " + self.conf.ssh_key_option)
-        print("Starting ssh-agent ")
-        # use a dedicated agent to minimize stateful components
-        sock_fn = os.path.join(self.conf.workspace, "ssh-agent-sock")
-        try:
-            self.runshellcommand("pkill -f 'ssh-agent -a {}'".format(sock_fn))
-            print("Killed previous instance of ssh-agent")
-        except:
-            pass
-        self.runshellcommand("ssh-agent -a {}".format(sock_fn))
-        print("adding id_shared ssh key")
-        self.runshellcommand("ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
-
     @timeout(90)
     @step
     def git_rebase(self):

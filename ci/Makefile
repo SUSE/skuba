@@ -5,20 +5,7 @@ JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 
 .PHONY: all
-all: deploy bootstrap
-
-# Steps
-.PHONY: add_master_nodes
-add_master_nodes:
-	${TEST_RUNNER} --add-nodes --master 2
-
-.PHONY: add_worker_nodes
-add_worker_nodes:
-	${TEST_RUNNER} --add-nodes --worker 1
-
-.PHONY: bootstrap_environment
-bootstrap_environment:
-	${TEST_RUNNER} --bootstrap
+all: deploy 
 
 .PHONY: create_skuba
 create_skuba:
@@ -61,12 +48,6 @@ pr_checks: git_rebase_check
 
 .PHONY: deploy
 deploy: create_environment create_skuba
-
-.PHONY: bootstrap
-bootstrap: bootstrap_environment
-
-.PHONY: add_nodes
-add_nodes: add_master_nodes add_worker_nodes
 
 .PHONY: post_run
 post_run: gather_logs cleanup

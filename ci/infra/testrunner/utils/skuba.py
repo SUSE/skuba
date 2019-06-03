@@ -42,12 +42,6 @@ class Skuba:
 
     @step
     def cleanup(self):
-        self.utils.gorun("go version")
-        print("Building skuba")
-        self.utils.gorun("make")
-
-    @step
-    def cleanup(self):
         """Cleanup skuba working environment"""
         # TODO: check why (and if) the following two commands are needed
         cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
@@ -76,69 +70,6 @@ class Skuba:
 
         if cleanup_failure:
             raise Exception("Failure(s) during cleanup")
-
-    @step
-    def cluster_init(self):
-        self._load_tfstate()
-
-        print("Cleaning up any previous test-cluster dir")
-        self.utils.runshellcommand("rm -rf {}".format(self.cwd))
-        cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
-        # Override work directory, because init must run in the parent directory of the
-        # cluster directory
-        self._run_skuba(cmd, cwd=self.conf.workspace)
-
-    @step
-    def node_bootstrap(self):
-        self._load_tfstate()
-        self._verify_bootstrap_dependency()
-
-        cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
-        self._run_skuba(cmd)
-
-    @step
-    def node_join(self, role="worker", nr=0):
-        self._load_tfstate()
-        self._verify_bootstrap_dependency()
-
-        try:
-            if role == "master":
-                ip_addr = self._get_masters_ipaddrs()[nr]
-            else:
-                ip_addr = self._get_workers_ipaddrs()[nr]
-        except:
-            raise Format.alert("Error: there is not enough node to add {} node in cluster".format(role))
-
-        cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
-            role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
-        try:
-            self._run_skuba(cmd)
-        except:
-            raise Format.alert("Error: {}".format(cmd))
-
-    @step
-    def node_remove(self, role="worker", nr=0):
-        self._load_tfstate()
-        self._verify_bootstrap_dependency()
-
-        if nr <= 0:
-            raise Format.alert("Error: there is not enough node to remove {} node in cluster".format(role))
-
-        if role == "master":
-            ip_addr = self._get_masters_ipaddrs()[nr]
-        else:
-            ip_addr = self._get_workers_ipaddrs()[nr]
-
-        cmd = "node remove my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
-        try:
-            self._run_skuba(cmd)
-        except:
-            raise Format.alert("Error: {}".format(cmd))
-
-    def cluster_status(self):
-        self._verify_bootstrap_dependency()
-        self._run_skuba("cluster status")
 
     def num_of_nodes(self):
 
@@ -190,18 +121,4 @@ class Skuba:
         if logging_error:
             raise Exception("Failure(s) while collecting logs")
 
-    def _run_skuba(self, cmd, cwd=None):
-        """Running skuba command in cwd.
-        The cwd defautls to {workspace}/test-cluster but can be overrided
-        for example, for the init command that must run in {workspace}
-        """
-        self._verify_skuba_bin_dependency()
-
-        if cwd is None:
-           cwd=self.cwd
-
-        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
-
-        binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
-        self.utils.runshellcommand(binpath + " "+ cmd, cwd=cwd, env=env)
 

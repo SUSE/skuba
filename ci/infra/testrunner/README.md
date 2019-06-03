@@ -48,29 +48,12 @@ optional arguments:
                         create skuba environment
                         {workspace}/go/src/github.com/SUSE/skuba and build
                         skuba in that directory
-  -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
-                        platform
-  -k, --status          check K8s cluster status
-  -a, --add-nodes       add nodes in k8s cluster. Default values are -m=1,
-                        -w=1
-  -r, --remove-nodes    remove nodes in k8s cluster. default values are -m=1,
-                        -w=1
   -l, --log             gather logs from nodes
   -v YAML_PATH, --vars YAML_PATH
                         path for platform yaml file. Default is
                         vars/openstack.yaml in
                         {workspace}/ci/infra/testrunner. eg) -v
                         vars/myconfig.yaml
-  -m NUM_MASTER, --master NUM_MASTER
-                        number of masters to add or delete. It is dependening
-                        on number of deployed master nodes in your yaml file.
-                        Default value is 1. eg) -m 2
-  -w NUM_WORKER, --worker NUM_WORKER
-                        number of workers to add or delete. It is dependening
-                        on number of deployed worker nodes in your yaml file.
-                        Default value is 1 eg) -w 2
-
-
 ```
 
 
@@ -93,29 +76,4 @@ As default, Jenkins has WORKSPACE environment variable so that workspace will be
 ```ci/infra/testrunner/testrunner -x ``` 
 2. Deploy nodes in openstack  
 ```ci/infra/testrunner/testrunner -t ```  
-3. Create skuba env and Build skuba and store in go bin dir
-```ci/infra/testrunner/testrunner -c ```
-4. Bootstraping a cluster
-```ci/infra/testrunner/testrunner -b ```
-
-Once bootstrapping is done you will be ready to use K8s cluster.
-
-5. To extend the cluster, you can add more node with 
-```ci/infra/testrunner/testrunner -a -m 2 -w 2 ```
-
-6. Use K8s
-Once your nodes are bootstrapped, {worksapce}/test-cluster folder will be created. Inside test-cluster, Your kubeconfig file will be located in with the name of admin.conf in test-cluster folder.
-```
-chang@~/Workspace/vNext/test-cluster$ kubectl get pods --all-namespaces --kubeconfig=./admin.conf
-NAMESPACE     NAME                                  READY     STATUS    RESTARTS   AGE
-kube-system   cilium-6mnrh                          1/1       Running   0          3m
-kube-system   cilium-z9rqm                          1/1       Running   0          3m
-kube-system   coredns-559fbd6bb4-gw7cn              1/1       Running   0          4m
-kube-system   coredns-559fbd6bb4-jqt4r              1/1       Running   0          4m
-kube-system   etcd-my-master-0                      1/1       Running   0          3m
-kube-system   kube-apiserver-my-master-0            1/1       Running   0          3m
-kube-system   kube-controller-manager-my-master-0   1/1       Running   0          3m
-kube-system   kube-proxy-782z2                      1/1       Running   0          4m
-kube-system   kube-proxy-kf7g5                      1/1       Running   0          3m
-kube-system   kube-scheduler-my-master-0            1/1       Running   0          3m
-```
+3. Use ginkgo for cluster creation.

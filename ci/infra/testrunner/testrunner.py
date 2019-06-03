@@ -1,7 +1,6 @@
 #!/usr/bin/env python3 -Wd -b
 
 """
-    Runs end-to-end product tests for v4+.
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
@@ -9,7 +8,6 @@ import sys
 from argparse import ArgumentParser
 
 from platforms import Openstack
-from tests import Tests
 from utils import (BaseConfig, Format, Skuba, Utils)
 
 __version__ = "0.0.3"
@@ -34,14 +32,6 @@ def main():
     parser.add_argument("-c", "--create-skuba", dest="create_skuba", action="store_true",
                         help="create skuba environment {workspace}/go/src/github.com/SUSE/skuba\
                               and build skuba in that directory")
-    parser.add_argument("-b", "--bootstrap", dest="boostrap", action="store_true",
-                        help="bootstrap k8s cluster with deployed nodes in your platform")
-    parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
-                        help="check K8s cluster status")
-    parser.add_argument("-a", "--add-nodes", dest="add_nodes", action="store_true",
-                        help="add nodes in k8s cluster. Default values are -m=1, -w=1")
-    parser.add_argument("-r", "--remove-nodes", dest="remove_nodes", action="store_true",
-                        help="remove nodes in k8s cluster. default values are -m=1, -w=1")
     parser.add_argument("-l", "--log", dest="log", action="store_true", help="gather logs from nodes")
     parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
                         help='path for platform yaml file. \
@@ -70,14 +60,6 @@ def main():
         get_platform(conf).apply_terraform()
     elif options.create_skuba:
         Skuba(conf).create_skuba()
-    elif options.boostrap:
-        Tests(conf).bootstrap_environment()
-    elif options.cluster_status:
-        Skuba(conf).cluster_status()
-    elif options.add_nodes:
-        Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
-    elif options.remove_nodes:
-        Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.log:
         Skuba(conf).gather_logs()
 
