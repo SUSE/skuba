@@ -78,6 +78,7 @@ packages = [
   "kubernetes-kubelet",
   "kubernetes-client",
   "ca-certificates-suse",
+  "skuba-update",
 ]
 
 # ssh keys to inject into all the nodes

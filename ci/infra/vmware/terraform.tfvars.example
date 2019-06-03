@@ -58,7 +58,8 @@ packages = [
     "kubernetes-kubelet",
     "kubernetes-client",
     "cri-o",
-    "cni-plugins"
+    "cni-plugins",
+    "skuba-update"
 ]
 
 # ssh keys to inject into all the nodes

@@ -79,6 +79,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"psp.deploy",
 		"kured.render",
 		"kured.deploy",
+		"skuba-update.start",
 	)
 
 	if err != nil {

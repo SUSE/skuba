@@ -96,6 +96,7 @@ variable "packages" {
     "kubernetes-kubeadm",
     "kubernetes-kubelet",
     "kubernetes-client",
+    "skuba-update",
   ]
 
   description = "list of additional packages to install"
