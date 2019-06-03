@@ -42,8 +42,16 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	statesToApply := []string{"kernel.load-modules", "kernel.configure-parameters",
-		"cri.start", "kubelet.configure", "kubelet.enable", "kubeadm.join", "cni.cilium-update-configmap"}
+	statesToApply := []string{
+		"kernel.load-modules",
+		"kernel.configure-parameters",
+		"cri.start",
+		"kubelet.configure",
+		"kubelet.enable",
+		"kubeadm.join",
+		"cni.cilium-update-configmap",
+		"skuba-update.start",
+	}
 
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
