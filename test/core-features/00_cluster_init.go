@@ -37,9 +37,6 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 	gomega.SetDefaultConsistentlyDuration(600 * time.Second)
 	gomega.SetDefaultConsistentlyPollingInterval(5 * time.Second)
 
-	ginkgo.BeforeEach(func() {
-	})
-
 	ginkgo.It("00: Initialize cluster", func() {
 		ginkgo.By("create configuration files")
 		session, err := skuba.Init()
