@@ -1,5 +1,5 @@
 # Name of the image to use
-image_name = "SLE-15-SP1-JeOS-GMC"
+image_name = "SLE-15-SP1-JeOS-GM"
 
 # Name of the internal network to be created
 internal_net = "testing"
