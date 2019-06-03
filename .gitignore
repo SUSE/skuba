@@ -23,5 +23,5 @@
 ci/packaging/suse/obs_files
 
 # ignore ginkgo and skuba
-ginkgo
-skuba
+/ginkgo
+/skuba
