@@ -13,12 +13,13 @@ from skuba_update.skuba_update import (
 @patch('subprocess.Popen')
 def test_run_command(mock_subprocess):
     mock_process = Mock()
-    mock_process.communicate.return_value = (b'stdout', b'stderr')
+    mock_process.communicate.return_value = (b'stdout', b'')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     result = run_command(['/bin/dummycmd', 'arg1'])
     assert result.output == "stdout"
     assert result.returncode == 0
+    assert result.error == '(no output on stderr)'
 
     mock_process.returncode = 1
     result = run_command(['/bin/dummycmd', 'arg1'])
@@ -27,7 +28,7 @@ def test_run_command(mock_subprocess):
 
     mock_process.communicate.return_value = (b'', b'stderr')
     result = run_command(['/bin/dummycmd', 'arg1'])
-    assert result.output == "(no output on stdout)"
+    assert result.output == ""
     assert result.returncode == 1
 
 
@@ -80,9 +81,19 @@ def test_main_no_root(mock_subprocess):
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main(mock_subprocess, mock_geteuid):
+    return_values = [
+        (b'some_service1\nsome_service2', b''), (b'zypper 1.14.15', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
     mock_geteuid.return_value = 0
     mock_process = Mock()
-    mock_process.communicate.return_value = (b'zypper 1.14.15', b'')
+    mock_process.communicate.side_effect = mock_communicate
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     main()
@@ -95,7 +106,19 @@ def test_main(mock_subprocess, mock_geteuid):
         ], env=ANY),
         call([
             'zypper', '--non-interactive-include-reboot-patches', 'patch-check'
-        ], env=ANY)
+        ], env=ANY),
+        call(
+            ['zypper', 'ps', '-sss'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['systemctl', 'restart', 'some_service1'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['systemctl', 'restart', 'some_service2'],
+            stdout=-1, stderr=-1, env=ANY
+        )
     ]
 
 
@@ -103,14 +126,22 @@ def test_main(mock_subprocess, mock_geteuid):
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
+    return_values = [(b'', b''), (b'zypper 1.14.15', b'')]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
     mock_geteuid.return_value = 0
     mock_process = Mock()
-    mock_process.communicate.return_value = (b'zypper 1.14.15', b'')
+    mock_process.communicate.side_effect = mock_communicate
     mock_process.returncode = 100
     mock_subprocess.return_value = mock_process
     main()
     assert mock_subprocess.call_args_list == [
-        call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
+        call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
         call(['zypper', 'ref', '-s'], env=ANY),
         call([
             'zypper', '--non-interactive',
@@ -122,7 +153,11 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], env=ANY)
+        ], env=ANY),
+        call(
+            ['zypper', 'ps', '-sss'],
+            stdout=-1, stderr=-1, env=ANY
+        )
     ]
 
 

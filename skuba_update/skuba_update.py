@@ -62,6 +62,9 @@ def main():
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ])
+    result = run_command(['zypper', 'ps', '-sss'])
+    for service in result.output.splitlines():
+        run_command(['systemctl', 'restart', service])
 
 
 def is_zypper_error(code):
@@ -136,7 +139,8 @@ def run_command(command):
 
     command_type = namedtuple(
         'command', ['output', 'error', 'returncode']
-        )
+    )
+    log('running \'{0}\''.format(' '.join(command)))
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
@@ -144,10 +148,8 @@ def run_command(command):
         env=os.environ
     )
     output, error = process.communicate()
-    if process.returncode != 0 and not error:
+    if not error:
         error = bytes(b'(no output on stderr)')
-    if process.returncode != 0 and not output:
-        output = bytes(b'(no output on stdout)')
     return command_type(
         output=output.decode(),
         error=error.decode(),
