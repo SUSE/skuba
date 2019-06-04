@@ -39,9 +39,7 @@ repositories = [
 # Additional packages that you may want to install in the initialization process.
 packages = [
   "ca-certificates-suse", # Required for registry.suse.de
-  "kubernetes-kubeadm",
-  "kubernetes-kubelet",
-  "kubernetes-client"
+  "patterns-caasp-Node"
 ]
 
 # Add your key here as you would do for the `~/.ssh/authorized_keys` file. They
