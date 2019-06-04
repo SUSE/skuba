@@ -92,6 +92,12 @@ for file in ci/infra/vmware/cloud-init/*.*; do
     install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/vmware/cloud-init
 done
 
+# Copy bare-metal files
+install -d -m 0755 %{buildroot}/%{_datadir}/caasp/autoyast/bare-metal
+for file in ci/infra/bare-metal/*.*; do
+  install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/autoyast/bare-metal
+done
+
 cd $HOME/go/bin
 install -D -m 0755 skuba %{buildroot}/%{_bindir}/skuba
 install -D -m 0755 kubectl-caasp %{buildroot}/%{_bindir}/kubectl-caasp
@@ -119,5 +125,7 @@ done
 %{_datadir}/caasp/terraform/openstack/cloud-init
 %{_datadir}/caasp/terraform/vmware
 %{_datadir}/caasp/terraform/vmware/cloud-init
+%{_datadir}/caasp/autoyast
+%{_datadir}/caasp/autoyast/bare-metal
 
 %changelog
