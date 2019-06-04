@@ -1,7 +1,7 @@
 MAKEFILE_PATH := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
-OPENSUSE_LEAP_IMAGE = registry.opensuse.org/opensuse/leap
-OPENSUSE_TUMBLEWEED_IMAGE = registry.opensuse.org/opensuse/tumbleweed
+OPENSUSE_LEAP_IMAGE = registry.opensuse.org/opensuse/leap:latest
+OPENSUSE_TUMBLEWEED_IMAGE = registry.opensuse.org/opensuse/tumbleweed:latest
 SLE_15_IMAGE = registry.suse.de/suse/sle-15-sp1/update/cr/images/suse/sle15:15.1
 BUILDER_IMAGE = opensuse/tumbleweed:build-rpm
 
