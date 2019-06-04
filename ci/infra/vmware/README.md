@@ -55,7 +55,7 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 
 ## Variables
 
-`vsphere_datastore` - Provide the datastore to use on the vSphere server
+`vsphere_datastore_cluster` - Provide the datastore cluster to use on the vSphere server
 `vsphere_datacenter` - Provide the datacenter to use on the vSphere server
 `vsphere_network` - Provide the network to use on the vSphere server - this network must be able to access the ntp servers and the nodes must be able to reach each other
 `vsphere_resource_ppol` - Provide the resource pool the machines will be running in

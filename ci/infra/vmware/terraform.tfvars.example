@@ -1,7 +1,7 @@
-# datastore to use on the vSphere server
+# datastore cluster to use on the vSphere server
 # EXAMPLE:
-# vsphere_datastore = "STORAGE-0"
-vsphere_datastore = ""
+# vsphere_datastore_cluster = "DATASTORE-CLUSTER-0"
+vsphere_datastore_cluster = ""
 
 # datacenter to use on the vSphere server
 # EXAMPLE:
