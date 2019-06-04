@@ -63,6 +63,35 @@ make %{?_smp_mflags} %{caasp_build_environment}
 make %{?_smp_mflags} docs
 
 %install
+
+# Copy openstack terraform templates
+install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/openstack
+install -d -m 0755 ci/infra/openstack/cloud-init %{buildroot}/%{_datadir}/caasp/terraform/openstack/cloud-init
+for file in ci/infra/openstack/*.*; do
+  install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/openstack/
+done
+for file in ci/infra/openstack/cloud-init/*.*; do
+  install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/openstack/cloud-init
+done
+
+# Copy vmware terraform templates
+install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/vmware
+install -d -m 0755 ci/infra/vmware/cloud-init %{buildroot}/%{_datadir}/caasp/terraform/vmware/cloud-init
+for file in ci/infra/vmware/*.*; do
+    # Load balancer is not supported by us, so the code will be stripped.
+    if [[ $file =~ lb-instance.tf$ ]]; then
+        continue
+    fi
+    install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/vmware/
+done
+for file in ci/infra/vmware/cloud-init/*.*; do
+    # Load balancer is not supported by us, so the code will be stripped.
+    if [[ $file =~ lb.tpl$ ]]; then
+        continue
+    fi
+    install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/vmware/cloud-init
+done
+
 cd $HOME/go/bin
 install -D -m 0755 skuba %{buildroot}/%{_bindir}/skuba
 install -D -m 0755 kubectl-caasp %{buildroot}/%{_bindir}/kubectl-caasp
@@ -83,5 +112,12 @@ done
 %{_mandir}/man1/skuba*
 # License
 %license LICENSE.md
+# Terraform files
+%dir %{_datadir}/caasp/
+%dir %{_datadir}/caasp/terraform/
+%{_datadir}/caasp/terraform/openstack
+%{_datadir}/caasp/terraform/openstack/cloud-init
+%{_datadir}/caasp/terraform/vmware
+%{_datadir}/caasp/terraform/vmware/cloud-init
 
 %changelog
