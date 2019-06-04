@@ -41,7 +41,25 @@ check_patch_type_interactivity() {
 }
 
 zypper_patch() {
-    zypper --no-refresh --non-interactive-include-reboot-patches patch -r "$1" -y
+    if [ "$SKUBA" = "1" ]; then
+        skuba-update
+    else
+        zypper --no-refresh --non-interactive-include-reboot-patches patch -r "$1" -y
+    fi
+}
+
+check_return_code() {
+    if [ "$SKUBA" = "1" ]; then
+        if [[ $1 -ne 0 ]]; then
+            echo "unexpected return value ($1) from skuba-update: 0 expected"
+            exit 1
+        fi
+    else
+        if [[ $1 -ne $2 ]]; then
+            echo "unexpected return value ($1) from zypper patch (expected $3: $2)"
+            exit 1
+        fi
+    fi
 }
 
 check_test_package_version() {
@@ -52,6 +70,18 @@ check_reboot_needed_present() {
     [ -f /var/run/reboot-needed ]
 }
 
+check_reboot_required_present() {
+    if [ "$SKUBA" = "1" ]; then
+        [ -f /var/run/reboot-required ]
+    fi
+}
+
 check_reboot_needed_absent() {
     [ ! -f /var/run/reboot-needed ]
+}
+
+check_reboot_required_absent() {
+    if [ "$SKUBA" = "1" ]; then
+        [ ! -f /var/run/reboot-required ]
+    fi
 }

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
 # Copyright (c) 2019 SUSE LLC. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -183,3 +186,7 @@ def check_version(call, version_waterline):
         message = 'Could not parse {0} version'.format(call)
         raise Exception(message)
     return version_info >= version_waterline
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()

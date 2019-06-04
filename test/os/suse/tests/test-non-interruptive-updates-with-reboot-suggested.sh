@@ -31,10 +31,8 @@ zypper_patch "$UPDATE_REPO"
 zypper_retval=$?
 set -e
 
-if [[ $zypper_retval -ne 102 ]]; then
-    echo "unexpected return value ($zypper_retval) from zypper patch (expected ZYPPER_EXIT_INF_REBOOT_NEEDED: 102)"
-    exit 1
-fi
+check_return_code $zypper_retval 102 "ZYPPER_EXIT_INF_REBOOT_NEEDED"
 
 check_test_package_version "2"
 check_reboot_needed_absent
+check_reboot_required_present

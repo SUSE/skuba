@@ -14,27 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source "$(dirname "$0")/../suse.sh"
+set -xe
 
-UPDATE_REPO="update-with-reboot-suggested"
+release=$(head -n 1 /etc/os-release)
+if [ "$release" = "NAME=\"SLES\"" ]; then
+    rpm -e container-suseconnect
+    zypper ar --no-gpgcheck http://download.opensuse.org/distribution/leap/15.1/repo/oss/ leap15.1
+    zypper ar --no-gpgcheck http://download.opensuse.org/update/leap/15.1/oss updates
+    zypper ref
+fi
 
-add_repository "base"
-install_package "base" "caasp-test"
+zypper in -y python3-setuptools
 
-check_test_package_version "1"
+if [ "$release" = "NAME=\"SLES\"" ]; then
+    zypper rr leap15.1
+    zypper rr updates
+fi
 
-add_package_to_need_reboot "caasp-test"
+cd /usr/src
+python3 setup.py install --root / --install-script /usr/sbin
 
-add_repository "$UPDATE_REPO"
-set +e
-zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
-check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "reboot"
-zypper_patch "$UPDATE_REPO"
-zypper_retval=$?
-set -e
-
-check_return_code $zypper_retval 102 "ZYPPER_EXIT_INF_REBOOT_NEEDED"
-
-check_test_package_version "2"
-check_reboot_needed_present
-check_reboot_required_present
+exit 0
