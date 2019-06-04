@@ -1,0 +1,9 @@
+-r requirements.txt
+coverage
+flake8
+pytest
+pytest-cov
+tox
+mock
+bumpversion
+tox
