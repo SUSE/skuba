@@ -1,6 +1,6 @@
 data "template_file" "lb_repositories" {
-  template = "${file("cloud-init/repository.tpl")}"
   count    = "${length(var.repositories)}"
+  template = "${file("cloud-init/repository.tpl")}"
 
   vars {
     repository_url  = "${element(values(var.repositories[count.index]), 0)}"
@@ -19,6 +19,7 @@ data "template_file" "haproxy_backends_master" {
 }
 
 data "template_file" "lb_cloud_init_metadata" {
+  count    = "${var.load-balancers}"
   template = "${file("cloud-init/metadata.tpl")}"
 
   vars {
@@ -28,6 +29,7 @@ data "template_file" "lb_cloud_init_metadata" {
 }
 
 data "template_file" "lb_cloud_init_userdata" {
+  count    = "${var.load-balancers}"
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
@@ -72,6 +74,8 @@ resource "vsphere_virtual_machine" "lb" {
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
+  count = "${var.load-balancers}"
+
   connection {
     host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
     user     = "${var.username}"
