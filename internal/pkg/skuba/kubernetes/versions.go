@@ -72,7 +72,7 @@ var (
 				KubeletVersion: "1.14.1",
 			},
 			AddonsVersion: AddonsVersion{
-				CiliumVersion:  "1.4.2",
+				CiliumVersion:  "1.5.1",
 				ToolingVersion: "0.1.0",
 				KuredVersion:   "1.2.0",
 			},
