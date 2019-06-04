@@ -57,7 +57,7 @@ resource "vsphere_virtual_machine" "master" {
   guest_id         = "${var.guest_id}"
   scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
   resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
-  datastore_id     = "${data.vsphere_datastore.datastore.id}"
+  datastore_cluster_id = "${data.vsphere_datastore_cluster.datastore_cluster.id}"
 
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
@@ -65,7 +65,6 @@ resource "vsphere_virtual_machine" "master" {
 
   disk {
     label        = "disk0"
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
     size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
 

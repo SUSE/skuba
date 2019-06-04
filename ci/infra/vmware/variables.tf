@@ -1,6 +1,6 @@
 variable "template_name" {}
 variable "stack_name" {}
-variable "vsphere_datastore" {}
+variable "vsphere_datastore_cluster" {}
 variable "vsphere_datacenter" {}
 variable "vsphere_network" {}
 variable "vsphere_resource_pool" {}
@@ -103,8 +103,8 @@ data "vsphere_resource_pool" "pool" {
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
-data "vsphere_datastore" "datastore" {
-  name          = "${var.vsphere_datastore}"
+data "vsphere_datastore_cluster" "datastore_cluster" {
+  name          = "${var.vsphere_datastore_cluster}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
