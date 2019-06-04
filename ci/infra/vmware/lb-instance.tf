@@ -35,20 +35,18 @@ data "template_file" "lb_cloud_init_userdata" {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.lb_repositories.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
-    username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
 
 resource "vsphere_virtual_machine" "lb" {
-  count            = "${var.load-balancers}"
-  name             = "${var.stack_name}-lb-${count.index}"
-  num_cpus         = "${var.lb_cpus}"
-  memory           = "${var.lb_memory}"
-  guest_id         = "${var.guest_id}"
-  scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
-  resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
+  count                = "${var.load-balancers}"
+  name                 = "${var.stack_name}-lb-${count.index}"
+  num_cpus             = "${var.lb_cpus}"
+  memory               = "${var.lb_memory}"
+  guest_id             = "${var.guest_id}"
+  scsi_type            = "${data.vsphere_virtual_machine.template.scsi_type}"
+  resource_pool_id     = "${data.vsphere_resource_pool.pool.id}"
   datastore_cluster_id = "${data.vsphere_datastore_cluster.datastore_cluster.id}"
 
   clone {
@@ -77,8 +75,8 @@ resource "null_resource" "lb_wait_cloudinit" {
   connection {
     host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
     user     = "${var.username}"
-    password = "${var.password}"
     type     = "ssh"
+    agent    = true
   }
 
   provisioner "remote-exec" {
