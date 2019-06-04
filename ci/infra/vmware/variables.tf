@@ -54,11 +54,6 @@ variable "workers" {
   description = "Number of worker nodes"
 }
 
-variable "load-balancers" {
-  default     = 1
-  description = "Number of load-balancer nodes"
-}
-
 variable "worker_cpus" {
   default     = 4
   description = "Number of CPUs used on worker node"
@@ -77,16 +72,6 @@ variable "master_cpus" {
 variable "master_memory" {
   default     = 8192
   description = "Amount of memory used on master node"
-}
-
-variable "lb_cpus" {
-  default     = 1
-  description = "Number of CPUs used on load-balancer node"
-}
-
-variable "lb_memory" {
-  default     = 2048
-  description = "Amount of memory used on load-balancer node"
 }
 
 variable "caasp_registry_code" {
