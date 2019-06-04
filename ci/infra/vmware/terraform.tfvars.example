@@ -54,12 +54,7 @@ repositories = []
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
-    "kubernetes-kubeadm",
-    "kubernetes-kubelet",
-    "kubernetes-client",
-    "cri-o",
-    "cni-plugins",
-    "skuba-update"
+  "patterns-caasp-Node"
 ]
 
 # ssh keys to inject into all the nodes

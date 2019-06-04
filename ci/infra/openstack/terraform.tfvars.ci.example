@@ -74,11 +74,8 @@ repositories = [
 packages = [
   "kernel-default",
   "-kernel-default-base",
-  "kubernetes-kubeadm",
-  "kubernetes-kubelet",
-  "kubernetes-client",
   "ca-certificates-suse",
-  "skuba-update",
+  "patterns-caasp-Node",
 ]
 
 # ssh keys to inject into all the nodes

@@ -93,10 +93,7 @@ variable "packages" {
   default = [
     "kernel-default",
     "-kernel-default-base",
-    "kubernetes-kubeadm",
-    "kubernetes-kubelet",
-    "kubernetes-client",
-    "skuba-update",
+    "patterns-caasp-Node",
   ]
 
   description = "list of additional packages to install"
