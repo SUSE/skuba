@@ -98,7 +98,7 @@ install -D -m 0755 kubectl-caasp %{buildroot}/%{_bindir}/kubectl-caasp
 
 # Install docs
 for file in $HOME/go/src/%{go_project}/docs/man/*.1; do
- install -D -m 0644 $file "%{buildroot}/%{_mandir}/man1/$(basename $file)"
+  install -D -m 0644 $file "%{buildroot}/%{_mandir}/man1/$(basename $file)"
 done
 
 %files -n kubectl-caasp
