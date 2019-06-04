@@ -39,11 +39,6 @@ variable "username" {
   description = "Username for the cluster nodes"
 }
 
-variable "password" {
-  default     = "sles"
-  description = "Password for the cluster nodes"
-}
-
 variable "masters" {
   default     = 1
   description = "Number of master nodes"

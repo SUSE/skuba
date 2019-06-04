@@ -66,8 +66,6 @@ data "template_file" "lb_cloud_init_userdata" {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
-    username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
@@ -115,8 +113,8 @@ resource "null_resource" "lb_wait_cloudinit" {
   connection {
     host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
     user     = "${var.username}"
-    password = "${var.password}"
     type     = "ssh"
+    agent    = true
   }
 
   provisioner "remote-exec" {
