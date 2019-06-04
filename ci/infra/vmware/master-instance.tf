@@ -52,8 +52,6 @@ data "template_file" "master_cloud_init_userdata" {
     register_scc    = "${join("\n", data.template_file.master_register_scc.*.rendered)}"
     register_rmt    = "${join("\n", data.template_file.master_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.master_commands.*.rendered)}"
-    username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
@@ -97,8 +95,8 @@ resource "null_resource" "master_wait_cloudinit" {
   connection {
     host     = "${element(vsphere_virtual_machine.master.*.guest_ip_addresses.0, count.index)}"
     user     = "${var.username}"
-    password = "${var.password}"
     type     = "ssh"
+    agent    = true
   }
 
   provisioner "remote-exec" {
