@@ -1,4 +1,4 @@
-MAKEFILE_PATH := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+PWD := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 OPENSUSE_LEAP_IMAGE = registry.opensuse.org/opensuse/leap:latest
 OPENSUSE_TUMBLEWEED_IMAGE = registry.opensuse.org/opensuse/tumbleweed:latest
@@ -13,34 +13,35 @@ test-opensuse: test-opensuse-tumbleweed test-opensuse-leap
 
 .PHONY: test-opensuse-tumbleweed
 test-opensuse-tumbleweed: repos
-	./run_tests.sh $(OPENSUSE_TUMBLEWEED_IMAGE)
+	$(PWD)/run_tests.sh $(OPENSUSE_TUMBLEWEED_IMAGE)
 
 .PHONY: test-opensuse-leap
 test-opensuse-leap: repos
-	./run_tests.sh $(OPENSUSE_LEAP_IMAGE)
+	$(PWD)/run_tests.sh $(OPENSUSE_LEAP_IMAGE)
 
 .PHONY: test-sle
 test-sle: test-sle-15
 
 .PHONY: test-sle-15
 test-sle-15: repos
-	./run_tests.sh $(SLE_15_IMAGE)
+	$(PWD)/run_tests.sh $(SLE_15_IMAGE)
 
 .PHONY: rpm-builder-image
 rpm-builder-image:
-	docker build -t $(BUILDER_IMAGE) -f Dockerfile.builder .
+	pushd $(PWD) >/dev/null
+	docker build -t $(BUILDER_IMAGE) -f $(PWD)/Dockerfile.builder $(PWD)
 
 .PHONY: rpms
 rpms: artifacts/caasp-test-1-1.noarch.rpm artifacts/caasp-test-2-1.noarch.rpm
 
 artifacts/%.rpm: rpm-builder-image
-	docker run --rm -v $(MAKEFILE_PATH):/suse -it $(BUILDER_IMAGE) /suse/build-rpm.sh $*
+	docker run --rm -v $(PWD):/suse -it $(BUILDER_IMAGE) /suse/build-rpm.sh $*
 
 .PHONY: repos
 repos: rpms artifacts/repo-base artifacts/repo-update-with-reboot-suggested artifacts/repo-update-with-restart-suggested artifacts/repo-update-plain artifacts/repo-update-with-message
 
 artifacts/repo-%:
-	docker run --rm -v $(MAKEFILE_PATH):/suse -it $(BUILDER_IMAGE) /suse/build-repo.sh $*
+	docker run --rm -v $(PWD):/suse -it $(BUILDER_IMAGE) /suse/build-repo.sh $*
 
 .PHONY: clean
 clean:
