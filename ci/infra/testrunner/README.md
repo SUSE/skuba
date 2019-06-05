@@ -20,8 +20,11 @@ export OS_PASSWORD="YOUR PASSWORD"
 4. Edit and update `ci/infra/testrunner/vars/openstack.yaml`
 ```
 workspace: "" # The top folder where skuba is stored
-username: "" # User deployed stack name
-openrc: "" # Path to openrc.sh file
+username: ""  # User deployed stack name
+openrc: ""    # Path to openrc.sh file
+skuba:        # skuba locations
+  srcpath:    # Path to skuba srch project (defaults to `./skuba`)
+  binpath     # Path to skuba bin directory (defaults to `<workspace>/go/bin/`)
 ```
 
 5. Use testrunner
