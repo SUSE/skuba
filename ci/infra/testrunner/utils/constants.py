@@ -160,6 +160,8 @@ class BaseConfig:
         # and set to default if not specified
         conf.terraform_dir = os.path.join(conf.skuba.srcpath, "ci/infra/{}".format(conf.platform))
 
+        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
+
         if not conf.jenkins.job_name:
             conf.jenkins.job_name = conf.username
         conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
