@@ -1,0 +1,9 @@
+graft skuba_update 
+
+global-exclude *.py[co] __pycache__
+exclude .gitignore
+exclude .travis.yml
+include README.md
+include LICENSE
+prune .cache
+prune .git
