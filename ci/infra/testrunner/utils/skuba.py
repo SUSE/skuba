@@ -166,24 +166,42 @@ class Skuba:
     @timeout(600)
     @step
     def gather_logs(self):
+        logging_errors = []
+        log_dir_path = os.path.join(self.conf.workspace, 'testrunner_logs')
+
+        if not os.path.isdir(log_dir_path):
+            os.mkdir(log_dir_path)
+            print(f"Created log dir {log_dir_path}")
+
         self._load_tfstate()
 
-        logging_error = False
+        for ipa in self._get_masters_ipaddrs():
+            logging_error = self._copy_cloud_init_logs(ipa, 'master', log_dir_path)
+            if logging_error is not None:
+                logging_errors.append(logging_error)
 
+        for ipa in self._get_workers_ipaddrs():
+            logging_error = self._copy_cloud_init_logs(ipa, 'worker', log_dir_path)
+            if logging_error is not None:
+                logging_errors.append(logging_error)
+
+        if logging_errors:
+            raise Exception(f"{len(logging_errors)} Failure(s) while collecting logs")
+
+    def _copy_cloud_init_logs(self, ip_address, node_type, log_dir_path):
+        node_log_dir_path = os.path.join(log_dir_path, f"{node_type}_{ip_address.replace('.', '_')}")
+
+        if not os.path.isdir(node_log_dir_path):
+            os.mkdir(node_log_dir_path)
+            print(f"Created log dir {node_log_dir_path}")
         try:
-            ipaddrs = self._get_masters_ipaddrs() + self._get_workers_ipaddrs()
-            for ipa in ipaddrs:
-                print("--------------------------------------------------------------")
-                print("Gathering logs from {}".format(ipa))
-                self.utils.ssh_run(ipa, "cat /var/run/cloud-init/status.json")
-                print("--------------------------------------------------------------")
-                self.utils.ssh_run(ipa, "cat /var/log/cloud-init-output.log")
+            print(f"Gathering cloud-init logs from {node_type} at {ip_address}")
+            self.utils.scp_file(ip_address, "/var/run/cloud-init/status.json", node_log_dir_path)
+            self.utils.scp_file(ip_address, "/var/log/cloud-init-output.log", node_log_dir_path)
+            self.utils.scp_file(ip_address, "/var/log/cloud-init.log", node_log_dir_path)
         except Exception as ex:
-            logging_error = True
-            print("Error while collecting logs from cluster \n {}".format(ex))
-
-        if logging_error:
-            raise Exception("Failure(s) while collecting logs")
+            print(f"Error while collecting cloud-init logs from {node_type} at {ip_address}\n {ex}")
+            return ex
 
     def _run_skuba(self, cmd, cwd=None):
         """Running skuba command in cwd.
