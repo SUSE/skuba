@@ -46,6 +46,26 @@ kubectl plugin that has the same layout as skuba. You can call to
 the same commands presented in skuba as kubectl caasp when installing
 the kubectl-caasp binary in your path.
 
+%if %{undefined python3_sitelib}
+%global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%endif
+%package update
+Summary:        Utility to automatically refresh and update a skuba cluster
+Group:          System/Management
+BuildRequires:  python3-setuptools
+# Standard systemd requirements
+BuildRequires:  pkgconfig(systemd)
+%{?systemd_requires}
+Requires:       python3-setuptools
+Requires:       zypper >= 1.14
+Requires:       lsof
+BuildArch:      noarch
+Supplements:    skuba
+
+%description update
+Wraps zypper to refresh repositories and apply non interactive patches,
+including patches requiring reboot.
+
 %prep
 %setup -q -n %{name}
 
@@ -63,6 +83,20 @@ make %{?_smp_mflags} %{caasp_build_environment}
 make %{?_smp_mflags} docs
 
 %install
+
+#
+# skuba-update install
+#
+
+pushd skuba-update
+python3 setup.py install --root %{buildroot} \
+    --install-script %{_sbindir} \
+    --install-data %{_unitdir}
+popd
+
+#
+# skuba install
+#
 
 # Copy openstack terraform templates
 install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/openstack
@@ -107,8 +141,32 @@ for file in $HOME/go/src/%{go_project}/docs/man/*.1; do
   install -D -m 0644 $file "%{buildroot}/%{_mandir}/man1/$(basename $file)"
 done
 
+# Add the suse rclink
+ln -sf service %{buildroot}%{_sbindir}/rcskuba-update
+
+%pre update
+%service_add_pre skuba-update.timer
+
+%post update
+%service_add_post skuba-update.timer
+
+%preun update
+%service_del_preun skuba-update.timer
+
+%postun update
+%service_del_postun skuba-update.timer
+
 %files -n kubectl-caasp
 %{_bindir}/kubectl-caasp
+
+%files update
+%defattr(-,root,root)
+%license skuba-update/LICENSE
+%{_sbindir}/skuba-update
+%{python3_sitelib}/*
+%{_unitdir}/skuba-update.service
+%{_unitdir}/skuba-update.timer
+%{_sbindir}/rcskuba-update
 
 %files
 # Binaries
