@@ -24,7 +24,29 @@ username: "" # User deployed stack name
 openrc: "" # Path to openrc.sh file
 ```
 
-5. Use testrunner
+### Local Dev Machine Setup For VMware
+
+1. Create an environment file e.g. `vmware-env.sh` with the following:
+```
+#!/usr/bin/env bash
+
+export VSPHERE_SERVER="vsphere.cluster.endpoint.hostname"
+export VSPHERE_USER="username@vsphere.cluster.endpoint.hostname"
+export VSPHERE_PASSWORD="password"
+export VSPHERE_ALLOW_UNVERIFIED_SSL="true"
+```
+
+2. Edit and update `ci/infra/testrunner/vars/vmware.yaml`
+```
+workspace: "" # The top folder where skuba is stored
+username: "" # User deployed stack name
+env_file: "" # Path to vmware-env.sh file
+```
+
+3. Be sure to use the `--vars` arg when calling testrunner and supply the path to `ci/infra/testrunner/vars/vmware.yaml`
+
+### Testrunner Usage
+
 ```
 ./testrunner -h
 Starting ./testrunner script
@@ -82,8 +104,9 @@ This pipeline script is same as openrc: "/Private/container-openrc.sh" in openst
 As default, Jenkins has WORKSPACE environment variable so that workspace will be replaced in Jenkins workspace
 ```
    environment {
-        OPENRC = "/Private/container-openrc.sh "
-        GITHUB_TOKEN = readFile("/Private/github-token").trim()
+        OPENRC = credentials('openrc') or ENV_FILE = credentials('vmware-env') 
+        GITHUB_TOKEN = credentials('github-token')
+        PLATFORM = 'openstack' or 'vmware'
    }
 ```
 
