@@ -43,11 +43,10 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*configuration files written to"))
 
 		//TODO: this assertion should be Eventually and wait for Exit(0)
-		gomega.Expect(session).Should(gexec.Exit(), "configuration was not created")
-		gomega.Expect(err).To(gomega.BeNil(), "configuration was not created")
+		gomega.Expect(err).Should(gomega.BeNil(), "configuration was not created")
 
 		_, err = os.Stat(skuba.ClusterName())
-		gomega.Expect(os.IsNotExist(err)).NotTo(gomega.BeTrue())
+		gomega.Expect(os.IsNotExist(err)).ShouldNot(gomega.BeTrue())
 
 		ginkgo.By("add master00 to the cluster")
 		session, err = skuba.Bootstrap(master00IP, master00Name)
@@ -55,14 +54,14 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
 		fmt.Println(session.Wait().Out.Contents())
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba adding master00 failed")
-		gomega.Expect(err).To(gomega.BeNil(), "skuba adding master00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba adding master00 failed")
 
 		ginkgo.By("verify master00 with skuba status")
 		session, err = skuba.Status()
 
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + master00Name))
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba status verify master00 failed")
-		gomega.Expect(err).To(gomega.BeNil(), "skuba status verify master00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba status verify master00 failed")
 
 		ginkgo.By("add a worker00 to the cluster")
 		session, err = skuba.JoinNode(worker00IP, worker00Name, "worker")
@@ -70,28 +69,31 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
 		fmt.Println(session.Wait().Out.Contents())
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba adding worker00 failed")
-		gomega.Expect(err).To(gomega.BeNil(), "skuba adding worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba adding worker00 failed")
 
 		ginkgo.By("verify worker00 with skuba status")
 		session, err = skuba.Status()
 
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + worker00Name))
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba status verify worker00 failed")
-		gomega.Expect(err).To(gomega.BeNil(), "skuba status verify worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba status verify worker00 failed")
 
 		ginkgo.By("verify all system pods are running")
 		client, err := skuba.GetClient()
 		if err != nil {
 			panic(err)
 		}
-
+		// retrieve debug info of failedPods for printing in case of failure
+		var failedPods []v1.Pod
 		gomega.Eventually(func() []v1.Pod {
 			podList, err := client.CoreV1().Pods("kube-system").List(metav1.ListOptions{FieldSelector: "status.phase!=Running"})
 			if err != nil {
 				panic(err)
 			}
+			failedPods = podList.Items
 			return podList.Items
-		}, 500*time.Second, 3*time.Second).ShouldNot(gomega.HaveLen(0), "Some system pods are not in 'running' state")
+			// the timeout 700 must be generous enough because the startup time of different pods can vary a lot, causing flakiness if small timeout
+		}, 700*time.Second, 3*time.Second).ShouldNot(gomega.HaveLen(0), "Some system pods are not in 'running' state: %#v ", failedPods)
 	})
 
 })
