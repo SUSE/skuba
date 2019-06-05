@@ -117,7 +117,7 @@ class Utils:
 
         try:
             cmd = 'git -c "user.name={}" -c "user.email={}" \
-                           rebase origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
+                           rebase --preserve-merges origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
             self.runshellcommand(cmd, cwd="skuba")
         except subprocess.CalledProcessError as ex:
             print(ex)
