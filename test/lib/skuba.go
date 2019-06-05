@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
+
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,9 +23,8 @@ func getEnvWithDefault(variable string, defaultValue string) string {
 }
 
 func getSkubaPath() (string, error) {
-	// Use an RPM binary provided by env variable otherwise use devel mode
-	var skuba string
-	skuba = os.Getenv("SKUBA_BIN_PATH")
+	// Use a binary provided by env variable otherwise use devel mode
+	skuba := os.Getenv("SKUBA_BIN_PATH")
 	if len(skuba) == 0 {
 		//TODO: what's the best way to report this warning?
 		fmt.Println("Skuba binary path not specified: taking skuba from GOPATH")
@@ -33,7 +33,7 @@ func getSkubaPath() (string, error) {
 
 	// check binary exists
 	if _, err := os.Stat(skuba); os.IsNotExist(err) {
-		return "", errors.New("skuba binary not found in GOPATH and ENV. variable:SKUBA_BIN_PATH !")
+		return "", errors.New("skuba binary not found in GOPATH and ENV. variable:SKUBA_BIN_PATH")
 	}
 
 	return skuba, nil
@@ -58,7 +58,7 @@ func NewSkuba(skuba string, username string, clusterName string, controlPlane st
 
 }
 
-// SkubaFromEnv builds a Skuba reading values from environment variables
+// NewSkubaFromEnv builds a Skuba reading values from environment variables
 func NewSkubaFromEnv() (*Skuba, error) {
 	controlPlane := os.Getenv("CONTROLPLANE") // ENV variable IP of controlplane
 	if len(controlPlane) == 0 {
