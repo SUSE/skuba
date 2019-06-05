@@ -6,6 +6,7 @@
     jobs:
         - '{name}-nightly'
         - '{name}-integration'
+        - '{name}-update-integration'
         - '{name}-code-lint'
         - '{name}-code-author'
         - '{name}-handle-pr'
