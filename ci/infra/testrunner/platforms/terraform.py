@@ -89,11 +89,8 @@ class Terraform:
     def generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(
-                            self.conf.workspace,
-                            "skuba/ci/infra/{}/{}".format(
-                                self.conf.platform,
-                                Constant.TERRAFORM_EXAMPLE)
-                        )
+                           self.conf.terraform_dir,
+                           Constant.TERRAFORM_EXAMPLE)
 
         dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
         dest_terraform = os.path.join(dir, tfvars)
