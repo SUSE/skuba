@@ -1,0 +1,75 @@
+#
+# spec file for package skuba-update
+#
+# Copyright (c) 2019 SUSE LINUX GmbH, Nuernberg, Germany.
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+#
+# Please submit bugfixes or comments via http://bugs.opensuse.org/
+#
+
+%if %{undefined python3_sitelib}
+%global python3_sitelib %(%{__python3} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+%endif
+
+Name:           skuba-update
+Version:        __VERSION__
+Release:        0
+Summary:        __SUMMARY__
+License:        Apache-2.0
+Group:          System/Management
+Url:            https://github.com/SUSE/skuba-update
+Source0:        %{name}.tar.gz
+BuildRequires:  python3-setuptools
+# Standard systemd requirements
+BuildRequires:  pkgconfig(systemd)
+%{?systemd_requires}
+Requires:       python3-setuptools
+Requires:       zypper >= 1.14
+BuildArch:      noarch
+
+%description
+__DESCRIPTION__
+
+%prep
+%setup -q -n %{name}-%{version}
+
+%build
+
+%install
+python3 setup.py install --root %{buildroot} \
+    --install-script %{_sbindir} \
+    --install-data %{_unitdir}
+
+# Add the suse rclink
+ln -sf service %{buildroot}%{_sbindir}/rc%{name}
+
+%pre
+%service_add_pre %{name}.timer
+
+%post
+%service_add_post %{name}.timer
+
+%preun
+%service_del_preun %{name}.timer
+
+%postun
+%service_del_postun %{name}.timer
+
+%files
+%defattr(-,root,root)
+%license LICENSE
+%{_sbindir}/%{name}
+%{python3_sitelib}/*
+%{_unitdir}/%{name}.service
+%{_unitdir}/%{name}.timer
+%{_sbindir}/rc%{name}
+
+%changelog
