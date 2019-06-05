@@ -2,10 +2,20 @@
 # -*- encoding: utf-8 -*-
 
 from setuptools import setup
+import os
+
+def version():
+    """Return the version. Pass when VERSION file not found"""
+    pwd = os.path.dirname(os.path.abspath(__file__))
+    try:
+        with open(os.path.join(pwd, '..', 'VERSION')) as version_file:
+            return version_file.read().strip()
+    except FileNotFoundError:
+        return ''
 
 setup(
     name = "skuba-update",
-    version = '0.1.0',
+    version = version(),
     author = "SUSE Containers Team",
     author_email = "containers@suse.com",
     description = "Utility to automatically refresh and update a SUSE CaaSP cluster nodes",
