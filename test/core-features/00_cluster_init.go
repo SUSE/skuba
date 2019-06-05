@@ -109,28 +109,14 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		if err != nil {
 			panic(err)
 		}
-		// We need to wait a little bit after a node has joined for pods to start on it. It normally
-		// needs a couple of minutes for all containers to be pulled in and started.
-		var podList *v1.PodList
-		timeout := time.After(180 * time.Second)
-		// Calling the k8s API takes a bit of time anyway
-		tick := time.Tick(5 * time.Second)
-	GetPods:
-		for {
-			select {
-			case <-tick:
-				podList, err = client.CoreV1().Pods("kube-system").List(metav1.ListOptions{FieldSelector: "status.phase!=Running"})
-				if err != nil {
-					panic(err)
-				}
-				if len(podList.Items) == 0 {
-					break GetPods
-				}
-			case <-timeout:
-				break GetPods
+
+		gomega.Eventually(func() []v1.Pod {
+			podList, err := client.CoreV1().Pods("kube-system").List(metav1.ListOptions{FieldSelector: "status.phase!=Running"})
+			if err != nil {
+				panic(err)
 			}
-		}
-		gomega.Expect(len(podList.Items)).To(gomega.BeZero(), "Some system pods are not in 'running' state")
+			return podList.Items
+		}, 500*time.Second, 3*time.Second).ShouldNot(gomega.HaveLen(0), "Some system pods are not in 'running' state")
 	})
 
 })
