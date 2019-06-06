@@ -12,7 +12,7 @@
         - timed: 'H H(3-5) * * *'
     parameters:
         - string:
-            name: branch
+            name: BRANCH
             default: '{branch}'
             description: The branch to checkout
         - string:
