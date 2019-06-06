@@ -12,7 +12,7 @@ pipeline {
         PR_CONTEXT = 'jenkins/skuba-integration'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
-        SRCPATH = ${WORKSPACE}
+        SRCPATH = "${WORKSPACE}"
     }
 
     stages {
