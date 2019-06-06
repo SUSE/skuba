@@ -35,13 +35,13 @@ rpm-builder-image:
 rpms: artifacts/caasp-test-1-1.noarch.rpm artifacts/caasp-test-2-1.noarch.rpm
 
 artifacts/%.rpm: rpm-builder-image
-	docker run --rm -v $(PWD):/suse -it $(BUILDER_IMAGE) /suse/build-rpm.sh $*
+	docker run --rm -v $(PWD):/suse $(BUILDER_IMAGE) /suse/build-rpm.sh $*
 
 .PHONY: repos
 repos: rpms artifacts/repo-base artifacts/repo-update-with-reboot-suggested artifacts/repo-update-with-restart-suggested artifacts/repo-update-plain artifacts/repo-update-with-message
 
 artifacts/repo-%:
-	docker run --rm -v $(PWD):/suse -it $(BUILDER_IMAGE) /suse/build-repo.sh $*
+	docker run --rm -v $(PWD):/suse $(BUILDER_IMAGE) /suse/build-repo.sh $*
 
 .PHONY: clean
 clean:
