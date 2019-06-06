@@ -30,3 +30,4 @@ zypper_patch "$UPDATE_REPO"
 
 check_test_package_version "1"
 check_reboot_needed_absent
+check_reboot_required_absent

@@ -27,15 +27,18 @@ from pathlib import Path
 # rebooted. This will be used later on by kured.
 REQUIRED_ZYPPER_VERSION = (1, 14, 0)
 
+# The path where zypper might write if it has detected that a patch/update that
+# has been installed requires the machine to reboot in order to work properly.
+ZYPPER_REBOOT_NEEDED_PATH = '/var/run/reboot-needed'
+
 # The path to the reboot-needed file. This is the file that kured will be
 # looking at.
 REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 # Exit codes as defined by zypper.
 
-ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
-ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
+ZYPPER_EXIT_INF_RESTART_NEEDED = 103
 
 
 def main():
@@ -52,19 +55,27 @@ def main():
     if os.geteuid() != 0:
         raise Exception('root privileges are required to run this tool')
 
+    update()
+    restart_services()
+
+
+def update():
+    """
+    Performs an update operation.
+    """
+
     run_zypper_command(['zypper', 'ref', '-s'])
-    run_zypper_command([
-        'zypper', '--non-interactive',
-        '--non-interactive-include-reboot-patches', 'patch'
-    ])
-    code = run_zypper_command(
-        ['zypper', '--non-interactive-include-reboot-patches', 'patch-check']
-    )
-    if are_patches_available(code):
-        run_zypper_command([
-            'zypper', '--non-interactive',
-            '--non-interactive-include-reboot-patches', 'patch'
-        ])
+    code = run_zypper_patch()
+    if is_restart_needed(code):
+        run_zypper_patch()
+
+
+def restart_services():
+    """
+    Restart services which are reported to have been updated and need a
+    restart.
+    """
+
     result = run_command(['zypper', 'ps', '-sss'])
     for service in result.output.splitlines():
         run_command(['systemctl', 'restart', service])
@@ -79,14 +90,13 @@ def is_zypper_error(code):
     return code != 0 and code < 100
 
 
-def are_patches_available(code):
+def is_restart_needed(code):
     """
-    Returns true if the given code is defined by zypper to mean that there are
-    patches available.
+    Returns true of the given code is defined by zypper to mean that restart is
+    needed (zypper itself has been updated).
     """
 
-    return code == ZYPPER_EXIT_INF_UPDATE_NEEDED or \
-        code == ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED
+    return code == ZYPPER_EXIT_INF_RESTART_NEEDED
 
 
 def is_reboot_needed(code):
@@ -125,13 +135,24 @@ def run_zypper_command(command):
     if is_zypper_error(process.returncode):
         raise Exception('"{0}" failed'.format(' '.join(command)))
 
-    # We trust the exit code of zypper over the presence of certain files.
-    # Thus, we will make sure that the `REBOOT_REQUIRED_PATH` is present
-    # depending on some exit codes.
-    if is_reboot_needed(process.returncode):
-        Path(REBOOT_REQUIRED_PATH).touch()
-
     return process.returncode
+
+
+def run_zypper_patch():
+    code = run_zypper_command([
+        'zypper', '--non-interactive',
+        '--non-interactive-include-reboot-patches', 'patch'
+    ])
+
+    # There are two instances in which we should create the
+    # REBOOT_REQUIRED_PATH file:
+    #
+    # 1. Zypper returned an exit code telling us to restart the system.
+    # 2. Zypper created the ZYPPER_REBOOT_NEEDED_PATH file regardless of the
+    #    final exit code.
+    if is_reboot_needed(code) or Path(ZYPPER_REBOOT_NEEDED_PATH).is_file():
+        Path(REBOOT_REQUIRED_PATH).touch()
+    return code
 
 
 def run_command(command):
