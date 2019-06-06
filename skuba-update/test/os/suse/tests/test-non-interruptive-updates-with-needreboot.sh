@@ -32,3 +32,4 @@ zypper_patch "$UPDATE_REPO"
 
 check_test_package_version "2"
 check_reboot_needed_present
+check_reboot_required_present

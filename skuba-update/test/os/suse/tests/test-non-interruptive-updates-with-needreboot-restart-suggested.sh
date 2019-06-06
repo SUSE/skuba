@@ -37,8 +37,4 @@ check_return_code $zypper_retval 103 "ZYPPER_EXIT_INF_RESTART_NEEDED"
 
 check_test_package_version "2"
 check_reboot_needed_present
-
-# skuba-update already handles 103 internally: if the patches installed affected
-# the package manager, then it will call patch again. Thus, in this case
-# /var/run/reboot-required won't be created.
-check_reboot_required_absent
+check_reboot_required_present
