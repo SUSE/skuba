@@ -6,6 +6,7 @@
     platform: openstack
     jobs:
         - '{name}-nightly'
+        - '{name}-update-nightly'
         - '{name}-integration'
         - '{name}-update-integration'
         - '{name}-code-lint'
