@@ -24,6 +24,7 @@ class BaseConfig:
         obj.nodeuser = None
 
         obj.openstack = BaseConfig.Openstack()
+        obj.vmware = BaseConfig.VMware()
         obj.jenkins = BaseConfig.Jenkins()
         obj.git = BaseConfig.Git()
         obj.skuba = BaseConfig.Skuba()
