@@ -2,10 +2,12 @@ from mock import patch, call, Mock, ANY
 
 from skuba_update.skuba_update import (
     main,
+    update,
     run_command,
     run_zypper_command,
-    REBOOT_NEEDED_PATH,
-    ZYPPER_EXIT_INF_UPDATE_NEEDED,
+    run_zypper_patch,
+    REBOOT_REQUIRED_PATH,
+    ZYPPER_EXIT_INF_RESTART_NEEDED,
     ZYPPER_EXIT_INF_REBOOT_NEEDED
 )
 
@@ -104,9 +106,6 @@ def test_main(mock_subprocess, mock_geteuid):
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], env=ANY),
-        call([
-            'zypper', '--non-interactive-include-reboot-patches', 'patch-check'
-        ], env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
@@ -137,7 +136,7 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
     mock_geteuid.return_value = 0
     mock_process = Mock()
     mock_process.communicate.side_effect = mock_communicate
-    mock_process.returncode = 100
+    mock_process.returncode = ZYPPER_EXIT_INF_RESTART_NEEDED
     mock_subprocess.return_value = mock_process
     main()
     assert mock_subprocess.call_args_list == [
@@ -146,9 +145,6 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], env=ANY),
-        call([
-            'zypper', '--non-interactive-include-reboot-patches', 'patch-check'
         ], env=ANY),
         call([
             'zypper', '--non-interactive',
@@ -161,6 +157,27 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
     ]
 
 
+@patch('pathlib.Path.is_file')
+@patch('subprocess.Popen')
+def test_update_zypper_is_fine_but_created_needreboot(
+        mock_subprocess, mock_is_file
+):
+
+    mock_process = Mock()
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    mock_is_file.return_value = True
+
+    exception = False
+    try:
+        update()
+    except PermissionError as e:
+        exception = True
+        msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
+        assert msg in str(e)
+    assert exception
+
+
 @patch('subprocess.Popen')
 def test_run_zypper_command(mock_subprocess):
     mock_process = Mock()
@@ -168,9 +185,10 @@ def test_run_zypper_command(mock_subprocess):
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     assert run_zypper_command(['zypper', 'patch']) == 0
-    mock_process.returncode = ZYPPER_EXIT_INF_UPDATE_NEEDED
+    mock_process.returncode = ZYPPER_EXIT_INF_RESTART_NEEDED
     mock_subprocess.return_value = mock_process
-    assert run_zypper_command(['zypper', 'patch']) == 100
+    assert run_zypper_command(
+        ['zypper', 'patch']) == ZYPPER_EXIT_INF_RESTART_NEEDED
 
 
 @patch('subprocess.Popen')
@@ -196,9 +214,9 @@ def test_run_zypper_command_creates_file_on_102(mock_subprocess):
     mock_subprocess.return_value = mock_process
     exception = False
     try:
-        run_zypper_command(['zypper', 'patch']) == 'stdout'
+        run_zypper_patch() == 'stdout'
     except PermissionError as e:
         exception = True
-        msg = 'Permission denied: \'{0}\''.format(REBOOT_NEEDED_PATH)
+        msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
         assert msg in str(e)
     assert exception
