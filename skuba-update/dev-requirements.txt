@@ -5,5 +5,4 @@ pytest
 pytest-cov
 tox
 mock
-bumpversion
 tox
