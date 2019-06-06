@@ -81,6 +81,18 @@ class Utils:
             key_fn=key_fn, ip=ipaddr, cmd=cmd, username=self.conf.nodeuser)
         self.runshellcommand(cmd)
 
+    def scp_file(self, ip_address, remote_file_path, local_file_path):
+        """
+        Copies a remote file from the given ip to the give path
+        :param ip_address: (str) IP address of the node to copy from
+        :param remote_file_path: (str) Path of the file to be copied
+        :param local_file_path: (str) Path where to store the log
+        :return:
+        """
+        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.ssh_key_option}"
+               f" {self.conf.nodeuser}@{ip_address}:{remote_file_path} {local_file_path}")
+        self.runshellcommand(cmd)
+
     def runshellcommand_withoutput(self, cmd, ignore_errors=True):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output, err = p.communicate()
