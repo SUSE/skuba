@@ -108,6 +108,18 @@ func (s *Skuba) JoinNode(nodeIP string, nodeName string, nodeRole string) (*gexe
 	return gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
 }
 
+func (s *Skuba) ResetNode(nodeIP string) (*gexec.Session, error) {
+	command := exec.Command(s.skuba, "node", "reset", "-v", s.debugLevel, "--user", s.username, "--sudo", "--target", nodeIP)
+	command.Dir = s.clusterName
+	return gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+}
+
+func (s *Skuba) RemoveNode(nodeName string) (*gexec.Session, error) {
+	command := exec.Command(s.skuba, "node", "remove", "-v", s.debugLevel, nodeName)
+	command.Dir = s.clusterName
+	return gexec.Start(command, ginkgo.GinkgoWriter, ginkgo.GinkgoWriter)
+}
+
 func (s *Skuba) Status() (*gexec.Session, error) {
 	command := exec.Command(s.skuba, "cluster", "status")
 	command.Dir = s.clusterName
