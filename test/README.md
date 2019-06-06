@@ -45,8 +45,9 @@ When you create a var specify also the behaviour and the usage: mandatory/option
 
 ### Currenlty supported:
 
-### IPs:
+### Cluster:
 
+- `CLUSTERNAME`: - optional - name of the cluster. Default `e2e-cluster`
 - `CONTROLPLANE`: - mandatory - IP of host which will be the controlplane
 - `MASTER00`: - mandatory - IP of 1st master
 - `WORKER00`: - mandatory - IP of 1st worker
@@ -55,13 +56,17 @@ SEE 1) example in HOW TO RUN
 
 As showed, in future we will have `WORKER01`, `MASTER01`, `MASTER02` etc. 
 
-### Behaviour variables:
+### Skuba setup
+
+- `SKUBA_DEBUG`: - optinal - Debug level. Default value is `3`
+- `SKUBA_USERNAME`: - optional - username used by `skuba` to connecto to machines - default `sles`
+
+### Environment setup variables:
 
 - `IP_FROM_TF_STATE`: - optional - if set to `TRUE` this will read terraform states. Default: false
 - `PLATFORM`: - optional - this specify the provider used. (libvirt, openstack, vmware, etc). Default: None.
 - `SKUBA_BIN_PATH`: - optional - for specify the full path of a skuba binary. ( e.g if you use an RPM). Default: GOPATH
 - `GINKGO_BIN_PATH`: - optional -  use this var for passing a fullpath to a ginkgo bin which will be used by tests. Default: your Path
-
 SEE 2) example in HOW TO RUN
 
 
