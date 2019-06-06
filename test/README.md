@@ -2,11 +2,20 @@
 
 The test can be run locally or in CI.
 
+# Summary:
+
+- [Requirements](#requirements)
+- [Howto](#howto)
+- [Testing Guidelines](#testing-guidelines)
+- [Specification/API](#specification)
+
+
 # Requirements:
 
 - the infrastructure is already deployed. ( Terraform is not necessary a requirement, only the ips)
+  See mandatory variable for the number of instances required.
 
-# HOW TO RUN:
+# Howto 
 
 You can run the `e2e-tests` in 2 ways:
 
@@ -15,7 +24,6 @@ You can run the `e2e-tests` in 2 ways:
 `CONTROLPLANE=10.86.2.23 MASTER00=10.86.1.103 WORKER00=10.86.2.130 make test-e2e` 
 
 2) without IP but with a terraform state,  specify the platform you have deployed the infrastructure.
-
 `IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e`
 
 This method will read the tfstate file and read the IPs of host and pass them to `ginkgo`
@@ -27,10 +35,26 @@ Boths methods are convenients: 1) method is usefull when we don't have the terra
 `~/go/src/github.com/SUSE/skuba> GINKGO_BIN_PATH="$PWD/ginkgo" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e`
 In the following example we assume you have builded ginkgo from vendor.
 
-# Env. Variable:
+# Testing Guidelines:
 
-## Guidelines:
+## Assertions:
 
+- Use `Should`  for assertion`gomega.Expect(err).Should(gomega.BeNil()` over `to`.
+
+- Use `Expect` over `Ω`
+
+## Misc:
+
+### Loops/Timeouts:
+
+Don't create a customized loop for checking each minute that a condition is satisfied. Instead use `eventually`.
+For examples, look in the test codebases,  we already use `eventually` in some tests.
+
+Upstream doc: https://onsi.github.io/gomega/#eventually
+
+# Specification
+
+## create new ENV variables
 Syntax: use `_` underscores for separating words and use UPPERCASE for naming.
 
 Adding NEW variables:
@@ -43,7 +67,8 @@ All needed variable should have been already implemented, only the NODE ips vari
 
 When you create a var specify also the behaviour and the usage: mandatory/optional and default value if any.
 
-### Currenlty supported:
+
+## Variables  supported:
 
 ### Cluster:
 
@@ -70,7 +95,7 @@ As showed, in future we will have `WORKER01`, `MASTER01`, `MASTER02` etc.
 SEE 2) example in HOW TO RUN
 
 
-# Internal Development:
+# Internal info
 
 The Env. variables are set by `ci/tasks/e2e-tests.py`.
 
