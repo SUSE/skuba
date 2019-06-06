@@ -1,9 +1,14 @@
 # Infra deployment engine
 platform: "openstack" # openstack, vmware, bare-metal, libvirt
-workspace: "~/go/src/ghithub.com/" # The top folder where skuba is stored
+workspace: "~/go/src/ghithub.com/" # Workdirectory for testrunner 
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: "USERNAME"  # Fill your username
 nodeuser: "sles"  # Default node username
+
+# Skuba setup
+skuba:
+  binpath: "" # path to skuba binary
+  srcpath: "" # path to skuba source
 
 openstack:
   openrc: "PATH TO YOUR OPENRC FILE" #os.getenv("OPENRC")
