@@ -41,6 +41,7 @@ class BaseConfig:
             BaseConfig.Git,
             BaseConfig.Openstack,
             BaseConfig.Skuba,
+            BaseConfig.VMware
         )
 
         #vars get the values from yaml file
