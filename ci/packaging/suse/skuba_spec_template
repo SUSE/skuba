@@ -25,6 +25,7 @@ License:        Apache-2.0
 Group:          System/Management
 URL:            https://github.com/SUSE/skuba
 Source0:        %{name}.tar.gz
+Patch0:         0001-Patch-out-load-balancer.patch
 BuildRequires:  go-go-md2man
 BuildRequires:  golang-packaging
 BuildRequires:  golang(API) >= 1.11
@@ -68,6 +69,7 @@ including patches requiring reboot.
 
 %prep
 %setup -q -n %{name}
+%patch0 -p1
 
 %build
 mkdir -pv $HOME/go/src/%{go_project}
