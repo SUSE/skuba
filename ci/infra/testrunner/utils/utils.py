@@ -128,8 +128,9 @@ class Utils:
             return
 
         try:
+            self.runshellcommand("git branch -r", cwd=self.conf.skuba.srcpath)
             cmd = 'git -c "user.name={}" -c "user.email={}" \
-                           rebase origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
+                           rebase master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
             self.runshellcommand(cmd, cwd=self.conf.skuba.srcpath)
         except subprocess.CalledProcessError as ex:
             print(ex)
