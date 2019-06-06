@@ -32,6 +32,7 @@ pipeline {
    post {
        always {
            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
+           zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
        }
        cleanup {
            dir("${WORKSPACE}") {
