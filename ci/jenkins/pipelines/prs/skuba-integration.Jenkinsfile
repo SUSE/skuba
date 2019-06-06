@@ -12,6 +12,7 @@ pipeline {
         PR_CONTEXT = 'jenkins/skuba-integration'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
+        SRCPATH = ${WORKSPACE}
     }
 
     stages {
@@ -38,25 +39,25 @@ pipeline {
         }}
 
         stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
-            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+            sh(script: 'make -f ci/Makefile pre_deployment', label: 'Pre Deployment')
+            sh(script: 'make -f ci/Makefile pr_checks', label: 'PR Checks')
         } }
 
         stage('Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars")
+            sh(script: 'make -f ci/Makefile deploy', label: 'Deploy')
+            archiveArtifacts("ci/infra/${PLATFORM}/terraform.tfstate")
+            archiveArtifacts("ci/infra/${PLATFORM}/terraform.tfvars")
         } }
 
         stage('Run end-to-end tests') { steps {
            dir("skuba") {
              sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
+             sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/ginkgo\" IP_FROM_TF_STATE=TRUE PLATFORM=openstack make test-e2e", label: "End-to-end tests")
        } } }
     }
     post {
         always {
-            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
+            sh(script: 'make --keep-going -f ci/Makefile post_run', label: 'Post Run')
             zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
         }
         cleanup {
@@ -65,10 +66,10 @@ pipeline {
             }
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }
