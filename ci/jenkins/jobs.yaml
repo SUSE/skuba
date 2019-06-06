@@ -5,14 +5,22 @@
     repo-credentials: github-token
     platform: openstack
     jobs:
-        - '{name}-nightly'
-        - '{name}-update-nightly'
         - '{name}-integration'
         - '{name}-update-integration'
         - '{name}-code-lint'
         - '{name}-code-author'
         - '{name}-handle-pr'
         - '{name}-jjb-validation'
+
+- project:
+      name: caasp-jobs/caasp-v4-openstack
+      repo-name: skuba
+      repo-owner: SUSE
+      repo-credentials: github-token
+      platform: openstack
+      jobs:
+          - '{name}-nightly'
+          - '{name}-update-nightly'
 
 - project:
       name: caasp-jobs/caasp-v4-vmware
@@ -22,6 +30,7 @@
       platform: vmware
       jobs:
           - '{name}-nightly'
+          - '{name}-update-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb
