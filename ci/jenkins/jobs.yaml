@@ -6,6 +6,7 @@
     platform: openstack
     jobs:
         - '{name}-integration'
+        - '{name}-update-unit'
         - '{name}-update-integration'
         - '{name}-code-lint'
         - '{name}-code-author'
