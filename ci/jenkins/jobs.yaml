@@ -3,6 +3,7 @@
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
+    platform: openstack
     jobs:
         - '{name}-nightly'
         - '{name}-integration'
@@ -11,6 +12,15 @@
         - '{name}-code-author'
         - '{name}-handle-pr'
         - '{name}-jjb-validation'
+
+- project:
+      name: caasp-jobs/caasp-v4-vmware
+      repo-name: skuba
+      repo-owner: SUSE
+      repo-credentials: github-token
+      platform: vmware
+      jobs:
+          - '{name}-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb

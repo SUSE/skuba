@@ -8,7 +8,7 @@ pipeline {
    environment {
         OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
-        PLATFORM = 'openstack'
+        ENV_FILE = credentials('vmware-env')
    }
 
    stages {

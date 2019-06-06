@@ -15,6 +15,10 @@
             name: branch
             default: '{branch}'
             description: The branch to checkout
+        - string:
+              name: platform
+              default: '{platform}'
+              description: The platform to perform the tests on
     pipeline-scm:
         scm:
             - git:
