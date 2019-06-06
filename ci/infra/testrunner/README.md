@@ -145,3 +145,14 @@ kube-system   kube-proxy-782z2                      1/1       Running   0       
 kube-system   kube-proxy-kf7g5                      1/1       Running   0          3m
 kube-system   kube-scheduler-my-master-0            1/1       Running   0          3m
 ```
+
+### Collected Logs
+All collected logs are stored at `path/to/workspace/testrunner_logs/`
+
+Logs that are currently being collected are the cloud-init logs for each of the nodes:
+
+    /var/run/cloud-init/status.json
+    /var/log/cloud-init-output.log
+    /var/log/cloud-init.log
+
+These are stored each in their own folder named `path/to/workspace/testrunner_logs/{master|worker}_ip_address/`
