@@ -87,6 +87,11 @@ class BaseConfig:
             self.podname = "default"
             self.no_destroy = False
 
+    class VMware:
+        def __init__(self):
+            self.env_file = None
+            self.template_name = None
+
 
     @staticmethod
     def get_yaml_path(yaml_path):

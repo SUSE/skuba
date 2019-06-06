@@ -1,0 +1,27 @@
+# Infra deployment engine
+platform: "vmware"
+workspace: "" # The top folder where skuba is stored
+ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
+username: ""  # Fill your username
+nodeuser: "sles"  # Default node username
+
+vmware:
+  env_file: "" #os.getenv("ENV_FILE")
+  template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("TEMPLATE_NAME")
+
+git: # Used for Jenkins rebase
+  change_author: "" # os.getenv("CHANGE_AUTHOR")
+  change_author_email: ""
+  github_token: ""
+  branch_name: "master"
+
+jenkins:  # Used for Jenkins
+  build_number: 0 # os.getenv("BUILD_NUMBER")
+  job_name: null # os.getenv("JOB_NAME")
+
+# node settings
+master:
+  count: 1
+
+worker:
+  count: 2

@@ -8,7 +8,7 @@
 import sys
 from argparse import ArgumentParser
 
-from platforms import Openstack
+from platforms import (Openstack, VMware)
 from tests import Tests
 from utils import (BaseConfig, Format, Skuba, Utils)
 
@@ -87,9 +87,7 @@ def get_platform(conf):
     if conf.platform == "openstack":
         platform = Openstack(conf)
     elif conf.platform == "vmware":
-        # TODO platform = VMware(conf, utils)
-        print("Todo: VMware is not ready yet")
-        sys.exit(0)
+        platform = VMware(conf)
     elif conf.platform == "bare-metal":
         # TODO platform = Bare_metal(conf, utils)
         print("Todo: bare-metal is not ready yet")
