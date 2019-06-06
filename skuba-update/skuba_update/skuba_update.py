@@ -29,7 +29,7 @@ REQUIRED_ZYPPER_VERSION = (1, 14, 0)
 
 # The path to the reboot-needed file. This is the file that kured will be
 # looking at.
-REBOOT_NEEDED_PATH = '/var/run/reboot-required'
+REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 # Exit codes as defined by zypper.
 
@@ -126,10 +126,10 @@ def run_zypper_command(command):
         raise Exception('"{0}" failed'.format(' '.join(command)))
 
     # We trust the exit code of zypper over the presence of certain files.
-    # Thus, we will make sure that the `REBOOT_NEEDED_PATH` is present
+    # Thus, we will make sure that the `REBOOT_REQUIRED_PATH` is present
     # depending on some exit codes.
     if is_reboot_needed(process.returncode):
-        Path(REBOOT_NEEDED_PATH).touch()
+        Path(REBOOT_REQUIRED_PATH).touch()
 
     return process.returncode
 
