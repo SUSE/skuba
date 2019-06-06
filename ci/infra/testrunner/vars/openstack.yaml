@@ -5,6 +5,11 @@ ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: ""  # Fill your username
 nodeuser: "sles"  # Default node username
 
+# Skuba setup
+skuba:
+  binpath: "" # path to skuba binary
+  srcpath: "" # path to skuba source
+
 openstack:
   openrc: "" #os.getenv("OPENRC")
 
