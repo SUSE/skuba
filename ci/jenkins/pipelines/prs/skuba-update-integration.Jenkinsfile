@@ -35,6 +35,8 @@ pipeline {
     post {
         cleanup {
             dir("${WORKSPACE}") {
+                sh(script: 'sudo rm -rf skuba/skuba-update/build skuba/skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
+                sh(script: 'sudo rm -rf skuba/skuba-update/test/os/suse/artifacts', label: 'Remove test artifacts created by root')
                 deleteDir()
             }
         }
