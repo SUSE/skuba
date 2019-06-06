@@ -130,11 +130,11 @@ class Utils:
         try:
             cmd = 'git -c "user.name={}" -c "user.email={}" \
                            rebase origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
-            self.runshellcommand(cmd, cwd="skuba")
+            self.runshellcommand(cmd, cwd=self.conf.skuba.srcpath)
         except subprocess.CalledProcessError as ex:
             print(ex)
             print(Format.alert("Rebase failed, manual rebase is required."))
-            self.runshellcommand("git rebase --abort", cwd="skuba")
+            self.runshellcommand("git rebase --abort", cwd=self.conf.skuba.srcpath)
             sys.exit(1)
         except Exception as ex:
             print(ex)
