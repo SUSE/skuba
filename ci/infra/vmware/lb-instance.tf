@@ -13,25 +13,38 @@ variable "lb_memory" {
   description = "Amount of memory used on load-balancer node"
 }
 
+variable "lb_repositories" {
+  type        = "list"
+  default     = [
+    { sle15sp1_ga     = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/GA/standard/" },
+    { sle15sp1_update = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/Update/standard/" },
+    { sle15_ga        = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/GA/standard/" },
+    { sle15_update    = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/Update/standard/" }
+  ]
+}
 
-data "template_file" "lb_repositories" {
-  count    = "${length(var.repositories)}"
+data "template_file" "lb_repositories_template" {
+  count    = "${length(var.lb_repositories)}"
   template = "${file("cloud-init/repository.tpl")}"
 
   vars {
-    repository_url  = "${element(values(var.repositories[count.index]), 0)}"
-    repository_name = "${element(keys(var.repositories[count.index]), 0)}"
+    repository_url  = "${element(values(var.lb_repositories[count.index]), 0)}"
+    repository_name = "${element(keys(var.lb_repositories[count.index]), 0)}"
   }
 }
 
 data "template_file" "haproxy_backends_master" {
   count    = "${var.masters}"
-  template = "server ${fqdn} ${ip}:6443 check check-ssl verify none"
+  template = "server $${fqdn} $${ip}:6443 check check-ssl verify none\n"
 
   vars = {
-    fqdn = "${var.stack_name}-master-${count.index}"
+    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
     ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
   }
+
+  depends_on = [
+    "vsphere_virtual_machine.master"
+  ]
 }
 
 data "template_file" "lb_cloud_init_metadata" {
@@ -51,7 +64,7 @@ data "template_file" "lb_cloud_init_userdata" {
   vars {
     backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.lb_repositories.*.rendered)}"
+    repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
@@ -87,16 +100,20 @@ resource "vsphere_virtual_machine" "lb" {
   network_interface {
     network_id = "${data.vsphere_network.network.id}"
   }
+
+  depends_on = [
+    "vsphere_virtual_machine.master"
+  ]
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
   count = "${var.lbs}"
 
   connection {
-    host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    type     = "ssh"
-    agent    = true
+    host  = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
