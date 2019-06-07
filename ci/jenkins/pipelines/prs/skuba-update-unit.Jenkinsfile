@@ -8,7 +8,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
         PR_CONTEXT = 'jenkins/skuba-update-unit'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
-        SUBDIRECTORY = 'skuba-update'
+        FILTER_SUBDIRECTORY = 'skuba-update'
         DOCKERIZED_UNIT_TESTS = '1'
     }
     stages {

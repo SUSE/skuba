@@ -16,13 +16,13 @@
 
 [[ ! -n ${GITHUB_TOKEN} ]] && echo "GITHUB_TOKEN env variable must be set" && exit 1
 [[ ! -n ${CHANGE_ID} ]] && echo "CHANGE_ID env variable must be set" && exit 1
-[[ ! -n ${SUBDIRECTORY} ]] && echo "SUBDIRECTORY env variable must be set" && exit 1
+[[ ! -n ${FILTER_SUBDIRECTORY} ]] && echo "FILTER_SUBDIRECTORY env variable must be set" && exit 1
 
 # We only expect PRs to come from forked repositories instead of branches from the main repo
 # so we need to check that before moving forward to examine the individual commits
 if $(curl -sL https://patch-diff.githubusercontent.com/raw/SUSE/skuba/pull/${CHANGE_ID}.patch?token=${GITHUB_TOKEN} | \
-    grep -q "diff --git a/${SUBDIRECTORY}/"); then
-    echo "PR-${CHANGE_ID} contains changes in the ${SUBDIRECTORY} subfolder."
+    grep -q "diff --git a/${FILTER_SUBDIRECTORY}/"); then
+    echo "PR-${CHANGE_ID} contains changes in the ${FILTER_SUBDIRECTORY} subfolder."
 else
-    echo "PR-${CHANGE_ID} does not contain changes in the ${SUBDIRECTORY} subfolder."
+    echo "PR-${CHANGE_ID} does not contain changes in the ${FILTER_SUBDIRECTORY} subfolder."
 fi
