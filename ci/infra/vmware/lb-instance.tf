@@ -1,3 +1,19 @@
+variable "load-balancers" {
+  default     = 1
+  description = "Number of load-balancer nodes"
+}
+
+variable "lb_cpus" {
+  default     = 1
+  description = "Number of CPUs used on load-balancer node"
+}
+
+variable "lb_memory" {
+  default     = 2048
+  description = "Amount of memory used on load-balancer node"
+}
+
+
 data "template_file" "lb_repositories" {
   count    = "${length(var.repositories)}"
   template = "${file("cloud-init/repository.tpl")}"
