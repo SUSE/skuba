@@ -26,7 +26,7 @@ data "template_file" "lb_repositories" {
 
 data "template_file" "haproxy_backends_master" {
   count    = "${var.masters}"
-  template = "${file("cloud-init/haproxy-backends.tpl")}"
+  template = "server ${fqdn} ${ip}:6443 check check-ssl verify none"
 
   vars = {
     fqdn = "${var.stack_name}-master-${count.index}"
