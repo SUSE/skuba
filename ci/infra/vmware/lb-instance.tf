@@ -1,4 +1,4 @@
-variable "load-balancers" {
+variable "lbs" {
   default     = 1
   description = "Number of load-balancer nodes"
 }
@@ -35,7 +35,7 @@ data "template_file" "haproxy_backends_master" {
 }
 
 data "template_file" "lb_cloud_init_metadata" {
-  count    = "${var.load-balancers}"
+  count    = "${var.lbs}"
   template = "${file("cloud-init/metadata.tpl")}"
 
   vars {
@@ -45,7 +45,7 @@ data "template_file" "lb_cloud_init_metadata" {
 }
 
 data "template_file" "lb_cloud_init_userdata" {
-  count    = "${var.load-balancers}"
+  count    = "${var.lbs}"
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
@@ -58,7 +58,7 @@ data "template_file" "lb_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "lb" {
-  count                = "${var.load-balancers}"
+  count                = "${var.lbs}"
   name                 = "${var.stack_name}-lb-${count.index}"
   num_cpus             = "${var.lb_cpus}"
   memory               = "${var.lb_memory}"
@@ -90,7 +90,7 @@ resource "vsphere_virtual_machine" "lb" {
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
-  count = "${var.load-balancers}"
+  count = "${var.lbs}"
 
   connection {
     host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
