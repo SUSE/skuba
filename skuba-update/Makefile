@@ -15,4 +15,4 @@ suse-changelog:
 
 .PHONY: test
 test:
-	tox
+	test/run-unit-tests.sh
