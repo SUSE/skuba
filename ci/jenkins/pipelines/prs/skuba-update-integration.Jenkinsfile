@@ -8,6 +8,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
         PR_CONTEXT = 'jenkins/skuba-update-integration'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
+        SUBDIRECTORY = 'skuba-update'
     }
     stages {
         stage('Setting GitHub in-progress status') { steps {
@@ -28,9 +29,17 @@ pipeline {
                                            url: 'https://github.com/SUSE/skuba']]])
         }}
 
-        stage('skuba-update SUSE OS Tests') { steps {
-            sh(script: "make -f skuba/skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
-        } }
+        stage('skuba-update SUSE OS Tests') {
+            when {
+                expression {
+                    stdout = sh(script: 'skuba/ci/jenkins/pipelines/prs/helpers/pr-filter.sh', label: 'checking if PR contains skuba-update changes')
+                    return (stdout =~ "contains changes")
+                }
+            }
+            steps {
+                sh(script: "make -f skuba/skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
+            }
+        }
     }
     post {
         cleanup {
