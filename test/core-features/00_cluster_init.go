@@ -65,7 +65,6 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 
 		ginkgo.By("add a worker00 to the cluster")
 		session, err = skuba.JoinNode(worker00IP, worker00Name, "worker")
-
 		// hack: we wait in this print until the command to finish. (if removed the following cmd fails because command hasn't finished)
 		fmt.Println(session.Wait().Out.Contents())
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba adding worker00 failed")
@@ -74,6 +73,37 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		ginkgo.By("verify worker00 with skuba status")
 		session, err = skuba.Status()
 
+		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + worker00Name))
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba status verify worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba status verify worker00 failed")
+
+		ginkgo.By("remove worker00 with skuba")
+		session, err = skuba.RemoveNode(worker00Name)
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba removing worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba removing worker00 failed")
+
+		ginkgo.By("reset worker00 with skuba")
+		session, err = skuba.ResetNode(worker00IP)
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba reset worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba reset worker00 failed")
+
+		ginkgo.By("verify worker00 is not present with skuba status")
+		session, err = skuba.Status()
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Eventually(session.Out).ShouldNot(gbytes.Say(".*" + worker00Name))
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba status exited with error")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba status returned errors, worker00 not removed correctly")
+
+		ginkgo.By("re-add a removed/resetted worker00 again to the cluster")
+		session, err = skuba.JoinNode(worker00IP, worker00Name, "worker")
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba re-adding worker00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba re-adding worker00 failed")
+
+		ginkgo.By("verify worker00 with skuba status")
+		session, err = skuba.Status()
 		gomega.Eventually(session.Out).Should(gbytes.Say(".*" + worker00Name))
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba status verify worker00 failed")
 		gomega.Expect(err).Should(gomega.BeNil(), "skuba status verify worker00 failed")
