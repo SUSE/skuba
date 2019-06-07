@@ -32,7 +32,10 @@ $ pip install -r dev-requirements.txt
 $ sudo zypper install ShellCheck
 
 # Run tests and code style checks
-$ tox
+$ make test
+
+# Run tests and code style checks inside of a Docker container
+$ DOCKERIZED_UNIT_TESTS=1 make test
 ```
 
 ## License

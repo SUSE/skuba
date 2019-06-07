@@ -8,6 +8,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
         PR_CONTEXT = 'jenkins/skuba-update-unit'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
+        DOCKERIZED_UNIT_TESTS = '1'
     }
     stages {
         stage('Setting GitHub in-progress status') { steps {
@@ -30,14 +31,13 @@ pipeline {
 
         stage('skuba-update SUSE Unit Tests') { steps {
             dir("skuba/skuba-update") {
-                sh(script: "tox", label: 'skuba-update Unit Tests')
+                sh(script: "make test", label: 'skuba-update Unit Tests')
             }
         } }
     }
     post {
         cleanup {
             dir("${WORKSPACE}") {
-                sh(script: 'sudo rm -rf skuba/skuba-update/build skuba/skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
                 deleteDir()
             }
         }
