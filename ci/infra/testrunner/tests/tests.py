@@ -14,7 +14,6 @@ class Tests:
     @step
     def bootstrap_environment(self):
         """Bootstrap Environment"""
-        self.utils.setup_ssh()
         self.skuba.cluster_init()
         self.skuba.node_bootstrap()
         self._num_master = 1
@@ -47,7 +46,6 @@ class Tests:
             self.skuba.node_remove(role="worker", nr=self._num_worker)
         except:
             self._num_worker += 1
-
 
     @timeout(600)
     @step

@@ -47,6 +47,7 @@ class Terraform:
         """ Create and apply terraform plan"""
         print("Init terraform")
         self._check_tf_deployed()
+        self.utils.setup_ssh()
         self.runshellcommandterraform("terraform init")
         self.runshellcommandterraform("terraform version")
         self.generate_tfvars_file()
@@ -130,6 +131,12 @@ class Terraform:
     def runshellcommandterraform(self, cmd, env=None):
         """Running terraform command in {workspace}/ci/infra/{platform}"""
         cwd = self.conf.terraform_dir
+        # Terraform needs PATH and SSH_AUTH_SOCK
+        sock_fn = self.utils.ssh_sock_fn()
+        env = {
+            "SSH_AUTH_SOCK": sock_fn,
+            'PATH': os.environ['PATH']
+        }
         print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
