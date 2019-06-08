@@ -8,9 +8,10 @@
 import sys
 from argparse import ArgumentParser
 
+from caaspctl import Skuba
 from platforms import (Openstack, Platform, VMware)
 from tests import Tests
-from utils import (BaseConfig, Format, Skuba, Utils)
+from utils import (BaseConfig, Format, Utils)
 
 __version__ = "0.0.3"
 
