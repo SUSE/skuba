@@ -23,9 +23,8 @@ class Skuba:
             raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
 
     def _verify_skuba_bin_dependency(self):
-        skuba_bin_path = os.path.join(self.conf.workspace, 'go/bin/skuba')
-        if not os.path.isfile(skuba_bin_path):
-            raise FileNotFoundError(Format.alert("skuba not found at {}. Please run create-skuba and try again".format(skuba_bin_path)))
+        if not os.path.isfile(self.binpath):
+            raise FileNotFoundError(Format.alert("skuba not found at {}".format(skuba.binpath)))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
@@ -142,8 +141,7 @@ class Skuba:
     def num_of_nodes(self):
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
-        binpath = os.path.join(self.conf.workspace, 'go/bin/skuba')
-        cmd = "cd " + test_cluster + "; " +binpath + " cluster status"
+        cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
         output = self.utils.runshellcommand_withoutput(cmd)
         return output.count("master"), output.count("worker")
 
