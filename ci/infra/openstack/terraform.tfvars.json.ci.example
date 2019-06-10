@@ -1,0 +1,43 @@
+{
+    "image_name": "SLE-15-SP1-JeOS-GM",
+    "internal_net": "testing",
+    "external_net": "floating",
+    "stack_name": "testing",
+    "subnet_cidr": "172.28.0.0/24",
+    "dnsdomain": "testing.qa.caasp.suse.net",
+    "dnsentry": 0,
+    "dns_nameservers": [
+        "172.28.0.2",
+        "8.8.8.8",
+        "8.8.8.4"
+    ],
+    "masters": 1,
+    "master_size": "m1.medium",
+    "workers": 2,
+    "worker_size": "m1.medium",
+    "workers_vol_enabled": 0,
+    "workers_vol_size": 5,
+    "username": "sles",
+    "password": "linux",
+    "repositories": {
+        "caasp_40_devel_sle15sp1": "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/",
+        "sle15sp1_pool": "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/GA/standard/",
+        "sle15sp1_update": "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update/standard/",
+        "sle15_pool": "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/",
+        "sle15_update": "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/",
+        "suse_ca": "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
+    },
+    "packages": [
+        "kernel-default",
+        "-kernel-default-base",
+        "ca-certificates-suse",
+        "patterns-caasp-Node"
+    ],
+    "authorized_keys": [],
+    "ntp_servers": [
+        "0.novell.pool.ntp.org",
+        "1.novell.pool.ntp.org",
+        "2.novell.pool.ntp.org",
+        "3.novell.pool.ntp.org"
+    ]
+}
