@@ -50,26 +50,14 @@ username = "sles"
 # Password for the cluster nodes
 password = "linux"
 
-repositories = [
-  {
-    caasp_40_devel_sle15sp1 = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/"
-  },
-  {
-    sle15sp1_pool = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
-  },
-  {
-    sle15sp1_update = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
-  },
-  {
-    sle15_pool = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
-  },
-  {
-    sle15_update = "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/"
-  },
-  {
-    suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
-  }
-]
+repositories = {
+  caasp_40_devel_sle15sp1 = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/"
+  sle15sp1_pool = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
+  sle15sp1_update = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
+  sle15_pool = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+  sle15_update = "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/"
+  suse_ca = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
+}
 
 packages = [
   "kernel-default",
