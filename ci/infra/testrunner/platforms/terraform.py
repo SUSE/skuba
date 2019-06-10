@@ -109,15 +109,17 @@ class Terraform:
 
     def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
-        src_terraform = os.path.join(
-                            self.tfdir,
-                            self.conf.terraform.tfvars)
+        tfvars_template = os.path.join(self.tfdir, self.conf.terraform.tfvars)
+        tfvars_final = os.path.join(self.tfdir, "terraform.tfvars")
 
-        dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
-        dest_terraform = os.path.join(dir, tfvars)
-        copyfile(src_terraform, dest_terraform)
+        if '.json' in os.path.basename(tfvars_template).lower():
+            tfvars_final += '.json'
+            self._generate_tfvars_from_json(tfvars_template, tfvars_final)
+        else:
+            self._generate_tfvars_from_hcl(tfvars_template, tfvars_final)
 
-        with open(dest_terraform) as f:
+    def _generate_tfvars_from_hcl(self, tfvars_template, tfvars_final):
+        with open(tfvars_template) as f:
             lines = f.readlines()
 
         for i, line in enumerate(lines):
@@ -143,10 +145,39 @@ class Terraform:
 
             # Switch to US mirror if running on CI
             if "download.suse.de" in line and os.environ.get('JENKINS_URL'):
-                lines[i]=line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
+                lines[i] = line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
 
-        with open(dest_terraform, "w") as f:
+        with open(tfvars_final, "w") as f:
             f.writelines(lines)
+
+    def _generate_tfvars_from_json(self, tfvars_template, tfvars_final):
+        new_vars = {
+            "internal_net": self.conf.jenkins.run_name,
+            "stack_name": self.conf.jenkins.run_name,
+            "username": self.conf.nodeuser,
+            "masters": self.conf.master.count,
+            "workers": self.conf.worker.count,
+            "authorized_keys": [self.utils.authorized_keys()]
+        }
+        with open(tfvars_template) as f:
+            tfvars = json.load(f)
+            repos = tfvars.get("repositories")
+
+        for k, v in new_vars.items():
+            if tfvars.get(k) is not None:
+                if isinstance(v, list):
+                    tfvars[k] = tfvars[k] + v
+                elif isinstance(v, dict):
+                    tfvars[k].update(v)
+                else:
+                    tfvars[k] = v
+
+        if os.environ.get("JENKINS_URL") and repos is not None:
+            for name, url in repos.items():
+                tfvars["repositories"][name] = url.replace("download.suse.de", "ibs-mirror.prv.suse.net")
+
+        with open(tfvars_final, "w") as f:
+            json.dump(tfvars, f)
 
     def _runshellcommandterraform(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
@@ -156,7 +187,7 @@ class Terraform:
         sock_fn = self.utils.ssh_sock_fn()
         env["SSH_AUTH_SOCK"] = sock_fn
         env["PATH"] = os.environ['PATH']
-    
+
         print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
