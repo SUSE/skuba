@@ -4,8 +4,8 @@ variable "image_name" {
 }
 
 variable "repositories" {
-  type        = "list"
-  default     = []
+  type        = "map"
+  default     = {}
   description = "Urls of the repositories to mount via cloud-init"
 }
 
