@@ -103,6 +103,9 @@ class Utils:
                 raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
         return output.decode()
 
+    def ssh_sock_fn(self):
+        return os.path.join(self.conf.workspace, "ssh-agent-sock")
+
     @timeout(60)
     @step
     def setup_ssh(self):
@@ -110,7 +113,7 @@ class Utils:
         self.runshellcommand("chmod 400 " + self.conf.ssh_key_option)
         print("Starting ssh-agent ")
         # use a dedicated agent to minimize stateful components
-        sock_fn = os.path.join(self.conf.workspace, "ssh-agent-sock")
+        sock_fn = self.ssh_sock_fn()
         try:
             self.runshellcommand("pkill -f 'ssh-agent -a {}'".format(sock_fn))
             print("Killed previous instance of ssh-agent")
