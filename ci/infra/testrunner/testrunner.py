@@ -9,7 +9,7 @@ import sys
 from argparse import ArgumentParser
 
 from caaspctl import Skuba
-from platforms import (Openstack, Platform, VMware)
+from platforms import Platform
 from tests import Tests
 from utils import (BaseConfig, Format, Utils)
 
