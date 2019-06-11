@@ -1,2 +1,1 @@
-from platforms.openstack import Openstack
-from platforms.vmware import VMware
+from platforms.platform import Platform

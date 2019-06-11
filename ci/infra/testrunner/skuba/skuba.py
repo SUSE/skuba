@@ -1,8 +1,8 @@
-import json
 import os
 
 from timeout_decorator import timeout
 
+from platforms.platform import Platform
 from utils.format import Format
 from utils.utils import (step, Utils)
 
@@ -12,15 +12,9 @@ class Skuba:
     def __init__(self, conf):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
-        self.srcpath = self.conf.skuba.srcpath
         self.utils = Utils(self.conf)
+        self.platform = Platform.get_platform(conf)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
-
-    # TODO: this function is currently not used. Identify points where it should
-    # be invoked
-    def _verify_tf_dependency(self):
-        if not os.path.exists(self.conf.terraform_json_path):
-            raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
@@ -30,43 +24,42 @@ class Skuba:
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
             raise Exception(Format.alert("test-cluster not found. Please run bootstrap and try again"))
 
-    @timeout(600)
-    @step
-    def create_skuba(self):
+    @staticmethod
+    def build(conf):
         """Buids skuba from source"""
-        self.utils.runshellcommand("rm -fr go")
-        self.utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-        self.utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(self.srcpath))
-        self.utils.gorun("go version")
+        utils = Utils(conf)
+        utils.runshellcommand("rm -fr go")
+        utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
+        utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
+        utils.gorun("go version")
         print("Building skuba")
-        self.utils.gorun("make")
+        utils.gorun("make")
 
-    @step
-    def cleanup(self):
+    @staticmethod
+    def cleanup(conf):
         """Cleanup skuba working environment"""
+        utils = Utils(conf)
         # TODO: check why (and if) the following two commands are needed
-        cmd = 'mkdir -p {}/logs'.format(self.conf.workspace)
-        self.utils.runshellcommand(cmd)
+        cmd = 'mkdir -p {}/logs'.format(conf.workspace)
+        utils.runshellcommand(cmd)
 
         # This is pretty aggressive but modules are also present
         # in workspace and they lack the 'w' bit so just set
         # everything so we can do whatever we want during cleanup
-        cmd = 'chmod -R 777 {}'.format(self.conf.workspace)
-        self.utils.runshellcommand(cmd)
+        cmd = 'chmod -R 777 {}'.format(conf.workspace)
+        utils.runshellcommand(cmd)
 
         # TODO: appending workspace is not necessary as runshellcommand has it as workdirectory
-        dirs = [os.path.join(self.conf.workspace, "test-cluster"),
-                os.path.join(self.conf.workspace, "go"),
-                os.path.join(self.conf.workspace, "logs"),
+        dirs = [os.path.join(conf.workspace, "test-cluster"),
+                os.path.join(conf.workspace, "go"),
+                os.path.join(conf.workspace, "logs"),
                 #TODO: move this to utils as ssh_cleanup
-                os.path.join(self.conf.workspace, "ssh-agent-sock"),
-                #TODO: duplicated. Remove
-                os.path.join(self.conf.workspace, "test-cluster")]
+                os.path.join(conf.workspace, "ssh-agent-sock")]
 
         cleanup_failure = False
         for dir in dirs:
             try: 
-                self.utils.runshellcommand("rm -rf {}".format(dir))
+                utils.runshellcommand("rm -rf {}".format(dir))
             except Exception as ex:
                 cleanup_failure = True
                 print("Received the following error {}".format(ex))
@@ -77,34 +70,31 @@ class Skuba:
 
     @step
     def cluster_init(self):
-        self._load_tfstate()
 
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
-        cmd = "cluster init --control-plane {} test-cluster".format(self._get_lb_ipaddr())
+        cmd = "cluster init --control-plane {} test-cluster".format(self.platform.get_lb_ipaddr())
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
 
     @step
     def node_bootstrap(self):
-        self._load_tfstate()
         self._verify_bootstrap_dependency()
 
         cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=self._get_masters_ipaddrs()[0], username=self.conf.nodeuser)
+                 {ip} my-master-0".format(ip=self.platform.get_masters_ipaddrs()[0], username=self.conf.nodeuser)
         self._run_skuba(cmd)
 
     @step
     def node_join(self, role="worker", nr=0):
-        self._load_tfstate()
         self._verify_bootstrap_dependency()
 
         try:
             if role == "master":
-                ip_addr = self._get_masters_ipaddrs()[nr]
+                ip_addr = self.platform.get_masters_ipaddrs()[nr]
             else:
-                ip_addr = self._get_workers_ipaddrs()[nr]
+                ip_addr = self.platform.get_workers_ipaddrs()[nr]
         except:
             raise Format.alert("Error: there is not enough node to add {} node in cluster".format(role))
 
@@ -117,16 +107,15 @@ class Skuba:
 
     @step
     def node_remove(self, role="worker", nr=0):
-        self._load_tfstate()
         self._verify_bootstrap_dependency()
 
         if nr <= 0:
             raise Format.alert("Error: there is not enough node to remove {} node in cluster".format(role))
 
         if role == "master":
-            ip_addr = self._get_masters_ipaddrs()[nr]
+            ip_addr = self.platform.get_masters_ipaddrs()[nr]
         else:
-            ip_addr = self._get_workers_ipaddrs()[nr]
+            ip_addr = self.platform.get_workers_ipaddrs()[nr]
 
         cmd = "node remove my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
@@ -145,22 +134,6 @@ class Skuba:
         output = self.utils.runshellcommand_withoutput(cmd)
         return output.count("master"), output.count("worker")
 
-
-    def _load_tfstate(self):
-        fn = os.path.join(self.conf.terraform_dir, "terraform.tfstate")
-        print("Reading {}".format(fn))
-        with open(fn) as f:
-            self.state= json.load(f)
-
-    def _get_lb_ipaddr(self):
-        return self.state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
-
-    def _get_masters_ipaddrs(self):
-        return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
-
-    def _get_workers_ipaddrs(self):
-        return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
-
     @timeout(600)
     @step
     def gather_logs(self):
@@ -171,14 +144,12 @@ class Skuba:
             os.mkdir(log_dir_path)
             print(f"Created log dir {log_dir_path}")
 
-        self._load_tfstate()
-
-        for ipa in self._get_masters_ipaddrs():
+        for ipa in self.platform.get_masters_ipaddrs():
             logging_error = self._copy_cloud_init_logs(ipa, 'master', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)
 
-        for ipa in self._get_workers_ipaddrs():
+        for ipa in self.platform.get_workers_ipaddrs():
             logging_error = self._copy_cloud_init_logs(ipa, 'worker', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)
