@@ -75,6 +75,7 @@ spec:
     - downwardAPI
     - projected
     - persistentVolumeClaim
+    - hostPath
     # Kubernetes Host Volume Types
     - hostPath
     # Networked Storage
@@ -91,7 +92,12 @@ spec:
     - azureDisk
     - azureFile
     - vsphereVolume
-  #allowedHostPaths: []
+  allowedHostPaths:
+    - pathPrefix: /var/run/cilium
+    - pathPrefix: /var/run/crio
+    - pathPrefix: /usr/lib/cni
+    - pathPrefix: /etc/cni/net.d
+    - pathPrefix: /sys/fs/bpf
   readOnlyRootFilesystem: false
   # Users and groups
   runAsUser:
@@ -198,12 +204,6 @@ spec:
     - azureDisk
     - azureFile
     - vsphereVolume
-  allowedHostPaths:
-    # Note: We don't allow hostPath volumes above, but set this to a path we
-    # control anyway as a belt+braces protection. /dev/null may be a better
-    # option, but the implications of pointing this towards a device are
-    # unclear.
-    - pathPrefix: /opt/kubernetes-hostpath-volumes
   readOnlyRootFilesystem: false
   # Users and groups
   runAsUser:
@@ -413,10 +413,14 @@ spec:
             readOnly: true
           - name: cilium-etcd-secret-mount
             mountPath: /tmp/cilium-etcd
+          - name: lib-modules
+            mountPath: /lib/modules
+            readOnly: true
         securityContext:
           capabilities:
             add:
               - "NET_ADMIN"
+              - "SYS_MODULE"
           privileged: true
       hostNetwork: true
       volumes:
@@ -436,7 +440,11 @@ spec:
           # To install cilium cni configuration in the host
         - name: host-cni-conf
           hostPath:
-              path: /etc/cni/net.d
+            path: /etc/cni/net.d
+          # To be able to load kernel modules
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
           # To read the etcd config stored in config maps
         - name: etcd-config-path
           configMap:
