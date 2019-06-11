@@ -91,7 +91,31 @@ spec:
     - azureDisk
     - azureFile
     - vsphereVolume
-  #allowedHostPaths: []
+  allowedHostPaths:
+    - pathPrefix: /etc/ca-certificates
+    - pathPrefix: /etc/cni/net.d
+    - pathPrefix: /etc/kubernetes
+    - pathPrefix: /etc/openssl
+    - pathPrefix: /etc/pki
+    - pathPrefix: /etc/srv/kubernetes
+    - pathPrefix: /etc/srv/sshproxy
+    - pathPrefix: /etc/ssl
+    - pathPrefix: /run/xtables.lock
+    - pathPrefix: /sys/fs/bpf
+    - pathPrefix: /srv/kubernetes
+    - pathPrefix: /usr/lib/cni
+    - pathPrefix: /usr/lib/ssl
+    - pathPrefix: /usr/share/ca-certificates
+    - pathPrefix: /usr/ssl
+    - pathPrefix: /var/etcd
+    - pathPrefix: /var/lib/etcd
+    - pathPrefix: /var/lib/kube-proxy
+    - pathPrefix: /var/lib/kubelet
+    - pathPrefix: /var/log
+    - pathPrefix: /var/run/cilium
+    - pathPrefix: /var/run/crio
+    - pathPrefix: /var/run/kubernetes
+    - pathPrefix: /var/ssl
   readOnlyRootFilesystem: false
   # Users and groups
   runAsUser:
@@ -413,10 +437,14 @@ spec:
             readOnly: true
           - name: cilium-etcd-secret-mount
             mountPath: /tmp/cilium-etcd
+          - name: lib-modules
+            mountPath: /lib/modules
+            readOnly: true
         securityContext:
           capabilities:
             add:
               - "NET_ADMIN"
+              - "SYS_MODULE"
           privileged: true
       hostNetwork: true
       volumes:
@@ -436,7 +464,11 @@ spec:
           # To install cilium cni configuration in the host
         - name: host-cni-conf
           hostPath:
-              path: /etc/cni/net.d
+            path: /etc/cni/net.d
+          # To be able to load kernel modules
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
           # To read the etcd config stored in config maps
         - name: etcd-config-path
           configMap:
