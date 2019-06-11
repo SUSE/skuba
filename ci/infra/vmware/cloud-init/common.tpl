@@ -51,7 +51,8 @@ runcmd:
   # With a new machine-id generated the journald daemon will work and can be restarted
   # Without a new machine-id it should be in a failed state
   - [ systemctl, restart, systemd-journald ]
-${registration}
+${register_scc}
+${register_rmt}
 ${commands}
 
 bootcmd:
