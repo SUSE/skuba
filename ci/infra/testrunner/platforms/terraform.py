@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from shutil import copyfile
@@ -9,6 +10,8 @@ class Terraform:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(conf)
+        self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
+        self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
 
     def _env_setup_cmd(self):
         """Returns the command for setting up the platform environment"""
@@ -28,8 +31,7 @@ class Terraform:
             print("Attempting to finish cleaup")
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
-                self.conf.terraform_json_path,
-                os.path.join(self.conf.workspace, "tfout.json")]
+                self.tfjson_path]
 
         for dir in dirs:
             try:
@@ -48,9 +50,9 @@ class Terraform:
         print("Init terraform")
         self._check_tf_deployed()
         self.utils.setup_ssh()
-        self.runshellcommandterraform("terraform init")
-        self.runshellcommandterraform("terraform version")
-        self.generate_tfvars_file()
+        self._runshellcommandterraform("terraform init")
+        self._runshellcommandterraform("terraform version")
+        self._generate_tfvars_file()
         plan_cmd = ("{env_setup};"
                     " terraform plan "
                     " -out {workspace}/tfout".format(
@@ -64,10 +66,10 @@ class Terraform:
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
             print(Format.alert("Run terraform plan - execution # {}".format(retry)))
-            self.runshellcommandterraform(plan_cmd)
+            self._runshellcommandterraform(plan_cmd)
             print(Format.alert("Run terraform apply - execution # {}".format(retry)))
             try:
-                self.runshellcommandterraform(apply_cmd)
+                self._runshellcommandterraform(apply_cmd)
                 break
 
             except:
@@ -76,22 +78,40 @@ class Terraform:
                     print(Format.alert("Failed Openstack Terraform deployment"))
                     raise
             finally:
-                self.fetch_terraform_output()
+                self._fetch_terraform_output()
+
+    def _load_tfstate(self):
+        fn = os.path.join(self.tfdir, "terraform.tfstate")
+        print("Reading {}".format(fn))
+        with open(fn) as f:
+            return json.load(f)
+
+    def get_lb_ipaddr(self):
+        self.state = self._load_tfstate()
+        return self.state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
+
+    def get_masters_ipaddrs(self):
+        self.state = self._load_tfstate()
+        return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
+
+    def get_workers_ipaddrs(self):
+        self.state = self._load_tfstate()
+        return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
 
     @step
-    def fetch_terraform_output(self):
+    def _fetch_terraform_output(self):
         cmd = ("{env_setup};"
                "terraform output -json >"
                "{json_f}".format(
                    env_setup=self._env_setup_cmd(),
-                   json_f=self.conf.terraform_json_path))
-        self.runshellcommandterraform(cmd)
+                   json_f=self.tfjson_path))
+        self._runshellcommandterraform(cmd)
 
-    def generate_tfvars_file(self):
+    def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         src_terraform = os.path.join(
-                           self.conf.terraform_dir,
-                           Constant.TERRAFORM_EXAMPLE)
+                            self.tfdir,
+                            self.conf.terraform.tfvars)
 
         dir, tfvars, _ = src_terraform.partition("terraform.tfvars")
         dest_terraform = os.path.join(dir, tfvars)
@@ -128,18 +148,24 @@ class Terraform:
         with open(dest_terraform, "w") as f:
             f.writelines(lines)
 
-    def runshellcommandterraform(self, cmd, env=None):
-        """Running terraform command in {workspace}/ci/infra/{platform}"""
-        cwd = self.conf.terraform_dir
+    def _runshellcommandterraform(self, cmd, env={}):
+        """Running terraform command in {terraform.tfdir}/{platform}"""
+        cwd = self.tfdir
+
         # Terraform needs PATH and SSH_AUTH_SOCK
         sock_fn = self.utils.ssh_sock_fn()
-        env = {
-            "SSH_AUTH_SOCK": sock_fn,
-            'PATH': os.environ['PATH']
-        }
+        env["SSH_AUTH_SOCK"] = sock_fn
+        env["PATH"] = os.environ['PATH']
+    
         print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def _check_tf_deployed(self):
-        if os.path.exists(self.conf.terraform_json_path):
+        if os.path.exists(self.tfjson_path):
             raise Exception(Format.alert("tf file found. Please run cleanup and try again{}"))
+
+    # TODO: this function is currently not used. Identify points where it should
+    # be invoked
+    def _verify_tf_dependency(self):
+        if not os.path.exists(self.tfjson_path):
+            raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))

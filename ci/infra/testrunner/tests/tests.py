@@ -1,6 +1,7 @@
 from timeout_decorator import timeout
 
-from utils import (Skuba, step, Utils)
+from skuba import Skuba
+from utils import ( step, Utils)
 
 
 class Tests:
