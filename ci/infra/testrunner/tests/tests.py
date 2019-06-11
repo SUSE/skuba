@@ -1,6 +1,6 @@
 from timeout_decorator import timeout
 
-from caaspctl import Skuba
+from skuba import Skuba
 from utils import ( step, Utils)
 
 
