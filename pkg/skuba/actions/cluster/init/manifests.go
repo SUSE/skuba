@@ -184,6 +184,7 @@ spec:
     - downwardAPI
     - projected
     - persistentVolumeClaim
+    - hostPath
     # Networked Storage
     - nfs
     - rbd
@@ -199,11 +200,11 @@ spec:
     - azureFile
     - vsphereVolume
   allowedHostPaths:
-    # Note: We don't allow hostPath volumes above, but set this to a path we
-    # control anyway as a belt+braces protection. /dev/null may be a better
-    # option, but the implications of pointing this towards a device are
-    # unclear.
-    - pathPrefix: /opt/kubernetes-hostpath-volumes
+    - pathPrefix: /var/run/cilium
+    - pathPrefix: /var/run/crio
+    - pathPrefix: /usr/lib/cni
+    - pathPrefix: /etc/cni/net.d
+    - pathPrefix: /sys/fs/bpf
   readOnlyRootFilesystem: false
   # Users and groups
   runAsUser:
