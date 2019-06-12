@@ -23,13 +23,11 @@ variable "img_source_url" {
 }
 
 variable "repositories" {
-  type = "list"
+  type = "map"
 
-  default = [
-    {
-      caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
-    },
-  ]
+  default = {
+    caasp_devel_leap15 = "https://download.opensuse.org/repositories/devel:/CaaSP:/Head:/ControllerNode/openSUSE_Leap_15.0"
+  }
 
   description = "Urls of the repositories to mount via cloud-init"
 }

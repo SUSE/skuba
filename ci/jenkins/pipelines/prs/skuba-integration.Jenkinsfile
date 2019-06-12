@@ -45,7 +45,7 @@ pipeline {
         stage('Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
             archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars")
+            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
         } }
 
         stage('Run end-to-end tests') { steps {

@@ -3,8 +3,8 @@ data "template_file" "worker_repositories" {
   count    = "${length(var.repositories)}"
 
   vars {
-    repository_url  = "${element(values(var.repositories[count.index]), 0)}"
-    repository_name = "${element(keys(var.repositories[count.index]), 0)}"
+    repository_url  = "${element(values(var.repositories), count.index)}"
+    repository_name = "${element(keys(var.repositories), count.index)}"
   }
 }
 
