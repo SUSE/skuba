@@ -17,7 +17,7 @@ pipeline {
         } }
 
         stage('Validating PR author') { steps {
-            sh(script: 'ci/jenkins/pipelines/prs/helpers/check-valid-author.sh', label: 'checking valid PR author')
+            sh(script: "${PR_MANAGER} check-pr --is-fork --employee-email", label: 'checking valid PR author')
         } }
 
     }
