@@ -8,12 +8,6 @@ nodeuser: "sles"  # Default node username
 openstack:
   openrc: "" #os.getenv("OPENRC")
 
-git: # Used for Jenkins rebase
-  change_author: ""
-  change_author_email: ""
-  github_token: ""
-  branch_name: "master"
-
 jenkins:  # Used for Jenkins
   build_number: 0 # os.getenv("BUILD_NUMBER")
   job_name: null # os.getenv("JOB_NAME")
