@@ -6,9 +6,12 @@ from skuba_update.skuba_update import (
     run_command,
     run_zypper_command,
     run_zypper_patch,
+    node_name_from_machine_id,
+    annotate,
     REBOOT_REQUIRED_PATH,
     ZYPPER_EXIT_INF_RESTART_NEEDED,
-    ZYPPER_EXIT_INF_REBOOT_NEEDED
+    ZYPPER_EXIT_INF_REBOOT_NEEDED,
+    KUBECONFIG_PATH
 )
 
 
@@ -220,3 +223,36 @@ def test_run_zypper_command_creates_file_on_102(mock_subprocess):
         msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
         assert msg in str(e)
     assert exception
+
+
+@patch('builtins.open', read_data='49f8e2911a1449b7b5ef2bf92282909a\n', create=True)
+@patch('subprocess.Popen')
+@patch('json.loads')
+def test_node_name_from_machine_id(mock_open, mock_subprocess, mock_json):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'my-node-1', b'stderr')
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    mock_open.return_value = '49f8e2911a1449b7b5ef2bf92282909a'
+    mock_json.return_value = {
+        'items':[
+            {
+                'status': {
+                    'nodeInfo': {
+                        'machineID':'49f8e2911a1449b7b5ef2bf92282909a'
+                    }
+                }
+            }
+        ]
+    }
+    assert node_name_from_machine_id() == 'my-node-1'
+
+
+@patch('subprocess.Popen')
+def test_annotate(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'stdout', b'stderr')
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    assert annotate('node', 'my-node-1', 'caasp.suse.com/has-disruptive-updates',
+                    'yes') == 'node/my-node-1 annotated'
