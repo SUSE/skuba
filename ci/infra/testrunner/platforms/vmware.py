@@ -22,4 +22,4 @@ class VMware(Terraform):
         cmd = (f"source {self.conf.vmware.env_file}; "
                f"terraform destroy -auto-approve -var stack_name={self.conf.jenkins.run_name}")
 
-        self.runshellcommandterraform(cmd)
+        self._runshellcommandterraform(cmd)
