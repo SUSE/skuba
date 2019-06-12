@@ -18,6 +18,7 @@ variable "lb_repositories" {
   default     = {
     sle_server_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
     basesystem_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
+    ha_pool             = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
     sle_server_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
     basesystem_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
   }
