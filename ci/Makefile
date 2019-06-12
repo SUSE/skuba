@@ -1,6 +1,8 @@
 .DEFAULT_GOAL := all
 MKFILE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 TEST_RUNNER := ${MKFILE_DIR}/infra/testrunner/testrunner
+TASKS := ${MKFILE_DIR}/tasks
+REBASE := rebase.py
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
@@ -39,7 +41,7 @@ gather_logs:
 
 .PHONY: git_rebase_check
 git_rebase_check:
-	${TEST_RUNNER} --git-rebase --vars vars/${PLATFORM}.yaml
+	${TASKS}/${REBASE}
 
 .PHONY: info
 info:
