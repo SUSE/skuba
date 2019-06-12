@@ -67,7 +67,6 @@ usage:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -z, --git-rebase      git rebase to master
   -i, --info            ip info
   -x, --cleanup         cleanup created skuba environment
   -t, --terraform-apply

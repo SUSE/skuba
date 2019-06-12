@@ -24,8 +24,6 @@ def main():
     """
     parser = ArgumentParser(help)
 
-    parser.add_argument("-z", "--git-rebase", dest="git_rebase", action="store_true",
-                        help="git rebase to master")
     parser.add_argument("-i", "--info", dest="ip_info", action='store_true', help='ip info')
     parser.add_argument("-x", "--cleanup", dest="cleanup", action='store_true',
                           help="cleanup created skuba environment")
@@ -62,8 +60,6 @@ def main():
 
     if options.ip_info:
         Utils(conf).info()
-    if options.git_rebase:
-        Utils(conf).git_rebase()
     elif options.cleanup:
         Platform.get_platform(conf).cleanup()
         Skuba.cleanup(conf)

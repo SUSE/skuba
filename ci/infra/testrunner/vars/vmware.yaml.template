@@ -9,12 +9,6 @@ vmware:
   env_file: "PATH TO YOUR VMware env file" #os.getenv("ENV_FILE")
   template_name: "SLES15-SP1-cloud-init" #os.getenv("TEMPLATE_NAME")
 
-git: # Used for Jenkins rebase
-  change_author: "GIT USERNAME" # os.getenv("CHANGE_AUTHOR")
-  change_author_email: "GIT EMAIL"
-  github_token: "PATH TO GIT TOKEN"
-  branch_name: "master"
-
 jenkins:  # Used for Jenkins
   build_number: 0 # os.getenv("BUILD_NUMBER")
   job_name: null # os.getenv("JOB_NAME")
