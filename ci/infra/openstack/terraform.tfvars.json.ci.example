@@ -1,6 +1,8 @@
 {
     "image_name": "SLE-15-SP1-JeOS-GM",
     "internal_net": "testing",
+    "internal_subnet": "testing-subnet",
+    "internal_router": "testing-router",
     "external_net": "floating",
     "stack_name": "testing",
     "subnet_cidr": "172.28.0.0/24",

@@ -4,7 +4,7 @@ resource "openstack_networking_network_v2" "network" {
 }
 
 resource "openstack_networking_subnet_v2" "subnet" {
-  name            = "${var.internal_net}-subnet"
+  name            = "${var.internal_subnet}"
   network_id      = "${openstack_networking_network_v2.network.id}"
   cidr            = "${var.subnet_cidr}"
   ip_version      = 4
@@ -16,7 +16,7 @@ data "openstack_networking_network_v2" "external_network" {
 }
 
 resource "openstack_networking_router_v2" "router" {
-  name                = "${var.internal_net}-router"
+  name                = "${var.internal_router}"
   external_network_id = "${data.openstack_networking_network_v2.external_network.id}"
 }
 
