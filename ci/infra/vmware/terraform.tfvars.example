@@ -45,11 +45,11 @@ password = ""
 
 # define the repositories to use
 # EXAMPLE:
-# repositories = [
-#   { repository1 = "http://example.my.repo.com/repository1/" },
-#   { repository2 = "http://example.my.repo.com/repository2/" }
-# ]
-repositories = []
+# repositories = {
+#   repository1 = "http://example.my.repo.com/repository1/"
+#   repository2 = "http://example.my.repo.com/repository2/"
+# }
+repositories = {}
 
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages

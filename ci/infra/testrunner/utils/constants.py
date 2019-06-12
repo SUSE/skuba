@@ -5,7 +5,7 @@ from utils.format import Format
 
 
 class Constant:
-    TERRAFORM_EXAMPLE="terraform.tfvars.ci.example"
+    TERRAFORM_EXAMPLE = "terraform.tfvars.json.ci.example"
     TERRAFORM_JSON_OUT = "tfout.json"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "

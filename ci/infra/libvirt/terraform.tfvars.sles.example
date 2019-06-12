@@ -27,14 +27,14 @@ username = "sles"
 img_source_url = "SLES15-SP1-JeOS-RC1-with-fixed-kernel-default.qcow2"
 
 # Define the repositories to use.
-repositories = [
-  { sle_server    = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Server-Applications-RC2/x86_64/DVD1/"},
-  { sle_base      = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Basesystem-RC2/x86_64/DVD1/"},
-  { sle_contaiers = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Containers-RC2/x86_64/DVD1/"},
-  { sle_ha        = "http://download.suse.de/install/SLP/SLE-15-SP1-Product-HA-RC1/x86_64/DVD1/"},
-  { suse_ca       = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/" },
-  { caasp_15sp1   = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update:/Products:/CASP40/standard/" }
-]
+repositories = {
+  sle_server    = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Server-Applications-RC2/x86_64/DVD1/"
+  sle_base      = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Basesystem-RC2/x86_64/DVD1/"
+  sle_contaiers = "http://download.suse.de/install/SLP/SLE-15-SP1-Module-Containers-RC2/x86_64/DVD1/"
+  sle_ha        = "http://download.suse.de/install/SLP/SLE-15-SP1-Product-HA-RC1/x86_64/DVD1/"
+  suse_ca       = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/"
+  caasp_15sp1   = "http://download.suse.de/ibs/SUSE:/SLE-15-SP1:/Update:/Products:/CASP40/standard/"
+}
 
 # Additional packages that you may want to install in the initialization process.
 packages = [
