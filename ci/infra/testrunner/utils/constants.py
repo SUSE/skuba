@@ -88,6 +88,7 @@ class BaseConfig:
             super().__init__()
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE 
+            self.plugin_dir = None
 
     class Skuba:
         def __init__(self):
