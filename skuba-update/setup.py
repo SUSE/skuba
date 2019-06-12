@@ -16,6 +16,7 @@
 
 from setuptools import setup
 import os
+import sys
 
 def version():
     """Return the version. Pass when VERSION file not found"""
@@ -41,10 +42,15 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache License 2.0',
         'Operating System :: POSIX :: Linux',
-    ], data_files={
-        'skuba_update/skuba-update.timer',
-        'skuba_update/skuba-update.service'
-    }, entry_points = {
+    ], data_files=[
+        (
+            'lib/systemd/system', [
+                'skuba_update/skuba-update.timer',
+                'skuba_update/skuba-update.service'
+            ]
+        ),
+        ('share/fillup-templates', ['skuba_update/sysconfig.skuba-update'])
+    ], entry_points = {
         'console_scripts': [
             'skuba-update = skuba_update.skuba_update:main'
         ]

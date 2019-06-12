@@ -5,6 +5,7 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/skuba-update
+EnvironmentFile=-/etc/sysconfig/skuba-update
+ExecStart=/usr/sbin/skuba-update $SKUBA_UPDATE_OPTIONS
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7

@@ -18,6 +18,9 @@ source "$(dirname "$0")/../suse.sh"
 
 UPDATE_REPO="update-with-reboot-suggested"
 
+force_machine_id_file
+install_fixtures
+
 add_repository "base"
 install_package "base" "caasp-test"
 
@@ -39,4 +42,7 @@ check_test_package_version "2"
 check_reboot_needed_present
 check_reboot_required_present
 
-check_no_kubectl_calls
+check_kubectl_calls "kubectl get nodes -o json" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-updates=yes" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-security-updates=no" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-disruptive-updates=no"

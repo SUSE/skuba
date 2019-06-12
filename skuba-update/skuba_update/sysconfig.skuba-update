@@ -1,0 +1,7 @@
+## Path           : System/Management
+## Description    : Extra switches for skuba-update
+## Type           : string
+## Default        : ""
+## ServiceRestart : skuba-update
+#
+SKUBA_UPDATE_OPTIONS=""

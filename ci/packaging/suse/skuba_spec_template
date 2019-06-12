@@ -92,8 +92,7 @@ make %{?_smp_mflags} docs
 
 pushd skuba-update
 python3 setup.py install --root %{buildroot} \
-    --install-script %{_sbindir} \
-    --install-data %{_unitdir}
+    --install-script %{_sbindir}
 popd
 
 #
@@ -150,6 +149,7 @@ ln -sf service %{buildroot}%{_sbindir}/rcskuba-update
 %service_add_pre skuba-update.timer
 
 %post update
+%{fillup_only -n skuba-update}
 %service_add_post skuba-update.timer
 
 %preun update
@@ -169,6 +169,7 @@ ln -sf service %{buildroot}%{_sbindir}/rcskuba-update
 %{_unitdir}/skuba-update.service
 %{_unitdir}/skuba-update.timer
 %{_sbindir}/rcskuba-update
+%{_fillupdir}/sysconfig.skuba-update
 
 %files
 # Binaries

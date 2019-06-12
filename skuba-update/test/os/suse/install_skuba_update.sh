@@ -24,7 +24,7 @@ if [ "$release" = "NAME=\"SLES\"" ]; then
     zypper ref
 fi
 
-zypper in -y python3-setuptools
+zypper in -y python3-setuptools lsof
 
 if [ "$release" = "NAME=\"SLES\"" ]; then
     zypper rr leap15.1
