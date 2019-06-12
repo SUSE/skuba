@@ -93,10 +93,10 @@ resource "null_resource" "master_wait_cloudinit" {
   count = "${var.masters}"
 
   connection {
-    host     = "${element(vsphere_virtual_machine.master.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    type     = "ssh"
-    agent    = true
+    host  = "${element(vsphere_virtual_machine.master.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {

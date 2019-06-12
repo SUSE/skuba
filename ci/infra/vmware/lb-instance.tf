@@ -14,13 +14,14 @@ variable "lb_memory" {
 }
 
 variable "lb_repositories" {
-  type        = "map"
-  default     = {
-    sle_server_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
-    basesystem_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
-    ha_pool             = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
-    sle_server_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
-    basesystem_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
+  type = "map"
+
+  default = {
+    sle_server_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
+    basesystem_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
+    ha_pool            = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
+    sle_server_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
+    basesystem_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
   }
 }
 
@@ -44,7 +45,7 @@ data "template_file" "haproxy_backends_master" {
   }
 
   depends_on = [
-    "vsphere_virtual_machine.master"
+    "vsphere_virtual_machine.master",
   ]
 }
 
@@ -104,7 +105,7 @@ resource "vsphere_virtual_machine" "lb" {
   }
 
   depends_on = [
-    "vsphere_virtual_machine.master"
+    "vsphere_virtual_machine.master",
   ]
 }
 
@@ -112,10 +113,10 @@ resource "null_resource" "lb_wait_cloudinit" {
   count = "${var.lbs}"
 
   connection {
-    host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    type     = "ssh"
-    agent    = true
+    host  = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {

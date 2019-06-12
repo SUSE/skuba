@@ -93,10 +93,10 @@ resource "null_resource" "worker_wait_cloudinit" {
   count = "${var.workers}"
 
   connection {
-    host     = "${element(vsphere_virtual_machine.worker.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    type     = "ssh"
-    agent    = true
+    host  = "${element(vsphere_virtual_machine.worker.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
