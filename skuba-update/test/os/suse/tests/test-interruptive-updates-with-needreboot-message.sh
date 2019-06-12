@@ -39,4 +39,6 @@ check_reboot_needed_absent
 check_reboot_required_absent
 
 check_kubectl_calls "kubectl get nodes -o json" \
-                    "kubectl annotate nodes my-node-1 caasp.suse.com/has-disruptive-updates=yes"
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-updates=yes" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-security-updates=no" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-disruptive-updates=yes"
