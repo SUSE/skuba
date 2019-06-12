@@ -14,12 +14,12 @@ variable "lb_memory" {
 }
 
 variable "lb_repositories" {
-  type        = "list"
+  type        = "map"
   default     = [
-    { sle15sp1_ga     = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/GA/standard/" },
-    { sle15sp1_update = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/Update/standard/" },
-    { sle15_ga        = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/GA/standard/" },
-    { sle15_update    = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/Update/standard/" }
+    sle15sp1_ga     = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
+    sle15sp1_update = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
+    sle15_ga        = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/GA/standard/"
+    sle15_update    = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/Update/standard/"
   ]
 }
 
@@ -28,8 +28,8 @@ data "template_file" "lb_repositories_template" {
   template = "${file("cloud-init/repository.tpl")}"
 
   vars {
-    repository_url  = "${element(values(var.repositories), count.index)}"
-    repository_name = "${element(keys(var.repositories), count.index)}"
+    repository_url  = "${element(values(var.lb_repositories), count.index)}"
+    repository_name = "${element(keys(var.lb_repositories), count.index)}"
   }
 }
 
