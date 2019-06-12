@@ -26,7 +26,6 @@ class BaseConfig:
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
         obj.jenkins = BaseConfig.Jenkins()
-        obj.git = BaseConfig.Git()
         obj.skuba = BaseConfig.Skuba()
 
         obj.lb = BaseConfig.NodeConfig()
@@ -38,7 +37,6 @@ class BaseConfig:
             BaseConfig.NodeConfig,
             BaseConfig.Jenkins,
             BaseConfig.Test,
-            BaseConfig.Git,
             BaseConfig.Openstack,
             BaseConfig.Terraform,
             BaseConfig.Skuba,
@@ -69,14 +67,6 @@ class BaseConfig:
             self.job_name = None
             self.build_number = None
             self.run_name = None
-
-    class Git:
-        def __init__(self):
-            super().__init__()
-            self.change_author = None
-            self.change_author_email = None
-            self.github_token = None
-            self.branch_name = "master"
 
     class Openstack:
         def __init__(self):
@@ -186,9 +176,6 @@ class BaseConfig:
             conf.ssh_key_option = os.path.join(conf.skuba.srcpath, "ci/infra/id_shared")
         elif conf.ssh_key_option == "id_rsa":
             conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
-
-        conf.git.change_author = os.getenv('GIT_COMMITTER_NAME', 'CaaSP Jenkins')
-        conf.git.change_author_email = os.getenv('GIT_COMMITTER_EMAIL', 'containers-bugowner@suse.de')
 
         return conf
 

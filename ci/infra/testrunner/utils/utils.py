@@ -123,27 +123,6 @@ class Utils:
         print("adding id_shared ssh key")
         self.runshellcommand("ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
 
-    @timeout(90)
-    @step
-    def git_rebase(self):
-        if self.conf.git.branch_name.lower() == "master":
-            print("Rebase not required for master.")
-            return
-
-        try:
-            cmd = 'git -c "user.name={}" -c "user.email={}" \
-                           rebase origin/master'.format(self.conf.git.change_author, self.conf.git.change_author_email)
-            self.runshellcommand(cmd, cwd="skuba")
-        except subprocess.CalledProcessError as ex:
-            print(ex)
-            print(Format.alert("Rebase failed, manual rebase is required."))
-            self.runshellcommand("git rebase --abort", cwd="skuba")
-            sys.exit(1)
-        except Exception as ex:
-            print(ex)
-            print(Format.alert("Unknown error exiting."))
-            sys.exit(2)
-
     @timeout(30)
     @step
     def info(self):

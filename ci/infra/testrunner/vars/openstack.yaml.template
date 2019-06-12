@@ -17,12 +17,6 @@ terraform:
 openstack:
   openrc: "PATH TO YOUR OPENRC FILE" #os.getenv("OPENRC")
 
-git: # Used for Jenkins rebase
-  change_author: "GIT USERNAME" # os.getenv("CHANGE_AUTHOR")
-  change_author_email: "GIT EMAIL"
-  github_token: "PATH TO GIT TOKEN"
-  branch_name: "master"
-
 jenkins:  # Used for Jenkins
   build_number: 0 # os.getenv("BUILD_NUMBER")
   job_name: null # os.getenv("JOB_NAME")
