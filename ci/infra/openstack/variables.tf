@@ -14,6 +14,16 @@ variable "internal_net" {
   description = "Name of the internal network to be created"
 }
 
+variable "internal_subnet" {
+  default     = ""
+  description = "Name of the internal subnet to be created"
+}
+
+variable "internal_router" {
+  default     = ""
+  description = "Name of the internal router to be created"
+}
+
 variable "subnet_cidr" {
   default     = ""
   description = "CIDR of the subnet for the internal network"
