@@ -18,7 +18,7 @@ class Skuba:
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
-            raise FileNotFoundError(Format.alert("skuba not found at {}".format(skuba.binpath)))
+            raise FileNotFoundError(Format.alert("skuba not found at {}".format(self.binpath)))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
