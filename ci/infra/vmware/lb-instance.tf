@@ -15,12 +15,12 @@ variable "lb_memory" {
 
 variable "lb_repositories" {
   type        = "map"
-  default     = [
-    sle15sp1_ga     = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/GA/standard/"
-    sle15sp1_update = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15-SP1:/Update/standard/"
-    sle15_ga        = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/GA/standard/"
-    sle15_update    = "http://ibs-mirror.prv.suse.net/ibs/SUSE:/SLE-15:/Update/standard/"
-  ]
+  default     = {
+    sle_server_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
+    basesystem_pool     = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
+    sle_server_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
+    basesystem_updates  = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
+  }
 }
 
 data "template_file" "lb_repositories_template" {
