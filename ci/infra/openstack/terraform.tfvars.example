@@ -8,6 +8,16 @@ image_name = ""
 # internal_net = "testing"
 internal_net = ""
 
+# Name of the internal subnet to be created
+# EXAMPLE:
+# internal_subnet = "${var.internal_net}-subnet"
+internal_subnet = "${var.internal_net}-subnet"
+
+# Name of the internal router to be created
+# EXAMPLE:
+# internal_router = "${var.internal_net}-router"
+internal_router = "${var.internal_net}-router"
+
 # Name of the external network to be used, the one used to allocate floating IPs
 # EXAMPLE:
 # external_net = "floating"
