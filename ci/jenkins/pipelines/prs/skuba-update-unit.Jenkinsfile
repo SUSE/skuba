@@ -33,8 +33,7 @@ pipeline {
         stage('skuba-update SUSE Unit Tests') {
             when {
                 expression {
-                    stdout = sh(script: 'skuba/ci/jenkins/pipelines/prs/helpers/pr-filter.sh', label: 'checking if PR contains skuba-update changes')
-                    return (stdout =~ "contains changes")
+                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
                 }
             }
             steps {

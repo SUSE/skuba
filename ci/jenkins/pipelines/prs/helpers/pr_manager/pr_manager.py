@@ -49,6 +49,26 @@ def check_pr(args):
         print(f'No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
 
+def filter_pr(args):
+    g = Github(GITHUB_TOKEN, per_page=1000)
+    repo = g.get_repo(GITHUB_REPO)
+
+    pull = repo.get_pull(int(CHANGE_ID))
+    changed_files = pull.get_files()
+    files_list = []
+
+    # change paginated list to normal list
+    for f in changed_files:
+        files_list.append(f.filename)
+
+    if any([s for s in files_list if args.filename in s]):
+        msg = "contains"
+    else:
+        msg = "does not contain"
+
+    print(f"Pull Request {GITHUB_REPO}#{CHANGE_ID} {msg} changes for {args.filename}")
+
+
 def merge_prs(args):
     if args.config:
         _read_config(args.config)
@@ -96,6 +116,11 @@ def parse_args():
     update_status_parser.add_argument('context')
     update_status_parser.add_argument('state', choices=['error', 'failure', 'pending', 'success'])
     update_status_parser.set_defaults(func=update_pr_status)
+
+    # Parse filter-pr command
+    filter_parser = subparsers.add_parser('filter-pr', help='Filter Pull Request by a file/pathname')
+    filter_parser.add_argument('--filename', help='Name of the path or File to filter')
+    filter_parser.set_defaults(func=filter_pr)
 
     parsed_args = parser.parse_args()
 
