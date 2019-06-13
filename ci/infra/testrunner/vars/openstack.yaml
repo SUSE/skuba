@@ -8,10 +8,6 @@ nodeuser: "sles"  # Default node username
 openstack:
   openrc: "" #os.getenv("OPENRC")
 
-jenkins:  # Used for Jenkins
-  build_number: 0 # os.getenv("BUILD_NUMBER")
-  job_name: null # os.getenv("JOB_NAME")
-
 # node settings
 lb:
   count: 1

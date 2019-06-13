@@ -9,10 +9,6 @@ vmware:
   env_file: "" #os.getenv("ENV_FILE")
   template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("TEMPLATE_NAME")
 
-jenkins:  # Used for Jenkins
-  build_number: 0 # os.getenv("BUILD_NUMBER")
-  job_name: null # os.getenv("JOB_NAME")
-
 # node settings
 master:
   count: 1
