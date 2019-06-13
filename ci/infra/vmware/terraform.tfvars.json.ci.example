@@ -1,5 +1,5 @@
 {
-    "vsphere_datastore": "3PAR",
+    "vsphere_datastore_cluster": "LOCAL-DISKS-CLUSTER",
     "vsphere_datacenter": "",
     "vsphere_network": "VM Network",
     "vsphere_resource_pool": "CaaSP_RP",

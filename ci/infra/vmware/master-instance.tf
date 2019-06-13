@@ -57,24 +57,23 @@ data "template_file" "master_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "master" {
-  count            = "${var.masters}"
-  name             = "${var.stack_name}-master-${count.index}"
-  num_cpus         = "${var.master_cpus}"
-  memory           = "${var.master_memory}"
-  guest_id         = "${var.guest_id}"
-  firmware         = "${var.firmware}"
-  scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
-  resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
-  datastore_id     = "${data.vsphere_datastore.datastore.id}"
+  count                = "${var.masters}"
+  name                 = "${var.stack_name}-master-${count.index}"
+  num_cpus             = "${var.master_cpus}"
+  memory               = "${var.master_memory}"
+  guest_id             = "${var.guest_id}"
+  firmware             = "${var.firmware}"
+  scsi_type            = "${data.vsphere_virtual_machine.template.scsi_type}"
+  resource_pool_id     = "${data.vsphere_resource_pool.pool.id}"
+  datastore_cluster_id = "${data.vsphere_datastore_cluster.datastore_cluster.id}"
 
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
   }
 
   disk {
-    label        = "disk0"
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
-    size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
+    label = "disk0"
+    size  = "${data.vsphere_virtual_machine.template.disks.0.size}"
   }
 
   extra_config {
