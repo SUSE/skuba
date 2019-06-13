@@ -32,7 +32,13 @@ if os.environ.get('IP_FROM_TF_STATE') == 'True' or os.environ.get('IP_FROM_TF_ST
   tf = os.path.join("ci/infra/{0}".format(os.environ['PLATFORM'].lower()), "terraform.tfstate")
   with open(tf) as f:
     tf_state = json.load(f)
-  os.environ['CONTROLPLANE'] = tf_state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
+
+  # Vmware template return a list while OpenStack returns a String
+  lb_ip = tf_state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
+  if isinstance(lb_ip, list):
+    lb_ip = lb_ip[0]
+
+  os.environ['CONTROLPLANE'] = lb_ip
   os.environ['MASTER00'] = tf_state["modules"][0]["outputs"]["ip_masters"]["value"][0]
   os.environ['WORKER00'] = tf_state["modules"][0]["outputs"]["ip_workers"]["value"][0]
 
