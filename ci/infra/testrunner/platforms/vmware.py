@@ -14,6 +14,11 @@ class VMware(Terraform):
                    'Check the VMware env file path in your configured yaml file.')
             raise ValueError(Format.alert(msg))
 
+    def get_lb_ipaddr(self):
+        # VMware template returns a list while OpenStack returns a string
+        self.state = self._load_tfstate()
+        return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"][0]
+
     def _env_setup_cmd(self):
         return f"source {self.conf.vmware.env_file}"
 

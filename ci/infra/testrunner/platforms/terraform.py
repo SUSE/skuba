@@ -89,7 +89,7 @@ class Terraform:
 
     def get_lb_ipaddr(self):
         self.state = self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_ext_load_balancer"]["value"]
+        return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
 
     def get_masters_ipaddrs(self):
         self.state = self._load_tfstate()
