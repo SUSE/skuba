@@ -13,6 +13,7 @@ class Terraform:
         self.utils = Utils(conf)
         self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
+        self.state = None
 
     def _env_setup_cmd(self):
         """Returns the command for setting up the platform environment"""
@@ -82,21 +83,22 @@ class Terraform:
                 self._fetch_terraform_output()
 
     def _load_tfstate(self):
-        fn = os.path.join(self.tfdir, "terraform.tfstate")
-        print("Reading {}".format(fn))
-        with open(fn) as f:
-            return json.load(f)
+        if self.state is None:
+            fn = os.path.join(self.tfdir, "terraform.tfstate")
+            print("Reading {}".format(fn))
+            with open(fn) as f:
+                self.state = json.load(f)
 
     def get_lb_ipaddr(self):
-        self.state = self._load_tfstate()
+        self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
 
     def get_masters_ipaddrs(self):
-        self.state = self._load_tfstate()
+        self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
 
     def get_workers_ipaddrs(self):
-        self.state = self._load_tfstate()
+        self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
 
     @step
