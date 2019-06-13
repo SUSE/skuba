@@ -1,4 +1,5 @@
-from mock import patch, call, Mock, ANY
+import json
+from mock import patch, call, mock_open, Mock, ANY
 
 from skuba_update.skuba_update import (
     main,
@@ -6,6 +7,8 @@ from skuba_update.skuba_update import (
     run_command,
     run_zypper_command,
     run_zypper_patch,
+    node_name_from_machine_id,
+    annotate,
     REBOOT_REQUIRED_PATH,
     ZYPPER_EXIT_INF_RESTART_NEEDED,
     ZYPPER_EXIT_INF_REBOOT_NEEDED
@@ -220,3 +223,76 @@ def test_run_zypper_command_creates_file_on_102(mock_subprocess):
         msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
         assert msg in str(e)
     assert exception
+
+
+@patch('builtins.open',
+       mock_open(read_data='9ea12911449eb7b5f8f228294bf9209a'))
+@patch('subprocess.Popen')
+@patch('json.loads')
+def test_node_name_from_machine_id(mock_loads, mock_subprocess):
+    json_node_object = {
+        'items': [
+            {
+                'metadata': {
+                    'name': 'my-node-1'
+                },
+                'status': {
+                    'nodeInfo': {
+                        'machineID': '49f8e2911a1449b7b5ef2bf92282909a'
+                    }
+                }
+            },
+            {
+                'metadata': {
+                    'name': 'my-node-2'
+                },
+                'status': {
+                    'nodeInfo': {
+                        'machineID': '9ea12911449eb7b5f8f228294bf9209a'
+                    }
+                }
+            }
+        ]
+    }
+    breaking_json_node_object = {'Items': []}
+
+    mock_process = Mock()
+    mock_process.communicate.return_value = (json.dumps(json_node_object)
+                                             .encode(), b'')
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    mock_loads.return_value = json_node_object
+    assert node_name_from_machine_id() == 'my-node-2'
+
+    json_node_object2 = json_node_object
+    json_node_object2['items'][1]['status']['nodeInfo']['machineID'] = \
+        'another-id-that-doesnt-reflect-a-node'
+    mock_loads.return_value = json_node_object2
+    exception = False
+    try:
+        node_name_from_machine_id() == 'my-node-2'
+    except Exception as e:
+        exception = True
+        assert 'Node name could not be determined' in str(e)
+    assert exception
+
+    mock_loads.return_value = breaking_json_node_object
+    exception = False
+    try:
+        node_name_from_machine_id() == 'my-node-2'
+    except Exception as e:
+        exception = True
+        assert 'Unexpected format' in str(e)
+    assert exception
+
+
+@patch('subprocess.Popen')
+def test_annotate(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'node/my-node-1 annotated',
+                                             b'stderr')
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    assert annotate('node', 'my-node-1',
+                    'caasp.suse.com/has-disruptive-updates',
+                    'yes') == 'node/my-node-1 annotated'

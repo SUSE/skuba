@@ -18,6 +18,7 @@
 import os
 import subprocess
 import re
+import json
 from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,9 @@ REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
 ZYPPER_EXIT_INF_RESTART_NEEDED = 103
+
+# The path to the kubelet config used for running kubectl commands
+KUBECONFIG_PATH = '/etc/kubernetes/kubelet.conf'
 
 
 def main():
@@ -207,6 +211,45 @@ def check_version(call, version_waterline):
         message = 'Could not parse {0} version'.format(call)
         raise Exception(message)
     return version_info >= version_waterline
+
+
+def node_name_from_machine_id():
+    """
+    Reads the kubernetes node name from the machine-id
+    """
+
+    with open('/etc/machine-id') as machine_id_file:
+        machine_id = machine_id_file.read().strip()
+
+    nodes_raw_json = run_command([
+        'KUBECONFIG={}'.format(KUBECONFIG_PATH),
+        'kubectl', 'get', 'nodes', '-o', 'json'
+    ])
+
+    formatted = json.loads(nodes_raw_json.output)
+
+    try:
+        for node in formatted['items']:
+            if node['status']['nodeInfo']['machineID'] == machine_id:
+                return node['metadata']['name']
+    except KeyError as e:
+        raise Exception('Unexpected format for node name: {}'.format(e))
+
+    raise Exception('Node name could not be determined via machine-id')
+
+
+def annotate(resource, resource_name, key, value):
+    """
+    Annotates any kubernetes resource
+    """
+
+    ret = run_command([
+        'KUBECONFIG={}'.format(KUBECONFIG_PATH),
+        'kubectl', 'annotate', resource, resource_name,
+        '{}={}'.format(key, value)
+    ])
+
+    return ret.output
 
 
 if __name__ == "__main__":  # pragma: no cover
