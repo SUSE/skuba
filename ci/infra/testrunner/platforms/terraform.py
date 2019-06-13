@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 from shutil import copyfile
 
@@ -128,23 +129,23 @@ class Terraform:
             if line.startswith("internal_net"):
                 lines[i] = 'internal_net = "{}"'.format(self.conf.jenkins.run_name)
 
-            if line.startswith("stack_name"):
+            elif line.startswith("stack_name"):
                 lines[i] = 'stack_name = "{}"'.format(self.conf.jenkins.run_name)
 
-            if line.startswith("username"):
+            elif line.startswith("username"):
                 lines[i] = 'username = "{}"'.format(self.conf.nodeuser)
 
-            if line.startswith("masters"):
+            elif re.match('^masters\b', line):
                 lines[i] = 'masters = {}'.format(self.conf.master.count)
 
-            if line.startswith("workers"):
+            elif re.match('^workers\b', line):
                 lines[i] = 'workers = {}'.format(self.conf.worker.count)
 
-            if line.startswith("authorized_keys"):
+            elif line.startswith("authorized_keys"):
                 lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
 
             # Switch to US mirror if running on CI
-            if "download.suse.de" in line and os.environ.get('JENKINS_URL'):
+            elif "download.suse.de" in line and os.environ.get('JENKINS_URL'):
                 lines[i] = line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
 
         with open(tfvars_final, "w") as f:
