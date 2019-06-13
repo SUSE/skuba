@@ -24,7 +24,8 @@ vsphere_resource_pool = ""
 template_name = ""
 
 # prefix that all of the booted machines will use
-# IMPORTANT, please enter unique identifier bellow as value of stack_name variable to not interfere with other deployments
+# IMPORTANT: please enter unique identifier below as value of
+# stack_name variable to not interfere with other deployments
 stack_name = "caasp-v4"
 
 # Number of master nodes
@@ -58,7 +59,7 @@ packages = [
 ]
 
 # ssh keys to inject into all the nodes
-# EXAMPLE: 
+# EXAMPLE:
 # authorized_keys = [
 #   "ssh-rsa <key-content>"
 # ]
