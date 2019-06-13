@@ -52,8 +52,6 @@ data "template_file" "worker_cloud_init_userdata" {
     register_scc    = "${join("\n", data.template_file.worker_register_scc.*.rendered)}"
     register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
-    username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
@@ -95,10 +93,10 @@ resource "null_resource" "worker_wait_cloudinit" {
   count = "${var.workers}"
 
   connection {
-    host     = "${element(vsphere_virtual_machine.worker.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    password = "${var.password}"
-    type     = "ssh"
+    host  = "${element(vsphere_virtual_machine.worker.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {

@@ -39,11 +39,6 @@ workers = 2
 # username = "sles"
 username = ""
 
-# Password for the cluster nodes
-# EXAMPLE:
-# password = "linux"
-password = ""
-
 # define the repositories to use
 # EXAMPLE:
 # repositories = {

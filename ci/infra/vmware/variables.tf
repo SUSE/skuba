@@ -39,11 +39,6 @@ variable "username" {
   description = "Username for the cluster nodes"
 }
 
-variable "password" {
-  default     = "sles"
-  description = "Password for the cluster nodes"
-}
-
 variable "masters" {
   default     = 1
   description = "Number of master nodes"
@@ -52,11 +47,6 @@ variable "masters" {
 variable "workers" {
   default     = 1
   description = "Number of worker nodes"
-}
-
-variable "load-balancers" {
-  default     = 1
-  description = "Number of load-balancer nodes"
 }
 
 variable "worker_cpus" {
@@ -77,16 +67,6 @@ variable "master_cpus" {
 variable "master_memory" {
   default     = 8192
   description = "Amount of memory used on master node"
-}
-
-variable "lb_cpus" {
-  default     = 1
-  description = "Number of CPUs used on load-balancer node"
-}
-
-variable "lb_memory" {
-  default     = 2048
-  description = "Amount of memory used on load-balancer node"
 }
 
 variable "caasp_registry_code" {

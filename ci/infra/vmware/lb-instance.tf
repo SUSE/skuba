@@ -1,24 +1,56 @@
-data "template_file" "lb_repositories" {
+variable "lbs" {
+  default     = 1
+  description = "Number of load-balancer nodes"
+}
+
+variable "lb_cpus" {
+  default     = 1
+  description = "Number of CPUs used on load-balancer node"
+}
+
+variable "lb_memory" {
+  default     = 2048
+  description = "Amount of memory used on load-balancer node"
+}
+
+variable "lb_repositories" {
+  type = "map"
+
+  default = {
+    sle_server_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
+    basesystem_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
+    ha_pool            = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
+    sle_server_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
+    basesystem_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
+  }
+}
+
+data "template_file" "lb_repositories_template" {
+  count    = "${length(var.lb_repositories)}"
   template = "${file("cloud-init/repository.tpl")}"
-  count    = "${length(var.repositories)}"
 
   vars {
-    repository_url  = "${element(values(var.repositories), count.index)}"
-    repository_name = "${element(keys(var.repositories), count.index)}"
+    repository_url  = "${element(values(var.lb_repositories), count.index)}"
+    repository_name = "${element(keys(var.lb_repositories), count.index)}"
   }
 }
 
 data "template_file" "haproxy_backends_master" {
   count    = "${var.masters}"
-  template = "${file("cloud-init/haproxy-backends.tpl")}"
+  template = "server $${fqdn} $${ip}:6443 check check-ssl verify none\n"
 
   vars = {
-    fqdn = "${var.stack_name}-master-${count.index}"
+    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
     ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
   }
+
+  depends_on = [
+    "vsphere_virtual_machine.master",
+  ]
 }
 
 data "template_file" "lb_cloud_init_metadata" {
+  count    = "${var.lbs}"
   template = "${file("cloud-init/metadata.tpl")}"
 
   vars {
@@ -28,21 +60,20 @@ data "template_file" "lb_cloud_init_metadata" {
 }
 
 data "template_file" "lb_cloud_init_userdata" {
+  count    = "${var.lbs}"
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
     backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.lb_repositories.*.rendered)}"
+    repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
-    username        = "${var.username}"
-    password        = "${var.password}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
 
 resource "vsphere_virtual_machine" "lb" {
-  count            = "${var.load-balancers}"
+  count            = "${var.lbs}"
   name             = "${var.stack_name}-lb-${count.index}"
   num_cpus         = "${var.lb_cpus}"
   memory           = "${var.lb_memory}"
@@ -72,14 +103,20 @@ resource "vsphere_virtual_machine" "lb" {
   network_interface {
     network_id = "${data.vsphere_network.network.id}"
   }
+
+  depends_on = [
+    "vsphere_virtual_machine.master",
+  ]
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
+  count = "${var.lbs}"
+
   connection {
-    host     = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
-    user     = "${var.username}"
-    password = "${var.password}"
-    type     = "ssh"
+    host  = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
