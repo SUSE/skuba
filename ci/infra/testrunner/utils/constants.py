@@ -25,7 +25,6 @@ class BaseConfig:
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
-        obj.jenkins = BaseConfig.Jenkins()
         obj.skuba = BaseConfig.Skuba()
 
         obj.lb = BaseConfig.NodeConfig()
@@ -35,7 +34,6 @@ class BaseConfig:
 
         config_classes = (
             BaseConfig.NodeConfig,
-            BaseConfig.Jenkins,
             BaseConfig.Test,
             BaseConfig.Openstack,
             BaseConfig.Terraform,
@@ -61,13 +59,6 @@ class BaseConfig:
             self.ips = []
             self.external_ips = []
 
-    class Jenkins:
-        def __init__(self):
-            super().__init__()
-            self.job_name = None
-            self.build_number = None
-            self.run_name = None
-
     class Openstack:
         def __init__(self):
             super().__init__()
@@ -76,6 +67,8 @@ class BaseConfig:
     class Terraform:
         def __init__(self):
             super().__init__()
+            self.internal_net = None
+            self.stack_name = None
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE 
             self.plugin_dir = None
@@ -168,9 +161,13 @@ class BaseConfig:
 
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
-        if not conf.jenkins.job_name:
-            conf.jenkins.job_name = conf.username
-        conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
+        if not conf.terraform.stack_name:
+            conf.terraform.stack_name = conf.username
+
+        # TODO: This variable should be in openstack configuration but due to
+        # the way variables are processed in Terraform class, must be here for know.
+        if not conf.terraform.internal_net:
+            conf.terraform.internal_net = conf.terraform.stack_name
 
         #TODO: add the path to shared ssh credentials as a configuration parameter
         if conf.ssh_key_option == "id_shared":
@@ -185,6 +182,9 @@ class BaseConfig:
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
                                            "before using testrunner (skuba/ci/infra/testrunner/vars)"))
+        if not conf.terraform.stack_name:
+            raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
+
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
             raise ValueError(Format.alert("workspace should not be your home directory"))
 

@@ -18,14 +18,12 @@ class Openstack(Terraform):
 
     @timeout(600)
     def _cleanup_platform(self):
-        # TODO: this command is here because is passes two openstack
-        # specific vars to terraform. Find a way to move the command to 
-        # Terraform class and pass the variables from Openstack class.
         cmd = ("source {openrc};"
                " terraform destroy -auto-approve"
-               " -var internal_net=net-{run}"
-               " -var stack_name={run}".format(
+               " -var internal_net=net-{net}"
+               " -var stack_name={stack}".format(
                    openrc=self.conf.openstack.openrc,
-                   run=self.conf.jenkins.run_name))
+                   net=self.conf.terraform.internal_net,
+                   stack=self.conf.terraform.stack_name))
 
         self._runshellcommandterraform(cmd)
