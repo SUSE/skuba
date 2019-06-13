@@ -29,7 +29,7 @@ This list is not comprehensive, meaning if you want to include more detail than 
   * Always start with an upper-case letter
   * Do not put a dot (period) at the end
   * Use imperative verbs
-  * Maximum characters: 50
+  * Maximum characters: 50 (excluding the (bsc#123456) part)
   * Tracking issues from Bugzilla
     * Add `(bsc#123456)` as part of the title
 

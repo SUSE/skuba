@@ -17,7 +17,7 @@ pipeline {
         } }
 
         stage('Validating PR author') { steps {
-            sh(script: "${PR_MANAGER} check-pr --is-fork --employee-email", label: 'checking valid PR author')
+            sh(script: "${PR_MANAGER} check-pr --is-fork --check-pr-details", label: 'checking valid PR author')
         } }
 
     }
