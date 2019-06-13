@@ -1,7 +1,7 @@
 #cloud-config
 
 # set locale
-locale: en_GB.UTF-8
+locale: en_US.UTF-8
 
 # set timezone
 timezone: Etc/UTC
