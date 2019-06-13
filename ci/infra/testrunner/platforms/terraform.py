@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 from shutil import copyfile
 
@@ -134,10 +135,10 @@ class Terraform:
             elif line.startswith("username"):
                 lines[i] = 'username = "{}"'.format(self.conf.nodeuser)
 
-            elif line.startswith("masters"):
+            elif re.match('^masters\b', line):
                 lines[i] = 'masters = {}'.format(self.conf.master.count)
 
-            elif line.startswith("workers"):
+            elif re.match('^workers\b', line):
                 lines[i] = 'workers = {}'.format(self.conf.worker.count)
 
             elif line.startswith("authorized_keys"):
