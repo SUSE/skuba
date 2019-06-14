@@ -204,6 +204,7 @@ def test_update_zypper_is_fine_but_created_needreboot(
 
     mock_process = Mock()
     mock_process.communicate.return_value = (b'stdout', b'stderr')
+
     mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
     mock_subprocess.return_value = mock_process
     mock_is_file.return_value = True

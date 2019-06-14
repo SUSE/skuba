@@ -166,6 +166,40 @@ def is_not_false_str(string):
     return string is not None and string != '' and string != 'false'
 
 
+def interruptive_updates_available():
+    """
+    Returns True if there are interruptive updates available. Otherwise it
+    returns False.
+    """
+
+    res = run_zypper_command(
+        ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+        True
+    )
+
+    try:
+        tree = ElementTree.fromstring(res.output)
+    except ElementTree.ParseError:
+        return False
+
+    us = tree.find('update-status')
+    if us is None:
+        return False
+    for update in us.find('update-list'):
+        attr = update.attrib.get('interactive', '')
+        if is_not_false_str(attr):
+            return True
+    return False
+
+
+def is_not_false_str(string):
+    """
+    Returns true if the given string contains a non-falsey value.
+    """
+
+    return string is not None and string != '' and string != 'false'
+
+
 def log(message):
     """
     Prints the given message by prefixing a timestamp and the name of the
