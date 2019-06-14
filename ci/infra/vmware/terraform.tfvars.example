@@ -23,6 +23,9 @@ vsphere_resource_pool = ""
 # template_name = "SLES15-SP1-cloud-init"
 template_name = ""
 
+# IMPORTANT: Replace by "efi" string in case your template was created by using EFI firmware
+firmware = "bios"
+
 # prefix that all of the booted machines will use
 # IMPORTANT: please enter unique identifier below as value of
 # stack_name variable to not interfere with other deployments

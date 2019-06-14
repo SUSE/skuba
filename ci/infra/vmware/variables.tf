@@ -1,4 +1,5 @@
 variable "template_name" {}
+variable "firmware" {}
 variable "stack_name" {}
 variable "vsphere_datastore" {}
 variable "vsphere_datacenter" {}

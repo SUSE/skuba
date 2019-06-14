@@ -62,6 +62,7 @@ resource "vsphere_virtual_machine" "worker" {
   num_cpus         = "${var.worker_cpus}"
   memory           = "${var.worker_memory}"
   guest_id         = "${var.guest_id}"
+  firmware         = "${var.firmware}"
   scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
   resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
   datastore_id     = "${data.vsphere_datastore.datastore.id}"
@@ -101,7 +102,7 @@ resource "null_resource" "worker_wait_cloudinit" {
 
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait",
+      "cloud-init status --wait > /dev/null",
     ]
   }
 }
