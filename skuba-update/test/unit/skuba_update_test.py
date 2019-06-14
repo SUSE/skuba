@@ -125,6 +125,7 @@ def test_main(mock_subprocess, mock_geteuid):
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
         call(['zypper', 'ref', '-s'], stdout=-1, stderr=-1, env=ANY),
+        call(['zypper', 'needs-rebooting'], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
@@ -173,6 +174,9 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=-1, stderr=-1, env=ANY),
+        call([
+            'zypper', 'needs-rebooting'
+        ], env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
