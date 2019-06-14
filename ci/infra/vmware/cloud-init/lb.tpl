@@ -52,6 +52,7 @@ write_files:
 
     backend apiserver-backend
       option httpchk GET /healthz
+      http-check expect string ok
       ${backends}
 
 runcmd:
