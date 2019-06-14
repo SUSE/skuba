@@ -7,12 +7,15 @@ import sys
 
 from github import Github
 
+from pr_checks import PrChecks
 from pr_merge import PrMerge
 from pr_status import PrStatus
 
+CHANGE_ID = os.getenv('CHANGE_ID')
+GITHUB_ORG = 'SUSE'
+GITHUB_REPO = f'{GITHUB_ORG}/skuba'
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 JENKINS_CONFIG = configparser.ConfigParser()
-GITHUB_REPO = 'SUSE/skuba'
 
 if GITHUB_TOKEN is None:
     print('Env var GITHUB_TOKEN missing please set it')
@@ -21,11 +24,29 @@ else:
     # Make sure to only grab the token
     GITHUB_TOKEN = GITHUB_TOKEN.split(':')[-1]
 
+if CHANGE_ID is not None:
+    CHANGE_ID = int(CHANGE_ID)
 
 def _read_config(config_path):
     if config_path is None:
         print('No config provided please set JENKINS_CONFIG or use the --config arg')
     JENKINS_CONFIG.read(config_path)
+
+
+def check_pr(args):
+    if CHANGE_ID:
+        g = Github(GITHUB_TOKEN)
+        org = g. get_organization(GITHUB_ORG)
+        repo = g.get_repo(GITHUB_REPO)
+
+        pr_checks = PrChecks(org, repo)
+
+        if args.is_fork:
+            pr_checks.check_pr_from_fork(CHANGE_ID)
+        if args.employee_email:
+            pr_checks.check_employee_emails(CHANGE_ID)
+    else:
+        print(f'No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
 
 def merge_prs(args):
@@ -57,6 +78,12 @@ def update_pr_status(args):
 def parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
+
+    # Parse check-pr command
+    checks_parser = subparsers.add_parser('check-pr', help='Check to make sure the PR meets certain standards')
+    checks_parser.add_argument('--is-fork', action='store_true')
+    checks_parser.add_argument('--employee-email', action='store_true')
+    checks_parser.set_defaults(func=check_pr)
 
     # Parse merge-prs command
     merge_parser = subparsers.add_parser('merge-prs', help='Look for and merge a Pull Request')
