@@ -50,8 +50,15 @@ class Terraform:
         """ Create and apply terraform plan"""
         print("Init terraform")
         self._check_tf_deployed()
+        
         self.utils.setup_ssh()
-        self._runshellcommandterraform("terraform init")
+
+        init_cmd = "terraform init"
+        if self.conf.terraform.plugin_dir:
+            print("Installing plugins from {}".format(self.conf.terraform.plugin_dir))
+            init_cmd = init_cmd+" -plugin-dir="+self.conf.terraform.plugin_dir
+        self._runshellcommandterraform(init_cmd)
+
         self._runshellcommandterraform("terraform version")
         self._generate_tfvars_file()
         plan_cmd = ("{env_setup};"
