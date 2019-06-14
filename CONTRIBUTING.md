@@ -16,6 +16,7 @@ Contributors:
 Maintainers:
 * Devote time to regular code review and make your reviews impactful. Look at the big picture, don't get hung up on style alone.
 * Veto only when there's is something really problematic, otherwise just comment. Otherwise you are forcing a new round of reviews including a new CI run.
+* Add yourself to the [CODEOWNERS](.github/CODEOWNERS) file if you want to be assigned automatically as reviewer in a particular area.
 
 
 ## Styleguides
