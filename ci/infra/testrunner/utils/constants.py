@@ -114,34 +114,26 @@ class BaseConfig:
     @staticmethod
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
+            if isinstance(value, config_classes):
+                # Check that the key is in vars and has at some sub-keys defined 
+                if key in vars and vars[key]:
+                    key_vars = vars[key]
+                else:
+                    key_vars = {}
 
-            # FIXME: If key is the yaml file and is a config class, but has no subelements 
-            # the logic fails. This happens if we comment all values under the key, for example:
-            # key:
-            # # subkey: value  #commented!
-            #  
-            if key in vars and isinstance(value, config_classes):
-                BaseConfig.inject_attrs_from_yaml(value, vars[key], config_classes)
+                BaseConfig.inject_attrs_from_yaml(value, key_vars, config_classes)
                 continue
-
-            new_key = key.upper()
-            new_value = None
 
             # FIXME: the env variables must be looked as CLASS_KEY to prevent name collitions
             # with well known variables (e.g. PATH) or between classes
-            if os.getenv(new_key):
-                new_value = os.getenv(new_key)
+            env_key = key.upper()
+            env_value = os.getenv(env_key)
 
-            # if env variable does not exist, store
-            if not new_value and key in vars:
-                obj.__dict__[key] = vars[key]
-
-            # if username env variable exist but do not update username
-            if new_value:
-                obj.__dict__[key] = new_value
-
-            # username should get from xml config file
-            if key == "username":
+            # if env variable exist but is not 'username' use env_value
+            # username must get from config file
+            if env_value and env_key != "USERNAME":
+                obj.__dict__[key] = env_value
+            elif key in vars:
                 obj.__dict__[key] = vars[key]
 
         return obj
