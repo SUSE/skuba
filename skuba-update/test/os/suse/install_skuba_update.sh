@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2019 SUSE LLC. All rights reserved.
+# Copyright (c) 2019 SUSE LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
