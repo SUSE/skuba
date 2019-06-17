@@ -4,6 +4,7 @@ workspace: "~/go/src/ghithub.com/" # Workdirectory for testrunner
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: "USERNAME"  # Fill your username
 nodeuser: "sles"  # Default node username
+mirrors: ""       # mirrors for dowloading packages
 
 # Skuba setup
 skuba:

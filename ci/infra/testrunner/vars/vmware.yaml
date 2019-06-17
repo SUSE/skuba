@@ -4,6 +4,7 @@ workspace: "" # The top folder where skuba is stored
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: ""  # Fill your username
 nodeuser: "sles"  # Default node username
+mirror: "ibs-mirror.prv.suse.net"
 
 vmware:
   env_file: "" #os.getenv("ENV_FILE")

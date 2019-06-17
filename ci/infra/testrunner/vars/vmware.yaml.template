@@ -4,6 +4,7 @@ workspace: "~/go/src/github.com/" # The top folder where skuba is stored
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: "USERNAME"  # Fill your username
 nodeuser: "sles"  # Default node username
+mirror: ""       # mirror for dowloading packages
 
 vmware:
   env_file: "PATH TO YOUR VMware env file" #os.getenv("ENV_FILE")

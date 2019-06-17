@@ -21,6 +21,7 @@ class BaseConfig:
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
+        obj.mirror = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()

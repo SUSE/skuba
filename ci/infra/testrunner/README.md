@@ -118,7 +118,12 @@ As default, Jenkins has WORKSPACE environment variable so that workspace will be
         PLATFORM = 'openstack' or 'vmware'
    }
 ```
+2. Set the package download mirror
 
+Edit the `vars/<platform>.yaml` file and set the mirror for downloading packages for node setup
+```
+mirror: "ibs-mirror.prv.suse.net"
+```
 
 ### Step to create K8s Cluster and start to use K8s cluster 
 1. Cleanup before deploying nodes

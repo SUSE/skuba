@@ -151,9 +151,9 @@ class Terraform:
             elif line.startswith("authorized_keys"):
                 lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
 
-            # Switch to US mirror if running on CI
-            elif "download.suse.de" in line and os.environ.get('JENKINS_URL'):
-                lines[i] = line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
+            # Switch to mirrors  
+            elif "download.suse.de" in line and self.conf.mirror:
+                lines[i] = line.replace('download.suse.de', self.conf.mirror)
 
         with open(tfvars_final, "w") as f:
             f.writelines(lines)
@@ -180,9 +180,10 @@ class Terraform:
                 else:
                     tfvars[k] = v
 
-        if os.environ.get("JENKINS_URL") and repos is not None:
+        # Switch to mirrors  
+        if self.conf.mirror and repos is not None:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", "ibs-mirror.prv.suse.net")
+                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.mirror)
 
         with open(tfvars_final, "w") as f:
             json.dump(tfvars, f)
