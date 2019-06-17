@@ -18,9 +18,10 @@ VERSION      := $(shell cat VERSION)
 COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE   := $(shell date +%Y%m%d)
 TAGS         := development
-SKUBA_LDFLAGS = -ldflags "-X=github.com/SUSE/skuba/internal/app/skuba.Version=$(VERSION) \
-                          -X=github.com/SUSE/skuba/internal/app/skuba.Commit=$(COMMIT) \
-                          -X=github.com/SUSE/skuba/internal/app/skuba.BuildDate=$(BUILD_DATE)"
+PROJECT_PATH := github.com/SUSE/skuba
+SKUBA_LDFLAGS = -ldflags "-X=$(PROJECT_PATH)/internal/app/skuba.Version=$(VERSION) \
+                          -X=$(PROJECT_PATH)/internal/app/skuba.Commit=$(COMMIT) \
+                          -X=$(PROJECT_PATH)/internal/app/skuba.BuildDate=$(BUILD_DATE)"
 
 SKUBA_DIRS    = cmd pkg internal test
 
@@ -84,6 +85,13 @@ suse-changelog:
 	ci/packaging/suse/changelog_maker.sh "$(CHANGES)"
 
 # tests
+.PHONY: test
+test: test-unit test-e2e
+
+.PHONY: test-unit
+test-unit:
+	$(GO) test $(PROJECT_PATH)/{cmd,pkg,internal}/...
+
 .PHONY: test-e2e
 test-e2e:
 	./ci/tasks/e2e-tests.py

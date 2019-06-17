@@ -38,6 +38,10 @@ pipeline {
             }
         }}
 
+        stage('Running skuba unit tests') { steps {
+            sh(script: 'make test-unit', label: 'make test-unit')
+        } }
+
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')

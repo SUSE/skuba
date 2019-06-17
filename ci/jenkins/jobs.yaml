@@ -5,7 +5,7 @@
     repo-credentials: github-token
     platform: openstack
     jobs:
-        - '{name}-integration'
+        - '{name}-test'
         - '{name}-update-unit'
         - '{name}-update-integration'
         - '{name}-code-lint'
