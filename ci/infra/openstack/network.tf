@@ -4,11 +4,10 @@ resource "openstack_networking_network_v2" "network" {
 }
 
 resource "openstack_networking_subnet_v2" "subnet" {
-  name            = "${var.internal_subnet}"
-  network_id      = "${openstack_networking_network_v2.network.id}"
-  cidr            = "${var.subnet_cidr}"
-  ip_version      = 4
-  dns_nameservers = "${var.dns_nameservers}"
+  name       = "${var.internal_subnet}"
+  network_id = "${openstack_networking_network_v2.network.id}"
+  cidr       = "${var.subnet_cidr}"
+  ip_version = 4
 }
 
 data "openstack_networking_network_v2" "external_network" {
