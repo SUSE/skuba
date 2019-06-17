@@ -1,3 +1,4 @@
+import hcl
 import json
 import os
 import re
@@ -120,45 +121,20 @@ class Terraform:
     def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
         tfvars_template = os.path.join(self.tfdir, self.conf.terraform.tfvars)
-        tfvars_final = os.path.join(self.tfdir, "terraform.tfvars")
+        tfvars_final = os.path.join(self.tfdir, "terraform.tfvars.json")
 
-        if '.json' in os.path.basename(tfvars_template).lower():
-            tfvars_final += '.json'
-            self._generate_tfvars_from_json(tfvars_template, tfvars_final)
-        else:
-            self._generate_tfvars_from_hcl(tfvars_template, tfvars_final)
-
-    def _generate_tfvars_from_hcl(self, tfvars_template, tfvars_final):
         with open(tfvars_template) as f:
-            lines = f.readlines()
+            if '.json' in os.path.basename(tfvars_template).lower():
+                tfvars = json.load(f)
+            else:
+                tfvars = hcl.load(f)
+                
+            self._update_tfvars(tfvars)
 
-        for i, line in enumerate(lines):
-            if line.startswith("internal_net"):
-                lines[i] = 'internal_net = "{}"'.format(self.conf.terraform.internal_net)
+            with open(tfvars_final, "w") as f:
+                json.dump(tfvars, f)
 
-            elif line.startswith("stack_name"):
-                lines[i] = 'stack_name = "{}"'.format(self.conf.terraform.stack_name)
-
-            elif line.startswith("username"):
-                lines[i] = 'username = "{}"'.format(self.conf.nodeuser)
-
-            elif re.match('^masters\b', line):
-                lines[i] = 'masters = {}'.format(self.conf.master.count)
-
-            elif re.match('^workers\b', line):
-                lines[i] = 'workers = {}'.format(self.conf.worker.count)
-
-            elif line.startswith("authorized_keys"):
-                lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
-
-            # Switch to mirrors  
-            elif "download.suse.de" in line and self.conf.mirror:
-                lines[i] = line.replace('download.suse.de', self.conf.mirror)
-
-        with open(tfvars_final, "w") as f:
-            f.writelines(lines)
-
-    def _generate_tfvars_from_json(self, tfvars_template, tfvars_final):
+    def _update_tfvars(self, tfvars):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
             "stack_name": self.conf.terraform.stack_name,
@@ -167,9 +143,6 @@ class Terraform:
             "workers": self.conf.worker.count,
             "authorized_keys": [self.utils.authorized_keys()]
         }
-        with open(tfvars_template) as f:
-            tfvars = json.load(f)
-            repos = tfvars.get("repositories")
 
         for k, v in new_vars.items():
             if tfvars.get(k) is not None:
@@ -181,12 +154,10 @@ class Terraform:
                     tfvars[k] = v
 
         # Switch to mirrors  
+        repos = tfvars.get("repositories")
         if self.conf.mirror and repos is not None:
             for name, url in repos.items():
                 tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.mirror)
-
-        with open(tfvars_final, "w") as f:
-            json.dump(tfvars, f)
 
     def _runshellcommandterraform(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
