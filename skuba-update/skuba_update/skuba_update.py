@@ -22,6 +22,7 @@ import json
 from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
+from xml.etree import ElementTree
 
 # Since zypper 1.14.0, it will automatically create a /var/run/reboot-required
 # text file whenever one of the applied patches requires the system to be
@@ -44,6 +45,9 @@ ZYPPER_EXIT_INF_RESTART_NEEDED = 103
 # The path to the kubelet config used for running kubectl commands
 KUBECONFIG_PATH = '/etc/kubernetes/kubelet.conf'
 
+# The key for the annotation on the Kubernetes node for disruptive updates.
+KUBE_DISRUPTIVE_UPDATES_KEY = 'caasp.suse.com/has-disruptive-updates'
+
 
 def main():
     """
@@ -61,6 +65,7 @@ def main():
 
     update()
     restart_services()
+    annotate_resources()
 
 
 def update():
@@ -83,6 +88,18 @@ def restart_services():
     result = run_command(['zypper', 'ps', '-sss'])
     for service in result.output.splitlines():
         run_command(['systemctl', 'restart', service])
+
+
+def annotate_resources():
+    """
+    Annotate all the needed Kubernetes resources for the current conditions.
+    """
+
+    if interruptive_updates_available():
+        annotate(
+            'nodes', node_name_from_machine_id(),
+            KUBE_DISRUPTIVE_UPDATES_KEY, 'yes'
+        )
 
 
 def is_zypper_error(code):
@@ -112,6 +129,40 @@ def is_reboot_needed(code):
     return code == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
+def interruptive_updates_available():
+    """
+    Returns True if there are interruptive updates available. Otherwise it
+    returns False.
+    """
+
+    res = run_zypper_command(
+        ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+        True
+    )
+
+    try:
+        tree = ElementTree.fromstring(res.output)
+    except ElementTree.ParseError:
+        return False
+
+    us = tree.find('update-status')
+    if us is None:
+        return False
+    for update in us.find('update-list'):
+        attr = update.attrib.get('interactive', '')
+        if is_not_false_str(attr) and attr != 'reboot':
+            return True
+    return False
+
+
+def is_not_false_str(string):
+    """
+    Returns true if the given string contains a non-falsey value.
+    """
+
+    return string is not None and string != '' and string != 'false'
+
+
 def log(message):
     """
     Prints the given message by prefixing a timestamp and the name of the
@@ -124,21 +175,17 @@ def log(message):
     )
 
 
-def run_zypper_command(command):
+def run_zypper_command(command, needsOutput=False):
     """
     Run the given zypper command. The command is expected to be a tuple which
     also contains the 'zypper' string. It returns the exit code from zypper.
     """
 
-    log('running \'{0}\''.format(' '.join(command)))
-    process = subprocess.Popen(
-        command,
-        env=os.environ
-    )
-    process.communicate()
+    process = run_command(command)
     if is_zypper_error(process.returncode):
         raise Exception('"{0}" failed'.format(' '.join(command)))
-
+    if needsOutput:
+        return process
     return process.returncode
 
 

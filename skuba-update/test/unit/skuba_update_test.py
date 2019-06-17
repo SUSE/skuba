@@ -26,6 +26,7 @@ from skuba_update.skuba_update import (
     run_zypper_patch,
     node_name_from_machine_id,
     annotate,
+    annotate_resources,
     REBOOT_REQUIRED_PATH,
     ZYPPER_EXIT_INF_RESTART_NEEDED,
     ZYPPER_EXIT_INF_REBOOT_NEEDED
@@ -104,7 +105,9 @@ def test_main_no_root(mock_subprocess):
 @patch('subprocess.Popen')
 def test_main(mock_subprocess, mock_geteuid):
     return_values = [
-        (b'some_service1\nsome_service2', b''), (b'zypper 1.14.15', b'')
+        (b'some_service1\nsome_service2', b''),
+        (b'<root></root>', b''),
+        (b'zypper 1.14.15', b'')
     ]
 
     def mock_communicate():
@@ -121,11 +124,11 @@ def test_main(mock_subprocess, mock_geteuid):
     main()
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
-        call(['zypper', 'ref', '-s'], env=ANY),
+        call(['zypper', 'ref', '-s'], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], env=ANY),
+        ], stdout=-1, stderr=-1, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
@@ -136,6 +139,10 @@ def test_main(mock_subprocess, mock_geteuid):
         ),
         call(
             ['systemctl', 'restart', 'some_service2'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -161,17 +168,21 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
     main()
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
-        call(['zypper', 'ref', '-s'], env=ANY),
+        call(['zypper', 'ref', '-s'], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], env=ANY),
+        ], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], env=ANY),
+        ], stdout=-1, stderr=-1, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -184,6 +195,7 @@ def test_update_zypper_is_fine_but_created_needreboot(
 ):
 
     mock_process = Mock()
+    mock_process.communicate.return_value = (b'stdout', b'stderr')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     mock_is_file.return_value = True
@@ -214,7 +226,7 @@ def test_run_zypper_command(mock_subprocess):
 @patch('subprocess.Popen')
 def test_run_zypper_command_failure(mock_subprocess):
     mock_process = Mock()
-    mock_process.communicate.return_value = (None, None)
+    mock_process.communicate.return_value = (b'', b'')
     mock_process.returncode = 1
     mock_subprocess.return_value = mock_process
     exception = False
@@ -229,7 +241,7 @@ def test_run_zypper_command_failure(mock_subprocess):
 @patch('subprocess.Popen')
 def test_run_zypper_command_creates_file_on_102(mock_subprocess):
     mock_process = Mock()
-    mock_process.communicate.return_value = (None, None)
+    mock_process.communicate.return_value = (b'', b'')
     mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
     mock_subprocess.return_value = mock_process
     exception = False
@@ -313,3 +325,137 @@ def test_annotate(mock_subprocess):
     assert annotate('node', 'my-node-1',
                     'caasp.suse.com/has-disruptive-updates',
                     'yes') == 'node/my-node-1 annotated'
+
+
+@patch('subprocess.Popen')
+def test_annotate_resources_empty(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'<root></root>', b'')
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    annotate_resources()
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
+
+
+@patch('subprocess.Popen')
+def test_annotate_resources(mock_subprocess):
+    return_values = [
+        (b'<stream><update-status><update-list><update interactive="message">'
+         b'</update></update-list></update-status></stream>', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+
+    exception = False
+    try:
+        annotate_resources()
+    except json.decoder.JSONDecodeError:
+        exception = True
+
+    assert exception
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['KUBECONFIG=/etc/kubernetes/kubelet.conf',
+             'kubectl', 'get', 'nodes', '-o', 'json'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
+
+
+@patch('subprocess.Popen')
+def test_annotate_resources_bad_xml(mock_subprocess):
+    return_values = [
+        (b'<update-status><update-list><update interactive="message">'
+         b'</update></update-list></update-status>', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+
+    annotate_resources()
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
+
+
+@patch('subprocess.Popen')
+def test_annotate_resources_no_interruptive(mock_subprocess):
+    return_values = [
+        (b'<stream><update-status><update-list><update interactive="false">'
+         b'</update></update-list></update-status></stream>', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+
+    annotate_resources()
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
+
+
+@patch('subprocess.Popen')
+def test_annotate_resources_is_reboot(mock_subprocess):
+    return_values = [
+        (b'<stream><update-status><update-list><update interactive="reboot">'
+         b'</update></update-list></update-status></stream>', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+
+    annotate_resources()
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
