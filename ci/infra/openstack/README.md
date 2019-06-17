@@ -43,7 +43,7 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 
 `image_name` - Name of the image to use 
 `internal_net` - Name of the internal network to be created  
-`stack_name` - A prefix that all of the booted machines will use  
+`stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project  
 `authorized_keys` - A list of ssh public keys that will be installed on all nodes  
 `repositories` - Additional repositories that will be added on all nodes  
 `packages` - Additional packages that will be installed on all nodes  
