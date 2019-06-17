@@ -4,13 +4,10 @@ workspace: "" # The top folder where skuba is stored
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: ""  # Fill your username
 nodeuser: "sles"  # Default node username
+mirror: "ibs-mirror.prv.suse.net"
 
 openstack:
   openrc: "" #os.getenv("OPENRC")
-
-jenkins:  # Used for Jenkins
-  build_number: 0 # os.getenv("BUILD_NUMBER")
-  job_name: null # os.getenv("JOB_NAME")
 
 # node settings
 lb:

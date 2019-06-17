@@ -21,11 +21,11 @@ class BaseConfig:
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
+        obj.mirror = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
-        obj.jenkins = BaseConfig.Jenkins()
         obj.skuba = BaseConfig.Skuba()
 
         obj.lb = BaseConfig.NodeConfig()
@@ -35,7 +35,6 @@ class BaseConfig:
 
         config_classes = (
             BaseConfig.NodeConfig,
-            BaseConfig.Jenkins,
             BaseConfig.Test,
             BaseConfig.Openstack,
             BaseConfig.Terraform,
@@ -61,13 +60,6 @@ class BaseConfig:
             self.ips = []
             self.external_ips = []
 
-    class Jenkins:
-        def __init__(self):
-            super().__init__()
-            self.job_name = None
-            self.build_number = None
-            self.run_name = None
-
     class Openstack:
         def __init__(self):
             super().__init__()
@@ -76,6 +68,8 @@ class BaseConfig:
     class Terraform:
         def __init__(self):
             super().__init__()
+            self.internal_net = None
+            self.stack_name = None
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE 
             self.plugin_dir = None
@@ -121,34 +115,26 @@ class BaseConfig:
     @staticmethod
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
+            if isinstance(value, config_classes):
+                # Check that the key is in vars and has at some sub-keys defined 
+                if key in vars and vars[key]:
+                    key_vars = vars[key]
+                else:
+                    key_vars = {}
 
-            # FIXME: If key is the yaml file and is a config class, but has no subelements 
-            # the logic fails. This happens if we comment all values under the key, for example:
-            # key:
-            # # subkey: value  #commented!
-            #  
-            if key in vars and isinstance(value, config_classes):
-                BaseConfig.inject_attrs_from_yaml(value, vars[key], config_classes)
+                BaseConfig.inject_attrs_from_yaml(value, key_vars, config_classes)
                 continue
-
-            new_key = key.upper()
-            new_value = None
 
             # FIXME: the env variables must be looked as CLASS_KEY to prevent name collitions
             # with well known variables (e.g. PATH) or between classes
-            if os.getenv(new_key):
-                new_value = os.getenv(new_key)
+            env_key = key.upper()
+            env_value = os.getenv(env_key)
 
-            # if env variable does not exist, store
-            if not new_value and key in vars:
-                obj.__dict__[key] = vars[key]
-
-            # if username env variable exist but do not update username
-            if new_value:
-                obj.__dict__[key] = new_value
-
-            # username should get from xml config file
-            if key == "username":
+            # if env variable exist but is not 'username' use env_value
+            # username must get from config file
+            if env_value and env_key != "USERNAME":
+                obj.__dict__[key] = env_value
+            elif key in vars:
                 obj.__dict__[key] = vars[key]
 
         return obj
@@ -168,9 +154,13 @@ class BaseConfig:
 
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
-        if not conf.jenkins.job_name:
-            conf.jenkins.job_name = conf.username
-        conf.jenkins.run_name = "{}-{}".format(conf.jenkins.job_name, str(conf.jenkins.build_number))
+        if not conf.terraform.stack_name:
+            conf.terraform.stack_name = conf.username
+
+        # TODO: This variable should be in openstack configuration but due to
+        # the way variables are processed in Terraform class, must be here for know.
+        if not conf.terraform.internal_net:
+            conf.terraform.internal_net = conf.terraform.stack_name
 
         #TODO: add the path to shared ssh credentials as a configuration parameter
         if conf.ssh_key_option == "id_shared":
@@ -185,6 +175,9 @@ class BaseConfig:
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
                                            "before using testrunner (skuba/ci/infra/testrunner/vars)"))
+        if not conf.terraform.stack_name:
+            raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
+
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
             raise ValueError(Format.alert("workspace should not be your home directory"))
 

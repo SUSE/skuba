@@ -133,13 +133,11 @@ class Terraform:
             lines = f.readlines()
 
         for i, line in enumerate(lines):
-            # TODO: internal_net and stack_name are openstack variables
-            #       should move to the Openstack class
             if line.startswith("internal_net"):
-                lines[i] = 'internal_net = "{}"'.format(self.conf.jenkins.run_name)
+                lines[i] = 'internal_net = "{}"'.format(self.conf.terraform.internal_net)
 
             elif line.startswith("stack_name"):
-                lines[i] = 'stack_name = "{}"'.format(self.conf.jenkins.run_name)
+                lines[i] = 'stack_name = "{}"'.format(self.conf.terraform.stack_name)
 
             elif line.startswith("username"):
                 lines[i] = 'username = "{}"'.format(self.conf.nodeuser)
@@ -153,17 +151,17 @@ class Terraform:
             elif line.startswith("authorized_keys"):
                 lines[i] = 'authorized_keys = [ "{}" ,'.format(self.utils.authorized_keys())
 
-            # Switch to US mirror if running on CI
-            elif "download.suse.de" in line and os.environ.get('JENKINS_URL'):
-                lines[i] = line.replace('download.suse.de', 'ibs-mirror.prv.suse.net')
+            # Switch to mirrors  
+            elif "download.suse.de" in line and self.conf.mirror:
+                lines[i] = line.replace('download.suse.de', self.conf.mirror)
 
         with open(tfvars_final, "w") as f:
             f.writelines(lines)
 
     def _generate_tfvars_from_json(self, tfvars_template, tfvars_final):
         new_vars = {
-            "internal_net": self.conf.jenkins.run_name,
-            "stack_name": self.conf.jenkins.run_name,
+            "internal_net": self.conf.terraform.internal_net,
+            "stack_name": self.conf.terraform.stack_name,
             "username": self.conf.nodeuser,
             "masters": self.conf.master.count,
             "workers": self.conf.worker.count,
@@ -182,9 +180,10 @@ class Terraform:
                 else:
                     tfvars[k] = v
 
-        if os.environ.get("JENKINS_URL") and repos is not None:
+        # Switch to mirrors  
+        if self.conf.mirror and repos is not None:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", "ibs-mirror.prv.suse.net")
+                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.mirror)
 
         with open(tfvars_final, "w") as f:
             json.dump(tfvars, f)

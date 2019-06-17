@@ -7,6 +7,7 @@ pipeline {
 
    environment {
         OPENRC = credentials('ecp-openrc')
+        STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
         GITHUB_TOKEN = credentials('github-token')
         ENV_FILE = credentials('vmware-env')
    }

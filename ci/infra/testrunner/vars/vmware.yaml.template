@@ -4,14 +4,11 @@ workspace: "~/go/src/github.com/" # The top folder where skuba is stored
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: "USERNAME"  # Fill your username
 nodeuser: "sles"  # Default node username
+mirror: ""       # mirror for dowloading packages
 
 vmware:
   env_file: "PATH TO YOUR VMware env file" #os.getenv("ENV_FILE")
   template_name: "SLES15-SP1-cloud-init" #os.getenv("TEMPLATE_NAME")
-
-jenkins:  # Used for Jenkins
-  build_number: 0 # os.getenv("BUILD_NUMBER")
-  job_name: null # os.getenv("JOB_NAME")
 
 # node settings
 master:

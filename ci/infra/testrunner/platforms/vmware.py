@@ -25,6 +25,6 @@ class VMware(Terraform):
     @timeout(600)
     def _cleanup_platform(self):
         cmd = (f"source {self.conf.vmware.env_file}; "
-               f"terraform destroy -auto-approve -var stack_name={self.conf.jenkins.run_name}")
+               f"terraform destroy -auto-approve -var stack_name={self.conf.terraform.stack_name}")
 
         self._runshellcommandterraform(cmd)
