@@ -30,6 +30,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GetCurrentClusterVersion returns the current cluster version
+func GetCurrentClusterVersion() (string, error) {
+	initcfg := &kubeadmapi.InitConfiguration{}
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return "", errors.Wrap(err, "error getting client set")
+	}
+	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "could not retrieve the kubeadm-config ConfigMap")
+	}
+	// gets ClusterConfiguration from kubeadm-config
+	clusterConfigurationData, ok := kubeadmConfig.Data[kubeadmconstants.ClusterConfigurationConfigMapKey]
+	if !ok {
+		return "", errors.Errorf("unexpected error when reading kubeadm-config ConfigMap: %s key value pair missing", kubeadmconstants.ClusterConfigurationConfigMapKey)
+	}
+	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), []byte(clusterConfigurationData), &initcfg.ClusterConfiguration); err != nil {
+		return "", errors.Wrap(err, "failed to decode cluster configuration data")
+	}
+
+	return initcfg.ClusterConfiguration.KubernetesVersion, nil
+}
+
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
 func GetAPIEndpointsFromConfigMap() ([]string, error) {
 	apiEndpoints := []string{}
