@@ -58,7 +58,7 @@ BuildRequires:  python3-setuptools
 BuildRequires:  pkgconfig(systemd)
 %{?systemd_requires}
 Requires:       python3-setuptools
-Requires:       zypper >= 1.14
+Requires:       zypper >= 1.14.15
 Requires:       lsof
 BuildArch:      noarch
 Supplements:    skuba

@@ -27,7 +27,9 @@ from xml.etree import ElementTree
 # Since zypper 1.14.0, it will automatically create a /var/run/reboot-required
 # text file whenever one of the applied patches requires the system to be
 # rebooted. This will be used later on by kured.
-REQUIRED_ZYPPER_VERSION = (1, 14, 0)
+# Since zypper 1.14.15, there is a subcommand to check if a reboot is needed
+# `zypper needs-rebooting`
+REQUIRED_ZYPPER_VERSION = (1, 14, 15)
 
 # The path where zypper might write if it has detected that a patch/update that
 # has been installed requires the machine to reboot in order to work properly.
@@ -120,13 +122,14 @@ def is_restart_needed(code):
     return code == ZYPPER_EXIT_INF_RESTART_NEEDED
 
 
-def is_reboot_needed(code):
+def is_reboot_needed():
     """
-    Returns true of the given code is defined by zypper to mean that reboot is
-    needed.
+    Returns true if reboot is needed.
     """
 
-    return code == ZYPPER_EXIT_INF_REBOOT_NEEDED
+    run_zypper_command(
+        ['zypper', 'needs-rebooting']
+    ) == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
 def interruptive_updates_available():
@@ -199,9 +202,8 @@ def run_zypper_patch():
     # REBOOT_REQUIRED_PATH file:
     #
     # 1. Zypper returned an exit code telling us to restart the system.
-    # 2. Zypper created the ZYPPER_REBOOT_NEEDED_PATH file regardless of the
-    #    final exit code.
-    if is_reboot_needed(code) or Path(ZYPPER_REBOOT_NEEDED_PATH).is_file():
+    # 2. `zypper needs-rebooting` returns ZYPPER_EXIT_INF_REBOOT_NEEDED.
+    if code == ZYPPER_EXIT_INF_REBOOT_NEEDED or is_reboot_needed():
         Path(REBOOT_REQUIRED_PATH).touch()
     return code
 
