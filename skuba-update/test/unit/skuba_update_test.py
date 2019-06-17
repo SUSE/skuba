@@ -346,7 +346,7 @@ def test_annotate_resources_empty(mock_subprocess):
     ]
 
 
-@patch("builtins.open", read_data="data")
+@patch("builtins.open", read_data="aa59dc0c5fe84247a77c26780dd0b3fd")
 @patch('subprocess.Popen')
 def test_annotate_resources(mock_subprocess, mock_open):
     return_values = [

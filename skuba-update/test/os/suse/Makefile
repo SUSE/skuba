@@ -1,6 +1,5 @@
 PWD := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
-OPENSUSE_LEAP_IMAGE = registry.opensuse.org/opensuse/leap:latest
 OPENSUSE_TUMBLEWEED_IMAGE = registry.opensuse.org/opensuse/tumbleweed:latest
 SLE_15_IMAGE = registry.suse.de/suse/sle-15-sp1/update/cr/images/suse/sle15:15.1
 BUILDER_IMAGE = opensuse/tumbleweed:build-rpm
@@ -9,15 +8,11 @@ BUILDER_IMAGE = opensuse/tumbleweed:build-rpm
 test: test-opensuse test-sle
 
 .PHONY: test-opensuse
-test-opensuse: test-opensuse-tumbleweed test-opensuse-leap
+test-opensuse: test-opensuse-tumbleweed
 
 .PHONY: test-opensuse-tumbleweed
 test-opensuse-tumbleweed: repos
 	$(PWD)/run_tests.sh $(OPENSUSE_TUMBLEWEED_IMAGE)
-
-.PHONY: test-opensuse-leap
-test-opensuse-leap: repos
-	$(PWD)/run_tests.sh $(OPENSUSE_LEAP_IMAGE)
 
 .PHONY: test-sle
 test-sle: test-sle-15
