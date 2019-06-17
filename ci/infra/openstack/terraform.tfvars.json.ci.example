@@ -8,11 +8,6 @@
     "subnet_cidr": "172.28.0.0/24",
     "dnsdomain": "testing.qa.caasp.suse.net",
     "dnsentry": 0,
-    "dns_nameservers": [
-        "172.28.0.2",
-        "8.8.8.8",
-        "8.8.8.4"
-    ],
     "masters": 1,
     "master_size": "m1.medium",
     "workers": 2,

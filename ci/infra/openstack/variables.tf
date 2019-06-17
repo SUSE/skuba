@@ -29,12 +29,6 @@ variable "subnet_cidr" {
   description = "CIDR of the subnet for the internal network"
 }
 
-variable "dns_nameservers" {
-  type        = "list"
-  default     = []
-  description = "DNS servers for the nodes"
-}
-
 variable "external_net" {
   default     = ""
   description = "Name of the external network to be used, the one used to allocate floating IPs"

@@ -31,14 +31,6 @@ stack_name = "my-caasp-cluster"
 # subnet_cidr = "172.28.0.0/24"
 subnet_cidr = ""
 
-# DNS servers for the nodes
-# EXAMPLE:
-# "dns_nameservers" = [
-#     "172.28.0.2",
-#     "8.8.8.8"
-# ]
-"dns_nameservers" = []
-
 # Number of master nodes
 masters = 1
 
