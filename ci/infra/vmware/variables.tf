@@ -1,5 +1,4 @@
 variable "template_name" {}
-variable "firmware" {}
 variable "stack_name" {}
 variable "vsphere_datastore" {}
 variable "vsphere_datacenter" {}
@@ -9,7 +8,17 @@ variable "vsphere_resource_pool" {}
 variable "authorized_keys" {
   type        = "list"
   default     = []
-  description = "ssh keys to inject into all the nodes"
+  description = "SSH keys to inject into all the nodes"
+}
+
+variable "caasp_registry_code" {
+  default     = ""
+  description = "SUSE CaaSP Product Registration Code"
+}
+
+variable "firmware" {
+  default     = "bios"
+  description = "Firmware interface to use"
 }
 
 variable "guest_id" {
@@ -20,19 +29,24 @@ variable "guest_id" {
 variable "ntp_servers" {
   type        = "list"
   default     = []
-  description = "list of ntp servers to configure"
+  description = "List of ntp servers to configure"
 }
 
 variable "packages" {
   type        = "list"
   default     = []
-  description = "list of additional packages to install"
+  description = "List of additional packages to install"
 }
 
 variable "repositories" {
   type        = "map"
   default     = {}
-  description = "Urls of the repositories to mount via cloud-init"
+  description = "URLs of the repositories to mount via cloud-init"
+}
+
+variable "rmt_server_name" {
+  default     = ""
+  description = "SUSE Repository Mirroring Server Name"
 }
 
 variable "username" {
@@ -68,16 +82,6 @@ variable "master_cpus" {
 variable "master_memory" {
   default     = 8192
   description = "Amount of memory used on master node"
-}
-
-variable "caasp_registry_code" {
-  default     = ""
-  description = "SUSE CaaSP Product Registration Code"
-}
-
-variable "rmt_server_name" {
-  default     = ""
-  description = "SUSE Repository Mirroring Server Name"
 }
 
 #### To be moved to separate vsphere.tf? ####
