@@ -97,7 +97,7 @@ func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet.StringVarP(&t.user, "user", "u", "root", "User identity used to connect to target")
 	flagSet.BoolVarP(&t.sudo, "sudo", "s", false, "Run remote command via sudo")
 	flagSet.IntVarP(&t.port, "port", "p", 22, "Port to connect to using SSH")
-	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH")
+	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH (required)")
 
 	cobra.MarkFlagRequired(flagSet, "target")
 

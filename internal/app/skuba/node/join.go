@@ -53,7 +53,7 @@ func NewJoinCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(target.GetFlags())
-	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker)")
+	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker) (required)")
 	cmd.Flags().StringVar(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
 
 	cmd.MarkFlagRequired("role")
