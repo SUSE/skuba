@@ -346,8 +346,9 @@ def test_annotate_resources_empty(mock_subprocess):
     ]
 
 
+@patch("builtins.open", read_data="data")
 @patch('subprocess.Popen')
-def test_annotate_resources(mock_subprocess):
+def test_annotate_resources(mock_subprocess, mock_open):
     return_values = [
         (b'<stream><update-status><update-list><update interactive="message">'
          b'</update></update-list></update-status></stream>', b'')
@@ -370,6 +371,7 @@ def test_annotate_resources(mock_subprocess):
     except json.decoder.JSONDecodeError:
         exception = True
 
+    mock_open.assert_called_with('/etc/machine-id')
     assert exception
     assert mock_subprocess.call_args_list == [
         call(
