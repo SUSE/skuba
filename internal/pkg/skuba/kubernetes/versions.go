@@ -19,6 +19,9 @@ package kubernetes
 
 import (
 	"log"
+	"sort"
+
+	"k8s.io/apimachinery/pkg/util/version"
 )
 
 type Addon string
@@ -56,12 +59,14 @@ type KubernetesVersion struct {
 	AddonsVersion                 AddonsVersion
 }
 
+type KubernetesVersions map[string]KubernetesVersion
+
 const (
 	CurrentVersion = "v1.14.1"
 )
 
 var (
-	Versions = map[string]KubernetesVersion{
+	Versions = KubernetesVersions{
 		"v1.14.1": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				EtcdVersion:    "3.3.11",
@@ -106,4 +111,20 @@ func CurrentAddonVersion(addon Addon) string {
 	}
 	log.Fatalf("unknown addon %q", addon)
 	panic("unreachable")
+}
+
+func availableVersionsForMap(versions KubernetesVersions) []*version.Version {
+	rawVersions := make([]*version.Version, 0, len(versions))
+	for rawVersion := range versions {
+		rawVersions = append(rawVersions, version.MustParseSemantic(rawVersion))
+	}
+	sort.SliceStable(rawVersions, func(i, j int) bool {
+		return rawVersions[i].LessThan(rawVersions[j])
+	})
+	return rawVersions
+}
+
+// AvailableVersions return the list of platform versions known to skuba
+func AvailableVersions() []*version.Version {
+	return availableVersionsForMap(Versions)
 }
