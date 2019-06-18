@@ -28,8 +28,11 @@ add_package_to_need_reboot "caasp-test"
 add_repository "$UPDATE_REPO"
 zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
 check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "---"
+check_list_patches_interactivity "false"
 zypper_patch "$UPDATE_REPO"
 
 check_test_package_version "2"
 check_reboot_needed_present
 check_reboot_required_present
+
+check_no_kubectl_calls

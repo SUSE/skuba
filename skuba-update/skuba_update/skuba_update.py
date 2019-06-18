@@ -208,11 +208,16 @@ def run_zypper_patch():
     return code
 
 
-def run_command(command):
+def run_command(command, added_env={}):
     """
     Runs the given command and it returns a named tuple containing: 'output',
-    'error' and 'returncode'.
+    'error' and 'returncode'. It also accepts a dictionary `added_env`, which
+    will be added to the environment for the given command.
     """
+
+    env = os.environ.copy()
+    if len(added_env) > 0:
+        env.update(added_env)
 
     command_type = namedtuple(
         'command', ['output', 'error', 'returncode']
@@ -222,7 +227,7 @@ def run_command(command):
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env=os.environ
+        env=env
     )
     output, error = process.communicate()
     if not error:
@@ -270,10 +275,10 @@ def node_name_from_machine_id():
     with open('/etc/machine-id') as machine_id_file:
         machine_id = machine_id_file.read().strip()
 
-    nodes_raw_json = run_command([
-        'KUBECONFIG={}'.format(KUBECONFIG_PATH),
-        'kubectl', 'get', 'nodes', '-o', 'json'
-    ])
+    nodes_raw_json = run_command(
+        ['kubectl', 'get', 'nodes', '-o', 'json'],
+        {'KUBECONFIG': KUBECONFIG_PATH}
+    )
 
     formatted = json.loads(nodes_raw_json.output)
 
@@ -293,10 +298,10 @@ def annotate(resource, resource_name, key, value):
     """
 
     ret = run_command([
-        'KUBECONFIG={}'.format(KUBECONFIG_PATH),
         'kubectl', 'annotate', resource, resource_name,
-        '{}={}'.format(key, value)
-    ])
+        '{}={}'.format(key, value)],
+        {'KUBECONFIG': KUBECONFIG_PATH}
+    )
 
     return ret.output
 

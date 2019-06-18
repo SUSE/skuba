@@ -26,8 +26,11 @@ check_test_package_version "1"
 add_repository "$UPDATE_REPO"
 zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
 check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "---"
+check_list_patches_interactivity "false"
 zypper_patch "$UPDATE_REPO"
 
 check_test_package_version "2"
 check_reboot_needed_absent
 check_reboot_required_absent
+
+check_no_kubectl_calls
