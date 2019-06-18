@@ -1,10 +1,10 @@
 - job-template:
-    name: '{name}-update-integration'
+    name: '{name}-update-acceptance'
     project-type: multibranch
     periodic-folder-trigger: 5m
     number-to-keep: 30
     days-to-keep: 30
-    script-path: ci/jenkins/pipelines/prs/skuba-update-integration.Jenkinsfile
+    script-path: ci/jenkins/pipelines/prs/skuba-update-acceptance.Jenkinsfile
     wrappers:
       - timeout:
           timeout: 120

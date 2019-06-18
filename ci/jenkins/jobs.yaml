@@ -7,7 +7,7 @@
     jobs:
         - '{name}-test'
         - '{name}-update-unit'
-        - '{name}-update-integration'
+        - '{name}-update-acceptance'
         - '{name}-code-lint'
         - '{name}-code-author'
         - '{name}-handle-pr'
