@@ -413,10 +413,14 @@ spec:
             readOnly: true
           - name: cilium-etcd-secret-mount
             mountPath: /tmp/cilium-etcd
+          - name: lib-modules
+            mountPath: /lib/modules
+            readOnly: true
         securityContext:
           capabilities:
             add:
               - "NET_ADMIN"
+              - "SYS_MODULE"
           privileged: true
       hostNetwork: true
       volumes:
@@ -436,7 +440,11 @@ spec:
           # To install cilium cni configuration in the host
         - name: host-cni-conf
           hostPath:
-              path: /etc/cni/net.d
+            path: /etc/cni/net.d
+          # To be able to load kernel modules
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
           # To read the etcd config stored in config maps
         - name: etcd-config-path
           configMap:
