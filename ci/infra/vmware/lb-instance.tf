@@ -13,6 +13,11 @@ variable "lb_memory" {
   description = "Amount of memory used on load-balancer node"
 }
 
+variable "lb_disk_size" {
+  default     = 40
+  description = "Size of the root disk in GB on load-balancer node"
+}
+
 variable "lb_repositories" {
   type = "map"
 
@@ -90,7 +95,7 @@ resource "vsphere_virtual_machine" "lb" {
   disk {
     label        = "disk0"
     datastore_id = "${data.vsphere_datastore.datastore.id}"
-    size         = "${data.vsphere_virtual_machine.template.disks.0.size}"
+    size         = "${var.lb_disk_size}"
   }
 
   extra_config {
