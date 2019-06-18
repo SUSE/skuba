@@ -72,9 +72,8 @@ resource "vsphere_virtual_machine" "worker" {
   }
 
   disk {
-    label        = "disk0"
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
-    size         = "${var.worker_disk_size}"
+    label = "disk0"
+    size  = "${var.worker_disk_size}"
   }
 
   extra_config {

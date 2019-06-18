@@ -93,9 +93,8 @@ resource "vsphere_virtual_machine" "lb" {
   }
 
   disk {
-    label        = "disk0"
-    datastore_id = "${data.vsphere_datastore.datastore.id}"
-    size         = "${var.lb_disk_size}"
+    label = "disk0"
+    size  = "${var.lb_disk_size}"
   }
 
   extra_config {
