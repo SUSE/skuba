@@ -6,9 +6,6 @@ locale: en_US.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# Set FQDN
-fqdn: ${fqdn}
-
 # set root password
 chpasswd:
   list: |
@@ -19,8 +16,13 @@ chpasswd:
 ssh_authorized_keys:
 ${authorized_keys}
 
-bootcmd:
-  - ip link set dev eth0 mtu 1400
+ntp:
+  enabled: true
+  ntp_client: chrony
+  config:
+    confpath: /etc/chrony.conf
+  servers:
+${ntp_servers}
 
 # need to disable gpg checks because the cloud image has an untrusted repo
 zypper:
@@ -31,23 +33,24 @@ ${repositories}
     solver.onlyRequires: "true"
     download.use_deltarpm: "true"
 
+# need to remove the standard docker packages that are pre-installed on the
+# cloud image because they conflict with the kubic- ones that are pulled by
+# the kubernetes packages
 packages:
   - haproxy
 
 write_files:
 - path: /etc/haproxy/haproxy.cfg
   content: |
-    # Used high values so "kubectl exec" or "kubectl logs -f"
-    # do not exit due to inactivity in the connection
     defaults
       timeout connect 10s
       timeout client 86400s
       timeout server 86400s
 
-    # NAT access: ssh -L 9000:10.17.1.0:9000 $VM_HOST
     listen stats
       bind    *:9000
       mode    http
+      stats   hide-version
       stats   uri       /stats
 
     frontend apiserver
@@ -63,5 +66,18 @@ runcmd:
   # start another service by either `enable --now` or `start` will create a
   # deadlock. Instead, we have to use the `--no-block-` flag.
   - [ systemctl, enable, --now, --no-block, haproxy ]
+  - [ systemctl, disable, --now, --no-block, firewalld ]
+  # The template machine should have been cleaned up, so no machine-id exists
+  - [ dbus-uuidgen, --ensure ]
+  - [ systemd-machine-id-setup ]
+  # With a new machine-id generated the journald daemon will work and can be restarted
+  # Without a new machine-id it should be in a failed state
+  - [ systemctl, restart, systemd-journald ]
+
+bootcmd:
+  - ip link set dev eth0 mtu 1400
+  # Hostnames from DHCP - otherwise localhost will be used
+  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"no\"#DHCLIENT_SET_HOSTNAME=\"yes\"#" /etc/sysconfig/network/dhcp
+  - netconfig update -f
 
 final_message: "The system is finally up, after $UPTIME seconds"
