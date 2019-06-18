@@ -40,6 +40,10 @@ check_patch_type_interactivity() {
     [ "$(zypper_show_patch "$1" "$2" | grep -Poh '(?<=Interactive : )([^\s]+)')" == "$3" ]
 }
 
+check_list_patches_interactivity() {
+    [ "$(zypper --non-interactive --xmlout list-patches | grep -Poh '(?<=interactive\=\")([a-zA-Z0-9]+)')" == "$1" ]
+}
+
 zypper_patch() {
     if [ "$SKUBA" = "1" ]; then
         skuba-update
@@ -85,5 +89,29 @@ check_reboot_needed_absent() {
 check_reboot_required_absent() {
     if [ "$SKUBA" = "1" ]; then
         [ ! -f /var/run/reboot-required ]
+    fi
+}
+
+force_machine_id_file() {
+    [ -w "/etc/machine-id" ] || echo "49f8e2911a1449b7b5ef2bf92282909a" >> /etc/machine-id
+}
+
+install_fixtures() {
+    cp /suse/fixtures/fake_kubectl.sh /usr/bin/kubectl
+    chmod +x /usr/bin/kubectl
+}
+
+check_kubectl_calls() {
+    if [ "$SKUBA" = "1" ]; then
+        for i in "$@"; do
+            echo "$i" >> /commands.txt
+        done
+        diff -w /commands.txt /tmp/kubectl-commands &> /dev/null
+    fi
+}
+
+check_no_kubectl_calls() {
+    if [ "$SKUBA" = "1" ]; then
+        [ ! -f /tmp/kubectl-commands ]
     fi
 }

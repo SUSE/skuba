@@ -18,6 +18,9 @@ source "$(dirname "$0")/../suse.sh"
 
 UPDATE_REPO="update-with-message"
 
+force_machine_id_file
+install_fixtures
+
 add_repository "base"
 install_package "base" "caasp-test"
 
@@ -28,8 +31,12 @@ add_package_to_need_reboot "caasp-test"
 add_repository "$UPDATE_REPO"
 zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
 check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "message"
+check_list_patches_interactivity "true"
 zypper_patch "$UPDATE_REPO"
 
 check_test_package_version "1"
 check_reboot_needed_absent
 check_reboot_required_absent
+
+check_kubectl_calls "kubectl get nodes -o json" \
+                    "kubectl annotate nodes my-node-1 caasp.suse.com/has-disruptive-updates=yes"

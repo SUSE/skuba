@@ -27,6 +27,7 @@ add_repository "$UPDATE_REPO"
 set +e
 zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
 check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "reboot"
+check_list_patches_interactivity "reboot"
 zypper_patch "$UPDATE_REPO"
 zypper_retval=$?
 set -e
@@ -36,3 +37,5 @@ check_return_code $zypper_retval 102 "ZYPPER_EXIT_INF_REBOOT_NEEDED"
 check_test_package_version "2"
 check_reboot_needed_absent
 check_reboot_required_present
+
+check_no_kubectl_calls
