@@ -138,7 +138,7 @@ class Skuba:
     @step
     def gather_logs(self):
         logging_errors = []
-        log_dir_path = os.path.join(self.conf.workspace, 'testrunner_logs')
+        log_dir_path = os.path.join(self.conf.workspace, f'testrunner_{self.conf.platform}_logs')
 
         if not os.path.isdir(log_dir_path):
             os.mkdir(log_dir_path)

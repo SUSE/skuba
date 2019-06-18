@@ -158,7 +158,7 @@ kube-system   kube-scheduler-my-master-0            1/1       Running   0       
 ```
 
 ### Collected Logs
-All collected logs are stored at `path/to/workspace/testrunner_logs/`
+All collected logs are stored at `path/to/workspace/testrunner_${PLATFORM}_logs/`
 
 Logs that are currently being collected are the cloud-init logs for each of the nodes:
 
@@ -166,4 +166,4 @@ Logs that are currently being collected are the cloud-init logs for each of the 
     /var/log/cloud-init-output.log
     /var/log/cloud-init.log
 
-These are stored each in their own folder named `path/to/workspace/testrunner_logs/{master|worker}_ip_address/`
+These are stored each in their own folder named `path/to/workspace/testrunner_${PLATFORM}_logs/{master|worker}_ip_address/`
