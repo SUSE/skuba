@@ -47,8 +47,18 @@ class Terraform:
             raise Exception(Format.alert("Failure(s) during cleanup"))
 
     @step
-    def apply_terraform(self):
+    def apply_terraform(self, num_master=-1, num_worker=-1):
         """ Create and apply terraform plan"""
+        if num_master > -1 or num_worker > -1:
+            print("Overriding number of nodes")
+            if num_master > -1:
+                self.conf.master.count = num_master
+                print("   Masters:{} ".format(num_master));
+
+            if num_worker > -1:
+                self.conf.worker.count = num_worker
+                print("   Workers:{} ".format(num_worker));
+
         print("Init terraform")
         self._check_tf_deployed()
         

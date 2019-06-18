@@ -29,7 +29,9 @@ def main():
                           help="cleanup created skuba environment")
     parser.add_argument("-t", "--terraform-apply", dest="apply_terraform", action="store_true",
                         help="deploy nodes for cluster in your configured platform \
-                              e.g) openstack, vmware, ..")
+                              e.g) openstack, vmware. \
+                              The number of master/workers can be specified with the --master \
+                              and --worker parameters")
     parser.add_argument("-c", "--create-skuba", dest="create_skuba", action="store_true",
                         help="create skuba environment {workspace}/go/src/github.com/SUSE/skuba\
                               and build skuba in that directory")
@@ -64,7 +66,7 @@ def main():
         Platform.get_platform(conf).cleanup()
         Skuba.cleanup(conf)
     elif options.apply_terraform:
-        Platform.get_platform(conf).apply_terraform()
+        Platform.get_platform(conf).apply_terraform(num_master=options.num_master, num_worker=options.num_worker)
     elif options.create_skuba:
         Skuba.build(conf)
     elif options.boostrap:

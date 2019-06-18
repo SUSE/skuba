@@ -73,7 +73,8 @@ optional arguments:
   -x, --cleanup         cleanup created skuba environment
   -t, --terraform-apply
                         deploy nodes for cluster in your configured platform
-                        e.g) openstack, vmware, ..
+                        e.g) openstack, vmware. The number of master/workers
+                        can be specified with the --master --worker parameters
   -c, --create-skuba
                         create skuba environment
                         {workspace}/go/src/github.com/SUSE/skuba and build
