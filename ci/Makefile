@@ -53,7 +53,7 @@ test_jenkins_jobs:
 
 .PHONY: update_jenkins_jobs
 update_jenkins_jobs:
-	jenkins-jobs  --ignore-cache --conf ${JENKINS_JOB_CONFIG} update ${JENKINS_JOBS_DIR}/:${JENKINS_JOBS_DIR}/templates/
+	jenkins-jobs  --ignore-cache --conf ${JENKINS_JOB_CONFIG} update --delete-old ${JENKINS_JOBS_DIR}/:${JENKINS_JOBS_DIR}/templates/
 
 # Stages
 .PHONY: pre_deployment
