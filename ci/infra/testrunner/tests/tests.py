@@ -58,7 +58,10 @@ class Tests:
             self._num_master += 1
 
     @step
-    def add_nodes_in_cluster(self, num_master=1, num_worker=1):
+    def add_nodes_in_cluster(self, num_master=-1, num_worker=-1):
+
+        if num_master < 1 and num_worker < 1:
+            raise ValueError("A positive number of either masters or workers must be specified")
 
         for _ in range(num_worker):
             self.add_worker_in_cluster()
@@ -68,7 +71,10 @@ class Tests:
         self.skuba.cluster_status()
 
     @step
-    def remove_nodes_in_cluster(self, num_master=0, num_worker=1):
+    def remove_nodes_in_cluster(self, num_master=-1, num_worker=-1):
+
+        if num_master < 1 and num_worker < 1:
+            raise ValueError("A positive number of either masters or workers must be specified")
 
         for _ in range(num_worker):
             self.remove_worker_in_cluster()

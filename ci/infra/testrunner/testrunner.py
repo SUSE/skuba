@@ -38,22 +38,22 @@ def main():
     parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
                         help="check K8s cluster status")
     parser.add_argument("-a", "--add-nodes", dest="add_nodes", action="store_true",
-                        help="add nodes in k8s cluster. Default values are -m=1, -w=1")
+                        help="add nodes in k8s cluster. \
+                              Requires specifying --master and/or --worker options")
     parser.add_argument("-r", "--remove-nodes", dest="remove_nodes", action="store_true",
-                        help="remove nodes in k8s cluster. default values are -m=1, -w=1")
+                        help="remove nodes in k8s cluster. \
+                              Requires specifying --master and/or --worker options")
     parser.add_argument("-l", "--log", dest="log", action="store_true", help="gather logs from nodes")
     parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
                         help='path for platform yaml file. \
                               Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner. \
                               eg) -v vars/myconfig.yaml')
-    parser.add_argument("-m", "--master", dest="num_master", type=int, default=1,
-                        help='number of masters to add or delete. It is dependening on \
-                              number of deployed master nodes in your yaml file. Default value is 1. \
-                              eg) -m 2')
-    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=1,
-                        help='number of workers to add or delete. It is dependening on \
-                              number of deployed worker nodes in your yaml file. Default value is 1  \
-                              eg) -w 2')
+    parser.add_argument("-m", "--master", dest="num_master", type=int, default=-1,
+                        help='number of masters to deployed, add or delete. \
+                              eg: -m 2')
+    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=-1,
+                        help='number of workers to deploy, add or delete.  \
+                              eg: -w 2')
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)

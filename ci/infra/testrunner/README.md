@@ -81,10 +81,10 @@ optional arguments:
   -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
                         platform
   -k, --status          check K8s cluster status
-  -a, --add-nodes       add nodes in k8s cluster. Default values are -m=1,
-                        -w=1
-  -r, --remove-nodes    remove nodes in k8s cluster. default values are -m=1,
-                        -w=1
+  -a, --add-nodes       add nodes in k8s cluster. Requires specifying --master
+                        and/or --worker options
+  -r, --remove-nodes    remove nodes in k8s cluster. Requires specifying
+                        --master and/or --worker options
   -l, --log             gather logs from nodes
   -v YAML_PATH, --vars YAML_PATH
                         path for platform yaml file. Default is
@@ -92,15 +92,9 @@ optional arguments:
                         {workspace}/ci/infra/testrunner. eg) -v
                         vars/myconfig.yaml
   -m NUM_MASTER, --master NUM_MASTER
-                        number of masters to add or delete. It is dependening
-                        on number of deployed master nodes in your yaml file.
-                        Default value is 1. eg) -m 2
+                        number of masters to deployed, add or delete. eg: -m 2
   -w NUM_WORKER, --worker NUM_WORKER
-                        number of workers to add or delete. It is dependening
-                        on number of deployed worker nodes in your yaml file.
-                        Default value is 1 eg) -w 2
-
-
+                        number of workers to deploy, add or delete. eg: -w 2
 ```
 
 
