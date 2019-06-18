@@ -35,6 +35,10 @@ create_environment:
 cleanup:
 	${TEST_RUNNER} --cleanup --vars vars/${PLATFORM}.yaml
 
+.PHONY: destroy_environment
+destroy_environment:
+	${TEST_RUNNER} --terraform-destroy --vars vars/${PLATFORM}.yaml
+
 .PHONY: gather_logs
 gather_logs:
 	${TEST_RUNNER} --log --vars vars/${PLATFORM}.yaml
@@ -72,4 +76,4 @@ bootstrap: bootstrap_environment
 add_nodes: add_master_nodes add_worker_nodes
 
 .PHONY: post_run
-post_run: gather_logs cleanup
+post_run: gather_logs destroy_environment cleanup

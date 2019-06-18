@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from skuba import Skuba
 from platforms import Platform
 from tests import Tests
-from utils import (BaseConfig, Format, Utils)
+from utils import (BaseConfig, Utils)
 
 __version__ = "0.0.3"
 
@@ -30,6 +30,8 @@ def main():
     parser.add_argument("-t", "--terraform-apply", dest="apply_terraform", action="store_true",
                         help="deploy nodes for cluster in your configured platform \
                               e.g) openstack, vmware, ..")
+    parser.add_argument("-d", "--terraform-destroy", dest="destroy_terraform", action="store_true",
+                        help="Destroy your terraform deployment")
     parser.add_argument("-c", "--create-skuba", dest="create_skuba", action="store_true",
                         help="create skuba environment {workspace}/go/src/github.com/SUSE/skuba\
                               and build skuba in that directory")
@@ -61,10 +63,11 @@ def main():
     if options.ip_info:
         Utils(conf).info()
     elif options.cleanup:
-        Platform.get_platform(conf).cleanup()
         Skuba.cleanup(conf)
     elif options.apply_terraform:
         Platform.get_platform(conf).apply_terraform()
+    elif options.destroy_terraform:
+        Platform.get_platform(conf).cleanup()
     elif options.create_skuba:
         Skuba.build(conf)
     elif options.boostrap:

@@ -11,7 +11,7 @@ class Terraform:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(conf)
-        self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
+        self.tfdir = os.path.join(self.conf.terraform.tfdir, self.conf.platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
         self.state = None
 
