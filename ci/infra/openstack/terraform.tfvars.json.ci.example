@@ -14,8 +14,6 @@
     "worker_size": "m1.medium",
     "workers_vol_enabled": 0,
     "workers_vol_size": 5,
-    "username": "sles",
-    "password": "linux",
     "repositories": {
         "caasp_devel": "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/",
         "suse_ca": "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/",
