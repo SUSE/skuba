@@ -1,5 +1,7 @@
 /**
- * This pipeline verifies basic skuba deployment, bootstrapping, and adding nodes to a cluster on GitHub Pr
+ * This pipeline verifies on a Github PR:
+ *   - skuba unit and integration tests
+ *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
 pipeline {
@@ -10,7 +12,7 @@ pipeline {
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack'
         STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
-        PR_CONTEXT = 'jenkins/skuba-integration'
+        PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
     }
@@ -38,8 +40,10 @@ pipeline {
             }
         }}
 
-        stage('Running skuba unit tests') { steps {
-            sh(script: 'make test-unit', label: 'make test-unit')
+        stage('Run skuba unit tests') { steps {
+            dir("skuba") {
+              sh(script: 'make test-unit', label: 'make test-unit')
+            }
         } }
 
         stage('Getting Ready For Cluster Deployment') { steps {
