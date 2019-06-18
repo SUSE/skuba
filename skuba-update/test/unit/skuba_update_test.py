@@ -125,11 +125,11 @@ def test_main(mock_subprocess, mock_geteuid):
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=ANY, stderr=ANY, env=ANY),
         call(['zypper', 'ref', '-s'], stdout=-1, stderr=-1, env=ANY),
-        call(['zypper', 'needs-rebooting'], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=-1, stderr=-1, env=ANY),
+        call(['zypper', 'needs-rebooting'], stdout=-1, stderr=-1, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
@@ -176,10 +176,13 @@ def test_main_zypper_returns_100(mock_subprocess, mock_geteuid):
         ], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', 'needs-rebooting'
-        ], env=ANY),
+        ], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
+        ], stdout=-1, stderr=-1, env=ANY),
+        call([
+            'zypper', 'needs-rebooting'
         ], stdout=-1, stderr=-1, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
@@ -200,7 +203,7 @@ def test_update_zypper_is_fine_but_created_needreboot(
 
     mock_process = Mock()
     mock_process.communicate.return_value = (b'stdout', b'stderr')
-    mock_process.returncode = 0
+    mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
     mock_subprocess.return_value = mock_process
     mock_is_file.return_value = True
 
@@ -379,8 +382,7 @@ def test_annotate_resources(mock_subprocess, mock_open):
             stdout=-1, stderr=-1, env=ANY
         ),
         call(
-            ['KUBECONFIG=/etc/kubernetes/kubelet.conf',
-             'kubectl', 'get', 'nodes', '-o', 'json'],
+            ['kubectl', 'get', 'nodes', '-o', 'json'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]

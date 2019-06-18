@@ -127,7 +127,7 @@ def is_reboot_needed():
     Returns true if reboot is needed.
     """
 
-    run_zypper_command(
+    return run_zypper_command(
         ['zypper', 'needs-rebooting']
     ) == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
