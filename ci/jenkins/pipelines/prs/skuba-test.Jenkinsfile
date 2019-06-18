@@ -8,9 +8,7 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
-        OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
-        PLATFORM = 'openstack'
         STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
         PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
@@ -40,33 +38,104 @@ pipeline {
             }
         }}
 
+        stage('Get Worker Info') { steps {
+            sh(script: 'make -f skuba/ci/Makefile info', label: 'Info')
+        } }
+
+        stage('PR Checks') { steps {
+            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+        } }
+
+        stage('Environment Setup') { steps {
+            dir('skuba') {
+                sh(script: 'make build-ginkgo', label: 'Build Ginkgo Binary')
+            }
+        } }
+
         stage('Run skuba unit tests') { steps {
             dir("skuba") {
               sh(script: 'make test-unit', label: 'make test-unit')
             }
         } }
 
-        stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
-            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+        stage('Build Skuba') { steps {
+            sh(script: 'make -f skuba/ci/Makefile create_skuba', label: 'Create Skuba')
         } }
 
-        stage('Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-        } }
+        stage('Platform Tests') {
+            parallel {
+                stage('OpenStack') {
+                    environment {
+                        OPENRC = credentials('ecp-openrc')
+                        PLATFORM = 'openstack'
+                        CLUSTERNAME = "${PLATFORM}-cluster"
+                    }
 
-        stage('Run end-to-end tests') { steps {
-           dir("skuba") {
-             sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-       } } }
+                    stages {
+                        stage('Cluster Deployment') { steps {
+                            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
+                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
+                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+                        } }
+                        stage('Run end-to-end tests') { steps {
+                            sshagent(credentials: ['shared-ssh-key']) {
+                                dir('skuba') {
+                                    sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+                                }
+                            }
+                        } }
+                    }
+
+                    post {
+                        always {
+                            sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
+                            zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
+                        }
+                        cleanup {
+                            sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
+                        }
+                    }
+                }
+
+                stage('VMware') {
+                    environment {
+                        ENV_FILE = credentials('vmware-env')
+                        PLATFORM = 'vmware'
+                        CLUSTERNAME = "${PLATFORM}-cluster"
+                    }
+
+                    stages {
+                        stage('Cluster Deployment') { steps {
+                            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
+                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
+                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+                        } }
+                        stage('Run end-to-end tests') { steps {
+                            sshagent(credentials: ['shared-ssh-key']) {
+                                dir('skuba') {
+                                    sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+                                }
+                            }
+                        } }
+                    }
+
+                    post {
+                        always {
+                            sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
+                            zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
+                        }
+                        cleanup {
+                            sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
+                        }
+                    }
+                }
+            }
+        }
     }
+
     post {
         always {
-            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
-            zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
+            sh(script: 'make -f skuba/ci/Makefile cleanup', label: 'Cleanup')
         }
         cleanup {
             dir("${WORKSPACE}") {
