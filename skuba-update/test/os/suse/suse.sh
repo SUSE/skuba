@@ -71,8 +71,11 @@ check_test_package_version() {
 }
 
 check_reboot_needed_present() {
+    set +e
     zypper needs-rebooting
-    [ $? -eq 102 ] && [ -f /var/run/reboot-needed ]
+    ret=$?
+    set -e
+    [ "$ret" = "102" ] && [ -f /var/run/reboot-needed ]
 }
 
 check_reboot_required_present() {
@@ -82,8 +85,11 @@ check_reboot_required_present() {
 }
 
 check_reboot_needed_absent() {
+    set +e
     zypper needs-rebooting
-    [ $? -ne 102 ] && [ ! -f /var/run/reboot-needed ]
+    ret=$?
+    set -e
+    [ "$ret" != "102" ] && [ ! -f /var/run/reboot-needed ]
 }
 
 check_reboot_required_absent() {
