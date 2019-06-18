@@ -1,4 +1,4 @@
-// this pipeline runs os integration tests for skuba-update
+// this pipeline runs os acceptance tests for skuba-update
 
 pipeline {
     agent { node { label 'caasp-team-private' } }
@@ -6,7 +6,7 @@ pipeline {
         GITHUB_TOKEN = credentials('github-token')
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
-        PR_CONTEXT = 'jenkins/skuba-update-integration'
+        PR_CONTEXT = 'jenkins/skuba-update-acceptance'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         FILTER_SUBDIRECTORY = 'skuba-update'
     }
