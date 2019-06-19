@@ -18,10 +18,11 @@ source container-openrc.sh
 Also make sure to have your ssh key within OpenStack, by adding your key to the
 key_pairs first.
 
-Then you can use `terraform` to deploy the cluster
+Once you perform a [Customization](#Customization) you can use `terraform` to deploy the cluster:
 
 ```sh
 terraform init
+terraform validate
 terraform apply
 ```
 
@@ -49,16 +50,15 @@ provide reasonable values.
 
 ## Variables
 
-`image_name` - Name of the image to use
-`internal_net` - Name of the internal network to be created
-`stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project
-`authorized_keys` - A list of ssh public keys that will be installed on all nodes
-`repositories` - Additional repositories that will be added on all nodes
+`image_name` - Name of the image to use\
+`internal_net` - Name of the internal network to be created\
+`stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project\
+`authorized_keys` - A list of ssh public keys that will be installed on all nodes\
+`repositories` - Additional repositories that will be added on all nodes\
 `packages` - Additional packages that will be installed on all nodes
 
-Please use **one** from the following options:
+### Please use one of the following options:
 `caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in 
-`registration.auto.tfvars` file to register product against official repositories
-
+`registration.auto.tfvars` file to register product against official SCC server\
 `rmt_server_name` - Provide SUSE Repository Mirroring Tool Server Name in
-`registration.auto.tfvars` file to register product against official repositories
+`registration.auto.tfvars` file to use repositories stored on RMT server
