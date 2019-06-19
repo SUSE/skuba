@@ -102,6 +102,12 @@ pipeline {
                         ENV_FILE = credentials('vmware-env')
                         PLATFORM = 'vmware'
                         CLUSTERNAME = "${PLATFORM}-cluster"
+                        FILTER_SUBDIRECTORY = 'ci/infra/vmware'
+                    }
+                    when {
+                        expression {
+                            sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+                        }
                     }
 
                     stages {
