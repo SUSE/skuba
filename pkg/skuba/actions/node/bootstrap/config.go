@@ -15,7 +15,7 @@
  *
  */
 
-package node
+package bootstrap
 
 import (
 	"fmt"

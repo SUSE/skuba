@@ -15,7 +15,7 @@
  *
  */
 
-package node
+package join
 
 import (
 	"reflect"
