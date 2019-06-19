@@ -27,6 +27,7 @@ from skuba_update.skuba_update import (
     node_name_from_machine_id,
     annotate,
     annotate_resources,
+    is_reboot_needed,
     REBOOT_REQUIRED_PATH,
     ZYPPER_EXIT_INF_RESTART_NEEDED,
     ZYPPER_EXIT_INF_REBOOT_NEEDED
@@ -467,3 +468,23 @@ def test_annotate_resources_is_reboot(mock_subprocess):
             stdout=-1, stderr=-1, env=ANY
         )
     ]
+
+
+@patch('subprocess.Popen')
+def test_is_reboot_needed_truthy(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'', b'')
+    mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
+    mock_subprocess.return_value = mock_process
+
+    assert is_reboot_needed()
+
+
+@patch('subprocess.Popen')
+def test_is_reboot_needed_falsey(mock_subprocess):
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'', b'')
+    mock_process.returncode = ZYPPER_EXIT_INF_RESTART_NEEDED
+    mock_subprocess.return_value = mock_process
+
+    assert not is_reboot_needed()
