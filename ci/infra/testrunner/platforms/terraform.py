@@ -2,9 +2,8 @@ import json
 import os
 import re
 import subprocess
-from shutil import copyfile
 
-from utils import (Constant, Format, step, Utils)
+from utils import (Format, step, Utils)
 
 
 class Terraform:
@@ -12,7 +11,8 @@ class Terraform:
         self.conf = conf
         self.utils = Utils(conf)
         self.tfdir = os.path.join(self.conf.terraform.tfdir, self.conf.platform)
-        self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
+        self.tfjson_path = os.path.join(self.tfdir, "tfout.json")
+        self.tfout_path = os.path.join(self.tfdir, "tfout")
         self.state = None
 
     def _env_setup_cmd(self):
@@ -32,16 +32,15 @@ class Terraform:
             print(Format.alert("Received the following error {}".format(ex)))
             print("Attempting to finish cleaup")
 
-        dirs = [os.path.join(self.conf.workspace, "tfout"),
-                self.tfjson_path]
+        tf_files = [self.tfout_path, self.tfjson_path]
 
-        for dir in dirs:
+        for tf_file in tf_files:
             try:
-                self.utils.runshellcommand("rm -rf {}".format(dir))
+                self.utils.runshellcommand("rm -rf {}".format(tf_file))
             except Exception as ex:
                 cleanup_failure = True
                 print("Received the following error {}".format(ex))
-                print("Attempting to finish cleaup")
+                print("Attempting to finish cleanup")
 
         if cleanup_failure:
             raise Exception(Format.alert("Failure(s) during cleanup"))
@@ -62,15 +61,11 @@ class Terraform:
 
         self._runshellcommandterraform("terraform version")
         self._generate_tfvars_file()
-        plan_cmd = ("{env_setup};"
+        plan_cmd = (f"{self._env_setup_cmd()};"
                     " terraform plan "
-                    " -out {workspace}/tfout".format(
-                        env_setup=self._env_setup_cmd(),
-                        workspace=self.conf.workspace))
-        apply_cmd = ("{env_setup};"
-                     "terraform apply -auto-approve {workspace}/tfout".format(
-                        env_setup=self._env_setup_cmd(),
-                        workspace=self.conf.workspace))
+                    f" -out {self.tfout_path}")
+        apply_cmd = (f"{self._env_setup_cmd()};"
+                     f"terraform apply -auto-approve {self.tfout_path}")
 
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):

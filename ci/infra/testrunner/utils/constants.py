@@ -6,7 +6,6 @@ from utils.format import Format
 
 class Constant:
     TERRAFORM_EXAMPLE = "terraform.tfvars.json.ci.example"
-    TERRAFORM_JSON_OUT = "tfout.json"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
            "-oConnectTimeout=60 -oBatchMode=yes "
 
@@ -17,7 +16,6 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
-        obj.terraform_json_path = None
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
@@ -150,9 +148,7 @@ class BaseConfig:
             conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
 
         if not conf.terraform.tfdir:
-           conf.terraform.tfdir= os.path.join(conf.skuba.srcpath, "ci/infra/")
-
-        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
+            conf.terraform.tfdir = os.path.join(conf.skuba.srcpath, "ci/infra/")
 
         if not conf.terraform.stack_name:
             conf.terraform.stack_name = conf.username
