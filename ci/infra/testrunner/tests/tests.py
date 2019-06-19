@@ -18,7 +18,6 @@ class Tests:
         self.skuba.cluster_init()
         self.skuba.node_bootstrap()
         self._num_master = 1
-        self.add_worker_in_cluster()
         self.skuba.cluster_status()
 
     @timeout(600)
