@@ -96,14 +96,14 @@ class Skuba:
             else:
                 ip_addr = self.platform.get_workers_ipaddrs()[nr]
         except IndexError:
-            raise Format.alert("Error: there is not enough nodes to add {} node in cluster".format(role))
+            raise Exception(Format.alert("Error: there is not enough nodes to add {} node in cluster".format(role)))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
             role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
         try:
             self._run_skuba(cmd)
         except:
-            raise Format.alert("Error: {}".format(cmd))
+            raise Exception(Format.alert("Error: {}".format(cmd)))
 
     @step
     def node_remove(self, role="worker", nr=0):
@@ -131,7 +131,7 @@ class Skuba:
         try:
             self._run_skuba(cmd)
         except:
-            raise Format.alert("Error: {}".format(cmd))
+            raise Exception(Format.alert("Error: {}".format(cmd)))
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()
