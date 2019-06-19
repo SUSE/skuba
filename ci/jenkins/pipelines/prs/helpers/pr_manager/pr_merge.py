@@ -23,7 +23,7 @@ class PrMerge:
             time.sleep(5)
 
     def _passed_integration_tests(self, pull_request):
-        job_name = f'caasp-jobs/caasp-v4-integration/PR-{pull_request.number}'
+        job_name = f'caasp-jobs/caasp-v4-test/PR-{pull_request.number}'
         wait_count = 15
         server = jenkins.Jenkins(self.jenkins_config['jenkins']['url'],
                                  username=self.jenkins_config['jenkins']['user'],
