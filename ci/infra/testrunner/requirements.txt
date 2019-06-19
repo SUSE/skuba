@@ -1,3 +1,4 @@
 timeout-decorator
 requests
+pyhcl
 pyyaml
