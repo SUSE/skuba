@@ -84,7 +84,8 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
 }
 
 resource "null_resource" "master_wait_cloudinit" {
-  count = "${var.masters}"
+  depends_on = ["openstack_compute_instance_v2.master"]
+  count      = "${var.masters}"
 
   connection {
     host = "${element(openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip, count.index)}"
@@ -92,12 +93,23 @@ resource "null_resource" "master_wait_cloudinit" {
     type = "ssh"
   }
 
-  depends_on = ["openstack_compute_instance_v2.master"]
-
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
-      "sudo reboot&",
     ]
+  }
+}
+
+resource "null_resource" "master_reboot" {
+  depends_on = ["null_resource.master_wait_cloudinit"]
+  count      = "${var.masters}"
+
+  provisioner "local-exec" {
+    environment = {
+      user = "${var.username}"
+      host = "${element(openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip, count.index)}"
+    }
+
+    command = "ssh -o StrictHostKeyChecking=no $user@$host sudo reboot || :"
   }
 }

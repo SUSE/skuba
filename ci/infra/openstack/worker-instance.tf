@@ -96,7 +96,8 @@ resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
-  count = "${var.workers}"
+  depends_on = ["openstack_compute_instance_v2.worker"]
+  count      = "${var.workers}"
 
   connection {
     host = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
@@ -104,12 +105,23 @@ resource "null_resource" "worker_wait_cloudinit" {
     type = "ssh"
   }
 
-  depends_on = ["openstack_compute_instance_v2.worker"]
-
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
-      "sudo reboot&",
     ]
+  }
+}
+
+resource "null_resource" "worker_reboot" {
+  depends_on = ["null_resource.worker_wait_cloudinit"]
+  count      = "${var.workers}"
+
+  provisioner "local-exec" {
+    environment = {
+      user = "${var.username}"
+      host = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
+    }
+
+    command = "ssh -o StrictHostKeyChecking=no $user@$host sudo reboot || :"
   }
 }
