@@ -1,14 +1,14 @@
-# datastore to use on the vSphere server
+# datastore to use in vSphere
 # EXAMPLE:
 # vsphere_datastore = "STORAGE-0"
 vsphere_datastore = ""
 
-# datacenter to use on the vSphere server
+# datacenter to use in vSphere
 # EXAMPLE:
 # vsphere_datacenter = "DATACENTER"
 vsphere_datacenter = ""
 
-# network to use on the vSphere server
+# network to use in vSphere
 # EXAMPLE:
 # vsphere_network = "VM Network"
 vsphere_network = ""
@@ -34,19 +34,25 @@ stack_name = "caasp-v4"
 # Number of master nodes
 masters = 1
 
+# Optional: Size of the root disk in GB on master node
+master_disk_size = 50
+
 # Number of worker nodes
 workers = 2
+
+# Optional: Size of the root disk in GB on worker node
+worker_disk_size = 40
 
 # Username for the cluster nodes
 # EXAMPLE:
 # username = "sles"
-username = ""
+username = "sles"
 
-# define the repositories to use
+# Optional: Define the repositories to use
 # EXAMPLE:
 # repositories = {
-#   repository1 = "http://example.my.repo.com/repository1/"
-#   repository2 = "http://example.my.repo.com/repository2/"
+#   repository1 = "http://repo.example.com/repository1/"
+#   repository2 = "http://repo.example.com/repository2/"
 # }
 repositories = {}
 

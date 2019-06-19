@@ -52,17 +52,18 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 
 ## Variables
 
-`vsphere_datastore` - Provide the datastore to use on the vSphere server  
-`vsphere_datacenter` - Provide the datacenter to use on the vSphere server  
-`vsphere_network` - Provide the network to use on the vSphere server - this network must be able to access the ntp servers and the nodes must be able to reach each other  
-`vsphere_resource_ppol` - Provide the resource pool the machines will be running in  
-`template_name` - The template name the machines will be copied from  
-`firmware` - Replace the default "bios" value with "efi" in case your template was created by using EFI firmware  
-`stack_name` - A prefix that all of the booted machines will use  
-`authorized_keys` - A list of ssh public keys that will be installed on all nodes  
-`repositories` - Additional repositories that will be added on all nodes  
+`vsphere_datastore` - Provide the datastore to use in vSphere\
+`vsphere_datacenter` - Provide the datacenter to use in vSphere\
+`vsphere_network` - Provide the network to use in vSphere - this network must be able to access the ntp servers and the nodes must be able to reach each other\
+`vsphere_resource_pool` - Provide the resource pool the machines will be running in\
+`template_name` - The template name the machines will be copied from\
+`firmware` - Replace the default "bios" value with "efi" in case your template was created by using EFI firmware\
+`stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project\
+`authorized_keys` - A list of ssh public keys that will be installed on all nodes\
+`repositories` - Additional repositories that will be added on all nodes\
 `packages` - Additional packages that will be installed on all nodes
 
 ### Please use one of the following options:
-`caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in `registration.auto.tfvars` file to register product against official SCC server  
-`rmt_server_name` - Provide SUSE Repository Mirroring Tool Server Name in `registration.auto.tfvars` file to use repositories stored on RMT server  
+
+`caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in `registration.auto.tfvars` file to register product against official SCC server\
+`rmt_server_name` - Provide SUSE Repository Mirroring Tool Server Name in `registration.auto.tfvars` file to use repositories stored on RMT server

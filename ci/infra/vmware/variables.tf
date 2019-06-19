@@ -74,6 +74,11 @@ variable "worker_memory" {
   description = "Amount of memory used on worker node"
 }
 
+variable "worker_disk_size" {
+  default     = 40
+  description = "Size of the root disk in GB on worker node"
+}
+
 variable "master_cpus" {
   default     = 4
   description = "Number of CPUs used on master node"
@@ -82,6 +87,11 @@ variable "master_cpus" {
 variable "master_memory" {
   default     = 8192
   description = "Amount of memory used on master node"
+}
+
+variable "master_disk_size" {
+  default     = 50
+  description = "Size of the root disk in GB on master node"
 }
 
 #### To be moved to separate vsphere.tf? ####
