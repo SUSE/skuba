@@ -59,13 +59,13 @@ env_file: "" # Path to vmware-env.sh file
 ```
 ./testrunner -h
 Starting ./testrunner script
-usage: 
+sage: 
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
     
-       [-h] [-z] [-i] [-x] [-t] [-c] [-b] [-k] [-a] [-r] [-l] [-v YAML_PATH]
-       [-m NUM_MASTER] [-w NUM_WORKER]
+       [-h] [-i] [-x] [-t] [-c] [-b] [-k] [-a] [-r] [-l] [-v YAML_PATH]
+       [-R {master,worker}] [-n NODE] [-m MASTER_COUNT] [-w WORKER_COUNT]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -74,28 +74,32 @@ optional arguments:
   -t, --terraform-apply
                         deploy nodes for cluster in your configured platform
                         e.g) openstack, vmware. The number of master/workers
-                        can be specified with the --master --worker parameters
-  -c, --create-skuba
-                        create skuba environment
+                        can be specified with the --master and --worker
+                        parameters
+  -c, --create-skuba    create skuba environment
                         {workspace}/go/src/github.com/SUSE/skuba and build
                         skuba in that directory
   -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
                         platform
   -k, --status          check K8s cluster status
-  -a, --add-nodes       add nodes in k8s cluster. Requires specifying --master
-                        and/or --worker options
-  -r, --remove-nodes    remove nodes in k8s cluster. Requires specifying
-                        --master and/or --worker options
+  -a, --add-node        add node in k8s cluster. Requires specifying --master
+                        or --worker options
+  -r, --remove-node     remove node in k8s cluster. Requires specifying
+                        --master or --worker options
   -l, --log             gather logs from nodes
   -v YAML_PATH, --vars YAML_PATH
                         path for platform yaml file. Default is
                         vars/openstack.yaml in
                         {workspace}/ci/infra/testrunner. eg) -v
                         vars/myconfig.yaml
-  -m NUM_MASTER, --master NUM_MASTER
-                        number of masters to deployed, add or delete. eg: -m 2
-  -w NUM_WORKER, --worker NUM_WORKER
-                        number of workers to deploy, add or delete. eg: -w 2
+  -R {master,worker}, --role {master,worker}
+                        role of the node to be added or deleted. eg: --role
+                        master
+  -n NODE, --node NODE  ode to be added or deleted. eg: -n 0
+  -m MASTER_COUNT, --master-count MASTER_COUNT
+                        number of masters nodes to be deployed. eg: -m 2
+  -w WORKER_COUNT, --worker-count WORKER_COUNT
+                        number of workers nodes to be deployed. eg: -w 2
 ```
 
 

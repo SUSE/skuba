@@ -39,26 +39,34 @@ def main():
                         help="bootstrap k8s cluster with deployed nodes in your platform")
     parser.add_argument("-k", "--status", dest="cluster_status", action="store_true",
                         help="check K8s cluster status")
-    parser.add_argument("-a", "--add-nodes", dest="add_nodes", action="store_true",
-                        help="add nodes in k8s cluster. \
-                              Requires specifying --master and/or --worker options")
-    parser.add_argument("-r", "--remove-nodes", dest="remove_nodes", action="store_true",
-                        help="remove nodes in k8s cluster. \
-                              Requires specifying --master and/or --worker options")
+    parser.add_argument("-a", "--add-node", dest="add_node", action="store_true",
+                        help="add node in k8s cluster. \
+                              Requires specifying --master or --worker options")
+    parser.add_argument("-r", "--remove-node", dest="remove_node", action="store_true",
+                        help="remove node in k8s cluster. \
+                              Requires specifying --master or --worker options")
     parser.add_argument("-l", "--log", dest="log", action="store_true", help="gather logs from nodes")
     parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
                         help='path for platform yaml file. \
                               Default is vars/openstack.yaml in {workspace}/ci/infra/testrunner. \
                               eg) -v vars/myconfig.yaml')
-    parser.add_argument("-m", "--master", dest="num_master", type=int, default=-1,
-                        help='number of masters to deployed, add or delete. \
+    parser.add_argument("-R", "--role", dest="role",choices=["master","worker"], 
+                        help='role of the node to be added or deleted. \
+                              eg: --role master')
+    parser.add_argument("-n", "--node", dest="node", type=int,
+                        help='ode to be added or deleted.  \
+                              eg: -n 0')
+    parser.add_argument("-m", "--master-count", dest="master_count", type=int, default=-1,
+                        help='number of masters nodes to be deployed. \
                               eg: -m 2')
-    parser.add_argument("-w", "--worker", dest="num_worker", type=int, default=-1,
-                        help='number of workers to deploy, add or delete.  \
+    parser.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
+                        help='number of workers nodes to be deployed.  \
                               eg: -w 2')
+
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
+
 
     if options.ip_info:
         Utils(conf).info()
@@ -66,19 +74,28 @@ def main():
         Platform.get_platform(conf).cleanup()
         Skuba.cleanup(conf)
     elif options.apply_terraform:
-        Platform.get_platform(conf).apply_terraform(num_master=options.num_master, num_worker=options.num_worker)
+        Platform.get_platform(conf).apply_terraform(num_master=options.master_count,
+                 num_worker=options.worker_count)
     elif options.create_skuba:
         Skuba.build(conf)
     elif options.boostrap:
         Tests(conf).bootstrap_environment()
     elif options.cluster_status:
         Skuba(conf).cluster_status()
-    elif options.add_nodes:
-        Tests(conf).add_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
-    elif options.remove_nodes:
-        Tests(conf).remove_nodes_in_cluster(num_master=options.num_master, num_worker=options.num_worker)
     elif options.log:
         Skuba(conf).gather_logs()
+    else:
+        # node related commands
+        if not options.role:
+            raise ValueError("A node role must be specified")
+
+        if not options.node:
+            raise ValueError("A node number must be specified")
+
+        if options.add_node:
+            Skuba(conf).node_join(options.role, options.node)
+        elif options.remove_node:
+            Skuba(conf).node_remove(options.role, options.node)
 
     sys.exit(0)
 
