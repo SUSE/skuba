@@ -112,6 +112,26 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		gomega.Eventually(session.Out).ShouldNot(gbytes.Say(".*" + worker00Name))
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba status exited with error")
 		gomega.Expect(err).Should(gomega.BeNil(), "skuba status returned errors, worker00 not removed correctly")
+
+		ginkgo.By("remove master00 with skuba")
+		session, err = skuba.RemoveNode(master00Name)
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba removing master00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba removing master00 failed")
+
+		ginkgo.By("reset master00 with skuba")
+		session, err = skuba.ResetNode(master00IP)
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba reset master00 failed")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba reset master00 failed")
+
+		ginkgo.By("verify master00 is not present with skuba status")
+		session, err = skuba.Status()
+		fmt.Println(session.Wait().Out.Contents())
+		gomega.Eventually(session.Out).ShouldNot(gbytes.Say(".*" + master00Name))
+		gomega.Expect(session).Should(gexec.Exit(0), "skuba status exited with error, master00 not removed correctly")
+		gomega.Expect(err).Should(gomega.BeNil(), "skuba status returned errors, master00 not removed correctly")
+
 	})
 
 })
