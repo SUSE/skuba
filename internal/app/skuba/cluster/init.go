@@ -32,7 +32,7 @@ func NewInitCmd() *cobra.Command {
 	initOptions := initOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "init <cluster-name>",
+		Use:   "init <cluster-name> --control-plane <IP/FQDN>",
 		Short: "Initialize skuba structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cluster.Init(cluster.InitConfiguration{
@@ -45,7 +45,7 @@ func NewInitCmd() *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 	}
-	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes")
+	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes (required)")
 	cmd.MarkFlagRequired("control-plane")
 
 	return cmd
