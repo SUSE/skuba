@@ -55,14 +55,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
     cidr        = "0.0.0.0/0"
   }
 
-  # Kubernetes API server
-  rule {
-    from_port   = 6443
-    to_port     = 6444
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
   # Kubelet API
   rule {
     from_port   = 10250
