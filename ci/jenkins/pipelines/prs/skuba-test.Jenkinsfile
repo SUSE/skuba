@@ -10,7 +10,7 @@ def platformTest(platformName) {
         withEnv([
                 "OPENRC=${credentials('ecp-openrc')}",
                 "PLATFORM=${platformName.toLowerCase()}",
-                "CLUSTERNAME=${PLATFORM}-cluster"
+                "CLUSTERNAME=${platformName.toLowerCase()}-cluster"
         ]) {
             sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
             archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
