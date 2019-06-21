@@ -102,7 +102,7 @@ pipeline {
             steps {
                 script {
                     def platformTests = []
-                    if(sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes") {
+                    if(sh(script: "skuba/${PR_MANAGER} filter-pr --filename ci/infra/vmware", returnStdout: true, label: "Filtering PR") =~ "contains changes") {
                         platformNames << 'VMware'
                     }
                     platformNames.each {platformName ->
