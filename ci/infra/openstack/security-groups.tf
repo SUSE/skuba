@@ -23,10 +23,10 @@ resource "openstack_compute_secgroup_v2" "secgroup_base_internal" {
   name        = "caasp-base-internal-${var.stack_name}"
   description = "Basic internal security group"
 
-  # etcd client requests
+  # etcd client and peer
   rule {
     from_port   = 2379
-    to_port     = 2379
+    to_port     = 2380
     ip_protocol = "tcp"
     self        = true
   }
@@ -44,40 +44,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_base_internal" {
     from_port   = 8472
     to_port     = 8472
     ip_protocol = "udp"
-    self        = true
-  }
-}
-
-resource "openstack_compute_secgroup_v2" "secgroup_master_external" {
-  name        = "caasp-master-external-${var.stack_name}"
-  description = "External security group for masters"
-
-  # Node ports (TCP)
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  # Node ports (UDP)
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
-  }
-}
-
-resource "openstack_compute_secgroup_v2" "secgroup_master_internal" {
-  name        = "caasp-master-internal-${var.stack_name}"
-  description = "Internal security group for masters"
-
-  # etcd peer
-  rule {
-    from_port   = 2380
-    to_port     = 2380
-    ip_protocol = "tcp"
     self        = true
   }
 
@@ -114,9 +80,9 @@ resource "openstack_compute_secgroup_v2" "secgroup_master_internal" {
   }
 }
 
-resource "openstack_compute_secgroup_v2" "secgroup_worker_external" {
-  name        = "caasp-worker-external-${var.stack_name}"
-  description = "External security group for workers"
+resource "openstack_compute_secgroup_v2" "secgroup_master_external" {
+  name        = "caasp-master-external-${var.stack_name}"
+  description = "External security group for masters"
 
   # Node ports (TCP)
   rule {
@@ -135,32 +101,16 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker_external" {
   }
 }
 
-resource "openstack_compute_secgroup_v2" "secgroup_worker_internal" {
-  name        = "caasp-worker-internal-${var.stack_name}"
-  description = "Internal security group for workers"
-
-  # etcd peer
-  rule {
-    from_port   = 2380
-    to_port     = 2380
-    ip_protocol = "tcp"
-    self        = true
-  }
-
-  # Kubelet API
-  rule {
-    from_port   = 10250
-    to_port     = 10250
-    ip_protocol = "tcp"
-    self        = true
-  }
+resource "openstack_compute_secgroup_v2" "secgroup_worker_external" {
+  name        = "caasp-worker-external-${var.stack_name}"
+  description = "External security group for workers"
 
   # Node ports (TCP)
   rule {
     from_port   = 30000
     to_port     = 32768
     ip_protocol = "tcp"
-    self        = true
+    cidr        = "0.0.0.0/0"
   }
 
   # Node ports (UDP)
@@ -168,7 +118,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker_internal" {
     from_port   = 30000
     to_port     = 32768
     ip_protocol = "udp"
-    self        = true
+    cidr        = "0.0.0.0/0"
   }
 }
 

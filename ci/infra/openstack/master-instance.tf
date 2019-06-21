@@ -68,7 +68,6 @@ resource "openstack_compute_instance_v2" "master" {
     "${openstack_compute_secgroup_v2.secgroup_base_external.name}",
     "${openstack_compute_secgroup_v2.secgroup_base_internal.name}",
     "${openstack_compute_secgroup_v2.secgroup_master_external.name}",
-    "${openstack_compute_secgroup_v2.secgroup_master_internal.name}",
   ]
 
   user_data = "${data.template_file.master-cloud-init.rendered}"

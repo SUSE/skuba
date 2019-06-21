@@ -80,7 +80,6 @@ resource "openstack_compute_instance_v2" "worker" {
     "${openstack_compute_secgroup_v2.secgroup_base_external.name}",
     "${openstack_compute_secgroup_v2.secgroup_base_internal.name}",
     "${openstack_compute_secgroup_v2.secgroup_worker_external.name}",
-    "${openstack_compute_secgroup_v2.secgroup_worker_internal.name}",
   ]
 
   user_data = "${data.template_file.worker-cloud-init.rendered}"
