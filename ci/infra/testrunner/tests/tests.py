@@ -9,7 +9,11 @@ class Tests:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.skuba = Skuba(conf)
-        self._num_master, self._num_worker = self.skuba.num_of_nodes()
+        # TODO: this is inefficient, but this logic would probably
+        # change soon, as it makes no sense to duplicate the node count
+        # here.
+        self._num_master = self.skuba.num_of_nodes("master")
+        self._num_worker = self.skuba.num_of_nodes("worker")
 
     @timeout(600)
     @step

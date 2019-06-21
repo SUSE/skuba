@@ -82,20 +82,16 @@ class Skuba:
     def node_bootstrap(self):
         self._verify_bootstrap_dependency()
 
+        master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=self.platform.get_masters_ipaddrs()[0], username=self.conf.nodeuser)
+                 {ip} my-master-0".format(ip=master0_ip, username=self.conf.nodeuser)
         self._run_skuba(cmd)
 
     @step
     def node_join(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        if role == "master":
-            ip_addrs = self.platform.get_masters_ipaddrs()
-        elif role == "worker":
-            ip_addrs = self.platform.get_workers_ipaddrs()
-        else:
-            raise ValueError("Invalid role: '{}'".format(role))
+        ip_addrs = self.platform.get_nodes_ipaddrs(role)
 
         if nr < 0:
             raise ValueError("Node number cannot be negative")
@@ -116,26 +112,17 @@ class Skuba:
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        if role == "master":
-            num_nodes = num_masters
-        elif role == "worker":
-            num_nodes = num_workers
-        else:
+        if role not in ("master", "worker"):
             raise ValueError("Invalid role {}".format(role))
 
-        num_masters, num_workers = self.num_of_nodes()
+        n_nodes = self.num_of_nodes(role)
 
         if nr < 0:
             raise ValueError("Node number must be non negative")
 
-        if nr >= num_nodes:
+        if nr >= n_nodes:
             raise ValueError("Error: there is no {role}-{rn} \
                               node to remove from cluster".format(role=role, nr=nr))
-
-        if role == "master":
-            ip_addr = self.platform.get_masters_ipaddrs()[nr]
-        else:
-            ip_addr = self.platform.get_workers_ipaddrs()[nr]
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
 
@@ -148,12 +135,15 @@ class Skuba:
         self._verify_bootstrap_dependency()
         self._run_skuba("cluster status")
 
-    def num_of_nodes(self):
+    def num_of_nodes(self, role):
+
+        if role not in ("master", "worker"):
+            raise ValueException("Invalid role '{}'".format(role))
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
         output = self.utils.runshellcommand_withoutput(cmd)
-        return output.count("master"), output.count("worker")
+        return output.count(role)
 
     @timeout(600)
     @step
@@ -165,12 +155,12 @@ class Skuba:
             os.mkdir(log_dir_path)
             print(f"Created log dir {log_dir_path}")
 
-        for ipa in self.platform.get_masters_ipaddrs():
+        for ipa in self.platform.get_nodes_ipaddrs("master"):
             logging_error = self._copy_cloud_init_logs(ipa, 'master', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)
 
-        for ipa in self.platform.get_workers_ipaddrs():
+        for ipa in self.platform.get_nodes_ipaddrs("worker"):
             logging_error = self._copy_cloud_init_logs(ipa, 'worker', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)

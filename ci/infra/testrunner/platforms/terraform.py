@@ -110,13 +110,14 @@ class Terraform:
         self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
 
-    def get_masters_ipaddrs(self):
+    def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
 
-    def get_workers_ipaddrs(self):
-        self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role: {}".format(role))
+
+        role_key = "ip_"+role+"s"
+        return self.state["modules"][0]["outputs"][role_key]["value"]
 
     @step
     def _fetch_terraform_output(self):
