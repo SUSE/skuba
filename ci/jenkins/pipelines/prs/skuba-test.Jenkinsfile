@@ -110,10 +110,8 @@ pipeline {
                     }
 
                 }
+                parallel(platformTests)
             }
-        }
-        stage('Parallel') {
-            parallel platformTests
         }
     }
 
