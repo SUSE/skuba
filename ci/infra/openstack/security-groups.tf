@@ -58,6 +58,13 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
   }
 
   rule {
+    from_port   = 10250
+    to_port     = 10250
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  rule {
     from_port   = 30000
     to_port     = 32768
     ip_protocol = "tcp"
