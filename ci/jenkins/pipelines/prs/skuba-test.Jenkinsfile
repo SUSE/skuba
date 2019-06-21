@@ -4,7 +4,7 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 def platformNames = ['OpenStack']
-def platformTests = []
+def platformTests = [:]
 def platformTest(platformName) {
     stage(platformName) {
         environment {
@@ -106,7 +106,7 @@ pipeline {
                         platformNames << 'VMware'
                     }
                     platformNames.each {platformName ->
-                        platformTests << platformTest(platformName)
+                        platformTests.put(platformName, platformTest(platformName))
                     }
 
                 }
