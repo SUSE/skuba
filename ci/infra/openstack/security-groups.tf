@@ -58,13 +58,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
   }
 
   rule {
-    from_port   = 8285
-    to_port     = 8285
-    ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
     from_port   = 30000
     to_port     = 32768
     ip_protocol = "tcp"
@@ -84,34 +77,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
   description = "security group for workers"
 
   rule {
-    from_port   = 80
-    to_port     = 80
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 443
-    to_port     = 443
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8080
-    to_port     = 8080
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8081
-    to_port     = 8081
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
     from_port   = 2380
     to_port     = 2380
     ip_protocol = "tcp"
@@ -122,13 +87,6 @@ resource "openstack_compute_secgroup_v2" "secgroup_worker" {
     from_port   = 10250
     to_port     = 10250
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8285
-    to_port     = 8285
-    ip_protocol = "udp"
     cidr        = "0.0.0.0/0"
   }
 
