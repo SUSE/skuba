@@ -90,37 +90,47 @@ class Skuba:
     def node_join(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        try:
-            if role == "master":
-                ip_addr = self.platform.get_masters_ipaddrs()[nr]
-            else:
-                ip_addr = self.platform.get_workers_ipaddrs()[nr]
-        except IndexError:
-            raise Exception(Format.alert("Error: there is not enough nodes to add {} node in cluster".format(role)))
+        if role == "master":
+            ip_addrs = self.platform.get_masters_ipaddrs()
+        elif role == "worker":
+            ip_addrs = self.platform.get_workers_ipaddrs()
+        else:
+            raise ValueError("Invalid role: '{}'".format(role))
 
-        cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
-            role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
-        try:
+        if nr < 0:
+            raise ValueError("Node number cannot be negative")
+
+        if nr >= len(ip_addrs):
+            raise Exception(Format.alert("Node {role}-{nr} no deployed in "
+                      "infrastructure".format(role=role, nr=nr)))
+
+        cmd = "node join --role {role} --user {username} --sudo --target {ip} \
+               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr, 
+                                   username=self.conf.nodeuser)
+        try: 
             self._run_skuba(cmd)
-        except:
-            raise Exception(Format.alert("Error: {}".format(cmd)))
+        except Exception as ex:
+            raise Exception("Eror executing cmd {}") from exc
 
     @step
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        num_masters, num_workers = self.num_of_nodes()
         if role == "master":
             num_nodes = num_masters
-        else:
+        elif role == "worker":
             num_nodes = num_workers
+        else:
+            raise ValueError("Invalid role {}".format(role))
+
+        num_masters, num_workers = self.num_of_nodes()
 
         if nr < 0:
             raise ValueError("Node number must be non negative")
 
         if nr >= num_nodes:
-            raise ValueError(Format.alert("Error: there is no {role}-{rn} "
-                                 "node to remove from cluster".format(role=role, nr=nr)))
+            raise ValueError("Error: there is no {role}-{rn} \
+                              node to remove from cluster".format(role=role, nr=nr))
 
         if role == "master":
             ip_addr = self.platform.get_masters_ipaddrs()[nr]
@@ -128,10 +138,11 @@ class Skuba:
             ip_addr = self.platform.get_workers_ipaddrs()[nr]
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
-        try:
+
+        try: 
             self._run_skuba(cmd)
-        except:
-            raise Exception(Format.alert("Error: {}".format(cmd)))
+        except Exception as ex:
+            raise Exception("Eror executing cmd {}".format(cmd)) from exc
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()
