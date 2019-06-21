@@ -13,19 +13,13 @@ def platformTest(platformName) {
             CLUSTERNAME = "${PLATFORM}-cluster"
         }
 
-        stages {
-            stage('Cluster Deployment') { steps {
-                sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
-                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-            } }
-            stage('Run end-to-end tests') { steps {
-                sshagent(credentials: ['shared-ssh-key']) {
-                    dir('skuba') {
-                        sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-                    }
-                }
-            } }
+        sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
+        archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
+        archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+        sshagent(credentials: ['shared-ssh-key']) {
+            dir('skuba') {
+                sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+            }
         }
 
         post {
@@ -108,9 +102,8 @@ pipeline {
                     platformNames.each {platformName ->
                         platformTests.put(platformName, platformTest(platformName))
                     }
-
+                    parallel(platformTests)
                 }
-                parallel(platformTests)
             }
         }
     }
