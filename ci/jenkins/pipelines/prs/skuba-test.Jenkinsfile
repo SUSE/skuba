@@ -3,6 +3,42 @@
  *   - skuba unit and integration tests
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
+def platformNames = ['OpenStack']
+
+def platformTest(platformName) {
+    stage(platformName) {
+        environment {
+            OPENRC = credentials('ecp-openrc')
+            PLATFORM = platformName.toLowerCase()
+            CLUSTERNAME = "${PLATFORM}-cluster"
+        }
+
+        stages {
+            stage('Cluster Deployment') { steps {
+                sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
+                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
+                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+            } }
+            stage('Run end-to-end tests') { steps {
+                sshagent(credentials: ['shared-ssh-key']) {
+                    dir('skuba') {
+                        sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+                    }
+                }
+            } }
+        }
+
+        post {
+            always {
+                sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
+                zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
+            }
+            cleanup {
+                sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
+            }
+        }
+    }
+}
 
 pipeline {
     agent { node { label 'caasp-team-private' } }
@@ -63,77 +99,16 @@ pipeline {
         } }
 
         stage('Platform Tests') {
-            parallel {
-                stage('OpenStack') {
-                    environment {
-                        OPENRC = credentials('ecp-openrc')
-                        PLATFORM = 'openstack'
-                        CLUSTERNAME = "${PLATFORM}-cluster"
+            steps {
+                script {
+                    def platformTests = []
+                    if(sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes") {
+                        platformNames << 'VMware'
                     }
-
-                    stages {
-                        stage('Cluster Deployment') { steps {
-                            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
-                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-                        } }
-                        stage('Run end-to-end tests') { steps {
-                            sshagent(credentials: ['shared-ssh-key']) {
-                                dir('skuba') {
-                                    sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-                                }
-                            }
-                        } }
+                    platformNames.each {platformName ->
+                        platformTests << platformTest(platformName)
                     }
-
-                    post {
-                        always {
-                            sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
-                            zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
-                        }
-                        cleanup {
-                            sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
-                        }
-                    }
-                }
-
-                stage('VMware') {
-                    environment {
-                        ENV_FILE = credentials('vmware-env')
-                        PLATFORM = 'vmware'
-                        CLUSTERNAME = "${PLATFORM}-cluster"
-                        FILTER_SUBDIRECTORY = 'ci/infra/vmware'
-                    }
-                    when {
-                        expression {
-                            sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
-                        }
-                    }
-
-                    stages {
-                        stage('Cluster Deployment') { steps {
-                            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
-                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-                            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-                        } }
-                        stage('Run end-to-end tests') { steps {
-                            sshagent(credentials: ['shared-ssh-key']) {
-                                dir('skuba') {
-                                    sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-                                }
-                            }
-                        } }
-                    }
-
-                    post {
-                        always {
-                            sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
-                            zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
-                        }
-                        cleanup {
-                            sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
-                        }
-                    }
+                    parallel platformTests
                 }
             }
         }
