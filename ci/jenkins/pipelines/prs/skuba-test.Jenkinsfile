@@ -7,28 +7,28 @@ def platformNames = ['OpenStack']
 def platformTests = [:]
 def platformTest(platformName) {
     return {
-        environment {
-            OPENRC = credentials('ecp-openrc')
-            PLATFORM = platformName.toLowerCase()
-            CLUSTERNAME = "${PLATFORM}-cluster"
-        }
-
-        sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
-        archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-        archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-        sshagent(credentials: ['shared-ssh-key']) {
-            dir('skuba') {
-                sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+        withEnv([
+                "OPENRC=${credentials('ecp-openrc')}",
+                "PLATFORM=${platformName.toLowerCase()}",
+                "CLUSTERNAME=${PLATFORM}-cluster"
+        ]) {
+            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Create Environment')
+            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
+            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+            sshagent(credentials: ['shared-ssh-key']) {
+                dir('skuba') {
+                    sh(script: "SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+                }
             }
-        }
 
-        post {
-            always {
-                sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
-                zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
-            }
-            cleanup {
-                sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
+            post {
+                always {
+                    sh(script: 'make -f skuba/ci/Makefile gather_logs', label: 'Gather Logs')
+                    zip(archive: true, dir: "testrunner_${PLATFORM}_logs", zipFile: "testrunner_${PLATFORM}_logs.zip")
+                }
+                cleanup {
+                    sh(script: 'make -f skuba/ci/Makefile destroy_environment', label: 'Destroy Environment')
+                }
             }
         }
     }
