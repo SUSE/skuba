@@ -4,7 +4,7 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 def platformNames = ['OpenStack']
-
+def platformTests = []
 def platformTest(platformName) {
     stage(platformName) {
         environment {
@@ -101,16 +101,19 @@ pipeline {
         stage('Platform Tests') {
             steps {
                 script {
-                    def platformTests = []
+
                     if(sh(script: "skuba/${PR_MANAGER} filter-pr --filename ci/infra/vmware", returnStdout: true, label: "Filtering PR") =~ "contains changes") {
                         platformNames << 'VMware'
                     }
                     platformNames.each {platformName ->
                         platformTests << platformTest(platformName)
                     }
-                    parallel platformTests
+
                 }
             }
+        }
+        stage('Parallel') {
+            parallel platformTests
         }
     }
 
