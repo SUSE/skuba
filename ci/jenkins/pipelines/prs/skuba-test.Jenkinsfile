@@ -6,7 +6,7 @@
 def platformNames = ['OpenStack']
 def platformTests = [:]
 def platformTest(platformName) {
-    stage(platformName) {
+    return {
         environment {
             OPENRC = credentials('ecp-openrc')
             PLATFORM = platformName.toLowerCase()
