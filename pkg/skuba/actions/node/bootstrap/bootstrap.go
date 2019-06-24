@@ -39,6 +39,13 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead
 //        of using the PWD
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
+	if clientSet, err := kubernetes.GetAdminClientSet(); err == nil {
+		_, err := clientSet.ServerVersion()
+		if err == nil {
+			return errors.New("cluster is already bootstrapped")
+		}
+	}
+
 	initConfiguration, err := LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
