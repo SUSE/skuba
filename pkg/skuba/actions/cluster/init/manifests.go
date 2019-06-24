@@ -670,7 +670,7 @@ metadata:
   name: cilium
 rules:
 - apiGroups:
-  - "networking.k8s.io"
+  - networking.k8s.io
   resources:
   - networkpolicies
   verbs:
@@ -700,10 +700,15 @@ rules:
   - watch
   - update
 - apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - patch
+- apiGroups:
   - extensions
   resources:
-  - networkpolicies #FIXME remove this when we drop support for k8s NP-beta GH-1202
-  - thirdpartyresources
   - ingresses
   verbs:
   - create
@@ -711,7 +716,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - "apiextensions.k8s.io"
+  - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
   verbs:
@@ -728,7 +733,7 @@ rules:
   - ciliumendpoints
   - ciliumendpoints/status
   verbs:
-  - "*"
+  - '*'
 `
 	kuredManifest = `---
 apiVersion: rbac.authorization.k8s.io/v1
