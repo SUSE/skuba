@@ -16,13 +16,13 @@ all: deploy bootstrap
 bootstrap_environment:
 	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml bootstrap 
 
-.PHONY: create_skuba
-create_skuba:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml create-skuba
+.PHONY: build_skuba
+build_skuba:
+	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml build-skuba
 
 .PHONY: create_environment
 create_environment:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml terraform-apply
+	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml provision
 
 .PHONY: cleanup
 cleanup:
@@ -56,7 +56,7 @@ pre_deployment: info
 pr_checks: git_rebase_check
 
 .PHONY: deploy
-deploy: create_environment create_skuba
+deploy: create_environment build_skuba
 
 .PHONY: bootstrap
 bootstrap: bootstrap_environment

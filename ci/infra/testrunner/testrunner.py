@@ -15,18 +15,19 @@ from utils import (BaseConfig, Format, Utils)
 
 __version__ = "0.0.3"
 
-def ip_info(options):
+def info(options):
     Utils(options.conf).info()
 
 def cleanup(options):
     Platform.get_platform(options.conf).cleanup()
     Skuba.cleanup(options.conf)
 
-def apply_terraform(options):
-    Platform.get_platform(options.conf).apply_terraform(num_master=options.master_count,
-             num_worker=options.worker_count)
+def provision(options):
+    Platform.get_platform(options.conf).provision(
+                 num_master=options.master_count,
+                 num_worker=options.worker_count)
 
-def create_skuba(options):
+def build_skuba(options):
     Skuba.build(options.conf)
 
 def bootstrap(options):
@@ -38,10 +39,10 @@ def cluster_status(options):
 def log(options):
     Skuba(options.conf).gather_logs()
 
-def add_node(options):
+def join_node(options):
         Skuba(options.conf).node_join(role=options.role, nr=options.node)
 
-def  remove_node(options):
+def remove_node(options):
         Skuba(options.conf).node_remove(role=options.role, nr=options.node)
 
 
@@ -62,7 +63,7 @@ def main():
     commands = parser.add_subparsers()
 
     cmd_info = commands.add_parser("info", help='ip info')
-    cmd:info.set_defaults(func=info)
+    cmd_info.set_defaults(func=info)
 
     cmd_log = commands.add_parser("log",  help="gather logs from nodes")
     cmd_log.set_defaults(func=log)
@@ -70,19 +71,19 @@ def main():
     cmd_cleanup = commands.add_parser("cleanup", help="cleanup created skuba environment")
     cmd_cleanup.set_defaults(func=cleanup)
 
-    cmd_apply = commands.add_parser( "terraform-apply", help="deploy nodes for cluster in \
+    cmd_provision = commands.add_parser( "provision", help="provision nodes for cluster in \
                     your configured platform e.g: openstack, vmware.") 
-    cmd_apply.set_defaults(func=apply_terraform)
-    cmd_apply.add_argument("-m", "-master-count", dest="master_count", type=int, default=-1,
+    cmd_provision.set_defaults(func=provision)
+    cmd_provision.add_argument("-m", "-master-count", dest="master_count", type=int, default=-1,
                     help='number of masters nodes to be deployed. eg: -m 2')
-    cmd_apply.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
+    cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
                     help='number of workers nodes to be deployed. eg: -w 2')
 
 
-    cmd_create = commands.add_parser("create-skuba", help="create skuba environment \
+    cmd_build = commands.add_parser("build-skuba", help="build skuba environment \
                         {workspace}/go/src/github.com/SUSE/skuba and build skuba \
                         in that directory")
-    cmd_create.set_defaults(func=create_skuba)
+    cmd_build.set_defaults(func=build_skuba)
 
     cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
                         deployed nodes in your platform")
@@ -98,13 +99,13 @@ def main():
     node_args.add_argument("-n", "--node", dest="node", type=int,
                    help='node to be added or deleted.  eg: -n 0')
 
-    cmd_add_node = commands.add_parser("add-node", parents=[node_args], 
-                       help="add node to k8s cluster.")
-    cmd_add_node.set_defaults(func=add_node)
+    cmd_join_node = commands.add_parser("join-node", parents=[node_args], 
+                       help="add node in k8s cluster with the given role.")
+    cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
                         help="remove node from k8s cluster.")
-    cmd_rem_node.set_defaults(func=add_node)
+    cmd_rem_node.set_defaults(func=remove_node)
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
