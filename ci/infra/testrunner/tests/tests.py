@@ -9,7 +9,11 @@ class Tests:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.skuba = Skuba(conf)
-        self._num_master, self._num_worker = self.skuba.num_of_nodes()
+        # TODO: this is inefficient, but this logic would probably
+        # change soon, as it makes no sense to duplicate the node count
+        # here.
+        self._num_master = self.skuba.num_of_nodes("master")
+        self._num_worker = self.skuba.num_of_nodes("worker")
 
     @timeout(600)
     @step
@@ -18,47 +22,43 @@ class Tests:
         self.skuba.cluster_init()
         self.skuba.node_bootstrap()
         self._num_master = 1
-        self.add_worker_in_cluster()
         self.skuba.cluster_status()
 
     @timeout(600)
     @step
     def add_worker_in_cluster(self):
-        try:
-            self.skuba.node_join(role="worker", nr=self._num_worker)
-            self._num_worker += 1
-        except:
-            self._num_worker -= 1
+        self.skuba.node_join(role="worker", nr=self._num_worker)
+        self._num_worker += 1
 
     @timeout(600)
     @step
     def add_master_in_cluster(self):
-        try:
-            self.skuba.node_join(role="master", nr=self._num_master)
-            self._num_master += 1
-        except:
-            self._num_master -= 1
+        self.skuba.node_join(role="master", nr=self._num_master)
+        self._num_master += 1
 
     @timeout(600)
     @step
     def remove_worker_in_cluster(self):
-        try:
-            self._num_worker -= 1
-            self.skuba.node_remove(role="worker", nr=self._num_worker)
-        except:
-            self._num_worker += 1
+        if self._num_worker == 0:
+            raise Exception("No worker to remove from cluster")
+
+        self.skuba.node_remove(role="worker", nr=self._num_worker-1)
+        self._num_worker -= 1
 
     @timeout(600)
     @step
     def remove_master_in_cluster(self):
-        try:
-            self._num_master -= 1
-            self.skuba.node_remove(role="master", nr=self._num_master)
-        except:
-            self._num_master += 1
+        if self._num_master == 0:
+            raise Exception("No master nodes to remove from cluster")
+
+        self.skuba.node_remove(role="master", nr=self._num_master-1)
+        self._num_master -= 1
 
     @step
-    def add_nodes_in_cluster(self, num_master=1, num_worker=1):
+    def add_nodes_in_cluster(self, num_master=-1, num_worker=-1):
+
+        if num_master < 1 and num_worker < 1:
+            raise ValueError("A positive number of either masters or workers must be specified")
 
         for _ in range(num_worker):
             self.add_worker_in_cluster()
@@ -68,7 +68,10 @@ class Tests:
         self.skuba.cluster_status()
 
     @step
-    def remove_nodes_in_cluster(self, num_master=0, num_worker=1):
+    def remove_nodes_in_cluster(self, num_master=-1, num_worker=-1):
+
+        if num_master < 1 and num_worker < 1:
+            raise ValueError("A positive number of either masters or workers must be specified")
 
         for _ in range(num_worker):
             self.remove_worker_in_cluster()

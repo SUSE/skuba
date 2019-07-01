@@ -82,57 +82,68 @@ class Skuba:
     def node_bootstrap(self):
         self._verify_bootstrap_dependency()
 
+        master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=self.platform.get_masters_ipaddrs()[0], username=self.conf.nodeuser)
+                 {ip} my-master-0".format(ip=master0_ip, username=self.conf.nodeuser)
         self._run_skuba(cmd)
 
     @step
     def node_join(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        try:
-            if role == "master":
-                ip_addr = self.platform.get_masters_ipaddrs()[nr]
-            else:
-                ip_addr = self.platform.get_workers_ipaddrs()[nr]
-        except:
-            raise Format.alert("Error: there is not enough node to add {} node in cluster".format(role))
+        ip_addrs = self.platform.get_nodes_ipaddrs(role)
 
-        cmd = "node join --role {role} --user {username} --sudo --target {ip} my-{role}-{nr}".format(
-            role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
-        try:
+        if nr < 0:
+            raise ValueError("Node number cannot be negative")
+
+        if nr >= len(ip_addrs):
+            raise Exception(Format.alert("Node {role}-{nr} no deployed in "
+                      "infrastructure".format(role=role, nr=nr)))
+
+        cmd = "node join --role {role} --user {username} --sudo --target {ip} \
+               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr, 
+                                   username=self.conf.nodeuser)
+        try: 
             self._run_skuba(cmd)
-        except:
-            raise Format.alert("Error: {}".format(cmd))
+        except Exception as ex:
+            raise Exception("Eror executing cmd {}") from exc
 
     @step
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
 
-        if nr <= 0:
-            raise Format.alert("Error: there is not enough node to remove {} node in cluster".format(role))
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role {}".format(role))
 
-        if role == "master":
-            ip_addr = self.platform.get_masters_ipaddrs()[nr]
-        else:
-            ip_addr = self.platform.get_workers_ipaddrs()[nr]
+        n_nodes = self.num_of_nodes(role)
 
-        cmd = "node remove my-{role}-{nr}".format(role=role, ip=ip_addr, nr=nr, username=self.conf.nodeuser)
-        try:
+        if nr < 0:
+            raise ValueError("Node number must be non negative")
+
+        if nr >= n_nodes:
+            raise ValueError("Error: there is no {role}-{rn} \
+                              node to remove from cluster".format(role=role, nr=nr))
+
+        cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
+
+        try: 
             self._run_skuba(cmd)
-        except:
-            raise Format.alert("Error: {}".format(cmd))
+        except Exception as ex:
+            raise Exception("Eror executing cmd {}".format(cmd)) from exc
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()
         self._run_skuba("cluster status")
 
-    def num_of_nodes(self):
+    def num_of_nodes(self, role):
+
+        if role not in ("master", "worker"):
+            raise ValueException("Invalid role '{}'".format(role))
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
         output = self.utils.runshellcommand_withoutput(cmd)
-        return output.count("master"), output.count("worker")
+        return output.count(role)
 
     @timeout(600)
     @step
@@ -144,12 +155,12 @@ class Skuba:
             os.mkdir(log_dir_path)
             print(f"Created log dir {log_dir_path}")
 
-        for ipa in self.platform.get_masters_ipaddrs():
+        for ipa in self.platform.get_nodes_ipaddrs("master"):
             logging_error = self._copy_cloud_init_logs(ipa, 'master', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)
 
-        for ipa in self.platform.get_workers_ipaddrs():
+        for ipa in self.platform.get_nodes_ipaddrs("worker"):
             logging_error = self._copy_cloud_init_logs(ipa, 'worker', log_dir_path)
             if logging_error is not None:
                 logging_errors.append(logging_error)

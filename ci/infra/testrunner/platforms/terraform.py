@@ -48,8 +48,18 @@ class Terraform:
             raise Exception(Format.alert("Failure(s) during cleanup"))
 
     @step
-    def apply_terraform(self):
+    def apply_terraform(self, num_master=-1, num_worker=-1):
         """ Create and apply terraform plan"""
+        if num_master > -1 or num_worker > -1:
+            print("Overriding number of nodes")
+            if num_master > -1:
+                self.conf.master.count = num_master
+                print("   Masters:{} ".format(num_master));
+
+            if num_worker > -1:
+                self.conf.worker.count = num_worker
+                print("   Workers:{} ".format(num_worker));
+
         print("Init terraform")
         self._check_tf_deployed()
         
@@ -101,13 +111,14 @@ class Terraform:
         self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
 
-    def get_masters_ipaddrs(self):
+    def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_masters"]["value"]
 
-    def get_workers_ipaddrs(self):
-        self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_workers"]["value"]
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role: {}".format(role))
+
+        role_key = "ip_"+role+"s"
+        return self.state["modules"][0]["outputs"][role_key]["value"]
 
     @step
     def _fetch_terraform_output(self):
