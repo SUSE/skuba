@@ -106,7 +106,7 @@ class Skuba:
         try: 
             self._run_skuba(cmd)
         except Exception as ex:
-            raise Exception("Eror executing cmd {}") from ex
+            raise Exception("Error executing cmd {}") from ex
 
     @step
     def node_remove(self, role="worker", nr=0):
@@ -129,7 +129,27 @@ class Skuba:
         try: 
             self._run_skuba(cmd)
         except Exception as ex:
-            raise Exception("Eror executing cmd {}".format(cmd)) from ex
+            raise Exception("Error executing cmd {}".format(cmd)) from ex
+
+    @step
+    def node_reset(self, role="worker", nr=0):
+        self._verify_bootstrap_dependency()
+
+        ip_addrs = self.platform.get_nodes_ipaddrs(role)
+
+        if nr < 0:
+            raise ValueError("Node number cannot be negative")
+
+        if nr >= len(ip_addrs):
+            raise Exception(Format.alert("Node {role}-{nr} not deployed in "
+                      "infrastructure".format(role=role, nr=nr)))
+
+        cmd = "node reset --user {username} --sudo --target {ip}".format(
+                ip=ip_addrs[nr], username=self.conf.nodeuser)
+        try: 
+            self._run_skuba(cmd)
+        except Exception as ex:
+            raise Exception("Error executing cmd {}".format(cmd)) from ex
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()

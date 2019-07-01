@@ -68,7 +68,7 @@ usage:
     Warning: it removes docker containers, VMs, images, and network configuration.
 
        [-h] [-v YAML_PATH]
-       {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node}
+      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
        ...
 
 positional arguments:
@@ -86,6 +86,7 @@ positional arguments:
     status              check K8s cluster status
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
+    reset-node          reset node reverting state previous to bootstap/join.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -104,7 +105,7 @@ optional arguments:
   -w WORKER_COUNT, --worker-count WORKER_COUNT
                         number of workers nodes to be deployed. eg: -w 2
 
-### Node commands (join, remove)
+### Node commands (join, remove, reset)
 
   -h, --help            show this help message and exit
   -r {master,worker}, --role {master,worker}

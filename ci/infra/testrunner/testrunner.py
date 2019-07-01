@@ -45,6 +45,8 @@ def join_node(options):
 def remove_node(options):
         Skuba(options.conf).node_remove(role=options.role, nr=options.node)
 
+def reset_node(options):
+        Skuba(options.conf).node_reset(role=options.role, nr=options.node)
 
 def main():
     help = """
@@ -106,6 +108,10 @@ def main():
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
                         help="remove node from k8s cluster.")
     cmd_rem_node.set_defaults(func=remove_node)
+
+    cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
+                        help="reset node reverting state previous to bootstap/join.")
+    cmd_reset_node.set_defaults(func=reset_node)
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
