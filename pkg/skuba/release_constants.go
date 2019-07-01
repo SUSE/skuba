@@ -19,7 +19,23 @@
 
 package skuba
 
+import "fmt"
+import "os"
+
+// Temporary workaround until release.
+// No longer a const... Bad place for this.
+var ImageRepository string
+
+func init() {
+        skubaImageRepo, skir := os.LookupEnv("SKUBA_IMAGE_REPO")
+        if skir {
+                fmt.Printf("SKUBA_IMAGE_REPO: %s\n", skubaImageRepo)
+                ImageRepository=skubaImageRepo
+        } else {
+                ImageRepository = "registry.suse.com/caasp/v4"
+        }
+}
+
 const (
-	BuildType       = "release"
-	ImageRepository = "registry.suse.com/caasp/v4"
+       BuildType       = "release"
 )
