@@ -26,7 +26,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"k8s.io/apimachinery/pkg/util/version"
 )
 
 func Plan() error {
@@ -37,7 +36,7 @@ func Plan() error {
 		return err
 	}
 	currentVersion := currentClusterVersion.String()
-	latestVersion := version.MustParseSemantic(kubernetes.LatestVersion).String()
+	latestVersion := kubernetes.LatestVersion().String()
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 
