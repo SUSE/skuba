@@ -21,15 +21,23 @@ import (
 	"fmt"
 	"os/exec"
 
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
 )
+
+type NodeVersionInfo struct {
+	ContainerRuntimeVersion string
+	KubeletVersion          *version.Version
+	Unschedulable           bool
+}
 
 func GetMasterNodes() (*v1.NodeList, error) {
 	clientSet, err := GetAdminClientSet()
@@ -60,4 +68,38 @@ func DrainNode(node *v1.Node) error {
 	}
 
 	return nil
+}
+
+// NodeVersioningInfo returns related versioning information about a node
+func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
+	client, err := GetAdminClientSet()
+	if err != nil {
+		return NodeVersionInfo{}, errors.Wrap(err, "unable to get admin client set")
+	}
+
+	nodeVersions, err := nodeVersioningInfoWithClientset(client, nodeName)
+	if err != nil {
+		return NodeVersionInfo{}, errors.Wrap(err, "unable to get node versioning info")
+	}
+
+	return nodeVersions, nil
+}
+
+func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName string) (NodeVersionInfo, error) {
+	nodeObject, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	if err != nil {
+		return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node object")
+	}
+
+	kubeletVersion := version.MustParseSemantic(nodeObject.Status.NodeInfo.KubeletVersion)
+	containerRuntimeVersion := nodeObject.Status.NodeInfo.ContainerRuntimeVersion
+	unschedulable := nodeObject.Spec.Unschedulable
+
+	nodeVersions := NodeVersionInfo{
+		ContainerRuntimeVersion: containerRuntimeVersion,
+		KubeletVersion:          kubeletVersion,
+		Unschedulable:           unschedulable,
+	}
+
+	return nodeVersions, nil
 }
