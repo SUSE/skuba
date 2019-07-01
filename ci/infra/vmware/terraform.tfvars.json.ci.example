@@ -1,6 +1,6 @@
 {
     "vsphere_datastore": "3PAR",
-    "vsphere_datacenter": "",
+    "vsphere_datacenter": "PROVO",
     "vsphere_network": "VM Network",
     "vsphere_resource_pool": "CaaSP_RP",
     "template_name": "SLES15-SP1-GM-guestinfo",

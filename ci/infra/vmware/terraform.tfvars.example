@@ -43,11 +43,6 @@ workers = 2
 # Optional: Size of the root disk in GB on worker node
 worker_disk_size = 40
 
-# Username for the cluster nodes
-# EXAMPLE:
-# username = "sles"
-username = "sles"
-
 # Optional: Define the repositories to use
 # EXAMPLE:
 # repositories = {

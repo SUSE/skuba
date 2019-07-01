@@ -45,6 +45,11 @@ runcmd:
   # With a new machine-id generated the journald daemon will work and can be restarted
   # Without a new machine-id it should be in a failed state
   - [ systemctl, restart, systemd-journald ]
+  # Workaround for bsc#1138557 . Disable root and password SSH login
+  - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - systemctl restart sshd
 ${register_scc}
 ${register_rmt}
 ${commands}
