@@ -23,6 +23,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
+	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
 
@@ -54,7 +55,8 @@ func NewJoinCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(target.GetFlags())
 	cmd.Flags().StringVarP(&joinOptions.role, "role", "r", "", "Role that this node will have in the cluster (master|worker) (required)")
-	cmd.Flags().StringVar(&joinOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
+
+	actions.AddCommonFlags(cmd, &joinOptions.ignorePreflightErrors)
 
 	cmd.MarkFlagRequired("role")
 

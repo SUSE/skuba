@@ -24,6 +24,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
+	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/reset"
 
 	"k8s.io/klog"
@@ -57,7 +58,7 @@ func NewResetCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(target.GetFlags())
-	cmd.Flags().StringVar(&resetOptions.ignorePreflightErrors, "ignore-preflight-errors", "", "Comma separated list of preflight errors to ignore")
+	actions.AddCommonFlags(&cmd, &resetOptions.ignorePreflightErrors)
 
 	return &cmd
 }
