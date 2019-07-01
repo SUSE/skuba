@@ -19,19 +19,33 @@ package skuba
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/spf13/cobra"
-
-	"github.com/SUSE/skuba/pkg/skuba"
+	"runtime"
 )
 
-func NewVersionCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Print version information",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(os.Stderr, "%s\n", skuba.CurrentVersion().String())
-		},
+var (
+	Version   string
+	BuildDate string
+	Commit    string
+)
+
+type SkubaVersion struct {
+	Version   string
+	BuildType string
+	BuildDate string
+	Commit    string
+	GoVersion string
+}
+
+func CurrentVersion() SkubaVersion {
+	return SkubaVersion{
+		Version:   Version,
+		BuildType: BuildType,
+		BuildDate: BuildDate,
+		Commit:    Commit,
+		GoVersion: runtime.Version(),
 	}
+}
+
+func (s SkubaVersion) String() string {
+	return fmt.Sprintf("skuba version: %s (%s) %s %s %s", s.Version, s.BuildType, s.Commit, s.BuildDate, s.GoVersion)
 }

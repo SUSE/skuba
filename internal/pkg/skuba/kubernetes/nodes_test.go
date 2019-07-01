@@ -54,6 +54,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 			schedulerVersion:         testK8sVersion,
 			etcdVersion:              testEtcdVersion,
 			expectedNodeVersionInfo: NodeVersionInfo{
+				Nodename:                 "my-master-0",
 				ContainerRuntimeVersion:  "cri-o://1.14.1",
 				KubeletVersion:           testK8sVersion,
 				APIServerVersion:         testK8sVersion,
@@ -74,6 +75,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 			schedulerVersion:         testK8sVersion,
 			etcdVersion:              testEtcdVersion,
 			expectedNodeVersionInfo: NodeVersionInfo{
+				Nodename:                 "my-master-0",
 				ContainerRuntimeVersion:  "cri-o://1.14.1",
 				KubeletVersion:           testK8sVersion,
 				APIServerVersion:         testK8sVersion,

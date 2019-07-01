@@ -105,7 +105,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
-	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, kubernetes.CurrentVersion)
+	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, kubernetes.LatestVersion)
 	return nil
 }
 
@@ -150,7 +150,7 @@ func setHyperkubeImageToInitConfiguration(initConfiguration *kubeadmapi.InitConf
 
 func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
 	initConfiguration.ImageRepository = skuba.ImageRepository
-	initConfiguration.KubernetesVersion = kubernetes.CurrentVersion
+	initConfiguration.KubernetesVersion = kubernetes.LatestVersion
 	initConfiguration.Etcd.Local = &kubeadmapi.LocalEtcd{
 		ImageMeta: kubeadmapi.ImageMeta{
 			ImageRepository: skuba.ImageRepository,

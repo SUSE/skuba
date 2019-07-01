@@ -62,7 +62,7 @@ type KubernetesVersion struct {
 type KubernetesVersions map[string]KubernetesVersion
 
 const (
-	CurrentVersion = "v1.14.1"
+	LatestVersion = "v1.14.1"
 )
 
 var (
@@ -86,7 +86,7 @@ var (
 )
 
 func CurrentComponentVersion(component Component) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[LatestVersion]
 	switch component {
 	case Etcd:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.EtcdVersion
@@ -100,7 +100,7 @@ func CurrentComponentVersion(component Component) string {
 }
 
 func CurrentAddonVersion(addon Addon) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[LatestVersion]
 	switch addon {
 	case Tooling:
 		return currentKubernetesVersion.AddonsVersion.ToolingVersion

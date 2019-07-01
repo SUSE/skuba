@@ -19,9 +19,9 @@ COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE   := $(shell date +%Y%m%d)
 TAGS         := development
 PROJECT_PATH := github.com/SUSE/skuba
-SKUBA_LDFLAGS = -ldflags "-X=$(PROJECT_PATH)/internal/app/skuba.Version=$(VERSION) \
-                          -X=$(PROJECT_PATH)/internal/app/skuba.Commit=$(COMMIT) \
-                          -X=$(PROJECT_PATH)/internal/app/skuba.BuildDate=$(BUILD_DATE)"
+SKUBA_LDFLAGS = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
+                          -X=$(PROJECT_PATH)/pkg/skuba.Commit=$(COMMIT) \
+                          -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE)"
 
 SKUBA_DIRS    = cmd pkg internal test
 

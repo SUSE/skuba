@@ -35,6 +35,7 @@ import (
 )
 
 type NodeVersionInfo struct {
+	Nodename                 string
 	ContainerRuntimeVersion  string
 	KubeletVersion           *version.Version
 	APIServerVersion         *version.Version
@@ -75,6 +76,31 @@ func DrainNode(node *v1.Node) error {
 	return nil
 }
 
+// AllNodesVersioningInfo returns the version info for all nodes in the cluster
+func AllNodesVersioningInfo() ([]NodeVersionInfo, error) {
+	client, err := GetAdminClientSet()
+	if err != nil {
+		return []NodeVersionInfo{}, errors.Wrap(err, "unable to get admin client set")
+	}
+
+	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		return []NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node list")
+	}
+
+	result := []NodeVersionInfo{}
+
+	for _, node := range nodeList.Items {
+		nodeVersion, err := nodeVersioningInfoWithClientset(client, node.ObjectMeta.Name)
+		if err != nil {
+			return []NodeVersionInfo{}, err
+		}
+		result = append(result, nodeVersion)
+	}
+
+	return result, nil
+}
+
 // NodeVersioningInfo returns related versioning information about a node
 func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
 	client, err := GetAdminClientSet()
@@ -105,6 +131,7 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 	etcdVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
 
 	nodeVersions := NodeVersionInfo{
+		Nodename:                 nodeName,
 		ContainerRuntimeVersion:  containerRuntimeVersion,
 		KubeletVersion:           version.MustParseSemantic(kubeletVersion),
 		APIServerVersion:         version.MustParseSemantic(apiServerVersion),
