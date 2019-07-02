@@ -19,21 +19,31 @@ set -xe
 WORKDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 PROJECT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." &>/dev/null && pwd)
 
-for testname in "$WORKDIR"/tests/*.sh
-do
-    docker run --rm -v "$WORKDIR":/suse -v "$PROJECT":/usr/src "$1" /suse/tests/"$(basename "$testname")"
-done
+if [ -z "$TESTNAME" ]; then
+    tests="$WORKDIR/tests/*.sh"
+else
+    tests="$WORKDIR"/tests/"$TESTNAME".sh
+fi
 
-# Add python into the original image and use the resulting one from now on.
-dst="$1-python"
-random=$(head -c 500 /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
-tmpname="suse-python-builder-$random"
-docker run -v "$WORKDIR":/suse -v "$PROJECT":/usr/src --name "$tmpname" "$1" /bin/bash /suse/install_skuba_update.sh
-docker commit "$tmpname" "$dst"
-docker rm -f "$tmpname"
+if [ "$SKUBA" != "1" ]; then
+    for name in $tests
+    do
+        docker run --rm -v "$WORKDIR":/suse -v "$PROJECT":/usr/src "$1" /suse/tests/"$(basename "$name")"
+    done
+fi
 
-# Execute skuba-update in the integration tests instead of zypper patch.
-for testname in "$WORKDIR"/tests/*.sh
-do
-    docker run --rm -v "$WORKDIR":/suse -v "$PROJECT":/usr/src -e SKUBA=1 "$dst" /suse/tests/"$(basename "$testname")"
-done
+if [ "$SKUBA" = "1" ] || [ -z "$SKUBA" ]; then
+    # Add python into the original image and use the resulting one from now on.
+    dst="$1-python"
+    random=$(head -c 500 /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+    tmpname="suse-python-builder-$random"
+    docker run -v "$WORKDIR":/suse -v "$PROJECT":/usr/src --name "$tmpname" "$1" /bin/bash /suse/install_skuba_update.sh
+    docker commit "$tmpname" "$dst"
+    docker rm -f "$tmpname"
+
+    # Execute skuba-update in the integration tests instead of zypper patch.
+    for name in $tests
+    do
+        docker run --rm -v "$WORKDIR":/suse -v "$PROJECT":/usr/src -e SKUBA=1 "$dst" /suse/tests/"$(basename "$name")"
+    done
+fi

@@ -38,6 +38,39 @@ $ make test
 $ DOCKERIZED_UNIT_TESTS=1 make test
 ```
 
+## Running OS tests
+
+Besides unit tests, there are also OS tests that check that the zypper commands
+we use underneath work as expected. You can consider them as integration tests
+for core features. You can run these tests like so:
+
+```bash
+$ cd test/os/suse
+$ make test
+# You can also run specific OSes like:
+$ make test-sle
+```
+
+Moreover, you can also filter the tests that you want to run by using two
+environment variables:
+
+- `TESTNAME`: specify the name of the file (without the extension) that you want
+  to execute.
+- `SKUBA`: if it is not set (default), the same test will be run once by using
+  zypper commands, and another time by using a `skuba-update` binary. If it's
+  set to `1`, then it will only run the binary version. Otherwise, if it's set
+  to `0`, it will only run once (with zypper commands).
+
+An example usage:
+
+```bash
+# Run only the 'test-non-interruptive-updates' test, and use SLE.
+$ TESTNAME=test-non-interruptive-updates make test-sle
+
+# Same as before but only run with the 'skuba-update' binary.
+$ TESTNAME=test-non-interruptive-updates SKUBA=1 make test-sle
+```
+
 ## License
 
 skuba-update is licensed under the Apache License, Version 2.0. See
