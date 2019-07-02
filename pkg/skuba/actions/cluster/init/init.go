@@ -28,8 +28,12 @@ import (
 )
 
 type InitConfiguration struct {
-	ClusterName  string
-	ControlPlane string
+	ClusterName         string
+	ControlPlane        string
+	CiliumImage         string
+	CiliumInitImage     string
+	CiliumOperatorImage string
+	KuredImage          string
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
@@ -59,15 +63,11 @@ func Init(initConfiguration InitConfiguration) error {
 		if err != nil {
 			return errors.Wrapf(err, "could not create file %q", file.Location)
 		}
-		if file.DoNotRender {
-			f.WriteString(file.Content)
-		} else {
-			str, err := renderTemplate(file.Content, initConfiguration)
-			if err != nil {
-				return errors.Wrap(err, "unable to render template")
-			}
-			f.WriteString(str)
+		str, err := renderTemplate(file.Content, initConfiguration)
+		if err != nil {
+			return errors.Wrap(err, "unable to render template")
 		}
+		f.WriteString(str)
 		f.Close()
 	}
 

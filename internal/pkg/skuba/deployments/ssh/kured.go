@@ -23,17 +23,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func init() {
-	stateMap["kured.render"] = kuredRender
 	stateMap["kured.deploy"] = kuredDeploy
-}
-
-func kuredRender(t *Target, data interface{}) error {
-	return kured.FillKuredManifestFile()
 }
 
 func kuredDeploy(t *Target, data interface{}) error {
