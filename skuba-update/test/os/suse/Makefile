@@ -33,7 +33,7 @@ artifacts/%.rpm: rpm-builder-image
 	docker run --rm -v $(PWD):/suse $(BUILDER_IMAGE) /suse/build-rpm.sh $*
 
 .PHONY: repos
-repos: rpms artifacts/repo-base artifacts/repo-update-with-reboot-suggested artifacts/repo-update-with-restart-suggested artifacts/repo-update-plain artifacts/repo-update-with-message
+repos: rpms artifacts/repo-base artifacts/repo-update-with-reboot-suggested artifacts/repo-update-with-restart-suggested artifacts/repo-update-plain artifacts/repo-update-with-message artifacts/repo-update-security
 
 artifacts/repo-%:
 	docker run --rm -v $(PWD):/suse $(BUILDER_IMAGE) /suse/build-repo.sh $*

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<updates>
+  <update from="caasp-team@suse.de" status="stable" type="security" version="1">
+    <id>SUSE-2019-0</id>
+    <title>An update</title>
+    <severity>moderate</severity>
+    <release>SUSE SLE-15-SP1 Update</release>
+    <issued date="1558700214"/>
+    <description>A security update</description>
+    <pkglist>
+      <collection>
+        <name>A security update</name>
+        <package arch="noarch" epoch="0" name="caasp-test" release="1" src="caasp-test-2-1.noarch.rpm" version="2">
+          <filename>caasp-test-2-1.noarch.rpm</filename>
+        </package>
+      </collection>
+    </pkglist>
+  </update>
+</updates>

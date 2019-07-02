@@ -46,8 +46,12 @@ check_list_patches_interactivity() {
 
 zypper_patch() {
     if [ "$SKUBA" = "1" ]; then
-        skuba-update
-    else
+        if [ -n "$SKUBA_UPDATE_OPTIONS" ]; then
+            skuba-update "$SKUBA_UPDATE_OPTIONS"
+        else
+            skuba-update
+        fi
+    elif [ "$SKUBA_UPDATE_OPTIONS" != "--annotate-only" ]; then
         zypper --no-refresh --non-interactive-include-reboot-patches patch -r "$1" -y
     fi
 }

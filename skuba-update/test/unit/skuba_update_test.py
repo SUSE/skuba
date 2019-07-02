@@ -377,7 +377,10 @@ def test_annotate(mock_subprocess):
 def test_annotate_updates_empty(mock_subprocess, mock_annotate, mock_name):
     mock_name.return_value = 'mynode'
     mock_process = Mock()
-    mock_process.communicate.return_value = (b'<root></root>', b'')
+    mock_process.communicate.return_value = (
+        b'<stream><update-status><update-list>'
+        b'</update-list></update-status></stream>', b''
+    )
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
     annotate_updates_available()
@@ -425,19 +428,12 @@ def test_annotate_updates(mock_subprocess, mock_annotate, mock_name):
 @patch('subprocess.Popen')
 def test_annotate_updates_available(mock_subprocess, mock_open, mock_name):
     mock_name.return_value = 'mynode'
-    return_values = [
-        (b'<stream><update-status><update-list><update interactive="message">'
-         b'</update></update-list></update-status></stream>', b'')
-    ]
-
-    def mock_communicate():
-        if len(return_values) > 1:
-            return return_values.pop()
-        else:
-            return return_values[0]
 
     mock_process = Mock()
-    mock_process.communicate.side_effect = mock_communicate
+    mock_process.communicate.return_value = (
+        b'<stream><update-status><update-list><update interactive="message">'
+        b'</update></update-list></update-status></stream>', b''
+    )
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
@@ -529,21 +525,13 @@ def test_annotate_updates_security(
 def test_annotate_updates_available_is_reboot(
     mock_subprocess, mock_annotate, mock_name
 ):
-    return_values = [
-        (b'<stream><update-status><update-list><update interactive="reboot">'
-         b'</update></update-list></update-status></stream>', b'')
-    ]
-
-    def mock_communicate():
-        if len(return_values) > 1:
-            return return_values.pop()
-        else:
-            return return_values[0]
-
     mock_name.return_value = 'mynode'
 
     mock_process = Mock()
-    mock_process.communicate.side_effect = mock_communicate
+    mock_process.communicate.return_value = (
+        b'<stream><update-status><update-list><update interactive="reboot">'
+        b'</update></update-list></update-status></stream>', b''
+    )
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
