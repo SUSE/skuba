@@ -16,7 +16,8 @@
 
 source "$(dirname "$0")/../suse.sh"
 
-UPDATE_REPO="update-with-reboot-suggested"
+UPDATE_REPO="update-security"
+export SKUBA_UPDATE_OPTIONS="--annotate-only"
 
 force_machine_id_file
 install_fixtures
@@ -27,21 +28,17 @@ install_package "base" "caasp-test"
 check_test_package_version "1"
 
 add_repository "$UPDATE_REPO"
-set +e
 zypper_show_patch "$UPDATE_REPO" "SUSE-2019-0"
-check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "reboot"
-check_list_patches_interactivity "reboot"
+check_patch_type_interactivity "$UPDATE_REPO" "SUSE-2019-0" "---"
+check_list_patches_interactivity "false"
 zypper_patch "$UPDATE_REPO"
-zypper_retval=$?
-set -e
 
-check_return_code $zypper_retval 102 "ZYPPER_EXIT_INF_REBOOT_NEEDED"
-
-check_test_package_version "2"
+check_test_package_version "1"
 check_reboot_needed_absent
-check_reboot_required_present
+check_reboot_required_absent
+
 
 check_kubectl_calls "kubectl get nodes -o json" \
-                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-updates=no" \
-                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-security-updates=no" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-updates=yes" \
+                    "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-security-updates=yes" \
                     "kubectl annotate --overwrite node my-node-1 caasp.suse.com/has-disruptive-updates=no"

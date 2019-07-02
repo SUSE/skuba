@@ -134,17 +134,18 @@ def annotate_updates_available():
         ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
         needsOutput=True
     ).output
+    updates = get_update_list(patch_xml)
     annotate(
         'node', node_name, KUBE_UPDATES_KEY,
-        'yes' if has_updates(patch_xml) else 'no'
+        'yes' if has_updates(updates) else 'no'
     )
     annotate(
         'node', node_name, KUBE_SECURITY_UPDATES_KEY,
-        'yes' if has_security_updates(patch_xml) else 'no'
+        'yes' if has_security_updates(updates) else 'no'
     )
     annotate(
         'node', node_name, KUBE_DISRUPTIVE_UPDATES_KEY,
-        'yes' if has_disruptive_updates(patch_xml) else 'no'
+        'yes' if has_disruptive_updates(updates) else 'no'
     )
 
 
@@ -164,43 +165,45 @@ def get_update_list(patch_xml):
     return us.find('update-list')
 
 
-def has_updates(patch_xml):
+def has_updates(update_list):
     """
     Returns true if there are updates available.
     """
-
-    if get_update_list(patch_xml) is None:
+    if update_list is None or len(update_list) == 0:
         return False
-    return True
+    else:
+        return True
 
 
-def has_security_updates(patch_xml):
+def has_security_updates(update_list):
     """
     Returns true if there are security updates available.
     """
 
-    update_list = get_update_list(patch_xml)
-    if update_list is None:
-        return False
-    for update in update_list:
-        attr = update.attrib.get('category', '')
-        if attr == 'security':
-            return True
-    return False
+    return filter_updates(update_list, 'category', lambda x: x == 'security')
 
 
-def has_disruptive_updates(patch_xml):
+def has_disruptive_updates(update_list):
     """
     Returns true if there are disruptive updates available.
     """
 
-    update_list = get_update_list(patch_xml)
-    if update_list is None:
-        return False
-    for update in update_list:
-        attr = update.attrib.get('interactive', '')
-        if is_not_false_str(attr):
-            return True
+    return filter_updates(update_list, 'interactive', is_not_false_str)
+
+
+def filter_updates(update_list, attrib, attrib_check):
+    """
+    Returns True if there is at least one update having the given
+    attribute (attrib) that is also passing the checker
+    function (attrib_check)
+    """
+
+    if has_updates(update_list):
+        for update in update_list:
+            attr = update.attrib.get(attrib, '')
+            if attrib_check(attr):
+                return True
+
     return False
 
 
