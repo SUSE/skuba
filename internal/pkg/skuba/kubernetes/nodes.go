@@ -20,6 +20,7 @@ package kubernetes
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -34,9 +35,13 @@ import (
 )
 
 type NodeVersionInfo struct {
-	ContainerRuntimeVersion string
-	KubeletVersion          *version.Version
-	Unschedulable           bool
+	ContainerRuntimeVersion  string
+	KubeletVersion           *version.Version
+	APIServerVersion         *version.Version
+	ControllerManagerVersion *version.Version
+	SchedulerVersion         *version.Version
+	EtcdVersion              *version.Version
+	Unschedulable            bool
 }
 
 func GetMasterNodes() (*v1.NodeList, error) {
@@ -91,15 +96,34 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 		return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node object")
 	}
 
-	kubeletVersion := version.MustParseSemantic(nodeObject.Status.NodeInfo.KubeletVersion)
+	kubeletVersion := nodeObject.Status.NodeInfo.KubeletVersion
 	containerRuntimeVersion := nodeObject.Status.NodeInfo.ContainerRuntimeVersion
 	unschedulable := nodeObject.Spec.Unschedulable
+	apiServerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
+	controllerManagerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
+	schedulerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
+	etcdVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
 
 	nodeVersions := NodeVersionInfo{
-		ContainerRuntimeVersion: containerRuntimeVersion,
-		KubeletVersion:          kubeletVersion,
-		Unschedulable:           unschedulable,
+		ContainerRuntimeVersion:  containerRuntimeVersion,
+		KubeletVersion:           version.MustParseSemantic(kubeletVersion),
+		APIServerVersion:         version.MustParseSemantic(apiServerVersion),
+		ControllerManagerVersion: version.MustParseSemantic(controllerManagerVersion),
+		SchedulerVersion:         version.MustParseSemantic(schedulerVersion),
+		EtcdVersion:              version.MustParseSemantic(etcdVersion),
+		Unschedulable:            unschedulable,
 	}
 
 	return nodeVersions, nil
+}
+
+func getPodContainerImageTagWithClientset(client kubernetes.Interface, namespace string, podName string) (string, error) {
+	podObject, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "could not retrieve pod object")
+	}
+	containerImageWithName := podObject.Spec.Containers[0].Image
+	containerImageTag := strings.Split(containerImageWithName, ":")
+
+	return containerImageTag[len(containerImageTag)-1], nil
 }
