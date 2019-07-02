@@ -90,7 +90,11 @@ test: test-unit test-e2e
 
 .PHONY: test-unit
 test-unit:
-	$(GO) test $(PROJECT_PATH)/{cmd,pkg,internal}/...
+	$(GO) test -coverprofile=coverage.out $(PROJECT_PATH)/{cmd,pkg,internal}/...
+
+.PHONY: test-unit-coverage
+test-unit-coverage: test-unit
+	$(GO) tool cover -html=coverage.out
 
 .PHONY: test-e2e
 test-e2e:

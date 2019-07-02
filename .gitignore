@@ -22,6 +22,9 @@
 # RPM files folder
 ci/packaging/suse/obs_files
 
+# ignore coverage result
+/coverage.out
+
 # ignore ginkgo and skuba
 /ginkgo
 /skuba
