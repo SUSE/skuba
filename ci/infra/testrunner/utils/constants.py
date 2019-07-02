@@ -83,9 +83,6 @@ class BaseConfig:
     class Test:
         def __init__(self):
             super().__init__()
-            self.replica_count = 5
-            self.replicas_creation_interval_seconds = 5
-            self.podname = "default"
             self.no_destroy = False
 
     class VMware:
