@@ -31,7 +31,8 @@ def build_skuba(options):
     Skuba.build(options.conf)
 
 def bootstrap(options):
-    Tests(options.conf).bootstrap_environment()
+    Skuba(options.conf).cluster_init()
+    Skuba(options.conf).node_bootstrap()
 
 def cluster_status(options):
     Skuba(options.conf).cluster_status()
