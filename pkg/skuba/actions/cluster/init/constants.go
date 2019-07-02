@@ -23,9 +23,8 @@ import (
 
 var (
 	scaffoldFiles = []struct {
-		Location    string
-		Content     string
-		DoNotRender bool
+		Location string
+		Content  string
 	}{
 		{
 			Location: skuba.KubeadmInitConfFile(),
@@ -42,9 +41,6 @@ var (
 		{
 			Location: skuba.CiliumManifestFile(),
 			Content:  ciliumManifest,
-			// cilium.yaml need delayed rendering as some
-			// fields remain unknown while `cluster init`
-			DoNotRender: true,
 		},
 		{
 			Location: skuba.PspUnprivManifestFile(),
@@ -55,9 +51,8 @@ var (
 			Content:  pspPrivManifest,
 		},
 		{
-			Location:    skuba.KuredManifestFile(),
-			Content:     kuredManifest,
-			DoNotRender: true,
+			Location: skuba.KuredManifestFile(),
+			Content:  kuredManifest,
 		},
 	}
 )

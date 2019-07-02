@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	cilium "github.com/SUSE/skuba/internal/pkg/skuba/cni"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/init"
 )
 
@@ -35,10 +37,16 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <cluster-name> --control-plane <IP/FQDN>",
 		Short: "Initialize skuba structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := cluster.Init(cluster.InitConfiguration{
-				ClusterName:  args[0],
-				ControlPlane: initOptions.ControlPlane,
-			})
+			initConfig := cluster.InitConfiguration{
+				ClusterName:         args[0],
+				ControlPlane:        initOptions.ControlPlane,
+				CiliumImage:         cilium.GetCiliumImage(),
+				CiliumInitImage:     cilium.GetCiliumInitImage(),
+				CiliumOperatorImage: cilium.GetCiliumOperatorImage(),
+				KuredImage:          kured.GetKuredImage(),
+			}
+
+			err := cluster.Init(initConfig)
 			if err != nil {
 				klog.Fatalf("init failed due to error: %s", err)
 			}

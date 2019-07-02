@@ -84,7 +84,6 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kubelet.enable",
 		"kubeadm.init",
 		"psp.deploy",
-		"kured.render",
 		"kured.deploy",
 		"skuba-update.start",
 	)
@@ -101,7 +100,6 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	// deploy cni only after downloadSecrets because
 	// we need to generate cilium etcd certs
 	err = target.Apply(nil,
-		"cni.render",
 		"cni.deploy")
 	if err != nil {
 		return err

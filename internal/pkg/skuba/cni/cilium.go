@@ -18,12 +18,9 @@
 package cni
 
 import (
-	"bytes"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
-	"text/template"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -68,35 +65,6 @@ type EtcdConfig struct {
 	CAFile    string   `yaml:"ca-file"`
 	CertFile  string   `yaml:"cert-file"`
 	KeyFile   string   `yaml:"key-file"`
-}
-
-type ciliumConfiguration struct {
-	CiliumImage         string
-	CiliumInitImage     string
-	CiliumOperatorImage string
-}
-
-func renderCiliumTemplate(ciliumConfig ciliumConfiguration, file string) error {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return errors.Errorf("could not create file %s", file)
-	}
-
-	template, err := template.New("").Parse(string(content))
-	if err != nil {
-		return errors.Errorf("could not parse template")
-	}
-
-	var rendered bytes.Buffer
-	if err := template.Execute(&rendered, ciliumConfig); err != nil {
-		return errors.Errorf("could not render configuration")
-	}
-
-	if err := ioutil.WriteFile(file, rendered.Bytes(), 0644); err != nil {
-		return errors.Errorf("could not write to %s: %s", file, err)
-	}
-
-	return nil
 }
 
 func CreateCiliumSecret() error {
@@ -195,18 +163,16 @@ func CreateOrUpdateCiliumConfigMap() error {
 	return nil
 }
 
-func FillCiliumManifestFile() error {
-	ciliumImage := images.GetGenericImage(skuba.ImageRepository, "cilium",
+func GetCiliumImage() string {
+	return images.GetGenericImage(skuba.ImageRepository, "cilium",
 		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
-	ciliumInitImage := images.GetGenericImage(skuba.ImageRepository, "cilium-init",
+}
+func GetCiliumInitImage() string {
+	return images.GetGenericImage(skuba.ImageRepository, "cilium-init",
 		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
-	ciliumOperatorImage := images.GetGenericImage(skuba.ImageRepository, "cilium-operator",
-		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
-	ciliumConfig := ciliumConfiguration{
-		CiliumImage:         ciliumImage,
-		CiliumInitImage:     ciliumInitImage,
-		CiliumOperatorImage: ciliumOperatorImage,
-	}
+}
 
-	return renderCiliumTemplate(ciliumConfig, filepath.Join("addons", "cni", "cilium.yaml"))
+func GetCiliumOperatorImage() string {
+	return images.GetGenericImage(skuba.ImageRepository, "cilium-operator",
+		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
 }

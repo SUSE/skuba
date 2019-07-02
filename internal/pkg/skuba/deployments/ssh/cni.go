@@ -29,15 +29,7 @@ import (
 
 func init() {
 	stateMap["cni.deploy"] = cniDeploy
-	stateMap["cni.render"] = cniRender
 	stateMap["cni.cilium-update-configmap"] = ciliumUpdateConfigMap
-}
-
-func cniRender(t *Target, data interface{}) error {
-	if err := cni.FillCiliumManifestFile(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func cniDeploy(t *Target, data interface{}) error {
