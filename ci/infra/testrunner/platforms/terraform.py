@@ -48,7 +48,7 @@ class Terraform:
             raise Exception(Format.alert("Failure(s) during cleanup"))
 
     @step
-    def apply_terraform(self, num_master=-1, num_worker=-1):
+    def provision(self, num_master=-1, num_worker=-1):
         """ Create and apply terraform plan"""
         if num_master > -1 or num_worker > -1:
             print("Overriding number of nodes")

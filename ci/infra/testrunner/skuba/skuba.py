@@ -106,7 +106,7 @@ class Skuba:
         try: 
             self._run_skuba(cmd)
         except Exception as ex:
-            raise Exception("Eror executing cmd {}") from exc
+            raise Exception("Eror executing cmd {}") from ex
 
     @step
     def node_remove(self, role="worker", nr=0):
@@ -129,7 +129,7 @@ class Skuba:
         try: 
             self._run_skuba(cmd)
         except Exception as ex:
-            raise Exception("Eror executing cmd {}".format(cmd)) from exc
+            raise Exception("Eror executing cmd {}".format(cmd)) from ex
 
     def cluster_status(self):
         self._verify_bootstrap_dependency()

@@ -1,7 +1,7 @@
 
 # Testrunner
 
-### Local Dev Machine Setup For Openstack
+## Local Dev Machine Setup For Openstack
 1. Create a private directory 
 ```
 sudo mkdir /Private
@@ -33,7 +33,7 @@ terraform:
   tfvars:     # name of the tfvars file to be used (defatuls to `terraform.tfvars.ci.example`)
 ```
 
-### Local Dev Machine Setup For VMware
+## Local Dev Machine Setup For VMware
 
 1. Create an environment file e.g. `vmware-env.sh` with the following:
 ```
@@ -54,48 +54,65 @@ env_file: "" # Path to vmware-env.sh file
 
 3. Be sure to use the `--vars` arg when calling testrunner and supply the path to `ci/infra/testrunner/vars/vmware.yaml`
 
-### Testrunner Usage
+## Testrunner Usage
+
+
+### General
 
 ```
 ./testrunner -h
 Starting ./testrunner script
-usage: 
+usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-    
-       [-h] [-z] [-i] [-x] [-t] [-c] [-b] [-k] [-a] [-r] [-l] [-v YAML_PATH]
-       [-m NUM_MASTER] [-w NUM_WORKER]
+
+       [-h] [-v YAML_PATH]
+       {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node}
+       ...
+
+positional arguments:
+  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+    info                ip info
+    log                 gather logs from nodes
+    cleanup             cleanup created skuba environment
+    provision           provision nodes for cluster in your configured
+                        platform e.g: openstack, vmware.
+    build-skuba         build skuba environment
+                        {workspace}/go/src/github.com/SUSE/skuba and build
+                        skuba in that directory
+    bootstrap           bootstrap k8s cluster with deployed nodes in your
+                        platform
+    status              check K8s cluster status
+    join-node           add node in k8s cluster with the given role.
+    remove-node         remove node from k8s cluster.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -i, --info            ip info
-  -x, --cleanup         cleanup created skuba environment
-  -t, --terraform-apply
-                        deploy nodes for cluster in your configured platform
-                        e.g) openstack, vmware. The number of master/workers
-                        can be specified with the --master --worker parameters
-  -c, --create-skuba
-                        create skuba environment
-                        {workspace}/go/src/github.com/SUSE/skuba and build
-                        skuba in that directory
-  -b, --bootstrap       bootstrap k8s cluster with deployed nodes in your
-                        platform
-  -k, --status          check K8s cluster status
-  -a, --add-nodes       add nodes in k8s cluster. Requires specifying --master
-                        and/or --worker options
-  -r, --remove-nodes    remove nodes in k8s cluster. Requires specifying
-                        --master and/or --worker options
-  -l, --log             gather logs from nodes
   -v YAML_PATH, --vars YAML_PATH
                         path for platform yaml file. Default is
                         vars/openstack.yaml in
-                        {workspace}/ci/infra/testrunner. eg) -v
+                        {workspace}/ci/infra/testrunner. eg: -v
                         vars/myconfig.yaml
-  -m NUM_MASTER, --master NUM_MASTER
-                        number of masters to deployed, add or delete. eg: -m 2
-  -w NUM_WORKER, --worker NUM_WORKER
-                        number of workers to deploy, add or delete. eg: -w 2
+
+### Provision
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MASTER_COUNT, -master-count MASTER_COUNT
+                        number of masters nodes to be deployed. eg: -m 2
+  -w WORKER_COUNT, --worker-count WORKER_COUNT
+                        number of workers nodes to be deployed. eg: -w 2
+
+### Node commands (join, remove)
+
+  -h, --help            show this help message and exit
+  -r {master,worker}, --role {master,worker}
+                        role of the node to be added or deleted. eg: --role
+                        master
+  -n NODE, --node NODE  node to be added or deleted. eg: -n 0
+
+
 ```
 
 
