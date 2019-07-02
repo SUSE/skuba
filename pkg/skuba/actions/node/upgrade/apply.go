@@ -30,16 +30,17 @@ import (
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	k8s "k8s.io/client-go/kubernetes"
 )
 
-func Apply(target *deployments.Target) error {
+func Apply(clientSet k8s.Interface, target *deployments.Target) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
 
 	if err := fillTargetWithNodeName(target); err != nil {
 		return err
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}
@@ -68,7 +69,7 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Println("Fetching the cluster configuration...")
 
-			initCfg, err := kubeadm.GetClusterConfiguration()
+			initCfg, err := kubeadm.GetClusterConfiguration(clientSet)
 			if err != nil {
 				return err
 			}

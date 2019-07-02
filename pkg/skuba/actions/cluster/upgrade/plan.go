@@ -26,12 +26,13 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 	"github.com/SUSE/skuba/pkg/skuba"
+	k8s "k8s.io/client-go/kubernetes"
 )
 
-func Plan() error {
+func Plan(clientSet k8s.Interface) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,7 @@ func Plan() error {
 		return nil
 	}
 
-	upgradePath, err := upgradecluster.UpgradePath()
+	upgradePath, err := upgradecluster.UpgradePath(clientSet)
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,7 @@ func Plan() error {
 		tmpVersion = version.String()
 	}
 
-	driftedNodes, err := upgradecluster.DriftedNodes()
+	driftedNodes, err := upgradecluster.DriftedNodes(clientSet)
 	if err != nil {
 		return err
 	}

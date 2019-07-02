@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -33,10 +34,14 @@ func init() {
 }
 
 func cniDeploy(t *Target, data interface{}) error {
-	if err := cni.CreateCiliumSecret(); err != nil {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "unable to retrieve clientset from kubernetes")
+	}
+	if err := cni.CreateCiliumSecret(clientSet); err != nil {
 		return errors.Wrap(err, "unable to create cilium secrets")
 	}
-	if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+	if err := cni.CreateOrUpdateCiliumConfigMap(clientSet); err != nil {
 		return errors.Wrap(err, "unable to create or update cilium config map")
 	}
 	cniFiles, err := ioutil.ReadDir(skuba.CniDir())
@@ -57,9 +62,13 @@ func cniDeploy(t *Target, data interface{}) error {
 }
 
 func ciliumUpdateConfigMap(t *Target, data interface{}) error {
-	if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "unable to retrieve clientset from kubernetes")
+	}
+	if err := cni.CreateOrUpdateCiliumConfigMap(clientSet); err != nil {
 		return err
 	}
 
-	return cni.AnnotateCiliumDaemonsetWithCurrentTimestamp()
+	return cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(clientSet)
 }

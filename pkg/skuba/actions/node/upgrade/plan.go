@@ -24,12 +24,13 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
+	k8s "k8s.io/client-go/kubernetes"
 )
 
-func Plan(nodeName string) error {
+func Plan(clientSet k8s.Interface, nodeName string) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}

@@ -21,6 +21,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"k8s.io/apimachinery/pkg/util/version"
+	k8s "k8s.io/client-go/kubernetes"
 )
 
 func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersionInfo kubernetes.NodeVersionInfoMap) []kubernetes.NodeVersionInfo {
@@ -41,8 +42,8 @@ func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersi
 // major version than the current cluster version are considered. If the difference on
 // the node version with regards to the current cluster version is only the patch level
 // version, the node won't be included in the list.
-func DriftedNodes() ([]kubernetes.NodeVersionInfo, error) {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+func DriftedNodes(clientSet k8s.Interface) ([]kubernetes.NodeVersionInfo, error) {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return []kubernetes.NodeVersionInfo{}, err
 	}

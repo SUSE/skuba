@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 
@@ -28,12 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateJob(name string, spec batchv1.JobSpec) (*batchv1.Job, error) {
-	clientSet, err := GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting client set")
-	}
-	_, err = clientSet.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
+func CreateJob(clientSet kubernetes.Interface, name string, spec batchv1.JobSpec) (*batchv1.Job, error) {
+	_, err := clientSet.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: metav1.NamespaceSystem,
@@ -43,25 +41,17 @@ func CreateJob(name string, spec batchv1.JobSpec) (*batchv1.Job, error) {
 	return nil, err
 }
 
-func DeleteJob(name string) error {
-	clientSet, err := GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "Error getting client set")
-	}
+func DeleteJob(clientSet kubernetes.Interface, name string) error {
 	return clientSet.BatchV1().Jobs(metav1.NamespaceSystem).Delete(name, &metav1.DeleteOptions{})
 }
 
-func CreateAndWaitForJob(name string, spec batchv1.JobSpec) error {
-	_, err := CreateJob(name, spec)
-	defer DeleteJob(name)
+func CreateAndWaitForJob(clientSet kubernetes.Interface, name string, spec batchv1.JobSpec) error {
+	_, err := CreateJob(clientSet, name, spec)
+	defer DeleteJob(clientSet, name)
 	if err != nil {
 		return err
 	}
 	for i := 0; i < 300; i++ {
-		clientSet, err := GetAdminClientSet()
-		if err != nil {
-			return errors.Wrap(err, "Error getting client set")
-		}
 		job, err := clientSet.BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 		if err != nil {
 			klog.V(1).Infof("failed to get status for job %s, continuing...", name)

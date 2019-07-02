@@ -19,6 +19,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"k8s.io/client-go/kubernetes"
 	"strings"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -28,8 +29,9 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func DisarmKubelet(node *v1.Node) error {
+func DisarmKubelet(clientSet kubernetes.Interface, node *v1.Node) error {
 	return CreateAndWaitForJob(
+		clientSet,
 		disarmKubeletJobName(node),
 		disarmKubeletJobSpec(node),
 	)

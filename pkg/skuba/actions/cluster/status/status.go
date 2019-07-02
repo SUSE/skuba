@@ -18,9 +18,9 @@
 package cluster
 
 import (
+	"k8s.io/client-go/kubernetes"
 	"os"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
@@ -31,14 +31,8 @@ import (
 //
 // FIXME: being this a part of the go API accept a io.Writer parameter instead of
 //        using os.Stdout
-func Status() error {
-	client, err := kubernetes.GetAdminClientSet()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
-
-	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+func Status(clientSet kubernetes.Interface) error {
+	nodeList, err := clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve node list")
 	}

@@ -18,14 +18,14 @@
 package kubernetes
 
 import (
-	clientset "k8s.io/client-go/kubernetes"
+	k8s "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
 )
 
-func GetAdminClientSet() (*clientset.Clientset, error) {
+func GetAdminClientSet() (k8s.Interface, error) {
 	client, err := kubeconfigutil.ClientSetFromFile(skuba.KubeConfigAdminFile())
 	if err != nil {
 		return nil, errors.Wrap(err, "could not load admin kubeconfig file")

@@ -22,22 +22,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/client-go/kubernetes"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/pkg/errors"
 )
 
-// GetClusterConfiguration returns the cluster configuration from the `kubeadm-config` ConfigMap
-func GetClusterConfiguration() (*kubeadmapi.InitConfiguration, error) {
+func GetClusterConfiguration(clientSet kubernetes.Interface) (*kubeadmapi.InitConfiguration, error) {
 	initCfg := &kubeadmapi.InitConfiguration{}
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting client set")
-	}
 	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config ConfigMap")
@@ -54,8 +49,8 @@ func GetClusterConfiguration() (*kubeadmapi.InitConfiguration, error) {
 }
 
 // GetCurrentClusterVersion returns the current cluster version
-func GetCurrentClusterVersion() (*version.Version, error) {
-	initCfg, err := GetClusterConfiguration()
+func GetCurrentClusterVersion(clientSet kubernetes.Interface) (*version.Version, error) {
+	initCfg, err := GetClusterConfiguration(clientSet)
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +58,8 @@ func GetCurrentClusterVersion() (*version.Version, error) {
 }
 
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
-func GetAPIEndpointsFromConfigMap() ([]string, error) {
+func GetAPIEndpointsFromConfigMap(clientSet kubernetes.Interface) ([]string, error) {
 	apiEndpoints := []string{}
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting client set")
-	}
 	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config configmap to get apiEndpoints")
@@ -86,11 +77,7 @@ func GetAPIEndpointsFromConfigMap() ([]string, error) {
 }
 
 // RemoveAPIEndpointFromConfigMap removes api endpoints from the config map
-func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "Error getting client set")
-	}
+func RemoveAPIEndpointFromConfigMap(clientSet kubernetes.Interface, node *v1.Node) error {
 	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve the kubeadm-config configmap to change the apiEndpoints")
@@ -103,10 +90,6 @@ func RemoveAPIEndpointFromConfigMap(node *v1.Node) error {
 	clusterStatusYaml, err := configutil.MarshalKubeadmConfigObject(clusterStatus)
 	if err != nil {
 		return errors.Wrap(err, "could not marshal modified cluster status")
-	}
-	clientSet, err = kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "Error getting client set")
 	}
 	_, err = clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

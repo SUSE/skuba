@@ -24,6 +24,7 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8s "k8s.io/client-go/kubernetes"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
@@ -41,7 +42,7 @@ import (
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
-func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
+func Join(clientSet k8s.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
 	statesToApply := []string{
 		"kernel.load-modules",
 		"kernel.configure-parameters",
@@ -54,13 +55,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"skuba-update.start",
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		fmt.Print("[join] failed to get admin client set\n")
-		return err
-	}
-
-	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	_, err := clientSet.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 		return err
@@ -86,7 +81,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
-func ConfigPath(role deployments.Role, target *deployments.Target) (string, error) {
+func ConfigPath(clientSet k8s.Interface, role deployments.Role, target *deployments.Target) (string, error) {
 	configPath := skuba.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = skuba.TemplatePathForRole(role)
@@ -96,7 +91,7 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
-	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
+	addFreshTokenToJoinConfiguration(clientSet, target.Target, joinConfiguration)
 	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
 	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
 	if err != nil {
@@ -110,12 +105,12 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	return skuba.MachineConfFile(target.Target), nil
 }
 
-func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
+func addFreshTokenToJoinConfiguration(clientSet k8s.Interface, target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
 	if joinConfiguration.Discovery.BootstrapToken == nil {
 		joinConfiguration.Discovery.BootstrapToken = &kubeadmapi.BootstrapTokenDiscovery{}
 	}
 	var err error
-	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(target)
+	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(clientSet, target)
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 	return err
 }
@@ -138,12 +133,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	return nil
 }
 
-func createBootstrapToken(target string) (string, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get admin client set")
-	}
-
+func createBootstrapToken(clientSet k8s.Interface, target string) (string, error) {
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
 		return "", errors.Wrap(err, "could not generate a new bootstrap token")
@@ -166,7 +156,7 @@ func createBootstrapToken(target string) (string, error) {
 		},
 	}
 
-	if err := kubeadmtokenphase.CreateNewTokens(client, bootstrapTokens); err != nil {
+	if err := kubeadmtokenphase.CreateNewTokens(clientSet, bootstrapTokens); err != nil {
 		return "", errors.Wrap(err, "could not create new bootstrap token")
 	}
 

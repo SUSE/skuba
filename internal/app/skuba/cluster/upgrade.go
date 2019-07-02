@@ -19,6 +19,8 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"k8s.io/klog"
 	"os"
 
 	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
@@ -39,11 +41,15 @@ func NewUpgradeCmd() *cobra.Command {
 }
 
 func newUpgradePlanCmd() *cobra.Command {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
+	}
 	return &cobra.Command{
 		Use:   "plan",
 		Short: "Plan cluster upgrade",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := upgrade.Plan(); err != nil {
+			if err := upgrade.Plan(clientSet); err != nil {
 				fmt.Printf("Unable to plan cluster upgrade: %s\n", err)
 				os.Exit(1)
 			}

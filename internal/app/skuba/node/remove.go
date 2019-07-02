@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/remove"
 )
 
@@ -31,7 +32,10 @@ type removeOptions struct {
 }
 
 func NewRemoveCmd() *cobra.Command {
-	removeOptions := removeOptions{}
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
+	}
 	cmd := &cobra.Command{
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
@@ -40,7 +44,7 @@ func NewRemoveCmd() *cobra.Command {
 				klog.Infof("the passed duration was negative and will be ignored")
 				removeOptions.drainTimeout = 0
 			}
-			if err := node.Remove(nodenames[0], removeOptions.drainTimeout); err != nil {
+			if err := node.Remove(clientSet, nodenames[0], removeOptions.drainTimeout); err != nil {
 				klog.Fatalf("error removing node %s: %s", nodenames[0], err)
 			}
 		},

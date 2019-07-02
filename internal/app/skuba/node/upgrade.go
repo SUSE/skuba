@@ -22,8 +22,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/upgrade"
 )
 
@@ -42,11 +44,15 @@ func NewUpgradeCmd() *cobra.Command {
 }
 
 func newUpgradePlanCmd() *cobra.Command {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
+	}
 	return &cobra.Command{
 		Use:   "plan <node-name>",
 		Short: "Plan node upgrade",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := upgrade.Plan(args[0]); err != nil {
+			if err := upgrade.Plan(clientSet, args[0]); err != nil {
 				fmt.Printf("Unable to plan node upgrade: %s\n", err)
 				os.Exit(1)
 			}
@@ -56,12 +62,16 @@ func newUpgradePlanCmd() *cobra.Command {
 }
 
 func newUpgradeApplyCmd() *cobra.Command {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
+	}
 	target := ssh.Target{}
 	cmd := cobra.Command{
 		Use:   "apply",
 		Short: "Apply node upgrade",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := upgrade.Apply(target.GetDeployment("")); err != nil {
+			if err := upgrade.Apply(clientSet, target.GetDeployment("")); err != nil {
 				fmt.Printf("Unable to apply node upgrade: %s\n", err)
 				os.Exit(1)
 			}
