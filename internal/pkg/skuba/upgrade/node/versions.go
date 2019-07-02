@@ -40,8 +40,9 @@ func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
 }
 
 func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() bool {
+	clientSet, _ := kubernetes.GetAdminClientSet()
 	isControlPlane := nviu.Current.IsControlPlane()
-	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion(clientSet)
 	allControlPlanesMatchVersion, _ := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
 	matchesClusterVersion := (currentClusterVersion.String() == nviu.Current.KubeletVersion.String())
 
@@ -53,7 +54,7 @@ func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
 	if err != nil {
 		return NodeVersionInfoUpdate{}, errors.Wrap(err, "unable to get admin client set")
 	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}

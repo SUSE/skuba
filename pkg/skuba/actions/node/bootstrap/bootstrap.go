@@ -43,7 +43,7 @@ import (
 //        of using the PWD
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	if clientSet, err := kubernetes.GetAdminClientSet(); err == nil {
-		_, err := clientSet.ServerVersion()
+		_, err := clientSet.Discovery().ServerVersion()
 		if err == nil {
 			return errors.New("cluster is already bootstrapped")
 		}

@@ -23,6 +23,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
@@ -36,6 +37,10 @@ type joinOptions struct {
 func NewJoinCmd() *cobra.Command {
 	joinOptions := joinOptions{}
 	target := ssh.Target{}
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
+	}
 
 	cmd := &cobra.Command{
 		Use:   "join <node-name>",
@@ -47,7 +52,7 @@ func NewJoinCmd() *cobra.Command {
 
 			joinConfiguration.Role = deployments.MustGetRoleFromString(joinOptions.role)
 
-			if err := node.Join(joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
+			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
 				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},

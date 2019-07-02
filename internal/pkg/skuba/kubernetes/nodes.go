@@ -33,11 +33,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func GetControlPlaneNodes() (*v1.NodeList, error) {
-	clientSet, err := GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get admin client set")
-	}
+func GetControlPlaneNodes(clientSet kubernetes.Interface) (*v1.NodeList, error) {
 	return clientSet.CoreV1().Nodes().List(metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 	})

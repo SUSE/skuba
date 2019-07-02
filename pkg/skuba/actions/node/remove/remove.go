@@ -66,23 +66,23 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
-		etcd.RemoveMember(node)
+		etcd.RemoveMember(client, node)
 	}
 
-	if err := kubernetes.DisarmKubelet(node); err != nil {
+	if err := kubernetes.DisarmKubelet(client, node); err != nil {
 		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...\n", err)
 	}
 
 	if isControlPlane {
-		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
+		if err := kubeadm.RemoveAPIEndpointFromConfigMap(client, node); err != nil {
 			return errors.Wrapf(err, "[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
 		}
 
-		if err := cni.CreateOrUpdateCiliumConfigMap(); err != nil {
+		if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
 			return errors.Wrap(err, "[remove-node] could not update cilium-config configmap")
 		}
 
-		if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(); err != nil {
+		if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(client); err != nil {
 			fmt.Printf("[remove-node] could not annonate cilium daemonset: %v\n", err)
 		}
 	}
