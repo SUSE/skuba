@@ -38,13 +38,19 @@ runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
   # start another service by either `enable --now` or `start` will create a
   # deadlock. Instead, we have to use the `--no-block-` flag.
-  - [ systemctl, disable, --now, --no-block, firewalld ]
+  - systemctl disable --now --no-block firewalld 
   # The template machine should have been cleaned up, so no machine-id exists
-  - [ dbus-uuidgen, --ensure ]
-  - [ systemd-machine-id-setup ]
+  - dbus-uuidgen --ensure
+  - systemd-machine-id-setup
   # With a new machine-id generated the journald daemon will work and can be restarted
   # Without a new machine-id it should be in a failed state
-  - [ systemctl, restart, systemd-journald ]
+  - systemctl restart systemd-journald
+  # Workaround for bsc#1138557 . Disable root and password SSH login
+  - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+  - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sshd -t || echo "ssh syntax failure"
+  - systemctl restart sshd
 ${register_scc}
 ${register_rmt}
 ${commands}

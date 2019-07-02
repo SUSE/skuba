@@ -51,7 +51,7 @@ variable "rmt_server_name" {
 
 variable "username" {
   default     = "sles"
-  description = "Username for the cluster nodes"
+  description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
 variable "masters" {
