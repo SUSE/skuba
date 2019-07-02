@@ -34,6 +34,7 @@ type InitConfiguration struct {
 	CiliumInitImage     string
 	CiliumOperatorImage string
 	KuredImage          string
+	GangwayImage        string
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current

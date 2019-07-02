@@ -843,4 +843,150 @@ spec:
           command:
             - /usr/bin/kured
 `
+	gangwayManifest = `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-gangway-config
+  namespace: kube-system
+data:
+  gangway.yaml: |
+    clusterName: "skuba"
+
+    redirectURL: "https://{{.ControlPlane}}:32001/callback"
+
+    serveTLS: true
+    authorizeURL: "https://{{.ControlPlane}}:32002/dex/auth"
+    tokenURL: "https://{{.ControlPlane}}:32002/dex/token"
+    keyFile: /etc/oidc/pki/gangway.key
+    certFile: /etc/oidc/pki/gangway.crt
+
+    clientID: "gangway"
+    clientSecret: "TODO"
+    usernameClaim: "sub"
+    apiServerURL: "https://kubernetes.default.svc.cluster.local:6443"
+    cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    trustedCAPath: /etc/oidc/pki/ca.crt
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-gangway-client-secret
+  namespace: kube-system
+type: Opaque
+data:
+  clientsecret: TODO
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-gangway-session-key
+  namespace: kube-system
+type: Opaque
+data:
+  sesssionkey: TODO
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-gangway-secrets
+  namespace: kube-system
+type: Opaque
+stringData:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    TODO
+    -----END CERTIFICATE-----
+  gangway.crt: |
+    -----BEGIN CERTIFICATE-----
+    TODO
+    -----END CERTIFICATE-----
+  gangway.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    TODO
+    -----END RSA PRIVATE KEY-----
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+  labels:
+    app: oidc-gangway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-gangway
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: oidc-gangway
+    spec:
+      serviceAccountName: oidc-gangway
+      containers:
+        - name: oidc-gangway
+          image: {{.GangwayImage}}
+          imagePullPolicy: IfNotPresent
+          command: ["gangway", "-config", "/gangway/gangway.yaml"]
+          env:
+            - name: GANGWAY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oidc-gangway-client-secret
+                  key: clientsecret
+            - name: GANGWAY_SESSION_SECURITY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: oidc-gangway-session-key
+                  key: sesssionkey
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: gangway-config-path
+              mountPath: /gangway/
+              readOnly: true
+            - name: gangway-cert-path
+              mountPath: /etc/oidc/pki
+              readOnly: true
+      volumes:
+        - name: gangway-config-path
+          configMap:
+            name: oidc-gangway-config
+            items:
+              - key: gangway.yaml
+                path: gangway.yaml
+        - name: gangway-cert-path
+          secret:
+            secretName: oidc-gangway-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - name: web
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 32001
+  selector:
+    app: oidc-gangway
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+`
 )

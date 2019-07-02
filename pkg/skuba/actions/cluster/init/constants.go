@@ -54,5 +54,9 @@ var (
 			Location: skuba.KuredManifestFile(),
 			Content:  kuredManifest,
 		},
+		{
+			Location: skuba.GangwayManifestfile(),
+			Content:  gangwayManifest,
+		},
 	}
 )

@@ -98,3 +98,11 @@ func KuredDir() string {
 func KuredManifestFile() string {
 	return filepath.Join(KuredDir(), "kured.yaml")
 }
+
+func GangwayDir() string {
+	return filepath.Join(AddonsDir(), "gangway")
+}
+
+func GangwayManifestfile() string {
+	return filepath.Join(GangwayDir(), "gangway.yaml")
+}

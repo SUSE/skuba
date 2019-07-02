@@ -31,6 +31,7 @@ const (
 	Cilium  Addon = "cilium"
 	Tooling Addon = "tooling"
 	Kured   Addon = "kured"
+	Gangway Addon = "gangway"
 
 	Etcd    Component = "etcd"
 	CoreDNS Component = "coredns"
@@ -51,6 +52,7 @@ type AddonsVersion struct {
 	CiliumVersion  string
 	ToolingVersion string
 	KuredVersion   string
+	GangwayVersion string
 }
 
 type KubernetesVersion struct {
@@ -80,6 +82,7 @@ var (
 				CiliumVersion:  "1.5.3",
 				ToolingVersion: "0.1.0",
 				KuredVersion:   "1.2.0",
+				GangwayVersion: "3.1.0",
 			},
 		},
 	}
@@ -108,6 +111,8 @@ func CurrentAddonVersion(addon Addon) string {
 		return currentKubernetesVersion.AddonsVersion.CiliumVersion
 	case Kured:
 		return currentKubernetesVersion.AddonsVersion.KuredVersion
+	case Gangway:
+		return currentKubernetesVersion.AddonsVersion.GangwayVersion
 	}
 	log.Fatalf("unknown addon %q", addon)
 	panic("unreachable")
