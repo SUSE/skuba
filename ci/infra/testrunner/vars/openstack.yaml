@@ -25,9 +25,3 @@ worker:
   memory: 4096
   cpu: 2
 
-test:
-  replica_count: "5"  # not used
-  replicas_creation_interval_seconds: "5"  # not used
-  podname: "default"    # not used
-  no_destroy: False     # not used
-
