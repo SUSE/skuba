@@ -9,14 +9,20 @@ image_name = ""
 internal_net = ""
 
 # Name of the internal subnet to be created
-# EXAMPLE:
+# IMPORTANT: If this variable is not set or empty,
+# then it will be generated with schema
 # internal_subnet = "${var.internal_net}-subnet"
-internal_subnet = "${var.internal_net}-subnet"
+# EXAMPLE:
+# internal_subnet = "testing-subnet"
+internal_subnet = ""
 
 # Name of the internal router to be created
-# EXAMPLE:
+# IMPORTANT: If this variable is not set or empty,
+# then it will be generated with schema
 # internal_router = "${var.internal_net}-router"
-internal_router = "${var.internal_net}-router"
+# EXAMPLE:
+# internal_router = "testing-router"
+internal_router = ""
 
 # Name of the external network to be used, the one used to allocate floating IPs
 # EXAMPLE:
