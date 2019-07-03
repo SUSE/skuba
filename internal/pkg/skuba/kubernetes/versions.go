@@ -32,15 +32,17 @@ const (
 	Tooling Addon = "tooling"
 	Kured   Addon = "kured"
 
-	Etcd    Component = "etcd"
-	CoreDNS Component = "coredns"
-	Pause   Component = "pause"
+	Hyperkube Component = "hyperkube"
+	Etcd      Component = "etcd"
+	CoreDNS   Component = "coredns"
+	Pause     Component = "pause"
 )
 
 type ControlPlaneComponentsVersion struct {
-	EtcdVersion    string
-	CoreDNSVersion string
-	PauseVersion   string
+	HyperkubeVersion string
+	EtcdVersion      string
+	CoreDNSVersion   string
+	PauseVersion     string
 }
 
 type ComponentsVersion struct {
@@ -61,17 +63,14 @@ type KubernetesVersion struct {
 
 type KubernetesVersions map[string]KubernetesVersion
 
-const (
-	CurrentVersion = "v1.14.1"
-)
-
 var (
 	Versions = KubernetesVersions{
-		"v1.14.1": KubernetesVersion{
+		"1.14.1": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
-				EtcdVersion:    "3.3.11",
-				CoreDNSVersion: "1.2.6",
-				PauseVersion:   "3.1",
+				HyperkubeVersion: "v1.14.1",
+				EtcdVersion:      "3.3.11",
+				CoreDNSVersion:   "1.2.6",
+				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion: "1.14.1",
@@ -86,8 +85,10 @@ var (
 )
 
 func CurrentComponentVersion(component Component) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[LatestVersion().String()]
 	switch component {
+	case Hyperkube:
+		return currentKubernetesVersion.ControlPlaneComponentsVersion.HyperkubeVersion
 	case Etcd:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.EtcdVersion
 	case CoreDNS:
@@ -100,7 +101,7 @@ func CurrentComponentVersion(component Component) string {
 }
 
 func CurrentAddonVersion(addon Addon) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[LatestVersion().String()]
 	switch addon {
 	case Tooling:
 		return currentKubernetesVersion.AddonsVersion.ToolingVersion
@@ -127,4 +128,10 @@ func availableVersionsForMap(versions KubernetesVersions) []*version.Version {
 // AvailableVersions return the list of platform versions known to skuba
 func AvailableVersions() []*version.Version {
 	return availableVersionsForMap(Versions)
+}
+
+// LatestVersion return the latest Kubernetes supported version
+func LatestVersion() *version.Version {
+	availableVersions := AvailableVersions()
+	return availableVersions[len(availableVersions)-1]
 }

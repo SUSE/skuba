@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
@@ -31,26 +32,26 @@ import (
 )
 
 // GetCurrentClusterVersion returns the current cluster version
-func GetCurrentClusterVersion() (string, error) {
+func GetCurrentClusterVersion() (*version.Version, error) {
 	initcfg := &kubeadmapi.InitConfiguration{}
 	clientSet, err := kubernetes.GetAdminClientSet()
 	if err != nil {
-		return "", errors.Wrap(err, "error getting client set")
+		return nil, errors.Wrap(err, "error getting client set")
 	}
 	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
-		return "", errors.Wrap(err, "could not retrieve the kubeadm-config ConfigMap")
+		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config ConfigMap")
 	}
 	// gets ClusterConfiguration from kubeadm-config
 	clusterConfigurationData, ok := kubeadmConfig.Data[kubeadmconstants.ClusterConfigurationConfigMapKey]
 	if !ok {
-		return "", errors.Errorf("unexpected error when reading kubeadm-config ConfigMap: %s key value pair missing", kubeadmconstants.ClusterConfigurationConfigMapKey)
+		return nil, errors.Errorf("unexpected error when reading kubeadm-config ConfigMap: %s key value pair missing", kubeadmconstants.ClusterConfigurationConfigMapKey)
 	}
 	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), []byte(clusterConfigurationData), &initcfg.ClusterConfiguration); err != nil {
-		return "", errors.Wrap(err, "failed to decode cluster configuration data")
+		return nil, errors.Wrap(err, "failed to decode cluster configuration data")
 	}
 
-	return initcfg.ClusterConfiguration.KubernetesVersion, nil
+	return version.MustParseSemantic(initcfg.ClusterConfiguration.KubernetesVersion), nil
 }
 
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map

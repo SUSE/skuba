@@ -15,23 +15,39 @@
  *
  */
 
-package skuba
+package cluster
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 	"github.com/spf13/cobra"
-
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func NewVersionCmd() *cobra.Command {
+func NewUpgradeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upgrade",
+		Short: "Manages cluster-wide upgrade operations",
+	}
+
+	cmd.AddCommand(
+		newUpgradePlanCmd(),
+	)
+
+	return cmd
+}
+
+func newUpgradePlanCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "version",
-		Short: "Print version information",
+		Use:   "plan",
+		Short: "Plan cluster upgrade",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(os.Stderr, "%s\n", skuba.CurrentVersion().String())
+			if err := upgrade.Plan(); err != nil {
+				fmt.Printf("Unable to plan cluster upgrade: %s\n", err)
+				os.Exit(1)
+			}
 		},
+		Args: cobra.NoArgs,
 	}
 }

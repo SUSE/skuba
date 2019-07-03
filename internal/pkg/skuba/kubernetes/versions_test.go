@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -60,6 +61,25 @@ func TestAvailableVersionsForMap(t *testing.T) {
 			availableVersions := availableVersionsForMap(tt.kubernetesVersions)
 			if !reflect.DeepEqual(availableVersions, tt.expectedAvailableVersions) {
 				t.Errorf("got %q, want %q", availableVersions, tt.expectedAvailableVersions)
+			}
+		})
+	}
+}
+
+func TestLatestVersion(t *testing.T) {
+	if _, ok := Versions[LatestVersion().String()]; !ok {
+		t.Errorf("Versions map --authoritative version mapping-- does not include version %q", LatestVersion().String())
+	}
+}
+
+func TestCurrentComponentVersion(t *testing.T) {
+	components := []Component{Hyperkube, Etcd, CoreDNS, Pause}
+	for _, component := range components {
+		t.Run(fmt.Sprintf("component %q has a version assigned", component), func(t *testing.T) {
+			componentVersion := CurrentComponentVersion(component)
+			_, err := version.ParseGeneric(componentVersion)
+			if err != nil {
+				t.Errorf("component %q version (%q) parsing failed", component, componentVersion)
 			}
 		})
 	}
