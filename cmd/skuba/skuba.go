@@ -61,6 +61,7 @@ func main() {
 func register(local *pflag.FlagSet, globalName string) {
 	if f := flag.CommandLine.Lookup(globalName); f != nil {
 		pflagFlag := pflag.PFlagFromGoFlag(f)
+		pflagFlag.Name = "verbosity"
 		local.AddFlag(pflagFlag)
 	} else {
 		klog.Fatalf("failed to find flag in global flagset (flag): %s", globalName)
