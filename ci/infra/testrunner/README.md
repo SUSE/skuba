@@ -91,13 +91,13 @@ usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-    
-       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
-       {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+
+       [-h] [-v YAML_PATH]
+      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
        ...
 
 positional arguments:
-  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
     info                ip info
     log                 gather logs from nodes
     cleanup             cleanup created skuba environment
@@ -112,17 +112,20 @@ positional arguments:
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
     reset-node          reset node reverting state previous to bootstap/join.
+    test                execute tests
 
 optional arguments:
   -h, --help            show this help message and exit
   -v YAML_PATH, --vars YAML_PATH
-                        path for platform yaml file. Default is vars.yaml. eg:
+                        path for configuration yaml file. Default is vars.yaml. eg:
                         -v myconfig.yaml
   -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
                         The platform you're targeting. Defaults to openstack
 ```
 
+
 ### Provision
+
 ```
 optional arguments:
   -h, --help            show this help message and exit
@@ -140,9 +143,19 @@ optional arguments:
                         master
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
 
-
 ```
 
+### Test
+
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -s TEST_SUITE, --suite TEST_SUITE
+                        test file name
+  -t TEST, --test TEST  test to execute
+  -l, --list            only list tests to be executed
+  -v, --verbose         show all output
+```
 
 ### Jenkins Machine Setup
 In your Jenkins file, you need to set up environment variables. Then These environment variables will replace
