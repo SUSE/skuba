@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/client-go/kubernetes/fake"
+	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 )
 
 func TestNodeVersioningInfoWithClientset(t *testing.T) {
@@ -91,6 +92,9 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 			clientset := fake.NewSimpleClientset(&v1.Node{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: tt.nodeName,
+					Labels: map[string]string{
+						kubeadmconstants.LabelNodeRoleMaster: "",
+					},
 				},
 				Status: v1.NodeStatus{
 					NodeInfo: v1.NodeSystemInfo{
