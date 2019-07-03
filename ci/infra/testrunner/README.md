@@ -68,11 +68,11 @@ usage:
     Warning: it removes docker containers, VMs, images, and network configuration.
 
        [-h] [-v YAML_PATH]
-      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
        ...
 
 positional arguments:
-  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
     info                ip info
     log                 gather logs from nodes
     cleanup             cleanup created skuba environment
@@ -87,6 +87,7 @@ positional arguments:
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
     reset-node          reset node reverting state previous to bootstap/join.
+    test                execute tests
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -95,27 +96,41 @@ optional arguments:
                         vars/openstack.yaml in
                         {workspace}/ci/infra/testrunner. eg: -v
                         vars/myconfig.yaml
+```
 
 ### Provision
 
+```
 optional arguments:
   -h, --help            show this help message and exit
   -m MASTER_COUNT, -master-count MASTER_COUNT
                         number of masters nodes to be deployed. eg: -m 2
   -w WORKER_COUNT, --worker-count WORKER_COUNT
                         number of workers nodes to be deployed. eg: -w 2
+```
 
 ### Node commands (join, remove, reset)
 
+```
   -h, --help            show this help message and exit
   -r {master,worker}, --role {master,worker}
                         role of the node to be added or deleted. eg: --role
                         master
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
 
-
 ```
 
+### Test
+
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -s TEST_SUITE, --suit TEST_SUITE
+                        test file name
+  -t TEST, --test TEST  test to execute
+  -l, --list            only list tests to be executed
+  -v, --verbose         show all output
+```
 
 ### Jenkins Machine Setup
 1. In your Jenkins file, you need to set up environment variables. Then These environment variables will replace
