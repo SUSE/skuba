@@ -122,23 +122,28 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 		return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node object")
 	}
 
-	kubeletVersion := nodeObject.Status.NodeInfo.KubeletVersion
+	kubeletVersion := version.MustParseSemantic(nodeObject.Status.NodeInfo.KubeletVersion)
 	containerRuntimeVersion := nodeObject.Status.NodeInfo.ContainerRuntimeVersion
 	unschedulable := nodeObject.Spec.Unschedulable
-	apiServerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
-	controllerManagerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
-	schedulerVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
-	etcdVersion, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
 
 	nodeVersions := NodeVersionInfo{
-		Nodename:                 nodeName,
-		ContainerRuntimeVersion:  containerRuntimeVersion,
-		KubeletVersion:           version.MustParseSemantic(kubeletVersion),
-		APIServerVersion:         version.MustParseSemantic(apiServerVersion),
-		ControllerManagerVersion: version.MustParseSemantic(controllerManagerVersion),
-		SchedulerVersion:         version.MustParseSemantic(schedulerVersion),
-		EtcdVersion:              version.MustParseSemantic(etcdVersion),
-		Unschedulable:            unschedulable,
+		Nodename:                nodeName,
+		ContainerRuntimeVersion: containerRuntimeVersion,
+		KubeletVersion:          kubeletVersion,
+		Unschedulable:           unschedulable,
+	}
+
+	// find out the container image tags, depending on the role of the node
+	if IsMaster(nodeObject) {
+		apiServerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
+		controllerManagerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
+		schedulerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
+		etcdTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
+
+		nodeVersions.APIServerVersion = version.MustParseSemantic(apiServerTag)
+		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(controllerManagerTag)
+		nodeVersions.SchedulerVersion = version.MustParseSemantic(schedulerTag)
+		nodeVersions.EtcdVersion = version.MustParseSemantic(etcdTag)
 	}
 
 	return nodeVersions, nil
