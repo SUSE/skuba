@@ -33,6 +33,9 @@ const (
 	Kured   Addon = "kured"
 	Gangway Addon = "gangway"
 
+	ContainerRuntime Component = "cri-o"
+	Kubelet          Component = "kubelet"
+
 	Hyperkube Component = "hyperkube"
 	Etcd      Component = "etcd"
 	CoreDNS   Component = "coredns"
@@ -47,7 +50,8 @@ type ControlPlaneComponentsVersion struct {
 }
 
 type ComponentsVersion struct {
-	KubeletVersion string
+	ContainerRuntimeVersion string
+	KubeletVersion          string
 }
 
 type AddonsVersion struct {
@@ -75,7 +79,8 @@ var (
 				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
-				KubeletVersion: "1.14.1",
+				ContainerRuntimeVersion: "1.14.1",
+				KubeletVersion:          "1.14.1",
 			},
 			AddonsVersion: AddonsVersion{
 				CiliumVersion:  "1.5.3",
@@ -87,9 +92,13 @@ var (
 	}
 )
 
-func CurrentComponentVersion(component Component) string {
-	currentKubernetesVersion := Versions[LatestVersion().String()]
+func ComponentVersionWithAvailableVersions(component Component, clusterVersion *version.Version, availableVersions KubernetesVersions) string {
+	currentKubernetesVersion := availableVersions[clusterVersion.String()]
 	switch component {
+	case ContainerRuntime:
+		return currentKubernetesVersion.ComponentsVersion.ContainerRuntimeVersion
+	case Kubelet:
+		return currentKubernetesVersion.ComponentsVersion.KubeletVersion
 	case Hyperkube:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.HyperkubeVersion
 	case Etcd:
@@ -101,6 +110,14 @@ func CurrentComponentVersion(component Component) string {
 	}
 	log.Fatalf("unknown component %q", component)
 	panic("unreachable")
+}
+
+func ComponentVersionForClusterVersion(component Component, clusterVersion *version.Version) string {
+	return ComponentVersionWithAvailableVersions(component, clusterVersion, Versions)
+}
+
+func CurrentComponentVersion(component Component) string {
+	return ComponentVersionForClusterVersion(component, LatestVersion())
 }
 
 func CurrentAddonVersion(addon Addon) string {
@@ -119,7 +136,7 @@ func CurrentAddonVersion(addon Addon) string {
 	panic("unreachable")
 }
 
-func availableVersionsForMap(versions KubernetesVersions) []*version.Version {
+func AvailableVersionsForMap(versions KubernetesVersions) []*version.Version {
 	rawVersions := make([]*version.Version, 0, len(versions))
 	for rawVersion := range versions {
 		rawVersions = append(rawVersions, version.MustParseSemantic(rawVersion))
@@ -132,7 +149,7 @@ func availableVersionsForMap(versions KubernetesVersions) []*version.Version {
 
 // AvailableVersions return the list of platform versions known to skuba
 func AvailableVersions() []*version.Version {
-	return availableVersionsForMap(Versions)
+	return AvailableVersionsForMap(Versions)
 }
 
 // LatestVersion return the latest Kubernetes supported version

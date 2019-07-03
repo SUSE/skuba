@@ -15,7 +15,7 @@
  *
  */
 
-package upgrade
+package cluster
 
 import (
 	"fmt"
@@ -30,13 +30,13 @@ import (
 func TestDriftedNodesWithVersions(t *testing.T) {
 	var versions = []struct {
 		currentClusterVersion *version.Version
-		nodesVersionInfo      []kubernetes.NodeVersionInfo
+		nodesVersionInfo      kubernetes.NodeVersionInfoMap
 		expectedDriftedNodes  []kubernetes.NodeVersionInfo
 	}{
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
@@ -45,12 +45,12 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
-				{
+				"another-node": {
 					Nodename:       "another-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
@@ -59,12 +59,12 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.5"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.5"),
 				},
-				{
+				"slightly-drifed-node": {
 					Nodename:       "slightly-drifted-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
@@ -73,12 +73,12 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
-				{
+				"drifted-node": {
 					Nodename:       "drifted-node",
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
@@ -92,16 +92,16 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.5"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.5"),
 				},
-				{
+				"slightly-drifted-node": {
 					Nodename:       "slightly-drifted-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
-				{
+				"drifted-node": {
 					Nodename:       "drifted-node",
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
@@ -115,12 +115,12 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 		{
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
-			nodesVersionInfo: []kubernetes.NodeVersionInfo{
-				{
+			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
+				"a-node": {
 					Nodename:       "a-node",
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
-				{
+				"drifted-unschedulable-node": {
 					Nodename:       "drifted-unschedulable-node",
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 					Unschedulable:  true,
