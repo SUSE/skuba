@@ -122,6 +122,6 @@ resource "null_resource" "worker_reboot" {
       host = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
     }
 
-    command = "ssh -o StrictHostKeyChecking=no $user@$host sudo reboot || :"
+    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :"
   }
 }
