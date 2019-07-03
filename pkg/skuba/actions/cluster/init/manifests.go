@@ -843,6 +843,169 @@ spec:
           command:
             - /usr/bin/kured
 `
+	dexManifest = `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-dex-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    issuer: https://{{.ControlPlane}}:32002/dex
+
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    web:
+      https: 0.0.0.0:32002
+      tlsCert: /etc/dex/pki/tls.crt
+      tlsKey: /etc/dex/pki/tls.key
+      tlsClientCA: /etc/dex/pki/ca.crt
+
+    frontend:
+      dir: /usr/share/caasp-dex/web
+
+    connectors:
+    - type: ldap
+      id: ldap
+      name: openLDAP
+      config:
+        host: openldap.kube-system.svc.cluster.local:389
+        insecureNoSSL: true
+        insecureSkipVerify: true
+        bindDN: cn=admin,dc=example,dc=org
+        bindPW: 'admin'
+        usernamePrompt: Email Address
+        userSearch:
+          baseDN: cn=People,dc=example,dc=org
+          filter: "(objectClass=person)"
+          username: mail
+          idAttr: DN
+          emailAttr: mail
+          nameAttr: uid
+
+    staticClients:
+    - name: 'gangway'
+      id: gangway
+      redirectURIs:
+      - 'https://{{.ControlPlane}}:32001/callback'
+      secret: '$(GANGWAY_CLIENT_SECRET)'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-dex
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-dex
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      name: oidc-dex
+      labels:
+        app: oidc-dex
+    spec:
+      serviceAccountName: oidc-dex
+      containers:
+      - name: oidc-dex
+        image: {{.DexImage}}
+        imagePullPolicy: IfNotPresent
+        command:
+          - /usr/bin/caasp-dex
+          - serve
+          - /etc/dex/cfg/config.yaml
+        env:
+          - name: GANGWAY_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: oidc-dex-secret
+                key: client-secret-gangway
+        ports:
+          - name: https
+            containerPort: 32002
+        volumeMounts:
+          - name: dex-config-path
+            mountPath: /etc/dex/cfg
+          - name: dex-cert-path
+            mountPath: /etc/dex/pki
+      volumes:
+      - name: dex-config-path
+        configMap:
+          name: oidc-dex-config
+          items:
+          - key: config.yaml
+            path: config.yaml
+      - name: dex-cert-path
+        secret:
+          secretName: oidc-dex-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-dex
+  namespace: kube-system
+spec:
+  selector:
+    app: oidc-dex
+  type: NodePort
+  ports:
+  - name: https
+    port: 32002
+    targetPort: 32002
+    nodePort: 32002
+    protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oidc-dex
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: oidc-dex
+  namespace: kube-system
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create", "get", "list", "update", "watch"]
+- apiGroups: ["dex.coreos.com"]
+  resources: ["oauth2clients", "connectors", "passwords", "refreshtokens"]
+  verbs: ["list"]
+- apiGroups: ["dex.coreos.com"]
+  resources: ["signingkeies"]
+  verbs: ["create", "get", "list"]
+- apiGroups: ["dex.coreos.com"]
+  resources: ["authcodes", "authrequests", "offlinesessionses"]
+  verbs: ["create", "delete", "get", "list", "update"]
+- apiGroups: ["dex.coreos.com"]
+  resources: ["refreshtokens"]
+  verbs: ["create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: oidc-dex
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: oidc-dex
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: oidc-dex
+  namespace: kube-system
+`
 	gangwayManifest = `---
 apiVersion: v1
 kind: ConfigMap
@@ -900,12 +1063,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: oidc-gangway-secret
-                  key: clientsecret
+                  key: client-secret
             - name: GANGWAY_SESSION_SECURITY_KEY
               valueFrom:
                 secretKeyRef:
                   name: oidc-gangway-secret
-                  key: sessionkey
+                  key: session-key
           ports:
             - name: web
               containerPort: 8080

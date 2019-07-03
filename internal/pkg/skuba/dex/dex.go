@@ -15,12 +15,11 @@
  *
  */
 
-package gangway
+package dex
 
 import (
 	"crypto/rand"
 	"crypto/x509"
-	"encoding/base64"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -32,82 +31,84 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 const (
-	certName   = "oidc-gangway-cert"
-	secretName = "oidc-gangway-secret"
-
-	clientSecret = "client-secret"
-	sessionKey   = "session-key"
+	certName = "oidc-dex-cert"
+	// SecretName is secret name which stores dex client secret
+	SecretName = "oidc-dex-client-secret"
 )
 
+// ClientSecret is the client secret used to
+// authenticate auth client to auth server (dex)
+type ClientSecret string
+
+const (
+	// Gangway client secret
+	Gangway ClientSecret = "client-secret-gangway"
+)
+
+func (cs ClientSecret) String() string {
+	return string(cs)
+}
+
 var (
-	gangwayCertConfg = certutil.Config{
-		CommonName:   "oidc-gangway",
+	dexCertConfg = certutil.Config{
+		CommonName:   "oidc-dex",
 		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
 		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 )
 
-// CreateGangwaySecret generates session key and read client secret from dex
-func CreateGangwaySecret() error {
-	key := make([]byte, 32)
-	_, err := rand.Read(key)
+// CreateDexClientSecret creates client secret which is used by
+// auth client (gangway) to authenticate to auth server (dex)
+//
+// Dex could generates more client secret at here if there are
+// multiple auth clients
+func CreateDexClientSecret() error {
+	clientSecretGangway := make([]byte, 12)
+	_, err := rand.Read(clientSecretGangway)
 	if err != nil {
-		return errors.Errorf("unable to generate session key %v", err)
+		return errors.Errorf("unable to generate client secret for gangway %v", err)
+	}
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      SecretName,
+			Namespace: metav1.NamespaceSystem,
+		},
+		Data: map[string][]byte{
+			Gangway.String(): clientSecretGangway,
+		},
 	}
 
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return errors.Wrap(err, "could not get admin client set")
 	}
-
-	// Read client secret from dex secret
-	dexSecret, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(dex.SecretName, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrap(err, "could not retrieve the dex secret")
-	}
-	cs, ok := dexSecret.Data[dex.Gangway.String()]
-	if !ok {
-		return errors.Wrap(err, "could not find dex client secret")
-	}
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: metav1.NamespaceSystem,
-		},
-		Data: map[string][]byte{
-			clientSecret: cs,
-			sessionKey:   []byte(base64.URLEncoding.EncodeToString(key)),
-		},
-	}
-
 	if err := apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Wrap(err, "error when creating gangway secret")
+		return errors.Wrap(err, "error when creating dex secret")
 	}
 
 	return nil
 }
 
-// CreateGangwayCert creates a signed certificate for gangway
+// CreateDexCert creates a signed certificate for dex
 // with kubernetes CA certificate and key
-func CreateGangwayCert() error {
+func CreateDexCert() error {
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk("pki", "ca")
 	if err != nil {
 		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
 	}
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &gangwayCertConfg)
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &dexCertConfg)
 	if err != nil {
-		return errors.Errorf("error when creating gangway certificate %v", err)
+		return errors.Errorf("error when creating dex certificate %v", err)
 	}
 	privateKey, err := keyutil.MarshalPrivateKeyToPEM(key)
 	if err != nil {
-		return errors.Errorf("gangway private key marshal failed %v", err)
+		return errors.Errorf("dex private key marshal failed %v", err)
 	}
 
 	secret := &v1.Secret{
@@ -128,14 +129,14 @@ func CreateGangwayCert() error {
 		return errors.Wrap(err, "unable to get admin client set")
 	}
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Errorf("error when creating gangway secret %v", err)
+		return errors.Errorf("error when creating dex secret %v", err)
 	}
 
 	return nil
 }
 
-// GetGangwayImage returns gangway image registry
-func GetGangwayImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "gangway",
-		kubernetes.CurrentAddonVersion(kubernetes.Gangway))
+// GetDexImage returns dex image registry
+func GetDexImage() string {
+	return images.GetGenericImage(skuba.ImageRepository, "caasp-dex",
+		kubernetes.CurrentAddonVersion(kubernetes.Dex))
 }

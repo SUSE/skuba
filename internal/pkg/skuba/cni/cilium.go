@@ -32,7 +32,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
-	pkiutil "k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"

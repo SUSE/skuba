@@ -55,6 +55,10 @@ var (
 			Content:  kuredManifest,
 		},
 		{
+			Location: skuba.DexManifestFile(),
+			Content:  dexManifest,
+		},
+		{
 			Location: skuba.GangwayManifestfile(),
 			Content:  gangwayManifest,
 		},

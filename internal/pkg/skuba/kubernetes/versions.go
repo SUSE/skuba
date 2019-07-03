@@ -31,6 +31,7 @@ const (
 	Cilium  Addon = "cilium"
 	Tooling Addon = "tooling"
 	Kured   Addon = "kured"
+	Dex     Addon = "dex"
 	Gangway Addon = "gangway"
 
 	ContainerRuntime Component = "cri-o"
@@ -58,6 +59,7 @@ type AddonsVersion struct {
 	CiliumVersion  string
 	ToolingVersion string
 	KuredVersion   string
+	DexVersion     string
 	GangwayVersion string
 }
 
@@ -86,6 +88,7 @@ var (
 				CiliumVersion:  "1.5.3",
 				ToolingVersion: "0.1.0",
 				KuredVersion:   "1.2.0",
+				DexVersion:     "2.16.0",
 				GangwayVersion: "3.1.0",
 			},
 		},
@@ -129,6 +132,8 @@ func CurrentAddonVersion(addon Addon) string {
 		return currentKubernetesVersion.AddonsVersion.CiliumVersion
 	case Kured:
 		return currentKubernetesVersion.AddonsVersion.KuredVersion
+	case Dex:
+		return currentKubernetesVersion.AddonsVersion.DexVersion
 	case Gangway:
 		return currentKubernetesVersion.AddonsVersion.GangwayVersion
 	}
