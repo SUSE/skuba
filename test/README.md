@@ -12,8 +12,13 @@ The test can be run locally or in CI.
 
 # Requirements:
 
-- the infrastructure is already deployed. ( Terraform is not necessary a requirement, only the ips)
-  See mandatory variable for the number of instances required.
+- The infrastructure should be already deployed (using Terraform is not mandatory; only the IP addresses are needed). For more information see mandatory variables for the number of instances required.
+
+- Running _ssh-agent_ socket at `/tmp/ssh-agent-sock`. You can do that by running: `./ci/tasks/setup-ssh.py`. Otherwise, you can try manually, by typing: `eval $(ssh-agent -a /tmp/ssh-agent-sock); ssh-add ci/infra/id_shared`. 
+
+- You can verify whether the key has been loaded correctly into the _ssh-agent_ by issuing the command: `ssh-add -L`.
+
+- Last but not least, you should be able to connect non-interactively to (either master or worker) node as a _sles_ user : `ssh sles@<node-ip>`.
 
 # Howto 
 
