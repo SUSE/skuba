@@ -86,9 +86,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"psp.deploy",
 		"kured.deploy",
 		"skuba-update.start",
-		"gangway.deploy",
 	)
-
 	if err != nil {
 		return err
 	}
@@ -98,10 +96,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
-	// deploy cni only after downloadSecrets because
-	// we need to generate cilium etcd certs
+	// deploy the components after downloadSecrets because
+	// we need to generate secrets and certificates
 	err = target.Apply(nil,
-		"cni.deploy")
+		"cni.deploy",
+		"gangway.deploy",
+	)
 	if err != nil {
 		return err
 	}

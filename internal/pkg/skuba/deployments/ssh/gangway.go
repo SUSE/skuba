@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -31,9 +32,16 @@ func init() {
 }
 
 func gangwayDeploy(t *Target, data interface{}) error {
+	if err := gangway.CreateGangwaySecret(); err != nil {
+		return errors.Wrap(err, "unable to create gangway secret")
+	}
+	if err := gangway.CreateGangwayCert(); err != nil {
+		return errors.Wrap(err, "unable to create gangway certificate")
+	}
+
 	gangwayFiles, err := ioutil.ReadDir(skuba.GangwayDir())
 	if err != nil {
-		return errors.Wrap(err, "could not read local ganway directory")
+		return errors.Wrap(err, "could not read local gangway directory")
 	}
 
 	defer t.ssh("rm -rf /tmp/gangway.d")

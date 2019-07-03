@@ -858,53 +858,14 @@ data:
     serveTLS: true
     authorizeURL: "https://{{.ControlPlane}}:32002/dex/auth"
     tokenURL: "https://{{.ControlPlane}}:32002/dex/token"
-    keyFile: /etc/oidc/pki/gangway.key
-    certFile: /etc/oidc/pki/gangway.crt
+    keyFile: /etc/gangway/pki/tls.key
+    certFile: /etc/gangway/pki/tls.crt
 
     clientID: "gangway"
-    clientSecret: "TODO"
     usernameClaim: "sub"
     apiServerURL: "https://kubernetes.default.svc.cluster.local:6443"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-    trustedCAPath: /etc/oidc/pki/ca.crt
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: oidc-gangway-client-secret
-  namespace: kube-system
-type: Opaque
-data:
-  clientsecret: TODO
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: oidc-gangway-session-key
-  namespace: kube-system
-type: Opaque
-data:
-  sesssionkey: TODO
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: oidc-gangway-secrets
-  namespace: kube-system
-type: Opaque
-stringData:
-  ca.crt: |
-    -----BEGIN CERTIFICATE-----
-    TODO
-    -----END CERTIFICATE-----
-  gangway.crt: |
-    -----BEGIN CERTIFICATE-----
-    TODO
-    -----END CERTIFICATE-----
-  gangway.key: |
-    -----BEGIN RSA PRIVATE KEY-----
-    TODO
-    -----END RSA PRIVATE KEY-----
+    trustedCAPath: /etc/gangway/pki/ca.crt
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -938,13 +899,13 @@ spec:
             - name: GANGWAY_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: oidc-gangway-client-secret
+                  name: oidc-gangway-secret
                   key: clientsecret
             - name: GANGWAY_SESSION_SECURITY_KEY
               valueFrom:
                 secretKeyRef:
-                  name: oidc-gangway-session-key
-                  key: sesssionkey
+                  name: oidc-gangway-secret
+                  key: sessionkey
           ports:
             - name: web
               containerPort: 8080
@@ -954,7 +915,7 @@ spec:
               mountPath: /gangway/
               readOnly: true
             - name: gangway-cert-path
-              mountPath: /etc/oidc/pki
+              mountPath: /etc/gangway/pki
               readOnly: true
       volumes:
         - name: gangway-config-path
@@ -965,7 +926,7 @@ spec:
                 path: gangway.yaml
         - name: gangway-cert-path
           secret:
-            secretName: oidc-gangway-secrets
+            secretName: oidc-gangway-cert
 ---
 apiVersion: v1
 kind: Service
