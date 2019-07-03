@@ -18,10 +18,25 @@
 package kubernetes
 
 import (
+	"fmt"
 	"log"
 	"sort"
 
 	"k8s.io/apimachinery/pkg/util/version"
+)
+
+// Update the latest currently supported versions
+const (
+	CurrentVersion        = "1.15.0"
+	currentETCDVersion    = "3.3.11"
+	currentCoreDNSVersion = "1.3.1"
+	currentPauseVersion   = "3.1"
+	currentCiliumVersion  = "1.5.3"
+	currentToolingVersion = "0.1.0"
+	currentKuredVersion   = "1.2.0"
+	registry              = "registry.suse.com"
+	productName           = "caasp"
+	caaspVersion          = "v4"
 )
 
 type Addon string
@@ -61,12 +76,10 @@ type KubernetesVersion struct {
 
 type KubernetesVersions map[string]KubernetesVersion
 
-const (
-	CurrentVersion = "v1.14.1"
-)
-
 var (
 	Versions = KubernetesVersions{
+		// Old supported k8s versions
+		// When you update the KubernetesVersion to a new one, add the current to the old supported versions
 		"v1.14.1": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				EtcdVersion:    "3.3.11",
@@ -82,11 +95,27 @@ var (
 				KuredVersion:   "1.2.0",
 			},
 		},
+		// New (current) supported supported version
+		fmt.Sprintf("v%s", CurrentVersion): KubernetesVersion{
+			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
+				EtcdVersion:    currentETCDVersion,
+				CoreDNSVersion: currentCoreDNSVersion,
+				PauseVersion:   currentPauseVersion,
+			},
+			ComponentsVersion: ComponentsVersion{
+				KubeletVersion: fmt.Sprintf("v%s", CurrentVersion),
+			},
+			AddonsVersion: AddonsVersion{
+				CiliumVersion:  currentCiliumVersion,
+				ToolingVersion: currentToolingVersion,
+				KuredVersion:   currentKuredVersion,
+			},
+		},
 	}
 )
 
 func CurrentComponentVersion(component Component) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[fmt.Sprintf("v%s", CurrentVersion)]
 	switch component {
 	case Etcd:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.EtcdVersion
@@ -100,7 +129,7 @@ func CurrentComponentVersion(component Component) string {
 }
 
 func CurrentAddonVersion(addon Addon) string {
-	currentKubernetesVersion := Versions[CurrentVersion]
+	currentKubernetesVersion := Versions[fmt.Sprintf("v%s", CurrentVersion)]
 	switch addon {
 	case Tooling:
 		return currentKubernetesVersion.AddonsVersion.ToolingVersion

@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -28,8 +29,8 @@ import (
 )
 
 func TestNodeVersioningInfoWithClientset(t *testing.T) {
-	testK8sVersion := version.MustParseSemantic("v1.14.1")
-	testEtcdVersion := version.MustParseSemantic("3.3.11")
+	testK8sVersion := version.MustParseSemantic(fmt.Sprintf("v%s", CurrentVersion))
+	testEtcdVersion := version.MustParseSemantic(currentETCDVersion)
 	namespace := "kube-system"
 	var nodes = []struct {
 		name                     string
@@ -47,14 +48,14 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 			name:                     "node version info schedulable",
 			nodeName:                 "my-master-0",
 			unschedulable:            false,
-			containerRuntimeVersion:  "cri-o://1.14.1",
+			containerRuntimeVersion:  fmt.Sprintf("cri-o://%s", CurrentVersion),
 			kubeletVersion:           testK8sVersion,
 			apiServerVersion:         testK8sVersion,
 			controllerManagerVersion: testK8sVersion,
 			schedulerVersion:         testK8sVersion,
 			etcdVersion:              testEtcdVersion,
 			expectedNodeVersionInfo: NodeVersionInfo{
-				ContainerRuntimeVersion:  "cri-o://1.14.1",
+				ContainerRuntimeVersion:  fmt.Sprintf("cri-o://%s", CurrentVersion),
 				KubeletVersion:           testK8sVersion,
 				APIServerVersion:         testK8sVersion,
 				ControllerManagerVersion: testK8sVersion,
@@ -67,14 +68,14 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 			name:                     "node version info unschedulable",
 			nodeName:                 "my-master-0",
 			unschedulable:            true,
-			containerRuntimeVersion:  "cri-o://1.14.1",
+			containerRuntimeVersion:  fmt.Sprintf("cri-o://%s", CurrentVersion),
 			kubeletVersion:           testK8sVersion,
 			apiServerVersion:         testK8sVersion,
 			controllerManagerVersion: testK8sVersion,
 			schedulerVersion:         testK8sVersion,
 			etcdVersion:              testEtcdVersion,
 			expectedNodeVersionInfo: NodeVersionInfo{
-				ContainerRuntimeVersion:  "cri-o://1.14.1",
+				ContainerRuntimeVersion:  fmt.Sprintf("cri-o://%s", CurrentVersion),
 				KubeletVersion:           testK8sVersion,
 				APIServerVersion:         testK8sVersion,
 				ControllerManagerVersion: testK8sVersion,
@@ -108,7 +109,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "kube-apiserver",
-							Image: "registry.suse.com/caasp/v4/hyperkube:1.14.1",
+							Image: fmt.Sprintf("%s/%s/%s/hyperkube:%s", registry, productName, caaspVersion, CurrentVersion),
 						},
 					},
 					NodeName: "my-master-0",
@@ -122,7 +123,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "kube-controller-manager",
-							Image: "registry.suse.com/caasp/v4/hyperkube:1.14.1",
+							Image: fmt.Sprintf("%s/%s/%s/hyperkube:%s", registry, productName, caaspVersion, CurrentVersion),
 						},
 					},
 					NodeName: "my-master-0",
@@ -136,7 +137,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "kube-scheduler",
-							Image: "registry.suse.com/caasp/v4/hyperkube:1.14.1",
+							Image: fmt.Sprintf("%s/%s/%s/hyperkube:%s", registry, productName, caaspVersion, CurrentVersion),
 						},
 					},
 					NodeName: "my-master-0",
@@ -150,7 +151,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 					Containers: []v1.Container{
 						{
 							Name:  "etcd",
-							Image: "registry.suse.com/caasp/v4/etcd:3.3.11",
+							Image: fmt.Sprintf("%s/%s/%s/etcd:%s", registry, productName, caaspVersion, currentETCDVersion),
 						},
 					},
 					NodeName: "my-master-0",
@@ -168,7 +169,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 func TestGetPodContainerImageTagWithClientset(t *testing.T) {
 	podName := "etcd-my-master-0"
 	namespace := "kube-system"
-	expectedEtcdContainerImageTag := "3.3.11"
+	expectedEtcdContainerImageTag := currentETCDVersion
 	t.Run("get pod container image tag with clientset", func(t *testing.T) {
 		clientset := fake.NewSimpleClientset(&v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -179,7 +180,7 @@ func TestGetPodContainerImageTagWithClientset(t *testing.T) {
 				Containers: []v1.Container{
 					{
 						Name:  "etcd",
-						Image: "registry.suse.com/caasp/v4/etcd:3.3.11",
+						Image: fmt.Sprintf("%s/%s/%s/etcd:%s", registry, productName, caaspVersion, currentETCDVersion),
 					},
 				},
 			},
