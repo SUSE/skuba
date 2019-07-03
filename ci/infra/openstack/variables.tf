@@ -95,8 +95,7 @@ variable "packages" {
   type = "list"
 
   default = [
-    "kernel-default",
-    "-kernel-default-base",
+    "kernel-default-base",
     "patterns-caasp-Node",
   ]
 
