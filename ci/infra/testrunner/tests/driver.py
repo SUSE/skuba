@@ -17,6 +17,9 @@ class TestDriver:
         
         opts = []
         
+        vars_opt = "--vars={}".format(self.conf.yaml_path)
+        opts.append(vars_opt)
+
         if verbose:
             opts.append(PyTestOpts.SHOW_OUTPUT)
 
