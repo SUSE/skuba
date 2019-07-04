@@ -1,4 +1,5 @@
 timeout-decorator
 requests
 pyhcl
+pytest
 pyyaml

@@ -15,6 +15,7 @@ class BaseConfig:
 
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
+        obj.yaml_path = yaml_path
         obj.workspace = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None

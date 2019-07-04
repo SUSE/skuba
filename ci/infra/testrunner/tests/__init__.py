@@ -1,1 +1,1 @@
-from tests.tests import Tests
+from tests.driver import TestDriver
