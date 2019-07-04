@@ -58,7 +58,7 @@ func TestAvailableVersionsForMap(t *testing.T) {
 	}
 	for _, tt := range versions {
 		t.Run(tt.name, func(t *testing.T) {
-			availableVersions := availableVersionsForMap(tt.kubernetesVersions)
+			availableVersions := AvailableVersionsForMap(tt.kubernetesVersions)
 			if !reflect.DeepEqual(availableVersions, tt.expectedAvailableVersions) {
 				t.Errorf("got %q, want %q", availableVersions, tt.expectedAvailableVersions)
 			}
@@ -73,13 +73,26 @@ func TestLatestVersion(t *testing.T) {
 }
 
 func TestCurrentComponentVersion(t *testing.T) {
-	components := []Component{Hyperkube, Etcd, CoreDNS, Pause}
+	components := []Component{ContainerRuntime, Kubelet, Hyperkube, Etcd, CoreDNS, Pause}
 	for _, component := range components {
 		t.Run(fmt.Sprintf("component %q has a version assigned", component), func(t *testing.T) {
 			componentVersion := CurrentComponentVersion(component)
 			_, err := version.ParseGeneric(componentVersion)
 			if err != nil {
 				t.Errorf("component %q version (%q) parsing failed", component, componentVersion)
+			}
+		})
+	}
+}
+
+func TestCurrentAddonVersion(t *testing.T) {
+	addons := []Addon{Tooling, Cilium, Kured, Gangway}
+	for _, addon := range addons {
+		t.Run(fmt.Sprintf("addon %q has a version assigned", addon), func(t *testing.T) {
+			addonVersion := CurrentAddonVersion(addon)
+			_, err := version.ParseGeneric(addonVersion)
+			if err != nil {
+				t.Errorf("addon %q version (%q) parsing failed", addon, addonVersion)
 			}
 		})
 	}

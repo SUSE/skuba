@@ -30,20 +30,20 @@ import (
 )
 
 func RemoveMember(node *v1.Node) error {
-	masterNodes, err := kubernetes.GetMasterNodes()
+	controlPlaneNodes, err := kubernetes.GetControlPlaneNodes()
 	if err != nil {
-		return errors.Wrap(err, "could not get the list of master nodes, aborting")
+		return errors.Wrap(err, "could not get the list of control plane nodes, aborting")
 	}
 
-	// Remove etcd member if target is a master
+	// Remove etcd member if target is a control plane
 	klog.V(1).Info("removing etcd member from the etcd cluster")
-	for _, masterNode := range masterNodes.Items {
-		klog.V(1).Infof("trying to remove etcd member from master node %s", masterNode.ObjectMeta.Name)
-		if err := RemoveMemberFrom(node, &masterNode); err == nil {
-			klog.V(1).Infof("etcd member for node %s removed from master node %s", node.ObjectMeta.Name, masterNode.ObjectMeta.Name)
+	for _, controlPlaneNode := range controlPlaneNodes.Items {
+		klog.V(1).Infof("trying to remove etcd member from control plane node %s", controlPlaneNode.ObjectMeta.Name)
+		if err := RemoveMemberFrom(node, &controlPlaneNode); err == nil {
+			klog.V(1).Infof("etcd member for node %s removed from control plane node %s", node.ObjectMeta.Name, controlPlaneNode.ObjectMeta.Name)
 			break
 		} else {
-			klog.V(1).Infof("could not remove etcd member from master node %s", masterNode.ObjectMeta.Name)
+			klog.V(1).Infof("could not remove etcd member from control plane node %s", controlPlaneNode.ObjectMeta.Name)
 		}
 	}
 

@@ -15,7 +15,7 @@
  *
  */
 
-package upgrade
+package cluster
 
 import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -23,13 +23,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/version"
 )
 
-func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersionInfo []kubernetes.NodeVersionInfo) []kubernetes.NodeVersionInfo {
+func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersionInfo kubernetes.NodeVersionInfoMap) []kubernetes.NodeVersionInfo {
 	driftedNodes := []kubernetes.NodeVersionInfo{}
 	for _, node := range nodesVersionInfo {
 		if node.Unschedulable {
 			continue
 		}
-		if (node.KubeletVersion.Major() < currentClusterVersion.Major()) || (node.KubeletVersion.Minor() < currentClusterVersion.Minor()) {
+		if node.DriftsFromClusterVersion(currentClusterVersion) {
 			driftedNodes = append(driftedNodes, node)
 		}
 	}

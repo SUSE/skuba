@@ -15,7 +15,7 @@
  *
  */
 
-package upgrade
+package cluster
 
 import (
 	"fmt"
@@ -323,7 +323,7 @@ func TestUpgradePathWithAvailableVersions(t *testing.T) {
 	}
 	for _, tt := range versions {
 		t.Run(fmt.Sprintf("Upgrade path from %s with %v available versions", tt.currentClusterVersion.String(), tt.availableVersions), func(t *testing.T) {
-			upgradePath, err := upgradePathWithAvailableVersions(tt.currentClusterVersion, tt.availableVersions)
+			upgradePath, err := UpgradePathWithAvailableVersions(tt.currentClusterVersion, tt.availableVersions)
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}

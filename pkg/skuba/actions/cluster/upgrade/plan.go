@@ -24,7 +24,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade"
+	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -39,13 +39,14 @@ func Plan() error {
 	latestVersion := kubernetes.LatestVersion().String()
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
+	fmt.Println()
 
 	if currentVersion == latestVersion {
 		fmt.Println("Congratulations! You are already at the latest version available")
 		return nil
 	}
 
-	upgradePath, err := upgrade.UpgradePath()
+	upgradePath, err := upgradecluster.UpgradePath()
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func Plan() error {
 		tmpVersion = version.String()
 	}
 
-	driftedNodes, err := upgrade.DriftedNodes()
+	driftedNodes, err := upgradecluster.DriftedNodes()
 	if err != nil {
 		return err
 	}

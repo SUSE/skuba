@@ -44,16 +44,16 @@ func Remove(target string) error {
 
 	targetName := node.ObjectMeta.Name
 
-	var isMaster bool
-	if isMaster = kubernetes.IsMaster(node); isMaster {
-		fmt.Printf("[remove-node] removing master node %s\n", targetName)
+	var isControlPlane bool
+	if isControlPlane = kubernetes.IsControlPlane(node); isControlPlane {
+		fmt.Printf("[remove-node] removing control plane node %s\n", targetName)
 	} else {
 		fmt.Printf("[remove-node] removing worker node %s\n", targetName)
 	}
 
 	kubernetes.DrainNode(node)
 
-	if isMaster {
+	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
 		etcd.RemoveMember(node)
 	}
@@ -62,7 +62,7 @@ func Remove(target string) error {
 		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...\n", err)
 	}
 
-	if isMaster {
+	if isControlPlane {
 		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
 			return errors.Wrapf(err, "[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
 		}

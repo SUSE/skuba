@@ -15,27 +15,40 @@
  *
  */
 
-package skuba
+package node
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/skuba/internal/app/skuba/node"
+	"github.com/SUSE/skuba/pkg/skuba/actions/node/upgrade"
 )
 
-func NewNodeCmd() *cobra.Command {
+func NewUpgradeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "node",
-		Short: "Commands to handle a specific node",
+		Use:   "upgrade",
+		Short: "Manages node specific upgrade operations",
 	}
 
 	cmd.AddCommand(
-		node.NewBootstrapCmd(),
-		node.NewJoinCmd(),
-		node.NewRemoveCmd(),
-		node.NewResetCmd(),
-		node.NewUpgradeCmd(),
+		newUpgradePlanCmd(),
 	)
 
 	return cmd
+}
+
+func newUpgradePlanCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "plan <node-name>",
+		Short: "Plan node upgrade",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := upgrade.Plan(args[0]); err != nil {
+				fmt.Printf("Unable to plan node upgrade: %s\n", err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.ExactArgs(1),
+	}
 }

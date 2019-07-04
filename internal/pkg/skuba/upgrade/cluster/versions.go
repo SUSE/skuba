@@ -15,7 +15,7 @@
  *
  */
 
-package upgrade
+package cluster
 
 import (
 	"k8s.io/apimachinery/pkg/util/version"
@@ -62,7 +62,10 @@ func NextAvailableVersions() (nextPatch *version.Version, nextMinor *version.Ver
 	return nextAvailableVersionsForVersion(currentClusterVersion, kubernetes.AvailableVersions())
 }
 
-func upgradePathWithAvailableVersions(currentClusterVersion *version.Version, availableVersions []*version.Version) ([]*version.Version, error) {
+// UpgradePathWithAvailableVersions returns the list of versions the cluster
+// need to go through in order to upgrade to the latest available version in the
+// provided list of available versions
+func UpgradePathWithAvailableVersions(currentClusterVersion *version.Version, availableVersions []*version.Version) ([]*version.Version, error) {
 	upgradePath := []*version.Version{}
 
 	nextPatch, nextMinor, nextMajor, err := nextAvailableVersionsForVersion(currentClusterVersion, availableVersions)
@@ -71,21 +74,21 @@ func upgradePathWithAvailableVersions(currentClusterVersion *version.Version, av
 	}
 
 	if nextPatch != nil {
-		newPath, err := upgradePathWithAvailableVersions(nextPatch, availableVersions)
+		newPath, err := UpgradePathWithAvailableVersions(nextPatch, availableVersions)
 		if err != nil {
 			return upgradePath, err
 		}
 		upgradePath = append(upgradePath, nextPatch)
 		upgradePath = append(upgradePath, newPath...)
 	} else if nextMinor != nil {
-		newPath, err := upgradePathWithAvailableVersions(nextMinor, availableVersions)
+		newPath, err := UpgradePathWithAvailableVersions(nextMinor, availableVersions)
 		if err != nil {
 			return upgradePath, err
 		}
 		upgradePath = append(upgradePath, nextMinor)
 		upgradePath = append(upgradePath, newPath...)
 	} else if nextMajor != nil {
-		newPath, err := upgradePathWithAvailableVersions(nextMajor, availableVersions)
+		newPath, err := UpgradePathWithAvailableVersions(nextMajor, availableVersions)
 		if err != nil {
 			return upgradePath, err
 		}
@@ -103,5 +106,5 @@ func UpgradePath() ([]*version.Version, error) {
 	if err != nil {
 		return []*version.Version{}, err
 	}
-	return upgradePathWithAvailableVersions(currentClusterVersion, kubernetes.AvailableVersions())
+	return UpgradePathWithAvailableVersions(currentClusterVersion, kubernetes.AvailableVersions())
 }
