@@ -19,6 +19,7 @@ package remove
 
 import (
 	"fmt"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -30,7 +31,7 @@ import (
 )
 
 // Remove removes a node from the cluster
-func Remove(target string) error {
+func Remove(target string, drainTimeout time.Duration) error {
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return errors.Wrap(err, "unable to get admin client set")
@@ -45,12 +46,12 @@ func Remove(target string) error {
 
 	var isControlPlane bool
 	if isControlPlane = kubernetes.IsControlPlane(node); isControlPlane {
-		fmt.Printf("[remove-node] removing control plane node %s\n", targetName)
+		fmt.Printf("[remove-node] removing control plane node %s (drain timeout: %s)\n", targetName, drainTimeout.String())
 	} else {
-		fmt.Printf("[remove-node] removing worker node %s\n", targetName)
+		fmt.Printf("[remove-node] removing worker node %s (drain timeout: %s)\n", targetName, drainTimeout.String())
 	}
 
-	kubernetes.DrainNode(node)
+	kubernetes.DrainNode(node, drainTimeout)
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)

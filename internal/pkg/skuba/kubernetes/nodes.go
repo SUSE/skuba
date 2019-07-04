@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -65,11 +66,11 @@ func IsControlPlane(node *v1.Node) bool {
 	return isControlPlane
 }
 
-func DrainNode(node *v1.Node) error {
+func DrainNode(node *v1.Node, drainTimeout time.Duration) error {
 	// Drain node (shelling out, FIXME after https://github.com/kubernetes/kubernetes/pull/72827 can be used [1.14])
 	cmd := exec.Command("kubectl",
 		fmt.Sprintf("--kubeconfig=%s", skuba.KubeConfigAdminFile()),
-		"drain", "--delete-local-data=true", "--force=true", "--ignore-daemonsets=true", node.ObjectMeta.Name)
+		"drain", "--delete-local-data=true", "--force=true", "--ignore-daemonsets=true", fmt.Sprintf("--timeout=%s", drainTimeout.String()), node.ObjectMeta.Name)
 
 	if err := cmd.Run(); err != nil {
 		klog.V(1).Infof("could not drain node %s, aborting (use --force if you want to ignore this error)", node.ObjectMeta.Name)

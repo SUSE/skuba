@@ -18,23 +18,37 @@
 package node
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/remove"
 )
 
+type removeOptions struct {
+	drainTimeout time.Duration
+}
+
 func NewRemoveCmd() *cobra.Command {
+	removeOptions := removeOptions{}
 	cmd := &cobra.Command{
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			if err := node.Remove(nodenames[0]); err != nil {
+			if removeOptions.drainTimeout < 0 {
+				klog.Infof("the passed duration was negative and will be ignored")
+				removeOptions.drainTimeout = 0
+			}
+			if err := node.Remove(nodenames[0], removeOptions.drainTimeout); err != nil {
 				klog.Fatalf("error removing node %s: %s", nodenames[0], err)
 			}
 		},
 		Args: cobra.ExactArgs(1),
 	}
+	cmd.Flags().DurationVar(&removeOptions.drainTimeout, "drain-timeout", 0, `Time to wait for the node to drain, before proceeding with node removal.
+The time can be specified using abbreviations for units: e.g. 1h15m15s (Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h").
+Will wait indefinitely by default.`)
 
 	return cmd
 }
