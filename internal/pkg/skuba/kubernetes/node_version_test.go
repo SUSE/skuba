@@ -31,7 +31,7 @@ import (
 func TestNodeVersioningInfoWithClientset(t *testing.T) {
 	testK8sVersion := version.MustParseSemantic("v1.14.1")
 	testEtcdVersion := version.MustParseSemantic("3.3.11")
-	namespace := "kube-system"
+	namespace := metav1.NamespaceSystem
 	var nodes = []struct {
 		name                     string
 		nodeName                 string

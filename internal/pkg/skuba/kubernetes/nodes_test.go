@@ -28,7 +28,7 @@ import (
 
 func TestGetPodContainerImageTagWithClientset(t *testing.T) {
 	podName := "etcd-my-master-0"
-	namespace := "kube-system"
+	namespace := metav1.NamespaceSystem
 	expectedEtcdContainerImageTag := "3.3.11"
 	t.Run("get pod container image tag with clientset", func(t *testing.T) {
 		clientset := fake.NewSimpleClientset(&v1.Pod{

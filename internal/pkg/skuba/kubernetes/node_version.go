@@ -184,10 +184,10 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 
 	// find out the container image tags, depending on the role of the node
 	if IsControlPlane(nodeObject) {
-		apiServerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
-		controllerManagerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
-		schedulerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
-		etcdTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
+		apiServerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
+		controllerManagerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
+		schedulerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
+		etcdTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "etcd", nodeName))
 
 		nodeVersions.APIServerVersion = version.MustParseSemantic(apiServerTag)
 		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(controllerManagerTag)
