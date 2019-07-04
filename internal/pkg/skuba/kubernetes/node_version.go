@@ -118,8 +118,9 @@ func (nvi NodeVersionInfo) ToleratesClusterVersion(clusterVersion *version.Versi
 			return false
 		}
 	}
-	return nvi.KubeletVersion.Major() == clusterVersion.Major() &&
-		nvi.KubeletVersion.Minor() == clusterVersion.Minor()
+
+	return nvi.KubeletVersion.Minor() == clusterVersion.Minor() ||
+		nvi.KubeletVersion.Minor()+1 == clusterVersion.Minor()
 }
 
 // AllNodesVersioningInfo returns the version info for all nodes in the cluster
@@ -196,4 +197,50 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 	}
 
 	return nodeVersions, nil
+}
+
+// AllWorkerNodesTolerateUpdate checks that all schedulable worker nodes tolerate the latest version to move to
+func AllWorkerNodesTolerateUpdate() (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+	if err != nil {
+		return false, err
+	}
+
+	return allWorkerNodesTolerateUpdateWithVersioningInfo(allNodesVersioningInfo, LatestVersion()), nil
+}
+
+func allWorkerNodesTolerateUpdateWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
+	for _, nodeInfo := range allNodesVersioningInfo {
+		if nodeInfo.IsControlPlane() {
+			continue
+		}
+		if nodeInfo.Unschedulable || !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+			return false
+		}
+	}
+	return true
+}
+
+// AllControlPlanesMatchVersion checks that all control planes are on the same version, and that they match the current cluster version
+func AllControlPlanesMatchVersion(currentClusterVersion *version.Version) (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+	if err != nil {
+		return false, err
+	}
+	return AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion), nil
+}
+
+// AllControlPlanesMatchVersionWithVersioningInfo checks that all control planes are on the same version, and that they match the current cluster version
+// With the addition of passing in a NodeVersionInfoMap to make it easily testable
+func AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, currentClusterVersion *version.Version) bool {
+	for _, nodeInfo := range allNodesVersioningInfo {
+		// skip workers
+		if !nodeInfo.IsControlPlane() {
+			continue
+		}
+		if !nodeInfo.ToleratesClusterVersion(currentClusterVersion) {
+			return false
+		}
+	}
+	return true
 }

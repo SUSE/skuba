@@ -170,3 +170,226 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 		})
 	}
 }
+
+func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
+	var nodes = []struct {
+		name                    string
+		currentClusterVersion   *version.Version
+		expectedResult          bool
+		containerRuntimeVersion string
+		nodeVersionInfoMap      NodeVersionInfoMap
+	}{
+		{
+			name:                  "all workers tolerate",
+			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			expectedResult:        true,
+			nodeVersionInfoMap: NodeVersionInfoMap{
+				"my-master-0": {
+					Nodename:                 "my-master-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-worker-0": {
+					Nodename:                 "my-worker-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+				"my-worker-1": {
+					Nodename:                 "my-worker-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+			},
+		},
+		{
+			name:                  "a worker needs to be updated before",
+			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			expectedResult:        false,
+			nodeVersionInfoMap: NodeVersionInfoMap{
+				"my-master-0": {
+					Nodename:                 "my-master-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-worker-0": {
+					Nodename:                 "my-worker-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+				"my-worker-1": {
+					Nodename:                 "my-worker-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.13.1"),
+					KubeletVersion:           version.MustParseSemantic("1.13.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+			},
+		},
+		{
+			name:                  "a worker is unschedulable",
+			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			expectedResult:        false,
+			nodeVersionInfoMap: NodeVersionInfoMap{
+				"my-master-0": {
+					Nodename:                 "my-master-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-worker-0": {
+					Nodename:                 "my-worker-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            true,
+				},
+				"my-worker-1": {
+					Nodename:                 "my-worker-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+			},
+		},
+	}
+	for _, tt := range nodes {
+		t.Run(tt.name, func(t *testing.T) {
+			allWorkerNodesTolerateUpdateWithVersioningInfo := allWorkerNodesTolerateUpdateWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
+			if !reflect.DeepEqual(allWorkerNodesTolerateUpdateWithVersioningInfo, tt.expectedResult) {
+				t.Errorf("got %v, want %v", allWorkerNodesTolerateUpdateWithVersioningInfo, tt.expectedResult)
+			}
+		})
+	}
+}
+
+func TestAllControlPlanesMatchVersionWithVersioningInfo(t *testing.T) {
+	var nodes = []struct {
+		name                    string
+		currentClusterVersion   *version.Version
+		expectedResult          bool
+		containerRuntimeVersion string
+		nodeVersionInfoMap      NodeVersionInfoMap
+	}{
+		{
+			name:                  "all control planes match",
+			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			expectedResult:        true,
+			nodeVersionInfoMap: NodeVersionInfoMap{
+				"my-master-0": {
+					Nodename:                 "my-master-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-master-1": {
+					Nodename:                 "my-master-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-worker-1": {
+					Nodename:                 "my-worker-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+			},
+		},
+		{
+			name:                  "at least one control plane doesn't match",
+			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			expectedResult:        false,
+			nodeVersionInfoMap: NodeVersionInfoMap{
+				"my-master-0": {
+					Nodename:                 "my-master-0",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         version.MustParseSemantic("1.14.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-master-1": {
+					Nodename:                 "my-master-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.13.1"),
+					KubeletVersion:           version.MustParseSemantic("1.13.1"),
+					APIServerVersion:         version.MustParseSemantic("1.13.1"),
+					ControllerManagerVersion: version.MustParseSemantic("1.13.1"),
+					SchedulerVersion:         version.MustParseSemantic("1.13.1"),
+					EtcdVersion:              version.MustParseSemantic("3.1.11"),
+					Unschedulable:            false,
+				},
+				"my-worker-1": {
+					Nodename:                 "my-worker-1",
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
+					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					APIServerVersion:         nil,
+					ControllerManagerVersion: nil,
+					SchedulerVersion:         nil,
+					EtcdVersion:              nil,
+					Unschedulable:            false,
+				},
+			},
+		},
+	}
+	for _, tt := range nodes {
+		t.Run(tt.name, func(t *testing.T) {
+			allControlPlanesMatchVersionWithVersioningInfo := AllControlPlanesMatchVersionWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
+			if !reflect.DeepEqual(allControlPlanesMatchVersionWithVersioningInfo, tt.expectedResult) {
+				t.Errorf("got %v, want %v", allControlPlanesMatchVersionWithVersioningInfo, tt.expectedResult)
+			}
+		})
+	}
+}
