@@ -843,4 +843,111 @@ spec:
           command:
             - /usr/bin/kured
 `
+	gangwayManifest = `---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-gangway-config
+  namespace: kube-system
+data:
+  gangway.yaml: |
+    clusterName: "skuba"
+
+    redirectURL: "https://{{.ControlPlane}}:32001/callback"
+
+    serveTLS: true
+    authorizeURL: "https://{{.ControlPlane}}:32002/dex/auth"
+    tokenURL: "https://{{.ControlPlane}}:32002/dex/token"
+    keyFile: /etc/gangway/pki/tls.key
+    certFile: /etc/gangway/pki/tls.crt
+
+    clientID: "gangway"
+    usernameClaim: "sub"
+    apiServerURL: "https://kubernetes.default.svc.cluster.local:6443"
+    cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    trustedCAPath: /etc/gangway/pki/ca.crt
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+  labels:
+    app: oidc-gangway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-gangway
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: oidc-gangway
+    spec:
+      serviceAccountName: oidc-gangway
+      containers:
+        - name: oidc-gangway
+          image: {{.GangwayImage}}
+          imagePullPolicy: IfNotPresent
+          command: ["gangway", "-config", "/gangway/gangway.yaml"]
+          env:
+            - name: GANGWAY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oidc-gangway-secret
+                  key: clientsecret
+            - name: GANGWAY_SESSION_SECURITY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: oidc-gangway-secret
+                  key: sessionkey
+          ports:
+            - name: web
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: gangway-config-path
+              mountPath: /gangway/
+              readOnly: true
+            - name: gangway-cert-path
+              mountPath: /etc/gangway/pki
+              readOnly: true
+      volumes:
+        - name: gangway-config-path
+          configMap:
+            name: oidc-gangway-config
+            items:
+              - key: gangway.yaml
+                path: gangway.yaml
+        - name: gangway-cert-path
+          secret:
+            secretName: oidc-gangway-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - name: web
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 32001
+  selector:
+    app: oidc-gangway
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oidc-gangway
+  namespace: kube-system
+`
 )
