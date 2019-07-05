@@ -95,7 +95,7 @@ resource "libvirt_domain" "worker" {
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
-  count = "${var.lbs}"
+  count = "${var.workers}"
 
   connection {
     host     = "${element(libvirt_domain.worker.*.network_interface.0.addresses.0, count.index)}"

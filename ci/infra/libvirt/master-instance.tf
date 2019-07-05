@@ -95,7 +95,7 @@ resource "libvirt_domain" "master" {
 }
 
 resource "null_resource" "master_wait_cloudinit" {
-  count = "${var.lbs}"
+  count = "${var.masters}"
 
   connection {
     host     = "${element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)}"
