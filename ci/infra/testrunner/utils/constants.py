@@ -15,13 +15,11 @@ class BaseConfig:
 
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
-        obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
-        obj.mirror = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
@@ -69,6 +67,7 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.internal_net = None
+            self.mirror = None
             self.stack_name = None
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE 
@@ -116,7 +115,7 @@ class BaseConfig:
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
-                # Check that the key is in vars and has at some sub-keys defined 
+                # Check that the key is in vars and has at some sub-keys defined
                 if key in vars and vars[key]:
                     key_vars = vars[key]
                 else:
@@ -173,8 +172,8 @@ class BaseConfig:
     @staticmethod
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
-            raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
-                                           "before using testrunner (skuba/ci/infra/testrunner/vars)"))
+            raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
+                                           "or set env var WORKSPACE before using testrunner)"))
         if not conf.terraform.stack_name:
             raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
 

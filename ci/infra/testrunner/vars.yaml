@@ -3,7 +3,6 @@ workspace: "" # Working directory for testrunner
 ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
 username: ""  # Fill your username
 nodeuser: "sles"  # Default node username
-mirrors: "ibs-mirror.prv.suse.net" # mirrors for downloading packages
 
 # Skuba setup
 skuba:
@@ -12,6 +11,10 @@ skuba:
 
 # platform settings
 terraform:
+  internal_net: "" # name of the internal network
+  mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
+  plugin_dir: "" # path to the terraform plugin dir
+  stack_name: "" # name of the stack
   tfdir: ""  # path to terraform templates
   tfvars: "" # terraform vars
 

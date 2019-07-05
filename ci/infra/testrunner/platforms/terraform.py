@@ -9,10 +9,10 @@ from utils import (Constant, Format, step, Utils)
 
 
 class Terraform:
-    def __init__(self, conf):
+    def __init__(self, conf, platform):
         self.conf = conf
         self.utils = Utils(conf)
-        self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
+        self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
         self.state = None
 
@@ -164,11 +164,11 @@ class Terraform:
                 else:
                     tfvars[k] = v
 
-        # Switch to mirrors  
+        # Update mirror urls
         repos = tfvars.get("repositories")
-        if self.conf.mirror and repos is not None:
+        if self.conf.terraform.mirror and repos is not None:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.mirror)
+                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
 
     def _runshellcommandterraform(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""

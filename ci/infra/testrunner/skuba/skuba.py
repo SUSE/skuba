@@ -9,11 +9,11 @@ from utils.utils import (step, Utils)
 
 class Skuba:
 
-    def __init__(self, conf):
+    def __init__(self, conf, platform):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
         self.utils = Utils(self.conf)
-        self.platform = Platform.get_platform(conf)
+        self.platform = Platform.get_platform(conf, platform)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
     def _verify_skuba_bin_dependency(self):
@@ -121,7 +121,7 @@ class Skuba:
             raise ValueError("Node number must be non negative")
 
         if nr >= n_nodes:
-            raise ValueError("Error: there is no {role}-{rn} \
+            raise ValueError("Error: there is no {role}-{nr} \
                               node to remove from cluster".format(role=role, nr=nr))
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
@@ -158,7 +158,7 @@ class Skuba:
     def num_of_nodes(self, role):
 
         if role not in ("master", "worker"):
-            raise ValueException("Invalid role '{}'".format(role))
+            raise ValueError("Invalid role '{}'".format(role))
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"

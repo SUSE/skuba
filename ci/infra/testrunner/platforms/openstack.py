@@ -7,7 +7,7 @@ from utils import Format
 
 class Openstack(Terraform):
     def __init__(self, conf):
-        super().__init__(conf)
+        super().__init__(conf, 'openstack')
         if  not os.path.isfile(conf.openstack.openrc):
             raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
                                  "Check your openrc file path in a configured yaml file".format(conf.openstack.openrc)))

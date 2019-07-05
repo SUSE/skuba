@@ -14,23 +14,23 @@ all: deploy bootstrap
 
 .PHONY: bootstrap_environment
 bootstrap_environment:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml bootstrap 
+	${TEST_RUNNER} --platform ${PLATFORM} bootstrap
 
 .PHONY: build_skuba
 build_skuba:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml build-skuba
+	${TEST_RUNNER} --platform ${PLATFORM} build-skuba
 
 .PHONY: create_environment
 create_environment:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml provision
+	${TEST_RUNNER} --platform ${PLATFORM} provision
 
 .PHONY: cleanup
 cleanup:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml cleanup
+	${TEST_RUNNER} --platform ${PLATFORM} cleanup
 
 .PHONY: gather_logs
 gather_logs:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml log
+	${TEST_RUNNER} --platform ${PLATFORM} log
 
 .PHONY: git_rebase_check
 git_rebase_check:
@@ -38,7 +38,7 @@ git_rebase_check:
 
 .PHONY: info
 info:
-	${TEST_RUNNER} --vars vars/${PLATFORM}.yaml info
+	${TEST_RUNNER} --platform ${PLATFORM} info
 
 .PHONY: test_jenkins_jobs
 test_jenkins_jobs:
