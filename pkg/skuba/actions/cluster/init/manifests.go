@@ -29,6 +29,12 @@ kind: ClusterConfiguration
 apiServer:
   certSANs:
     - {{.ControlPlane}}
+  extraArgs:
+    oidc-issuer-url: https://{{.ControlPlane}}:32002
+    oidc-client-id: oidc-dex
+    oidc-ca-file: /etc/kubernetes/pki/ca.crt
+    oidc-username-claim: email
+    oidc-groups-claim: groups
 clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlane}}:6443
 networking:
@@ -851,7 +857,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: https://{{.ControlPlane}}:32002/dex
+    issuer: https://{{.ControlPlane}}:32002
 
     storage:
       type: kubernetes
@@ -875,16 +881,22 @@ data:
         host: openldap.kube-system.svc.cluster.local:389
         insecureNoSSL: true
         insecureSkipVerify: true
-        bindDN: cn=admin,dc=example,dc=org
-        bindPW: 'admin'
+        bindDN: cn=admin,dc=example,dc=com
+        bindPW: admin
         usernamePrompt: Email Address
         userSearch:
-          baseDN: cn=People,dc=example,dc=org
+          baseDN: cn=Users,dc=example,dc=com
           filter: "(objectClass=person)"
           username: mail
           idAttr: DN
           emailAttr: mail
-          nameAttr: uid
+          nameAttr: cn
+        groupSearch:
+          baseDN: cn=Groups,dc=example,dc=com
+          filter: "(objectClass=group)"
+          userAttr: DN
+          groupAttr: member
+          nameAttr: cn
 
     staticClients:
     - name: 'gangway'
@@ -927,7 +939,7 @@ spec:
           - name: GANGWAY_CLIENT_SECRET
             valueFrom:
               secretKeyRef:
-                name: oidc-dex-secret
+                name: oidc-dex-client-secret
                 key: client-secret-gangway
         ports:
           - name: https
@@ -1019,8 +1031,8 @@ data:
     redirectURL: "https://{{.ControlPlane}}:32001/callback"
 
     serveTLS: true
-    authorizeURL: "https://{{.ControlPlane}}:32002/dex/auth"
-    tokenURL: "https://{{.ControlPlane}}:32002/dex/token"
+    authorizeURL: "https://{{.ControlPlane}}:32002/auth"
+    tokenURL: "https://{{.ControlPlane}}:32002/token"
     keyFile: /etc/gangway/pki/tls.key
     certFile: /etc/gangway/pki/tls.crt
 
