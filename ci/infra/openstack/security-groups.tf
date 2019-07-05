@@ -156,4 +156,18 @@ resource "openstack_compute_secgroup_v2" "secgroup_master_lb" {
     ip_protocol = "tcp"
     cidr        = "0.0.0.0/0"
   }
+
+  rule {
+    from_port   = 32001
+    to_port     = 32001
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  rule {
+    from_port   = 32002
+    to_port     = 32002
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
 }
