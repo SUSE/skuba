@@ -33,7 +33,6 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
@@ -43,31 +42,15 @@ const (
 	certName   = "oidc-gangway-cert"
 	secretName = "oidc-gangway-secret"
 
-	clientSecret = "client-secret"
-	sessionKey   = "session-key"
+	sessionKey = "session-key"
 )
 
-// CreateGangwaySecret generates session key and read client secret from dex
-func CreateGangwaySecret() error {
+// CreateGangwaySessionKey generates session key
+func CreateGangwaySessionKey() error {
 	key := make([]byte, 32)
 	_, err := rand.Read(key)
 	if err != nil {
 		return errors.Errorf("unable to generate session key %v", err)
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-
-	// Read client secret from dex secret
-	dexSecret, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(dex.SecretName, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrap(err, "could not retrieve the dex secret")
-	}
-	cs, ok := dexSecret.Data[dex.Gangway.String()]
-	if !ok {
-		return errors.Wrap(err, "could not find dex client secret")
 	}
 
 	secret := &v1.Secret{
@@ -76,11 +59,14 @@ func CreateGangwaySecret() error {
 			Namespace: metav1.NamespaceSystem,
 		},
 		Data: map[string][]byte{
-			clientSecret: cs,
-			sessionKey:   []byte(base64.URLEncoding.EncodeToString(key)),
+			sessionKey: []byte(base64.URLEncoding.EncodeToString(key)),
 		},
 	}
 
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
 	if err := apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return errors.Wrap(err, "error when creating gangway secret")
 	}

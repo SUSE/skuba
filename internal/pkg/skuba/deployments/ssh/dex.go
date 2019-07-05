@@ -32,9 +32,6 @@ func init() {
 }
 
 func dexDeploy(t *Target, data interface{}) error {
-	if err := dex.CreateDexClientSecret(); err != nil {
-		return errors.Wrap(err, "unable to create dex secret")
-	}
 	if err := dex.CreateDexCert(); err != nil {
 		return errors.Wrap(err, "unable to create dex certificate")
 	}

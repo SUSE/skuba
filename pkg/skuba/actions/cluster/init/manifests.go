@@ -899,21 +899,11 @@ data:
           nameAttr: cn
 
     staticClients:
-    - name: 'gangway'
-      id: gangway
+    - id: gangway
       redirectURIs:
       - 'https://{{.ControlPlane}}:32001/callback'
-      secret: '$(GANGWAY_CLIENT_SECRET)'
-
-    # Let dex keep a list of passwords which can be used to login to dex.
-    enablePasswordDB: true
-    # A static list of passwords to login the end user.
-    staticPasswords:
-    - email: "admin@example.com"
-      # bcrypt hash of the string "password"
-      hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-      username: "admin"
-      userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+      name: 'gangway'
+      secret: {{.GangwayClientSecret}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -945,12 +935,6 @@ spec:
           - /usr/bin/caasp-dex
           - serve
           - /etc/dex/cfg/config.yaml
-        env:
-          - name: GANGWAY_CLIENT_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: oidc-dex-client-secret
-                key: client-secret-gangway
         ports:
           - name: https
             containerPort: 32002
@@ -1047,6 +1031,7 @@ data:
     certFile: /etc/gangway/pki/tls.crt
 
     clientID: "gangway"
+    clientSecret: "{{.GangwayClientSecret}}"
     usernameClaim: "sub"
     apiServerURL: "https://kubernetes.default.svc.cluster.local:6443"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
@@ -1081,11 +1066,6 @@ spec:
           imagePullPolicy: IfNotPresent
           command: ["gangway", "-config", "/gangway/gangway.yaml"]
           env:
-            - name: GANGWAY_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: oidc-gangway-secret
-                  key: client-secret
             - name: GANGWAY_SESSION_SECURITY_KEY
               valueFrom:
                 secretKeyRef:

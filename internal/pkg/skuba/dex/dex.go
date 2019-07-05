@@ -20,6 +20,7 @@ package dex
 import (
 	"crypto/rand"
 	"crypto/x509"
+	"fmt"
 	"net"
 
 	"github.com/pkg/errors"
@@ -39,55 +40,7 @@ import (
 
 const (
 	certName = "oidc-dex-cert"
-	// SecretName is secret name which stores dex client secret
-	SecretName = "oidc-dex-client-secret"
 )
-
-// ClientSecret is the client secret used to
-// authenticate auth client to auth server (dex)
-type ClientSecret string
-
-const (
-	// Gangway client secret
-	Gangway ClientSecret = "client-secret-gangway"
-)
-
-func (cs ClientSecret) String() string {
-	return string(cs)
-}
-
-// CreateDexClientSecret creates client secret which is used by
-// auth client (gangway) to authenticate to auth server (dex)
-//
-// Dex could generates more client secret at here if there are
-// multiple auth clients
-func CreateDexClientSecret() error {
-	clientSecretGangway := make([]byte, 12)
-	_, err := rand.Read(clientSecretGangway)
-	if err != nil {
-		return errors.Errorf("unable to generate client secret for gangway %v", err)
-	}
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      SecretName,
-			Namespace: metav1.NamespaceSystem,
-		},
-		Data: map[string][]byte{
-			Gangway.String(): clientSecretGangway,
-		},
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-	if err := apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Wrap(err, "error when creating dex secret")
-	}
-
-	return nil
-}
 
 // CreateDexCert creates a signed certificate for dex
 // with kubernetes CA certificate and key
@@ -155,4 +108,16 @@ func CreateDexCert() error {
 func GetDexImage() string {
 	return images.GetGenericImage(skuba.ImageRepository, "caasp-dex",
 		kubernetes.CurrentAddonVersion(kubernetes.Dex))
+}
+
+// GetClientSecretGangway returns client secret which is used by
+// auth client (gangway) to authenticate to auth server (dex)
+//
+// Due to this issue https://github.com/dexidp/dex/issues/1099
+// client secret is not configurable through environment variable
+// so, replace client secret in configmap by rendering
+func GetClientSecretGangway() string {
+	b := make([]byte, 12)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
 }

@@ -47,6 +47,7 @@ func NewInitCmd() *cobra.Command {
 				CiliumOperatorImage: cilium.GetCiliumOperatorImage(),
 				KuredImage:          kured.GetKuredImage(),
 				DexImage:            dex.GetDexImage(),
+				GangwayClientSecret: dex.GetClientSecretGangway(),
 				GangwayImage:        gangway.GetGangwayImage(),
 			}
 
