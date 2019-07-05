@@ -47,6 +47,10 @@ func kubeadmReset(t *Target, data interface{}) error {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
 	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force", ignorePreflightErrors)
+	if err != nil {
+		return err
+	}
+	_, _, err = t.ssh("systemctl", "unmask", "kubelet")
 	return err
 }
 
