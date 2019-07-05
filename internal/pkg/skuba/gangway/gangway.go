@@ -21,6 +21,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
+	"net"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -35,6 +36,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
 )
 
 const (
@@ -43,14 +45,6 @@ const (
 
 	clientSecret = "client-secret"
 	sessionKey   = "session-key"
-)
-
-var (
-	gangwayCertConfg = certutil.Config{
-		CommonName:   "oidc-gangway",
-		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	}
 )
 
 // CreateGangwaySecret generates session key and read client secret from dex
@@ -97,11 +91,32 @@ func CreateGangwaySecret() error {
 // CreateGangwayCert creates a signed certificate for gangway
 // with kubernetes CA certificate and key
 func CreateGangwayCert() error {
+	// Load kubernetes CA
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk("pki", "ca")
 	if err != nil {
 		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
 	}
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &gangwayCertConfg)
+
+	// Load kubeadm-init.conf to get certificate SANs
+	cfg, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
+	if err != nil {
+		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
+	}
+	certIPs := make([]net.IP, len(cfg.ClusterConfiguration.APIServer.CertSANs))
+	for idx, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
+		certIPs[idx] = net.ParseIP(san)
+	}
+
+	// Generate gangway certificate
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &certutil.Config{
+		CommonName:   "oidc-gangway",
+		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
+		AltNames: certutil.AltNames{
+			DNSNames: cfg.ClusterConfiguration.APIServer.CertSANs,
+			IPs:      certIPs,
+		},
+		Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	})
 	if err != nil {
 		return errors.Errorf("error when creating gangway certificate %v", err)
 	}
@@ -110,6 +125,7 @@ func CreateGangwayCert() error {
 		return errors.Errorf("gangway private key marshal failed %v", err)
 	}
 
+	// Write certificate into secret resource
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      certName,

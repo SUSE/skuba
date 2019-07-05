@@ -20,6 +20,7 @@ package dex
 import (
 	"crypto/rand"
 	"crypto/x509"
+	"net"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -33,6 +34,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
 )
 
 const (
@@ -53,14 +55,6 @@ const (
 func (cs ClientSecret) String() string {
 	return string(cs)
 }
-
-var (
-	dexCertConfg = certutil.Config{
-		CommonName:   "oidc-dex",
-		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	}
-)
 
 // CreateDexClientSecret creates client secret which is used by
 // auth client (gangway) to authenticate to auth server (dex)
@@ -98,11 +92,32 @@ func CreateDexClientSecret() error {
 // CreateDexCert creates a signed certificate for dex
 // with kubernetes CA certificate and key
 func CreateDexCert() error {
+	// Load kubernetes CA
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk("pki", "ca")
 	if err != nil {
 		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
 	}
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &dexCertConfg)
+
+	// Load kubeadm-init.conf to get certificate SANs
+	cfg, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
+	if err != nil {
+		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
+	}
+	certIPs := make([]net.IP, len(cfg.ClusterConfiguration.APIServer.CertSANs))
+	for idx, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
+		certIPs[idx] = net.ParseIP(san)
+	}
+
+	// Generate dex certificate
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &certutil.Config{
+		CommonName:   "oidc-dex",
+		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
+		AltNames: certutil.AltNames{
+			DNSNames: cfg.ClusterConfiguration.APIServer.CertSANs,
+			IPs:      certIPs,
+		},
+		Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	})
 	if err != nil {
 		return errors.Errorf("error when creating dex certificate %v", err)
 	}
@@ -111,6 +126,7 @@ func CreateDexCert() error {
 		return errors.Errorf("dex private key marshal failed %v", err)
 	}
 
+	// Write certificate into secret resource
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      certName,
