@@ -122,6 +122,10 @@ resource "null_resource" "worker_reboot" {
       host = "${element(libvirt_domain.worker.*.network_interface.0.addresses.0, count.index)}"
     }
 
-    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :"
+    command = <<EOT
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
+# wait for ssh ready after reboot
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
+EOT
   }
 }
