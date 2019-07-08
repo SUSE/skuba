@@ -1035,7 +1035,7 @@ data:
     clientID: "gangway"
     clientSecret: "{{.GangwayClientSecret}}"
     usernameClaim: "sub"
-    apiServerURL: "https://kubernetes.default.svc.cluster.local:6443"
+    apiServerURL: "https://{{.ControlPlane}}:6443"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     trustedCAPath: /etc/gangway/pki/ca.crt
 ---
