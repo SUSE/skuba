@@ -19,6 +19,7 @@ package upgrade
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -29,6 +30,10 @@ import (
 
 func Apply(target *deployments.Target) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
+
+	if err := fillTargetWithNodeName(target); err != nil {
+		return err
+	}
 
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
 	if err != nil {
@@ -50,28 +55,86 @@ func Apply(target *deployments.Target) error {
 		return nil
 	}
 
-	// Check If the target node is the first control plane to be updated
+	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
+
+	// Check if the target node is the first control plane to be updated
 	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
-		upgradeable, err := kubernetes.AllWorkerNodesTolerateUpdate()
+		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
 		if upgradeable {
-			fmt.Println("TODO: trigger update installation")
+			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
+				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
+				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
+			}, "kubernetes.install-base-packages")
+			if err != nil {
+				return err
+			}
+			err = target.Apply(deployments.UpgradeConfiguration{
+				KubernetesVersion: fmt.Sprintf("v%s", nodeVersionInfoUpdate.Update.APIServerVersion.String()),
+			}, "kubeadm.upgrade.apply")
+			if err != nil {
+				return err
+			}
+			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
+				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
+				KubernetesVersion: nodeVersionInfoUpdate.Update.APIServerVersion.String(),
+			}, "kubernetes.install-base-packages")
+			if err != nil {
+				return err
+			}
+			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
+				return err
+			}
 		}
 	} else {
 		// there is already at least one updated control plane node
 		upgradeable := true
 		if nodeVersionInfoUpdate.Current.IsControlPlane() {
-			upgradeable, err = kubernetes.AllWorkerNodesTolerateUpdate()
+			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(currentClusterVersion)
 			if err != nil {
 				return err
 			}
 		}
 		if upgradeable {
-			fmt.Println("TODO: trigger update installation")
+			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
+				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+				KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
+			}, "kubernetes.install-base-packages")
+			if err != nil {
+				return err
+			}
+			if err := target.Apply(nil, "kubeadm.upgrade.node"); err != nil {
+				return err
+			}
+			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
+				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+				KubernetesVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+			}, "kubernetes.install-base-packages")
+			if err != nil {
+				return err
+			}
+			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
+				return err
+			}
 		}
 	}
 
+	fmt.Printf("Node %s (%s) successfully upgraded\n", target.Nodename, target.Target)
+
+	return nil
+}
+
+func fillTargetWithNodeName(target *deployments.Target) error {
+	machineId, err := target.DownloadFileContents("/etc/machine-id")
+	if err != nil {
+		return err
+	}
+	node, err := kubernetes.GetNodeWithMachineId(strings.TrimSuffix(machineId, "\n"))
+	if err != nil {
+		return err
+	}
+	target.Nodename = node.ObjectMeta.Name
 	return nil
 }

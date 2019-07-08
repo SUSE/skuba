@@ -171,7 +171,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 	}
 }
 
-func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
+func TestAllWorkerNodesTolerateVersionWithVersioningInfo(t *testing.T) {
 	var nodes = []struct {
 		name                    string
 		currentClusterVersion   *version.Version
@@ -202,7 +202,6 @@ func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            false,
 				},
 				"my-worker-1": {
 					Nodename:                 "my-worker-1",
@@ -212,24 +211,22 @@ func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            false,
 				},
 			},
 		},
 		{
 			name:                  "a worker needs to be updated before",
-			currentClusterVersion: version.MustParseSemantic("1.14.1"),
+			currentClusterVersion: version.MustParseSemantic("1.15.0"),
 			expectedResult:        false,
 			nodeVersionInfoMap: NodeVersionInfoMap{
 				"my-master-0": {
 					Nodename:                 "my-master-0",
-					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
-					KubeletVersion:           version.MustParseSemantic("1.14.1"),
-					APIServerVersion:         version.MustParseSemantic("1.14.1"),
-					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
-					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.15.0"),
+					KubeletVersion:           version.MustParseSemantic("1.15.0"),
+					APIServerVersion:         version.MustParseSemantic("1.15.0"),
+					ControllerManagerVersion: version.MustParseSemantic("1.15.0"),
+					SchedulerVersion:         version.MustParseSemantic("1.15.0"),
 					EtcdVersion:              version.MustParseSemantic("3.1.11"),
-					Unschedulable:            false,
 				},
 				"my-worker-0": {
 					Nodename:                 "my-worker-0",
@@ -239,7 +236,6 @@ func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            false,
 				},
 				"my-worker-1": {
 					Nodename:                 "my-worker-1",
@@ -249,24 +245,22 @@ func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            false,
 				},
 			},
 		},
 		{
-			name:                  "a worker is unschedulable",
-			currentClusterVersion: version.MustParseSemantic("1.14.1"),
-			expectedResult:        false,
+			name:                  "all workers tolerate except an unschedulable one",
+			currentClusterVersion: version.MustParseSemantic("1.15.0"),
+			expectedResult:        true,
 			nodeVersionInfoMap: NodeVersionInfoMap{
 				"my-master-0": {
 					Nodename:                 "my-master-0",
-					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
-					KubeletVersion:           version.MustParseSemantic("1.14.1"),
-					APIServerVersion:         version.MustParseSemantic("1.14.1"),
-					ControllerManagerVersion: version.MustParseSemantic("1.14.1"),
-					SchedulerVersion:         version.MustParseSemantic("1.14.1"),
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.15.0"),
+					KubeletVersion:           version.MustParseSemantic("1.15.0"),
+					APIServerVersion:         version.MustParseSemantic("1.15.0"),
+					ControllerManagerVersion: version.MustParseSemantic("1.15.0"),
+					SchedulerVersion:         version.MustParseSemantic("1.15.0"),
 					EtcdVersion:              version.MustParseSemantic("3.1.11"),
-					Unschedulable:            false,
 				},
 				"my-worker-0": {
 					Nodename:                 "my-worker-0",
@@ -276,26 +270,25 @@ func TestAllWorkerNodesTolerateUpdateWithVersioningInfo(t *testing.T) {
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            true,
 				},
 				"my-worker-1": {
 					Nodename:                 "my-worker-1",
-					ContainerRuntimeVersion:  version.MustParseSemantic("1.14.1"),
-					KubeletVersion:           version.MustParseSemantic("1.14.1"),
+					ContainerRuntimeVersion:  version.MustParseSemantic("1.13.1"),
+					KubeletVersion:           version.MustParseSemantic("1.13.1"),
 					APIServerVersion:         nil,
 					ControllerManagerVersion: nil,
 					SchedulerVersion:         nil,
 					EtcdVersion:              nil,
-					Unschedulable:            false,
+					Unschedulable:            true,
 				},
 			},
 		},
 	}
 	for _, tt := range nodes {
 		t.Run(tt.name, func(t *testing.T) {
-			allWorkerNodesTolerateUpdateWithVersioningInfo := allWorkerNodesTolerateUpdateWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
-			if !reflect.DeepEqual(allWorkerNodesTolerateUpdateWithVersioningInfo, tt.expectedResult) {
-				t.Errorf("got %v, want %v", allWorkerNodesTolerateUpdateWithVersioningInfo, tt.expectedResult)
+			allWorkerNodesTolerateVersionWithVersioningInfo := allWorkerNodesTolerateVersionWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
+			if !reflect.DeepEqual(allWorkerNodesTolerateVersionWithVersioningInfo, tt.expectedResult) {
+				t.Errorf("got %v, want %v", allWorkerNodesTolerateVersionWithVersioningInfo, tt.expectedResult)
 			}
 		})
 	}

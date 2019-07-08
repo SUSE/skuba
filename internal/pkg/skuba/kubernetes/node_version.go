@@ -199,22 +199,22 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 	return nodeVersions, nil
 }
 
-// AllWorkerNodesTolerateUpdate checks that all schedulable worker nodes tolerate the latest version to move to
-func AllWorkerNodesTolerateUpdate() (bool, error) {
+// AllWorkerNodesTolerateVersion checks that all schedulable worker nodes tolerate the given cluster version
+func AllWorkerNodesTolerateVersion(clusterVersion *version.Version) (bool, error) {
 	allNodesVersioningInfo, err := AllNodesVersioningInfo()
 	if err != nil {
 		return false, err
 	}
 
-	return allWorkerNodesTolerateUpdateWithVersioningInfo(allNodesVersioningInfo, LatestVersion()), nil
+	return allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion), nil
 }
 
-func allWorkerNodesTolerateUpdateWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
+func allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
 	for _, nodeInfo := range allNodesVersioningInfo {
 		if nodeInfo.IsControlPlane() {
 			continue
 		}
-		if nodeInfo.Unschedulable || !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+		if !nodeInfo.Unschedulable && !nodeInfo.ToleratesClusterVersion(clusterVersion) {
 			return false
 		}
 	}

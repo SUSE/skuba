@@ -31,24 +31,11 @@ func init() {
 	stateMap["kubeadm.init"] = kubeadmInit
 	stateMap["kubeadm.join"] = kubeadmJoin
 	stateMap["kubeadm.reset"] = kubeadmReset
+	stateMap["kubeadm.upgrade.apply"] = kubeadmUpgradeApply
+	stateMap["kubeadm.upgrade.node"] = kubeadmUpgradeNode
 }
 
 var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skuba.KubeadmInitConfFile())
-
-func kubeadmReset(t *Target, data interface{}) error {
-	resetConfiguration, ok := data.(deployments.ResetConfiguration)
-	if !ok {
-		return errors.New("couldn't access reset configuration")
-	}
-
-	ignorePreflightErrors := ""
-	ignorePreflightErrorsVal := resetConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
-	if len(ignorePreflightErrorsVal) > 0 {
-		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
-	}
-	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force", ignorePreflightErrors)
-	return err
-}
 
 func kubeadmInit(t *Target, data interface{}) error {
 	bootstrapConfiguration, ok := data.(deployments.BootstrapConfiguration)
@@ -92,5 +79,36 @@ func kubeadmJoin(t *Target, data interface{}) error {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
 	_, _, err = t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors)
+	return err
+}
+
+func kubeadmReset(t *Target, data interface{}) error {
+	resetConfiguration, ok := data.(deployments.ResetConfiguration)
+	if !ok {
+		return errors.New("couldn't access reset configuration")
+	}
+
+	ignorePreflightErrors := ""
+	ignorePreflightErrorsVal := resetConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
+	if len(ignorePreflightErrorsVal) > 0 {
+		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
+	}
+	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--force", ignorePreflightErrors)
+	return err
+}
+
+func kubeadmUpgradeApply(t *Target, data interface{}) error {
+	upgradeConfiguration, ok := data.(deployments.UpgradeConfiguration)
+	if !ok {
+		return errors.New("couldn't access upgrade configuration")
+	}
+
+	// FIXME: generate configuration with new versions and use it here
+	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "-y", upgradeConfiguration.KubernetesVersion)
+	return err
+}
+
+func kubeadmUpgradeNode(t *Target, data interface{}) error {
+	_, _, err := t.ssh("kubeadm", "upgrade", "node")
 	return err
 }
