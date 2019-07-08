@@ -99,6 +99,14 @@ func KuredManifestFile() string {
 	return filepath.Join(KuredDir(), "kured.yaml")
 }
 
+func DexDir() string {
+	return filepath.Join(AddonsDir(), "dex")
+}
+
+func DexManifestFile() string {
+	return filepath.Join(DexDir(), "dex.yaml")
+}
+
 func GangwayDir() string {
 	return filepath.Join(AddonsDir(), "gangway")
 }

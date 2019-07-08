@@ -100,6 +100,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	// we need to generate secrets and certificates
 	err = target.Apply(nil,
 		"cni.deploy",
+		"dex.deploy",
 		"gangway.deploy",
 	)
 	if err != nil {

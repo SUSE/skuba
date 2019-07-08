@@ -34,6 +34,8 @@ type InitConfiguration struct {
 	CiliumInitImage     string
 	CiliumOperatorImage string
 	KuredImage          string
+	DexImage            string
+	GangwayClientSecret string
 	GangwayImage        string
 }
 

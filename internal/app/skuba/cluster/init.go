@@ -22,6 +22,7 @@ import (
 	"k8s.io/klog"
 
 	cilium "github.com/SUSE/skuba/internal/pkg/skuba/cni"
+	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/init"
@@ -45,6 +46,8 @@ func NewInitCmd() *cobra.Command {
 				CiliumInitImage:     cilium.GetCiliumInitImage(),
 				CiliumOperatorImage: cilium.GetCiliumOperatorImage(),
 				KuredImage:          kured.GetKuredImage(),
+				DexImage:            dex.GetDexImage(),
+				GangwayClientSecret: dex.GetClientSecretGangway(),
 				GangwayImage:        gangway.GetGangwayImage(),
 			}
 

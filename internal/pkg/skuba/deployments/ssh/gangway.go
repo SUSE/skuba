@@ -32,8 +32,8 @@ func init() {
 }
 
 func gangwayDeploy(t *Target, data interface{}) error {
-	if err := gangway.CreateGangwaySecret(); err != nil {
-		return errors.Wrap(err, "unable to create gangway secret")
+	if err := gangway.CreateGangwaySessionKey(); err != nil {
+		return errors.Wrap(err, "unable to create gangway session key")
 	}
 	if err := gangway.CreateGangwayCert(); err != nil {
 		return errors.Wrap(err, "unable to create gangway certificate")
