@@ -50,10 +50,28 @@ write_files:
       bind :6443
       default_backend apiserver-backend
 
+    frontend gangway
+      bind :32001
+      default_backend gangway-backend
+
+    frontend dex
+      bind :32002
+      default_backend dex-backend
+
     backend apiserver-backend
       option httpchk GET /healthz
-      http-check expect string ok
-      ${backends}
+      http-check expect status 200
+      ${apiserver_backends}
+
+    backend gangway-backend
+      option httpchk GET /
+      http-check expect status 200
+      ${gangway_backends}
+
+    backend dex-backend
+      option httpchk GET /healthz
+      http-check expect status 200
+      ${dex_backends}
 
 runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
