@@ -873,6 +873,8 @@ data:
     frontend:
       dir: /usr/share/caasp-dex/web
 
+    # This is a sample with LDAP as connector.
+    # Requires a update to fulfill your environment.
     connectors:
     - type: ldap
       id: ldap
