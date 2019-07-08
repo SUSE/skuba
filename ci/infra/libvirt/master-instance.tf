@@ -95,7 +95,8 @@ resource "libvirt_domain" "master" {
 }
 
 resource "null_resource" "master_wait_cloudinit" {
-  count = "${var.lbs}"
+  depends_on = ["libvirt_domain.master"]
+  count      = "${var.masters}"
 
   connection {
     host     = "${element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)}"
@@ -104,12 +105,23 @@ resource "null_resource" "master_wait_cloudinit" {
     type     = "ssh"
   }
 
-  depends_on = ["libvirt_domain.master"]
-
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
-      "sudo reboot&",
     ]
+  }
+}
+
+resource "null_resource" "master_reboot" {
+  depends_on = ["null_resource.master_wait_cloudinit"]
+  count      = "${var.masters}"
+
+  provisioner "local-exec" {
+    environment = {
+      user = "${var.username}"
+      host = "${element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)}"
+    }
+
+    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :"
   }
 }
