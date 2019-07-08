@@ -86,7 +86,7 @@ func TestCurrentComponentVersion(t *testing.T) {
 }
 
 func TestCurrentAddonVersion(t *testing.T) {
-	addons := []Addon{Tooling, Cilium, Kured, Gangway}
+	addons := []Addon{Tooling, Cilium, Kured, Dex, Gangway}
 	for _, addon := range addons {
 		t.Run(fmt.Sprintf("addon %q has a version assigned", addon), func(t *testing.T) {
 			addonVersion := CurrentAddonVersion(addon)

@@ -88,6 +88,7 @@ var (
 				CiliumVersion:  "1.5.3",
 				ToolingVersion: "0.1.0",
 				KuredVersion:   "1.2.0",
+				DexVersion:     "2.16.0",
 				GangwayVersion: "3.1.0",
 			},
 		},
