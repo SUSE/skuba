@@ -7,11 +7,11 @@ resource "openstack_lb_loadbalancer_v2" "lb" {
   ]
 }
 
-resource "openstack_lb_listener_v2" "api_server_listener" {
+resource "openstack_lb_listener_v2" "kube_api_listener" {
   protocol        = "TCP"
   protocol_port   = "6443"
   loadbalancer_id = "${openstack_lb_loadbalancer_v2.lb.id}"
-  name            = "${var.stack_name}-api-server-listener"
+  name            = "${var.stack_name}-kube-api-listener"
 }
 
 resource "openstack_lb_listener_v2" "gangway_listener" {
@@ -32,7 +32,7 @@ resource "openstack_lb_pool_v2" "kube_api_pool" {
   name        = "${var.stack_name}-kube-api-pool"
   protocol    = "TCP"
   lb_method   = "ROUND_ROBIN"
-  listener_id = "${openstack_lb_listener_v2.api_server_listener.id}"
+  listener_id = "${openstack_lb_listener_v2.kube_api_listener.id}"
 }
 
 resource "openstack_lb_pool_v2" "gangway_pool" {
