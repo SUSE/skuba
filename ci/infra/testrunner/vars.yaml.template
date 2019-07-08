@@ -19,11 +19,11 @@ terraform:
   tfvars: "" # terraform vars
 
 openstack:
-  openrc: "PATH TO YOUR OPENRC FILE" #os.getenv("OPENRC")
+  openrc: "PATH TO YOUR OPENRC FILE" #os.getenv("OPENSTACK_OPENRC")
 
 vmware:
-  env_file: "" #os.getenv("ENV_FILE")
-  template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("TEMPLATE_NAME")
+  env_file: "" #os.getenv("VMWARE_ENV_FILE")
+  template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("VMWARE_TEMPLATE_NAME")
 
 # node settings
 lb:

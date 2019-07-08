@@ -115,17 +115,10 @@ class BaseConfig:
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
-                # Check that the key is in vars and has at some sub-keys defined
-                if key in vars and vars[key]:
-                    key_vars = vars[key]
-                else:
-                    key_vars = {}
-
-                BaseConfig.inject_attrs_from_yaml(value, key_vars, config_classes)
+                config_class = obj.__dict__[key]
+                BaseConfig._set_config_class_attrs(config_class, key, vars)
                 continue
 
-            # FIXME: the env variables must be looked as CLASS_KEY to prevent name collitions
-            # with well known variables (e.g. PATH) or between classes
             env_key = key.upper()
             env_value = os.getenv(env_key)
 
@@ -181,5 +174,18 @@ class BaseConfig:
             raise ValueError(Format.alert("workspace should not be your home directory"))
 
         return conf
+
+    @staticmethod
+    def _set_config_class_attrs(config_class, class_name, variables):
+        config_obj = variables.get(class_name)
+
+        if config_obj is not None:
+            for k, v in config_obj.items():
+                env_var = os.getenv(f"{class_name.upper()}_{k.upper()}")
+                if env_var is not None:
+                    config_class.__dict__[k] = env_var
+                elif v:
+                    config_class.__dict__[k] = v
+
 #if __name__ == '__main__':
 #    _conf = BaseConfig()
