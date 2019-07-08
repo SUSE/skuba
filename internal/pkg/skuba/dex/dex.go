@@ -56,9 +56,11 @@ func CreateDexCert() error {
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
-	certIPs := make([]net.IP, len(cfg.ClusterConfiguration.APIServer.CertSANs))
-	for idx, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
-		certIPs[idx] = net.ParseIP(san)
+	certIPs := make([]net.IP, 0)
+	for _, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
+		if ip := net.ParseIP(san); ip != nil {
+			certIPs = append(certIPs, ip)
+		}
 	}
 
 	// Generate dex certificate
