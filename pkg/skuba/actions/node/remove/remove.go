@@ -15,7 +15,7 @@
  *
  */
 
-package node
+package remove
 
 import (
 	"fmt"
