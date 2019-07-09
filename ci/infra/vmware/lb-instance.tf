@@ -40,9 +40,37 @@ data "template_file" "lb_repositories_template" {
   }
 }
 
-data "template_file" "haproxy_backends_master" {
+data "template_file" "haproxy_apiserver_backends_master" {
   count    = "${var.masters}"
   template = "server $${fqdn} $${ip}:6443 check check-ssl verify none\n"
+
+  vars = {
+    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
+    ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
+  }
+
+  depends_on = [
+    "vsphere_virtual_machine.master",
+  ]
+}
+
+data "template_file" "haproxy_gangway_backends_master" {
+  count    = "${var.masters}"
+  template = "server $${fqdn} $${ip}:32001 check check-ssl verify none\n"
+
+  vars = {
+    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
+    ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
+  }
+
+  depends_on = [
+    "vsphere_virtual_machine.master",
+  ]
+}
+
+data "template_file" "haproxy_dex_backends_master" {
+  count    = "${var.masters}"
+  template = "server $${fqdn} $${ip}:32002 check check-ssl verify none\n"
 
   vars = {
     fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
@@ -69,11 +97,13 @@ data "template_file" "lb_cloud_init_userdata" {
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
-    backends        = "${join("      ", data.template_file.haproxy_backends_master.*.rendered)}"
-    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
-    packages        = "${join("\n", formatlist("  - %s", var.packages))}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
+    apiserver_backends = "${join("      ", data.template_file.haproxy_apiserver_backends_master.*.rendered)}"
+    gangway_backends   = "${join("      ", data.template_file.haproxy_gangway_backends_master.*.rendered)}"
+    dex_backends       = "${join("      ", data.template_file.haproxy_dex_backends_master.*.rendered)}"
+    authorized_keys    = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories       = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
+    packages           = "${join("\n", formatlist("  - %s", var.packages))}"
+    ntp_servers        = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
 
