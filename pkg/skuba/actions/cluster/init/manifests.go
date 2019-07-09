@@ -871,6 +871,7 @@ data:
       tlsClientCA: /etc/dex/pki/ca.crt
 
     frontend:
+      theme: "caasp"
       dir: /usr/share/caasp-dex/web
 
     # This is a sample with LDAP as connector.
