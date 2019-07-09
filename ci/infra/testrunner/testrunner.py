@@ -9,6 +9,7 @@ import sys
 from argparse import ArgumentParser
 
 from skuba import Skuba
+from kubectl import Kubectl
 from platforms import Platform
 from tests import TestDriver
 from utils import (BaseConfig, Utils)
