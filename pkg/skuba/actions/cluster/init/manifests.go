@@ -31,7 +31,7 @@ apiServer:
     - {{.ControlPlane}}
   extraArgs:
     oidc-issuer-url: https://{{.ControlPlane}}:32002
-    oidc-client-id: oidc-dex
+    oidc-client-id: oidc
     oidc-ca-file: /etc/kubernetes/pki/ca.crt
     oidc-username-claim: email
     oidc-groups-claim: groups
@@ -902,10 +902,10 @@ data:
           nameAttr: cn
 
     staticClients:
-    - id: gangway
+    - id: oidc
       redirectURIs:
       - 'https://{{.ControlPlane}}:32001/callback'
-      name: 'gangway'
+      name: 'OIDC'
       secret: {{.GangwayClientSecret}}
 ---
 apiVersion: apps/v1
@@ -1033,7 +1033,7 @@ data:
     keyFile: /etc/gangway/pki/tls.key
     certFile: /etc/gangway/pki/tls.crt
 
-    clientID: "gangway"
+    clientID: "oidc"
     clientSecret: "{{.GangwayClientSecret}}"
     usernameClaim: "sub"
     apiServerURL: "https://{{.ControlPlane}}:6443"
