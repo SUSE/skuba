@@ -122,6 +122,10 @@ resource "null_resource" "worker_reboot" {
       host = "${element(openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip, count.index)}"
     }
 
-    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :"
+    command = <<EOT
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
+# wait for ssh ready after reboot
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
+EOT
   }
 }
