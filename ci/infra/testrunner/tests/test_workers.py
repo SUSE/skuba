@@ -1,5 +1,6 @@
 from platforms import Platform
 from skuba import Skuba
+from kubectl import Kubectl
 import pytest
 import time
 
@@ -19,6 +20,7 @@ def setup(request, conf):
 
 def test_worker(setup, conf):
     skuba = Skuba(conf)
+    kubectl = Kubectl(conf)
     skuba.node_join(role="worker", nr=0)
     masters = skuba.num_of_nodes("master")
     workers = skuba.num_of_nodes("worker")
@@ -29,4 +31,5 @@ def test_worker(setup, conf):
     workers = skuba.num_of_nodes("worker")
     assert masters == 1
     assert workers == 0
+    kubectl.get_nodes(conf)
 
