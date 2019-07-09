@@ -50,7 +50,7 @@ data "template_file" "master-cloud-init" {
 
 resource "openstack_compute_instance_v2" "master" {
   count      = "${var.masters}"
-  name       = "caasp-master-${var.stack_name}-${count.index}"
+  name       = "${format("${var.stack_name}-master-%03d", count.index)}"
   image_name = "${var.image_name}"
 
   depends_on = [

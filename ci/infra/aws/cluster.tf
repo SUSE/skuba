@@ -500,7 +500,7 @@ resource "aws_instance" "control_plane" {
   user_data                   = "${data.template_cloudinit_config.cfg.rendered}"
 
   tags = "${merge(local.tags, map(
-    "Name", "${var.stack_name}-master-${count.index}",
+    "Name", "${format("${var.stack_name}-master-%03d", count.index)}",
     "Class", "Instance"))}"
 
   vpc_security_group_ids = [
@@ -567,7 +567,7 @@ resource "aws_instance" "nodes" {
   user_data = "${data.template_cloudinit_config.cfg.rendered}"
 
   tags = "${merge(local.tags, map(
-    "Name", "${var.stack_name}-node-${count.index}",
+    "Name", "${format("${var.stack_name}-worker-%03d", count.index)}",
     "Class", "Instance"))}"
 
   security_groups = [

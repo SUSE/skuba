@@ -70,7 +70,7 @@ resource "libvirt_cloudinit_disk" "lb" {
 }
 
 resource "libvirt_domain" "lb" {
-  name      = "${var.stack_name}-lb-domain"
+  name      = "${var.stack_name}-lb"
   memory    = "${var.lb_memory}"
   vcpu      = "${var.lb_vcpu}"
   cloudinit = "${libvirt_cloudinit_disk.lb.id}"

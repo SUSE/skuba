@@ -58,7 +58,7 @@ data "template_file" "worker_cloud_init_userdata" {
 
 resource "vsphere_virtual_machine" "worker" {
   count            = "${var.workers}"
-  name             = "${var.stack_name}-worker-${count.index}"
+  name             = "${format("${var.stack_name}-worker-%03d", count.index)}"
   num_cpus         = "${var.worker_cpus}"
   memory           = "${var.worker_memory}"
   guest_id         = "${var.guest_id}"

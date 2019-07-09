@@ -67,7 +67,7 @@ resource "libvirt_cloudinit_disk" "master" {
 
 resource "libvirt_domain" "master" {
   count      = "${var.masters}"
-  name       = "${var.stack_name}-master-domain-${count.index}"
+  name       = "${format("${var.stack_name}-master-%03d", count.index)}"
   memory     = "${var.master_memory}"
   vcpu       = "${var.master_vcpu}"
   cloudinit  = "${element(libvirt_cloudinit_disk.master.*.id, count.index)}"

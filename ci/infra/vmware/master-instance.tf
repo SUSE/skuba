@@ -58,7 +58,7 @@ data "template_file" "master_cloud_init_userdata" {
 
 resource "vsphere_virtual_machine" "master" {
   count            = "${var.masters}"
-  name             = "${var.stack_name}-master-${count.index}"
+  name             = "${format("${var.stack_name}-master-%03d", count.index)}"
   num_cpus         = "${var.master_cpus}"
   memory           = "${var.master_memory}"
   guest_id         = "${var.guest_id}"

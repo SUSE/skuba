@@ -109,7 +109,7 @@ data "template_file" "lb_cloud_init_userdata" {
 
 resource "vsphere_virtual_machine" "lb" {
   count            = "${var.lbs}"
-  name             = "${var.stack_name}-lb-${count.index}"
+  name             = "${format("${var.stack_name}-lb-%03d", count.index)}"
   num_cpus         = "${var.lb_cpus}"
   memory           = "${var.lb_memory}"
   guest_id         = "${var.guest_id}"

@@ -67,7 +67,7 @@ resource "libvirt_cloudinit_disk" "worker" {
 
 resource "libvirt_domain" "worker" {
   count      = "${var.workers}"
-  name       = "${var.stack_name}-worker-domain-${count.index}"
+  name       = "${format("${var.stack_name}-worker-%03d", count.index)}"
   memory     = "${var.worker_memory}"
   vcpu       = "${var.worker_vcpu}"
   cloudinit  = "${element(libvirt_cloudinit_disk.worker.*.id, count.index)}"
