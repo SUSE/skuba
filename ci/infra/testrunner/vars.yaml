@@ -1,0 +1,42 @@
+# Infra deployment engine
+workspace: "" # Working directory for testrunner
+ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
+username: ""  # Fill your username
+nodeuser: "sles"  # Default node username
+
+# Skuba setup
+skuba:
+  binpath: "" # path to skuba binary
+  srcpath: "" # path to skuba source
+
+# platform settings
+terraform:
+  internal_net: "" # name of the internal network
+  mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
+  plugin_dir: "" # path to the terraform plugin dir
+  stack_name: "" # name of the stack
+  tfdir: ""  # path to terraform templates
+  tfvars: "" # terraform vars
+
+openstack:
+  openrc: "" #os.getenv("OPENSTACK_OPENRC")
+
+vmware:
+  env_file: "" #os.getenv("VMWARE_ENV_FILE")
+  template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("VMWARE_TEMPLATE_NAME")
+
+# node settings
+lb:
+  count: 1
+  memory: 8192
+  cpu: 4
+
+master:
+  count: 3
+  memory: 4096
+  cpu: 4
+
+worker:
+  count: 3
+  memory: 4096
+  cpu: 2

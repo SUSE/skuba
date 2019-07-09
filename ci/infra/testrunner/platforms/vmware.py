@@ -8,7 +8,7 @@ from utils import Format
 
 class VMware(Terraform):
     def __init__(self, conf):
-        super().__init__(conf)
+        super().__init__(conf, 'vmware')
         if not os.path.isfile(conf.vmware.env_file):
             msg = (f'Your VMware env file path "{conf.vmware.env_file}" does not exist.\n\t    '
                    'Check the VMware env file path in your configured yaml file.')

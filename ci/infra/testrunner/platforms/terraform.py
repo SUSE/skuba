@@ -1,18 +1,16 @@
 import hcl
 import json
 import os
-import re
 import subprocess
-from shutil import copyfile
 
-from utils import (Constant, Format, step, Utils)
+from utils import (Format, step, Utils)
 
 
 class Terraform:
-    def __init__(self, conf):
+    def __init__(self, conf, platform):
         self.conf = conf
         self.utils = Utils(conf)
-        self.tfdir = os.path.join(self.conf.terraform.tfdir,self.conf.platform)
+        self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
         self.state = None
 
@@ -31,18 +29,18 @@ class Terraform:
         except Exception as ex:
             cleanup_failure = True
             print(Format.alert("Received the following error {}".format(ex)))
-            print("Attempting to finish cleaup")
+            print("Attempting to finish cleanup")
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
                 self.tfjson_path]
 
-        for dir in dirs:
+        for tmp_dir in dirs:
             try:
-                self.utils.runshellcommand("rm -rf {}".format(dir))
+                self.utils.runshellcommand("rm -rf {}".format(tmp_dir))
             except Exception as ex:
                 cleanup_failure = True
                 print("Received the following error {}".format(ex))
-                print("Attempting to finish cleaup")
+                print("Attempting to finish cleanup")
 
         if cleanup_failure:
             raise Exception(Format.alert("Failure(s) during cleanup"))
@@ -54,11 +52,11 @@ class Terraform:
             print("Overriding number of nodes")
             if num_master > -1:
                 self.conf.master.count = num_master
-                print("   Masters:{} ".format(num_master));
+                print("   Masters:{} ".format(num_master))
 
             if num_worker > -1:
                 self.conf.worker.count = num_worker
-                print("   Workers:{} ".format(num_worker));
+                print("   Workers:{} ".format(num_worker))
 
         print("Init terraform")
         self._check_tf_deployed()
@@ -92,7 +90,7 @@ class Terraform:
                 self._runshellcommandterraform(apply_cmd)
                 break
 
-            except:
+            except Exception:
                 print("Failed terraform apply n. %d" % retry)
                 if retry == 4:
                     print(Format.alert("Failed Openstack Terraform deployment"))
@@ -164,11 +162,11 @@ class Terraform:
                 else:
                     tfvars[k] = v
 
-        # Switch to mirrors  
+        # Update mirror urls
         repos = tfvars.get("repositories")
-        if self.conf.mirror and repos is not None:
+        if self.conf.terraform.mirror and repos is not None:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.mirror)
+                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
 
     def _runshellcommandterraform(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""

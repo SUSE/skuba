@@ -6,10 +6,10 @@ pipeline {
    agent { node { label 'caasp-team-private' } }
 
    environment {
-        OPENRC = credentials('ecp-openrc')
-        STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
+        OPENSTACK_OPENRC = credentials('ecp-openrc')
+        TERRAFORM_STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
         GITHUB_TOKEN = credentials('github-token')
-        ENV_FILE = credentials('vmware-env')
+        VMWARE_ENV_FILE = credentials('vmware-env')
    }
 
    stages {

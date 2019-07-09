@@ -8,10 +8,10 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
-        OPENRC = credentials('ecp-openrc')
+        OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack'
-        STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
+        TERRAFORM_STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
         PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'

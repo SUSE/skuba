@@ -8,20 +8,18 @@ class Constant:
     TERRAFORM_EXAMPLE = "terraform.tfvars.json.ci.example"
     TERRAFORM_JSON_OUT = "tfout.json"
     SSH_OPTS = "-oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null " + \
-           "-oConnectTimeout=60 -oBatchMode=yes "
+               "-oConnectTimeout=60 -oBatchMode=yes "
 
 
 class BaseConfig:
 
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
-        obj.platform = None  #"openstack, vmware, bare-metal
         obj.workspace = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
-        obj.mirror = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
@@ -42,11 +40,11 @@ class BaseConfig:
             BaseConfig.VMware
         )
 
-        #vars get the values from yaml file
+        # vars get the values from yaml file
         vars = BaseConfig.get_var_dict(yaml_path)
-        #conf.objects will be overriden by the values from vars and matching ENV variables
+        # conf.objects will be overriden by the values from vars and matching ENV variables
         conf = BaseConfig.inject_attrs_from_yaml(obj, vars, config_classes)
-        # Final mofification for conf variables
+        # Final modification for conf variables
         conf = BaseConfig.finalize(conf)
         conf = BaseConfig.verify(conf)
         return conf
@@ -69,6 +67,7 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.internal_net = None
+            self.mirror = None
             self.stack_name = None
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE 
@@ -116,17 +115,10 @@ class BaseConfig:
     def inject_attrs_from_yaml(obj, vars, config_classes):
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
-                # Check that the key is in vars and has at some sub-keys defined 
-                if key in vars and vars[key]:
-                    key_vars = vars[key]
-                else:
-                    key_vars = {}
-
-                BaseConfig.inject_attrs_from_yaml(value, key_vars, config_classes)
+                config_class = obj.__dict__[key]
+                BaseConfig._set_config_class_attrs(config_class, key, vars)
                 continue
 
-            # FIXME: the env variables must be looked as CLASS_KEY to prevent name collitions
-            # with well known variables (e.g. PATH) or between classes
             env_key = key.upper()
             env_value = os.getenv(env_key)
 
@@ -150,7 +142,7 @@ class BaseConfig:
             conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
 
         if not conf.terraform.tfdir:
-           conf.terraform.tfdir= os.path.join(conf.skuba.srcpath, "ci/infra/")
+            conf.terraform.tfdir= os.path.join(conf.skuba.srcpath, "ci/infra/")
 
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
@@ -162,7 +154,7 @@ class BaseConfig:
         if not conf.terraform.internal_net:
             conf.terraform.internal_net = conf.terraform.stack_name
 
-        #TODO: add the path to shared ssh credentials as a configuration parameter
+        # TODO: add the path to shared ssh credentials as a configuration parameter
         if conf.ssh_key_option == "id_shared":
             conf.ssh_key_option = os.path.join(conf.skuba.srcpath, "ci/infra/id_shared")
         elif conf.ssh_key_option == "id_rsa":
@@ -173,8 +165,8 @@ class BaseConfig:
     @staticmethod
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
-            raise ValueError(Format.alert("You should setup workspace value in a configured yaml file "
-                                           "before using testrunner (skuba/ci/infra/testrunner/vars)"))
+            raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
+                                          "or set env var WORKSPACE before using testrunner)"))
         if not conf.terraform.stack_name:
             raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
 
@@ -182,5 +174,15 @@ class BaseConfig:
             raise ValueError(Format.alert("workspace should not be your home directory"))
 
         return conf
-#if __name__ == '__main__':
-#    _conf = BaseConfig()
+
+    @staticmethod
+    def _set_config_class_attrs(config_class, class_name, variables):
+        config_obj = variables.get(class_name)
+
+        if config_obj is not None:
+            for k, v in config_obj.items():
+                env_var = os.getenv(f"{class_name.upper()}_{k.upper()}")
+                if env_var is not None:
+                    config_class.__dict__[k] = env_var
+                elif v:
+                    config_class.__dict__[k] = v

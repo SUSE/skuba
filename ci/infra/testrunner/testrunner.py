@@ -11,56 +11,72 @@ from argparse import ArgumentParser
 from skuba import Skuba
 from platforms import Platform
 from tests import Tests
-from utils import (BaseConfig, Format, Utils)
+from utils import (BaseConfig, Utils)
 
 __version__ = "0.0.3"
+
 
 def info(options):
     Utils(options.conf).info()
 
+
 def cleanup(options):
-    Platform.get_platform(options.conf).cleanup()
+    Platform.get_platform(options.conf, options.platform).cleanup()
     Skuba.cleanup(options.conf)
 
+
 def provision(options):
-    Platform.get_platform(options.conf).provision(
+    Platform.get_platform(options.conf, options.platform).provision(
                  num_master=options.master_count,
                  num_worker=options.worker_count)
+
 
 def build_skuba(options):
     Skuba.build(options.conf)
 
+
 def bootstrap(options):
-    Skuba(options.conf).cluster_init()
-    Skuba(options.conf).node_bootstrap()
+    skuba = Skuba(options.conf, options.platform)
+
+    skuba.cluster_init()
+    skuba.node_bootstrap()
+
 
 def cluster_status(options):
-    Skuba(options.conf).cluster_status()
+    Skuba(options.conf, options.platform).cluster_status()
+
 
 def log(options):
-    Skuba(options.conf).gather_logs()
+    Skuba(options.conf, options.platform).gather_logs()
+
 
 def join_node(options):
-        Skuba(options.conf).node_join(role=options.role, nr=options.node)
+    Skuba(options.conf, options.platform).node_join(role=options.role, nr=options.node)
+
 
 def remove_node(options):
-        Skuba(options.conf).node_remove(role=options.role, nr=options.node)
+    Skuba(options.conf, options.platform).node_remove(role=options.role, nr=options.node)
+
 
 def reset_node(options):
-        Skuba(options.conf).node_reset(role=options.role, nr=options.node)
+    Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
+
 
 def main():
-    help = """
+    help_str = """
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
     """
-    parser = ArgumentParser(help)
+    parser = ArgumentParser(help_str)
 
     # Common parameters
-    parser.add_argument("-v", "--vars", dest="yaml_path", default="vars/openstack.yaml",
-                        help='path for platform yaml file. Default is vars/openstack.yaml \
-                        in {workspace}/ci/infra/testrunner. eg: -v vars/myconfig.yaml')
+    parser.add_argument("-v", "--vars", dest="yaml_path", default="vars.yaml",
+                        help='path for platform yaml file. Default is vars.yaml. eg: -v myconfig.yaml')
+    parser.add_argument("-p", "--platform",
+                        default="openstack",
+                        choices=["openstack", "vmware", "bare-metal", "libvirt"],
+                        help="The platform you're targeting. Defaults to openstack")
 
     # Sub commands
     commands = parser.add_subparsers()
@@ -74,14 +90,13 @@ def main():
     cmd_cleanup = commands.add_parser("cleanup", help="cleanup created skuba environment")
     cmd_cleanup.set_defaults(func=cleanup)
 
-    cmd_provision = commands.add_parser( "provision", help="provision nodes for cluster in \
-                    your configured platform e.g: openstack, vmware.") 
+    cmd_provision = commands.add_parser("provision", help="provision nodes for cluster in "
+                                                          "your configured platform e.g: openstack, vmware.")
     cmd_provision.set_defaults(func=provision)
-    cmd_provision.add_argument("-m", "-master-count", dest="master_count", type=int, default=-1,
-                    help='number of masters nodes to be deployed. eg: -m 2')
+    cmd_provision.add_argument("-m", "--master-count", dest="master_count", type=int, default=-1,
+                               help='number of masters nodes to be deployed. eg: -m 2')
     cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
-                    help='number of workers nodes to be deployed. eg: -w 2')
-
+                               help='number of workers nodes to be deployed. eg: -w 2')
 
     cmd_build = commands.add_parser("build-skuba", help="build skuba environment \
                         {workspace}/go/src/github.com/SUSE/skuba and build skuba \
@@ -97,21 +112,21 @@ def main():
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
-    node_args.add_argument("-r", "--role", dest="role",choices=["master","worker"], 
-                   help='role of the node to be added or deleted. eg: --role master')
+    node_args.add_argument("-r", "--role", dest="role",choices=["master", "worker"],
+                           help='role of the node to be added or deleted. eg: --role master')
     node_args.add_argument("-n", "--node", dest="node", type=int,
-                   help='node to be added or deleted.  eg: -n 0')
+                           help='node to be added or deleted.  eg: -n 0')
 
     cmd_join_node = commands.add_parser("join-node", parents=[node_args], 
-                       help="add node in k8s cluster with the given role.")
+                                        help="add node in k8s cluster with the given role.")
     cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
-                        help="remove node from k8s cluster.")
+                                       help="remove node from k8s cluster.")
     cmd_rem_node.set_defaults(func=remove_node)
 
     cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
-                        help="reset node reverting state previous to bootstap/join.")
+                                         help="reset node reverting state previous to bootstap/join.")
     cmd_reset_node.set_defaults(func=reset_node)
 
     options = parser.parse_args()
@@ -120,6 +135,7 @@ def main():
     options.func(options)
 
     sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
