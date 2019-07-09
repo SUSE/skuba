@@ -32,6 +32,7 @@ type removeOptions struct {
 }
 
 func NewRemoveCmd() *cobra.Command {
+	removeOptions := removeOptions{}
 	clientSet, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		klog.Warningf("Can not retrieve the ClientSet from kubernetes: %v", err)
