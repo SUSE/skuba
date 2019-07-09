@@ -118,8 +118,9 @@ func (nvi NodeVersionInfo) ToleratesClusterVersion(clusterVersion *version.Versi
 			return false
 		}
 	}
-	return nvi.KubeletVersion.Major() == clusterVersion.Major() &&
-		nvi.KubeletVersion.Minor() == clusterVersion.Minor()
+
+	return nvi.KubeletVersion.Minor() == clusterVersion.Minor() ||
+		nvi.KubeletVersion.Minor()+1 == clusterVersion.Minor()
 }
 
 // AllNodesVersioningInfo returns the version info for all nodes in the cluster
@@ -184,10 +185,10 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 
 	// find out the container image tags, depending on the role of the node
 	if IsControlPlane(nodeObject) {
-		apiServerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
-		controllerManagerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
-		schedulerTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
-		etcdTag, _ := getPodContainerImageTagWithClientset(client, "kube-system", fmt.Sprintf("%s-%s", "etcd", nodeName))
+		apiServerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
+		controllerManagerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
+		schedulerTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
+		etcdTag, _ := getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "etcd", nodeName))
 
 		nodeVersions.APIServerVersion = version.MustParseSemantic(apiServerTag)
 		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(controllerManagerTag)
@@ -196,4 +197,50 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 	}
 
 	return nodeVersions, nil
+}
+
+// AllWorkerNodesTolerateVersion checks that all schedulable worker nodes tolerate the given cluster version
+func AllWorkerNodesTolerateVersion(clusterVersion *version.Version) (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+	if err != nil {
+		return false, err
+	}
+
+	return allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion), nil
+}
+
+func allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
+	for _, nodeInfo := range allNodesVersioningInfo {
+		if nodeInfo.IsControlPlane() {
+			continue
+		}
+		if !nodeInfo.Unschedulable && !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+			return false
+		}
+	}
+	return true
+}
+
+// AllControlPlanesMatchVersion checks that all control planes are on the same version, and that they match the current cluster version
+func AllControlPlanesMatchVersion(currentClusterVersion *version.Version) (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+	if err != nil {
+		return false, err
+	}
+	return AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion), nil
+}
+
+// AllControlPlanesMatchVersionWithVersioningInfo checks that all control planes are on the same version, and that they match the current cluster version
+// With the addition of passing in a NodeVersionInfoMap to make it easily testable
+func AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, currentClusterVersion *version.Version) bool {
+	for _, nodeInfo := range allNodesVersioningInfo {
+		// skip workers
+		if !nodeInfo.IsControlPlane() {
+			continue
+		}
+		if !nodeInfo.ToleratesClusterVersion(currentClusterVersion) {
+			return false
+		}
+	}
+	return true
 }

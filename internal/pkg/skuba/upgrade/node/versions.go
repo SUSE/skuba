@@ -40,6 +40,15 @@ func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
 	return reflect.DeepEqual(nviu.Current, nviu.Update)
 }
 
+func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() bool {
+	isControlPlane := nviu.Current.IsControlPlane()
+	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
+	allControlPlanesMatchVersion, _ := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
+	matchesClusterVersion := (currentClusterVersion.String() == nviu.Current.KubeletVersion.String())
+
+	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion
+}
+
 func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
 	clientSet, err := kubernetes.GetAdminClientSet()
 	if err != nil {
@@ -134,11 +143,11 @@ func workerUpdateStatus(currentClusterVersion *version.Version, allNodesVersioni
 func workerUpdateStatusWithAvailableVersions(currentClusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node, versionInquirer kubernetes.VersionInquirer) (NodeVersionInfoUpdate, error) {
 	// Check that all control plane nodes have at least the current cluster version we plan to
 	// upgrade this worker node to. If not, they need to be fully upgraded first
-	for _, nodeInfo := range allNodesVersioningInfo {
-		if nodeInfo.IsControlPlane() && !nodeInfo.ToleratesClusterVersion(currentClusterVersion) {
-			return NodeVersionInfoUpdate{}, errors.New("at least one control plane does not tolerate the current cluster version")
-		}
+	controlPlanesMatchVersion := kubernetes.AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion)
+	if !controlPlanesMatchVersion {
+		return NodeVersionInfoUpdate{}, errors.New("at least one control plane does not tolerate the current cluster version")
 	}
+
 	// Worker nodes only update themselves to the `currentClusterVersion`. They get updated after
 	// control planes, that bump the current cluster version when the first control plane is updated
 	var ok bool

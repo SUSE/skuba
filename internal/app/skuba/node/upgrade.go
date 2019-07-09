@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/upgrade"
 )
 
@@ -34,6 +35,7 @@ func NewUpgradeCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		newUpgradePlanCmd(),
+		newUpgradeApplyCmd(),
 	)
 
 	return cmd
@@ -51,4 +53,21 @@ func newUpgradePlanCmd() *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 	}
+}
+
+func newUpgradeApplyCmd() *cobra.Command {
+	target := ssh.Target{}
+	cmd := cobra.Command{
+		Use:   "apply",
+		Short: "Apply node upgrade",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := upgrade.Apply(target.GetDeployment("")); err != nil {
+				fmt.Printf("Unable to apply node upgrade: %s\n", err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.NoArgs,
+	}
+	cmd.Flags().AddFlagSet(target.GetFlags())
+	return &cmd
 }

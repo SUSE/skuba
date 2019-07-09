@@ -43,6 +43,23 @@ func GetControlPlaneNodes() (*v1.NodeList, error) {
 	})
 }
 
+func GetNodeWithMachineId(machineId string) (*v1.Node, error) {
+	clientSet, err := GetAdminClientSet()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get admin client set")
+	}
+	nodes, err := clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, node := range nodes.Items {
+		if node.Status.NodeInfo.MachineID == machineId {
+			return &node, nil
+		}
+	}
+	return nil, errors.Errorf("node with machine-id %s not found", machineId)
+}
+
 func IsControlPlane(node *v1.Node) bool {
 	_, isControlPlane := node.ObjectMeta.Labels[kubeadmconstants.LabelNodeRoleMaster]
 	return isControlPlane
