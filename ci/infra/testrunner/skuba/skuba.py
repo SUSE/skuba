@@ -121,7 +121,7 @@ class Skuba:
             raise ValueError("Node number must be non negative")
 
         if nr >= n_nodes:
-            raise ValueError("Error: there is no {role}-{rn} \
+            raise ValueError("Error: there is no {role}-{nr} \
                               node to remove from cluster".format(role=role, nr=nr))
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)

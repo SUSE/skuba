@@ -17,10 +17,16 @@ def setup(request, conf):
     skuba.node_bootstrap()
 
 
-def test_add_worker(setup, conf):
+def test_worker(setup, conf):
     skuba = Skuba(conf)
     skuba.node_join(role="worker", nr=0)
     masters = skuba.num_of_nodes("master")
     workers = skuba.num_of_nodes("worker")
     assert masters == 1
     assert workers == 1
+    skuba.node_remove(role="worker", nr=0)
+    masters = skuba.num_of_nodes("master")
+    workers = skuba.num_of_nodes("worker")
+    assert masters == 1
+    assert workers == 0
+
