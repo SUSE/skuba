@@ -1,14 +1,45 @@
 
 # Testrunner
 
-## Local Dev Machine Setup For Openstack
-1. Create a private directory 
-```
-sudo mkdir /Private
-``` 
-2. Download container-openrc.sh from openstack, change the file, and store the file in /Private
+## Local Dev Machine Setup
+Set the following environment variables
 
-3. Add openstack password to downloaded container-openrc.sh like the following, save and move to /Private
+```
+WORKSPACE="/path/to/your/workspace" # e.g. $HOME/testrunner_workspace it is expected that the skuba code is at $HOME/testrunner_workspace/skuba
+TERRAFORM_STACK_NAME="name-of-your-stack" # i.e. $USER
+```
+
+or
+
+Copy `testrunner/vars.yaml` to `testrunner/myvars.yaml` set the variables in the there and use the `--vars myvars.yaml` arg
+
+```
+workspace: "" # Working directory for testrunner
+...
+terraform:
+  stack_name: "" # name of the stack
+```
+
+You can also set things like where the skuba binary and src are
+```
+SKUBA_BINPATH=/path/to/bin/skuba
+SKUBA_SRCPATH=/path/to/src/skuba
+```
+
+or
+
+```
+skuba:
+  binpath: "" # path to skuba binary
+  srcpath: "" # path to skuba source
+```
+
+Anything else you can override is in `testrunner/vars.yaml` or can also be set as an environment variable.
+
+### Setup For Openstack
+1. Download your openrc file from openstack
+
+2. Add your openstack password to the downloaded openrc.sh like the following
 ```
 export OS_USERNAME="YOUR USERNAME"
 # With Keystone you pass the keystone password.
@@ -17,23 +48,16 @@ export OS_USERNAME="YOUR USERNAME"
 #export OS_PASSWORD=$OS_PASSWORD_INPUT
 export OS_PASSWORD="YOUR PASSWORD"
 ```
-4. Edit and update `ci/infra/testrunner/vars/openstack.yaml`
+4. Set `OPENSTACK_OPENRC=/path/to/openrc.sh`
+
+or 
+
 ```
-workspace: "" # The top folder where skuba is stored
-username: ""  # User deployed stack name
-openrc: ""    # Path to openrc.sh file
-skuba:        # skuba locations
-  srcpath:    # Path to skuba srch project (defaults to `./skuba`)
-  binpath     # Path to skuba bin directory (defaults to `<workspace>/go/bin/`)
-terraform:
-  plugin_dir: # Path to directory used for installing providers 
-  stack_name: # Unique name for the terraform deployment
-  tfdir:      # Path to the directory with terraform templates (defaults to <skuba.srcpath>/ci/infra/`)
-              # under this directory there must be a subdirectory per platform (openstack, vmware, baremetal)
-  tfvars:     # name of the tfvars file to be used (defatuls to `terraform.tfvars.ci.example`)
+openstack:
+  openrc: ""
 ```
 
-## Local Dev Machine Setup For VMware
+### Setup For VMware
 
 1. Create an environment file e.g. `vmware-env.sh` with the following:
 ```
@@ -45,14 +69,16 @@ export VSPHERE_PASSWORD="password"
 export VSPHERE_ALLOW_UNVERIFIED_SSL="true"
 ```
 
-2. Edit and update `ci/infra/testrunner/vars/vmware.yaml`
+2. Set `VMWARE_ENV_FILE=/path/to/vmware-env.sh`
+
+or
+
 ```
-workspace: "" # The top folder where skuba is stored
-username: "" # User deployed stack name
-env_file: "" # Path to vmware-env.sh file
+vmware:
+  env_file: ""
 ```
 
-3. Be sure to use the `--vars` arg when calling testrunner and supply the path to `ci/infra/testrunner/vars/vmware.yaml`
+3. Be sure to use the `-p|--platform` arg when calling testrunner and set it to `vmware`
 
 ## Testrunner Usage
 
@@ -60,15 +86,14 @@ env_file: "" # Path to vmware-env.sh file
 ### General
 
 ```
-./testrunner -h
-Starting ./testrunner script
-usage:
+./testrunner --help
+usage: 
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-
-       [-h] [-v YAML_PATH]
-      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
+    
+       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
+       {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node}
        ...
 
 positional arguments:
@@ -91,22 +116,24 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -v YAML_PATH, --vars YAML_PATH
-                        path for platform yaml file. Default is
-                        vars/openstack.yaml in
-                        {workspace}/ci/infra/testrunner. eg: -v
-                        vars/myconfig.yaml
+                        path for platform yaml file. Default is vars.yaml. eg:
+                        -v myconfig.yaml
+  -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
+                        The platform you're targeting. Defaults to openstack
+```
 
 ### Provision
-
+```
 optional arguments:
   -h, --help            show this help message and exit
   -m MASTER_COUNT, -master-count MASTER_COUNT
                         number of masters nodes to be deployed. eg: -m 2
   -w WORKER_COUNT, --worker-count WORKER_COUNT
                         number of workers nodes to be deployed. eg: -w 2
+```
 
 ### Node commands (join, remove, reset)
-
+```
   -h, --help            show this help message and exit
   -r {master,worker}, --role {master,worker}
                         role of the node to be added or deleted. eg: --role
@@ -118,43 +145,31 @@ optional arguments:
 
 
 ### Jenkins Machine Setup
-1. In your Jenkins file, you need to set up environment variables. Then These environment variables will replace
-variables in yaml file.
+In your Jenkins file, you need to set up environment variables. Then These environment variables will replace
+variables in the yaml file.
 
-This pipeline script is same as openrc: "/Private/container-openrc.sh" in openstack.yaml.
 As default, Jenkins has WORKSPACE environment variable so that workspace will be replaced in Jenkins workspace
 ```
    environment {
-        OPENRC = credentials('openrc') or ENV_FILE = credentials('vmware-env') 
-        STACK_NAME  = '' #unique name for this pipeline run
+        OPENSTACK_OPENRC = credentials('openrc') or VMWARE_ENV_FILE = credentials('vmware-env') 
+        TERRAFORM_STACK_NAME  = '' #unique name for this pipeline run
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack' or 'vmware'
    }
 ```
-2. Set the package download mirror
-
-Edit the `vars/<platform>.yaml` file and set the mirror for downloading packages for node setup
-```
-mirror: "ibs-mirror.prv.suse.net"
-```
 
 ### Step to create K8s Cluster and start to use K8s cluster 
-1. Cleanup before deploying nodes
-```ci/infra/testrunner/testrunner -x ``` 
-2. Deploy nodes in openstack  
-```ci/infra/testrunner/testrunner -t ```  
-3. Create skuba env and Build skuba and store in go bin dir
-```ci/infra/testrunner/testrunner -c ```
-4. Bootstraping a cluster
-```ci/infra/testrunner/testrunner -b ```
+1. Deploy nodes to openstack  
+```ci/infra/testrunner/testrunner provision```  
+2. Build skuba and store at `SKUBA_BINPATH` defaults to $WORKSPACE/go/bin/skuba
+```ci/infra/testrunner/testrunner build-skuba```
+3. Initialize the control plane 
+```ci/infra/testrunner/testrunner bootstrap```
+4. Join nodes
+```ci/infra/testrunner/testrunner join-node --role worker --node 0```
 
-Once bootstrapping is done you will be ready to use K8s cluster.
-
-5. To extend the cluster, you can add more node with 
-```ci/infra/testrunner/testrunner -a -m 2 -w 2 ```
-
-6. Use K8s
-Once your nodes are bootstrapped, {worksapce}/test-cluster folder will be created. Inside test-cluster, Your kubeconfig file will be located in with the name of admin.conf in test-cluster folder.
+5. Use K8s
+Once your nodes are bootstrapped, $WORKSPACE/test-cluster folder will be created. Inside test-cluster, Your kubeconfig file will be located in with the name of admin.conf in test-cluster folder.
 ```
 chang@~/Workspace/vNext/test-cluster$ kubectl get pods --all-namespaces --kubeconfig=./admin.conf
 NAMESPACE     NAME                                  READY     STATUS    RESTARTS   AGE
