@@ -1026,6 +1026,7 @@ data:
     clusterName: "skuba"
 
     redirectURL: "https://{{.ControlPlane}}:32001/callback"
+    scopes: ["openid", "email", "groups", "profile", "offline_access"]
 
     serveTLS: true
     authorizeURL: "https://{{.ControlPlane}}:32000/auth"
@@ -1035,7 +1036,7 @@ data:
 
     clientID: "oidc"
     clientSecret: "{{.GangwayClientSecret}}"
-    usernameClaim: "sub"
+    usernameClaim: "email"
     apiServerURL: "https://{{.ControlPlane}}:6443"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     trustedCAPath: /etc/gangway/pki/ca.crt
