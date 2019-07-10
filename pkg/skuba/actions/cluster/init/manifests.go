@@ -848,6 +848,9 @@ spec:
                   fieldPath: spec.nodeName
           command:
             - /usr/bin/kured
+          args:
+            - "--reboot-sentinel"
+            - "/var/run/reboot-needed" # This is the file that libzypp creates
 `
 	dexManifest = `---
 apiVersion: v1
