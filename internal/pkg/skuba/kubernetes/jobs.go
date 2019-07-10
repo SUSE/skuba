@@ -57,7 +57,7 @@ func CreateAndWaitForJob(name string, spec batchv1.JobSpec) error {
 	if err != nil {
 		return err
 	}
-	for i := 0; i < 60; i++ {
+	for i := 0; i < 300; i++ {
 		clientSet, err := GetAdminClientSet()
 		if err != nil {
 			return errors.Wrap(err, "Error getting client set")
