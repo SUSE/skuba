@@ -30,7 +30,6 @@ import (
 )
 
 // Remove removes a node from the cluster
-//
 func Remove(target string) error {
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {

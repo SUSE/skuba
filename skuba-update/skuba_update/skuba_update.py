@@ -26,9 +26,9 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 
-# Since zypper 1.14.0, it will automatically create a /var/run/reboot-required
+# Since zypper 1.14.0, it will automatically create a `/var/run/reboot-needed`
 # text file whenever one of the applied patches requires the system to be
-# rebooted. This will be used later on by kured.
+# rebooted.
 # Since zypper 1.14.15, there is a subcommand to check if a reboot is needed
 # `zypper needs-rebooting`
 REQUIRED_ZYPPER_VERSION = (1, 14, 15)
@@ -37,7 +37,7 @@ REQUIRED_ZYPPER_VERSION = (1, 14, 15)
 # has been installed requires the machine to reboot in order to work properly.
 ZYPPER_REBOOT_NEEDED_PATH = '/var/run/reboot-needed'
 
-# The path to the reboot-needed file. This is the file that kured will be
+# The path to the reboot-required file. This is the file that kured will be
 # looking at.
 REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
