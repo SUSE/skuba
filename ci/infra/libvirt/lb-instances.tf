@@ -30,7 +30,7 @@ data "template_file" "haproxy_gangway_backends_master" {
 
 data "template_file" "haproxy_dex_backends_master" {
   count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:32002 check check-ssl verify none\n"
+  template = "server $${fqdn} $${ip}:32000 check check-ssl verify none\n"
 
   vars = {
     fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"

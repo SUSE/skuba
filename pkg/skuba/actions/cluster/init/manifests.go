@@ -30,7 +30,7 @@ apiServer:
   certSANs:
     - {{.ControlPlane}}
   extraArgs:
-    oidc-issuer-url: https://{{.ControlPlane}}:32002
+    oidc-issuer-url: https://{{.ControlPlane}}:32000
     oidc-client-id: oidc
     oidc-ca-file: /etc/kubernetes/pki/ca.crt
     oidc-username-claim: email
@@ -857,7 +857,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: https://{{.ControlPlane}}:32002
+    issuer: https://{{.ControlPlane}}:32000
 
     storage:
       type: kubernetes
@@ -865,7 +865,7 @@ data:
         inCluster: true
 
     web:
-      https: 0.0.0.0:32002
+      https: 0.0.0.0:32000
       tlsCert: /etc/dex/pki/tls.crt
       tlsKey: /etc/dex/pki/tls.key
       tlsClientCA: /etc/dex/pki/ca.crt
@@ -940,7 +940,7 @@ spec:
           - /etc/dex/cfg/config.yaml
         ports:
           - name: https
-            containerPort: 32002
+            containerPort: 32000
         volumeMounts:
           - name: dex-config-path
             mountPath: /etc/dex/cfg
@@ -968,9 +968,9 @@ spec:
   type: NodePort
   ports:
   - name: https
-    port: 32002
-    targetPort: 32002
-    nodePort: 32002
+    port: 32000
+    targetPort: 32000
+    nodePort: 32000
     protocol: TCP
 ---
 apiVersion: v1
@@ -1028,8 +1028,8 @@ data:
     redirectURL: "https://{{.ControlPlane}}:32001/callback"
 
     serveTLS: true
-    authorizeURL: "https://{{.ControlPlane}}:32002/auth"
-    tokenURL: "https://{{.ControlPlane}}:32002/token"
+    authorizeURL: "https://{{.ControlPlane}}:32000/auth"
+    tokenURL: "https://{{.ControlPlane}}:32000/token"
     keyFile: /etc/gangway/pki/tls.key
     certFile: /etc/gangway/pki/tls.crt
 

@@ -23,7 +23,7 @@ resource "openstack_lb_listener_v2" "gangway_listener" {
 
 resource "openstack_lb_listener_v2" "dex_listener" {
   protocol        = "TCP"
-  protocol_port   = "32002"
+  protocol_port   = "32000"
   loadbalancer_id = "${openstack_lb_loadbalancer_v2.lb.id}"
   name            = "${var.stack_name}-dex-listener"
 }
@@ -70,7 +70,7 @@ resource "openstack_lb_member_v2" "dex_member" {
   pool_id       = "${openstack_lb_pool_v2.dex_pool.id}"
   address       = "${element(openstack_compute_instance_v2.master.*.access_ip_v4, count.index)}"
   subnet_id     = "${openstack_networking_subnet_v2.subnet.id}"
-  protocol_port = 32002
+  protocol_port = 32000
 }
 
 resource "openstack_networking_floatingip_v2" "lb_ext" {

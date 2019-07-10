@@ -55,7 +55,7 @@ write_files:
       default_backend gangway-backend
 
     frontend dex
-      bind :32002
+      bind :32000
       default_backend dex-backend
 
     backend apiserver-backend
