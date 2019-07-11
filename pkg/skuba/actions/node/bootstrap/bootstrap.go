@@ -79,6 +79,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kubernetes.bootstrap.upload-secrets",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"apparmor.start",
 		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",

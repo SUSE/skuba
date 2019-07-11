@@ -45,6 +45,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	statesToApply := []string{
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"apparmor.start",
 		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",
