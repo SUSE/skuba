@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 from skuba import Skuba
 from platforms import Platform
-from tests import Tests
+from tests import TestDriver
 from utils import (BaseConfig, Utils)
 
 __version__ = "0.0.3"
@@ -61,6 +61,10 @@ def remove_node(options):
 def reset_node(options):
     Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
 
+
+def test(options):
+    TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
+            verbose=options.verbose, collect=options.collect)
 
 def main():
     help_str = """
@@ -128,6 +132,16 @@ def main():
     cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
                                          help="reset node reverting state previous to bootstap/join.")
     cmd_reset_node.set_defaults(func=reset_node)
+
+    test_args = ArgumentParser(add_help=False)
+    test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")
+    test_args.add_argument("-t", "--test", dest="test", help="test to execute")
+    test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
+            help="only list tests to be executed")
+    test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
+            help="show all output")
+    cmd_test = commands.add_parser("test", parents=[test_args], help="execute tests")
+    cmd_test.set_defaults(func=test)
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)

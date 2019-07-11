@@ -15,6 +15,7 @@ class BaseConfig:
 
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
+        obj.yaml_path = yaml_path
         obj.workspace = None
         obj.terraform_json_path = None
         obj.ssh_key_option = None
@@ -82,9 +83,6 @@ class BaseConfig:
     class Test:
         def __init__(self):
             super().__init__()
-            self.replica_count = 5
-            self.replicas_creation_interval_seconds = 5
-            self.podname = "default"
             self.no_destroy = False
 
     class VMware:
