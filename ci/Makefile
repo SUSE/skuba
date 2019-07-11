@@ -30,7 +30,7 @@ cleanup:
 
 .PHONY: gather_logs
 gather_logs:
-	${TEST_RUNNER} --platform ${PLATFORM} log
+	${TEST_RUNNER} --platform ${PLATFORM} get_logs
 
 .PHONY: git_rebase_check
 git_rebase_check:

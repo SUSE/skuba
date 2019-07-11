@@ -21,6 +21,7 @@ class BaseConfig:
         obj.ssh_key_option = None
         obj.username = None
         obj.nodeuser = None
+        obj.log_dir = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
@@ -132,6 +133,11 @@ class BaseConfig:
     @staticmethod
     def finalize(conf):
         conf.workspace = os.path.expanduser(conf.workspace)
+
+        if not conf.log_dir:
+            conf.log_dir = os.path.join(conf.workspace, 'testrunner_logs')
+        elif not os.path.isabs(conf.log_dir):
+            conf.log_dir = os.path.join(conf.workspace, conf.log_dir)
 
         if not conf.skuba.binpath:
             conf.skuba.binpath = os.path.join(conf.workspace, 'go/bin/skuba')
