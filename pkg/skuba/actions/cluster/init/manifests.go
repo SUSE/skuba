@@ -993,7 +993,7 @@ rules:
   verbs: ["list"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["signingkeies"]
-  verbs: ["create", "get", "list"]
+  verbs: ["create", "get", "list", "update"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["authcodes", "authrequests", "offlinesessionses"]
   verbs: ["create", "delete", "get", "list", "update"]
