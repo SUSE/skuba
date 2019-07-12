@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import subprocess
+import tarfile
 import time
 
 logger = logging.getLogger('Sonobuoy-E2E-Tests')
@@ -33,12 +34,14 @@ class SonobuoyE2eTests:
         attempts = 0
 
         if 'Sonobuoy has completed' in self._get_status():
+            results = None
+
             while retries > attempts:
                 try:
                     attempts += 1
                     logger.info(f'Attempting to retrieve the results {attempts}/{retries}')
-                    retrieve = self._sonobuoy('retrieve results' + ' '.join(sonobuoy_args))
-                    logger.info(retrieve)
+                    results = self._sonobuoy('retrieve results' + ' '.join(sonobuoy_args))
+
                 except SonobuoyE2eTestsError:
                     if retries == attempts:
                         error = 'Could not retrieve sonobuoy results'
@@ -46,6 +49,8 @@ class SonobuoyE2eTests:
                     time.sleep(self.default_sleep)
                 else:
                     break
+
+            self._extract_results(results.strip())
         else:
             error = 'Sonobuoy e2e tests failed'
 
@@ -61,6 +66,14 @@ class SonobuoyE2eTests:
 
         logger.info('Waiting for the tests to finish can take up to 2-3 hours...')
         self._wait_for_the_tests(timeout)
+
+    def _extract_results(self, results_path):
+        if tarfile.is_tarfile(results_path):
+            results_tar = tarfile.open(results_path)
+            results_tar.extractall(self.artifacts_dir)
+            os.remove(results_path)
+        else:
+            raise SonobuoyE2eTestsError(f'Could not extract results from {results_path}')
 
     def _get_status(self):
         status = self._sonobuoy('status')
@@ -117,11 +130,13 @@ class SonobuoyE2eTests:
     def _wait_for_the_tests(self, timeout):
         start_time = time.time()
         run_time = int(time.time() - start_time)
+        last_check = run_time
         timeout = timeout * 60
 
         while run_time < timeout:
             # Check the status every two minutes
-            if run_time % 120:
+            if run_time - last_check >= 120:
+                last_check = run_time
                 if 'Sonobuoy is still running' not in self._get_status():
                     break
 

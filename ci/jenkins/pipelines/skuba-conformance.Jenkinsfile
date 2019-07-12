@@ -28,11 +28,8 @@ pipeline {
         stage('Conformance Tests') { steps {
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Run Conformance')
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Collect Results')
-            dir('results') {
-                archiveArtifacts("*sonobuoy*.tar.gz")
-                sh(script: 'tar -xzf *sonobuoy*.tar.gz')
-                junit('plugins/e2e/results/*.xml')
-            }
+            archiveArtifacts('results')
+            junit('results/plugins/e2e/results/*.xml')
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Cleanup Cluster')
         } }
 
