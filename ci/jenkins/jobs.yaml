@@ -20,6 +20,7 @@
       repo-credentials: github-token
       platform: openstack
       jobs:
+          - '{name}-conformance'
           - '{name}-nightly'
           - '{name}-update-nightly'
 
@@ -30,6 +31,7 @@
       repo-credentials: github-token
       platform: vmware
       jobs:
+          - '{name}-conformance'
           - '{name}-nightly'
           - '{name}-update-nightly'
 
