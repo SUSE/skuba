@@ -14,14 +14,14 @@ def setup(request, platform, skuba):
     skuba.cluster_init()
     skuba.node_bootstrap()
 
-def test_add_worker(setup, skuba):
-    skuba.node_join(role="worker", nr=0)
-    masters = skuba.num_of_nodes("master")
-    workers = skuba.num_of_nodes("worker")
-    assert masters == 1
-    assert workers == 1
+#def test_add_worker(setup, skuba):
+#    skuba.node_join(role="worker", nr=0)
+#    masters = skuba.num_of_nodes("master")
+#    workers = skuba.num_of_nodes("worker")
+#    assert masters == 1
+#    assert workers == 1
 
-def test_nginx_deployment(setup, conf):
+def test_nginx_deployment(setup, skuba, kubectl):
     skuba.node_join(role="worker", nr=0)
     skuba.node_join(role="worker", nr=1)
     masters = skuba.num_of_nodes("master")

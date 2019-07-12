@@ -1,5 +1,6 @@
 import pytest
 from skuba import Skuba
+from kubectl import Kubectl
 from platforms import Platform
 from utils import BaseConfig
 
@@ -26,6 +27,10 @@ def target(request):
 @pytest.fixture
 def skuba(conf, target):
     return Skuba(conf, target)
+
+@pytest.fixture
+def kubectl(conf, target):
+    return Kubectl(conf, target)
 
 @pytest.fixture
 def platform(conf, target):
