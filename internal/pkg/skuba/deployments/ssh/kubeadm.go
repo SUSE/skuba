@@ -24,7 +24,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/pkg/skuba"
-	node "github.com/SUSE/skuba/pkg/skuba/actions/node/join"
+	"github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
 
 func init() {
@@ -63,7 +63,7 @@ func kubeadmJoin(t *Target, data interface{}) error {
 		return errors.New("couldn't access join configuration")
 	}
 
-	configPath, err := node.ConfigPath(joinConfiguration.Role, t.target)
+	configPath, err := join.ConfigPath(joinConfiguration.Role, t.target)
 	if err != nil {
 		return errors.Wrap(err, "unable to configure path")
 	}
@@ -103,8 +103,13 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 		return errors.New("couldn't access upgrade configuration")
 	}
 
-	// FIXME: generate configuration with new versions and use it here
-	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "-y", upgradeConfiguration.KubernetesVersion)
+	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skuba.KubeadmUpgradeConfFile())
+	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents); err != nil {
+		return err
+	}
+	defer t.ssh("rm", remoteKubeadmUpgradeConfFile)
+
+	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "--config", remoteKubeadmUpgradeConfFile, "-y")
 	return err
 }
 

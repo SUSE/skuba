@@ -21,11 +21,15 @@ import (
 	"fmt"
 	"strings"
 
+	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func Apply(target *deployments.Target) error {
@@ -55,8 +59,6 @@ func Apply(target *deployments.Target) error {
 		return nil
 	}
 
-	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
-
 	// Check if the target node is the first control plane to be updated
 	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
 		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
@@ -64,7 +66,25 @@ func Apply(target *deployments.Target) error {
 			return err
 		}
 		if upgradeable {
-			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
+			fmt.Println("Fetching the cluster configuration...")
+
+			initCfg, err := kubeadm.GetClusterConfiguration()
+			if err != nil {
+				return err
+			}
+			node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
+			kubeadm.SetContainerImagesWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
+			initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
+				Group:   "kubeadm.k8s.io",
+				Version: "v1beta2",
+			})
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
+
+			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
 			}, "kubernetes.install-base-packages")
@@ -72,7 +92,7 @@ func Apply(target *deployments.Target) error {
 				return err
 			}
 			err = target.Apply(deployments.UpgradeConfiguration{
-				KubernetesVersion: fmt.Sprintf("v%s", nodeVersionInfoUpdate.Update.APIServerVersion.String()),
+				KubeadmConfigContents: string(initCfgContents),
 			}, "kubeadm.upgrade.apply")
 			if err != nil {
 				return err
@@ -98,6 +118,8 @@ func Apply(target *deployments.Target) error {
 			}
 		}
 		if upgradeable {
+			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
+
 			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),

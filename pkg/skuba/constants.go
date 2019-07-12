@@ -33,6 +33,10 @@ func KubeadmInitConfFile() string {
 	return "kubeadm-init.conf"
 }
 
+func KubeadmUpgradeConfFile() string {
+	return "kubeadm-upgrade.conf"
+}
+
 func JoinConfDir() string {
 	return "kubeadm-join.conf.d"
 }
