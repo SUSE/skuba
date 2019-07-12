@@ -24,7 +24,9 @@ import (
 	cilium "github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
+	"github.com/SUSE/skuba/pkg/skuba"
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/init"
 )
 
@@ -49,6 +51,10 @@ func NewInitCmd() *cobra.Command {
 				DexImage:            dex.GetDexImage(),
 				GangwayClientSecret: dex.GetClientSecretGangway(),
 				GangwayImage:        gangway.GetGangwayImage(),
+				KubernetesVersion:   kubernetes.LatestVersion().String(), // TODO: pass this from the outside
+				ImageRepository:     skuba.ImageRepository,
+				EtcdImageTag:        kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Etcd, kubernetes.LatestVersion(), kubernetes.Versions),
+				CoreDNSImageTag:     kubernetes.ComponentVersionWithAvailableVersions(kubernetes.CoreDNS, kubernetes.LatestVersion(), kubernetes.Versions),
 			}
 
 			err := cluster.Init(initConfig)

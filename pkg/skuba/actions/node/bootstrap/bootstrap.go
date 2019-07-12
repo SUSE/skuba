@@ -56,8 +56,6 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrap(err, "unable to add target information to init configuration")
 	}
 
-	setHyperkubeImageToInitConfiguration(initConfiguration)
-	setContainerImages(initConfiguration)
 	setApiserverAdmissionPlugins(initConfiguration)
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
@@ -145,25 +143,6 @@ func addTargetInformationToInitConfiguration(target *deployments.Target, initCon
 		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = skuba.SUSECNIDir
 	}
 	return nil
-}
-
-func setHyperkubeImageToInitConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
-	initConfiguration.UseHyperKubeImage = true
-}
-
-func setContainerImages(initConfiguration *kubeadmapi.InitConfiguration) {
-	initConfiguration.ImageRepository = skuba.ImageRepository
-	initConfiguration.KubernetesVersion = kubernetes.CurrentComponentVersion(kubernetes.Hyperkube)
-	initConfiguration.Etcd.Local = &kubeadmapi.LocalEtcd{
-		ImageMeta: kubeadmapi.ImageMeta{
-			ImageRepository: skuba.ImageRepository,
-			ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.Etcd),
-		},
-	}
-	initConfiguration.DNS.ImageMeta = kubeadmapi.ImageMeta{
-		ImageRepository: skuba.ImageRepository,
-		ImageTag:        kubernetes.CurrentComponentVersion(kubernetes.CoreDNS),
-	}
 }
 
 func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguration) {

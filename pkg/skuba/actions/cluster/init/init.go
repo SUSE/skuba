@@ -37,6 +37,10 @@ type InitConfiguration struct {
 	DexImage            string
 	GangwayClientSecret string
 	GangwayImage        string
+	KubernetesVersion   string
+	ImageRepository     string
+	EtcdImageTag        string
+	CoreDNSImageTag     string
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
