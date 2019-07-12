@@ -37,9 +37,20 @@ apiServer:
     oidc-groups-claim: groups
 clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlane}}:6443
+dns:
+  imageRepository: {{.ImageRepository}}
+  imageTag: {{.CoreDNSImageTag}}
+  type: CoreDNS
+etcd:
+  local:
+    imageRepository: {{.ImageRepository}}
+    imageTag: {{.EtcdImageTag}}
+imageRepository: {{.ImageRepository}}
+kubernetesVersion: {{.KubernetesVersion}}
 networking:
   podSubnet: 10.244.0.0/16
   serviceSubnet: 10.96.0.0/12
+useHyperKubeImage: true
 `
 
 	masterConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
