@@ -67,7 +67,7 @@ kind: PodSecurityPolicy
 metadata:
   name: suse.caasp.psp.privileged
   annotations:
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
 spec:
   # Privileged
@@ -176,8 +176,8 @@ kind: PodSecurityPolicy
 metadata:
   name: suse.caasp.psp.unprivileged
   annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
 spec:
   # Privileged
   privileged: false
