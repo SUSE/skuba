@@ -18,7 +18,11 @@
 package cluster
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
 
 	cilium "github.com/SUSE/skuba/internal/pkg/skuba/cni"
@@ -31,7 +35,8 @@ import (
 )
 
 type initOptions struct {
-	ControlPlane string
+	ControlPlane      string
+	KubernetesVersion string
 }
 
 func NewInitCmd() *cobra.Command {
@@ -41,6 +46,16 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <cluster-name> --control-plane <IP/FQDN>",
 		Short: "Initialize skuba structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
+			kubernetesVersion := kubernetes.LatestVersion()
+			if initOptions.KubernetesVersion != "" {
+				var err error
+				kubernetesVersion, err = version.ParseSemantic(initOptions.KubernetesVersion)
+				if err != nil || !kubernetes.IsVersionAvailable(kubernetesVersion) {
+					fmt.Printf("Version %s does not exist or cannot be parsed.\n", initOptions.KubernetesVersion)
+					os.Exit(1)
+				}
+			}
+
 			initConfig := cluster.InitConfiguration{
 				ClusterName:         args[0],
 				ControlPlane:        initOptions.ControlPlane,
@@ -51,10 +66,10 @@ func NewInitCmd() *cobra.Command {
 				DexImage:            dex.GetDexImage(),
 				GangwayClientSecret: dex.GetClientSecretGangway(),
 				GangwayImage:        gangway.GetGangwayImage(),
-				KubernetesVersion:   kubernetes.LatestVersion().String(), // TODO: pass this from the outside
+				KubernetesVersion:   kubernetesVersion.String(),
 				ImageRepository:     skuba.ImageRepository,
-				EtcdImageTag:        kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Etcd, kubernetes.LatestVersion(), kubernetes.Versions),
-				CoreDNSImageTag:     kubernetes.ComponentVersionWithAvailableVersions(kubernetes.CoreDNS, kubernetes.LatestVersion(), kubernetes.Versions),
+				EtcdImageTag:        kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
+				CoreDNSImageTag:     kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 			}
 
 			err := cluster.Init(initConfig)
@@ -65,6 +80,9 @@ func NewInitCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes (required)")
+	if skuba.BuildType == "development" {
+		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
+	}
 	cmd.MarkFlagRequired("control-plane")
 
 	return cmd

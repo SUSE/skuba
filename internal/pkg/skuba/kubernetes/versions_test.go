@@ -97,3 +97,9 @@ func TestCurrentAddonVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestIsVersionAvailable(t *testing.T) {
+	if !IsVersionAvailable(LatestVersion()) {
+		t.Errorf("Versions map does not include version %q", LatestVersion().String())
+	}
+}

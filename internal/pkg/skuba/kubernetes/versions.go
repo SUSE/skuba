@@ -181,3 +181,9 @@ func LatestVersion() *version.Version {
 	availableVersions := AvailableVersions()
 	return availableVersions[len(availableVersions)-1]
 }
+
+// IsVersionAvailable returns if a specific kubernetes version is available
+func IsVersionAvailable(kubernetesVersion *version.Version) bool {
+	_, ok := Versions[kubernetesVersion.String()]
+	return ok
+}
