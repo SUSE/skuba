@@ -35,10 +35,12 @@ class TestDriver:
         if test_suite:
             if not test_suite.endswith(".py"):
                 raise ValueError("Test suite must be a python file")
-            test_path = os.path.join(module,test_suite)
+            test_path = os.path.join(test_path,test_suite)
         
         if test:
-            test_path += "{}::{}".format(test_path, test)
+            if not test_suite:
+                raise ValueError("Test suite is required for selecting a test")
+            test_path = "{}::{}".format(test_path, test)
 
         # Path must be the last argument
         opts.append(test_path)
