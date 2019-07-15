@@ -268,10 +268,10 @@ k8s.io/api/imagepolicy/v1alpha1
 # k8s.io/apiextensions-apiserver v0.0.0 => k8s.io/apiextensions-apiserver v0.0.0-20190620085554-14e95df34f1f
 k8s.io/apiextensions-apiserver/pkg/features
 # k8s.io/apimachinery v0.0.0 => k8s.io/apimachinery v0.0.0-20190612205821-1799e75a0719
+k8s.io/apimachinery/pkg/util/version
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/runtime
-k8s.io/apimachinery/pkg/util/version
 k8s.io/apimachinery/pkg/runtime/schema
 k8s.io/apimachinery/pkg/api/resource
 k8s.io/apimachinery/pkg/util/intstr
