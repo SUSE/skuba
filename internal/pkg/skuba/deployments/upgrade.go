@@ -19,5 +19,5 @@ package deployments
 
 // UpgradeConfiguration holds information passed to kubeadm during upgrade
 type UpgradeConfiguration struct {
-	KubernetesVersion string
+	KubeadmConfigContents string
 }

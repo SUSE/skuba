@@ -25,11 +25,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
 )
@@ -51,12 +51,15 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
 
+	versionToDeploy := kubernetes.LatestVersion()
+
 	fmt.Println("[bootstrap] updating init configuration with target information")
-	if err := addTargetInformationToInitConfiguration(target, initConfiguration); err != nil {
+	if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initConfiguration, versionToDeploy); err != nil {
 		return errors.Wrap(err, "unable to add target information to init configuration")
 	}
 
 	setApiserverAdmissionPlugins(initConfiguration)
+
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: "v1beta1",
@@ -106,7 +109,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
-	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, kubernetes.LatestVersion().String())
+	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, versionToDeploy.String())
 	return nil
 }
 
@@ -124,24 +127,6 @@ func downloadSecrets(target *deployments.Target) error {
 		}
 	}
 
-	return nil
-}
-
-func addTargetInformationToInitConfiguration(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration) error {
-	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
-		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-	}
-	initConfiguration.NodeRegistration.Name = target.Nodename
-	initConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
-	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
-	isSUSE, err := target.IsSUSEOS()
-	if err != nil {
-		return err
-	}
-	if isSUSE {
-		initConfiguration.NodeRegistration.KubeletExtraArgs["cni-bin-dir"] = skuba.SUSECNIDir
-	}
 	return nil
 }
 
