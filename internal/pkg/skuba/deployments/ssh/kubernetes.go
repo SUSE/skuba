@@ -36,6 +36,7 @@ func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
 	stateMap["kubernetes.install-base-packages"] = kubernetesInstallBasePackages
+	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 }
 
@@ -67,6 +68,17 @@ func kubernetesInstallBasePackages(t *Target, data interface{}) error {
 	)
 	// FIXME: do not ignore error, beta3 to beta4 package conflicts
 	return nil
+}
+
+func kubernetesInstallNodePattern(t *Target, data interface{}) error {
+	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
+	if !ok {
+		return errors.New("couldn't access kubernetes base OS configuration")
+	}
+	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
+		fmt.Sprintf("patterns-caasp-Node-%s", kubernetesBaseOSConfiguration.KubernetesVersion),
+	)
+	return err
 }
 
 func kubernetesRestartServices(t *Target, data interface{}) error {

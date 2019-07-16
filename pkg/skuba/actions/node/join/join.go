@@ -31,6 +31,7 @@ import (
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
@@ -42,6 +43,14 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
+	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
+	_, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+		KubernetesVersion: currentClusterVersion.String(),
+	})
+	if err != nil {
+		return err
+	}
+
 	statesToApply := []string{
 		"kernel.load-modules",
 		"kernel.configure-parameters",

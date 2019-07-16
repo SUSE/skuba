@@ -51,6 +51,13 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
 
+	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+		KubernetesVersion: initConfiguration.KubernetesVersion,
+	})
+	if err != nil {
+		return err
+	}
+
 	versionToDeploy := kubernetes.LatestVersion()
 
 	fmt.Println("[bootstrap] updating init configuration with target information")

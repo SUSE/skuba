@@ -100,7 +100,6 @@ variable "packages" {
     "-containerd",
     "-docker-runc",
     "-docker-libnetwork",
-    "patterns-caasp-Node",
   ]
 
   description = "list of additional packages to install"

@@ -78,8 +78,7 @@ repositories = {}
 # Feel free to add more packages
 packages = [
   "kernel-default",
-  "-kernel-default-base",
-  "patterns-caasp-Node"
+  "-kernel-default-base"
 ]
 
 # ssh keys to inject into all the nodes
