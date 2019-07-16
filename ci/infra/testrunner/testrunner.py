@@ -46,8 +46,11 @@ def cluster_status(options):
     Skuba(options.conf, options.platform).cluster_status()
 
 
-def log(options):
-    Skuba(options.conf, options.platform).gather_logs()
+def get_logs(options):
+    platform_logging_errors = Platform.get_platform(options.conf, options.platform).gather_logs()
+
+    if platform_logging_errors:
+        raise Exception("Failure(s) while collecting logs")
 
 
 def join_node(options):
@@ -65,6 +68,7 @@ def reset_node(options):
 def test(options):
     TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
             verbose=options.verbose, collect=options.collect)
+
 
 def main():
     help_str = """
@@ -88,8 +92,8 @@ def main():
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
 
-    cmd_log = commands.add_parser("log",  help="gather logs from nodes")
-    cmd_log.set_defaults(func=log)
+    cmd_log = commands.add_parser("get_logs",  help="gather logs from nodes")
+    cmd_log.set_defaults(func=get_logs)
 
     cmd_cleanup = commands.add_parser("cleanup", help="cleanup created skuba environment")
     cmd_cleanup.set_defaults(func=cleanup)

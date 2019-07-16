@@ -93,13 +93,13 @@ usage:
     Warning: it removes docker containers, VMs, images, and network configuration.
 
        [-h] [-v YAML_PATH]
-      {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
+      {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
        ...
 
 positional arguments:
-  {info,log,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,test}
     info                ip info
-    log                 gather logs from nodes
+    get_logs            gather logs from nodes
     cleanup             cleanup created skuba environment
     provision           provision nodes for cluster in your configured
                         platform e.g: openstack, vmware.

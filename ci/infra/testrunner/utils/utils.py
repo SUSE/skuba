@@ -1,7 +1,6 @@
 
 import os
 import subprocess
-import sys
 from functools import wraps
 
 import requests
@@ -31,6 +30,40 @@ class Utils:
 
     def __init__(self, conf):
         self.conf = conf
+
+    def collect_remote_logs(self, ip_address, logs, store_path):
+        """
+        Collect logs from a remote machine
+        :param ip_address: (str) IP of the machine to collect the logs from
+        :param logs: (dict: list) The different logs to collect {"files": [], "dirs": [], ""services": []}
+        :param store_path: (str) Path to copy the logs to
+        :return: (bool) True if there was an error while collecting the logs
+        """
+        logging_errors = False
+
+        for log in logs.get("files", []):
+            try:
+                self.scp_file(ip_address, log, store_path)
+            except Exception as ex:
+                print(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logging_errors = True
+
+        for log in logs.get("dirs", []):
+            try:
+                self.rsync(ip_address, log, store_path)
+            except Exception as ex:
+                print(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logging_errors = True
+
+        for service in logs.get("services", []):
+            try:
+                self.ssh_run(ip_address, f"sudo journalctl -xeu {service} > {service}.log")
+                self.scp_file(ip_address, f"{service}.log", store_path)
+            except Exception as ex:
+                print(f"Error while collecting {service}.log from {ip_address}\n {ex}")
+                logging_errors = True
+
+        return logging_errors
 
     def runshellcommand(self, cmd, cwd=None, env=None):
         """Running shell command in {workspace} if cwd == None
@@ -91,6 +124,19 @@ class Utils:
         """
         cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.ssh_key_option}"
                f" {self.conf.nodeuser}@{ip_address}:{remote_file_path} {local_file_path}")
+        self.runshellcommand(cmd)
+
+    def rsync(self, ip_address, remote_dir_path, local_dir_path):
+        """
+        Copies a remote dir from the given ip to the give path
+        :param ip_address: (str) IP address of the node to copy from
+        :param remote_dir_path: (str) Path of the dir to be copied
+        :param local_dir_path: (str) Path where to store the dir
+        :return:
+        """
+        cmd = (f'rsync -avz --no-owner --no-perms -e "ssh {Constant.SSH_OPTS} -i {self.conf.ssh_key_option}"  '
+               f'--rsync-path="sudo rsync" --ignore-missing-args {self.conf.nodeuser}@{ip_address}:{remote_dir_path} '
+               f'{local_dir_path}')
         self.runshellcommand(cmd)
 
     def runshellcommand_withoutput(self, cmd, ignore_errors=True):
