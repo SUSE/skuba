@@ -19,88 +19,55 @@ package dex
 
 import (
 	"crypto/rand"
-	"crypto/x509"
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/client-go/util/keyutil"
-	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
-	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/SUSE/skuba/pkg/skuba"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
 )
 
 const (
-	certName = "oidc-dex-cert"
+	imageName = "caasp-dex"
+
+	certCommonName = "oidc-dex"
+	secretName     = "oidc-dex-cert"
 )
 
-// CreateDexCert creates a signed certificate for dex
+// CreateCert creates a signed certificate for dex
 // with kubernetes CA certificate and key
-func CreateDexCert() error {
+func CreateCert(
+	client clientset.Interface,
+	pkiPath, kubeadmInitConfPath string,
+) error {
 	// Load kubernetes CA
-	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk("pki", "ca")
+	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(pkiPath, constants.CACertAndKeyBaseName)
 	if err != nil {
 		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
 	}
 
 	// Load kubeadm-init.conf to get certificate SANs
-	cfg, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
+	cfg, err := node.LoadInitConfigurationFromFile(kubeadmInitConfPath)
 	if err != nil {
-		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
-	}
-	certIPs := make([]net.IP, 0)
-	for _, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
-		if ip := net.ParseIP(san); ip != nil {
-			certIPs = append(certIPs, ip)
-		}
+		return errors.Wrapf(err, "could not parse %s file", kubeadmInitConfPath)
 	}
 
 	// Generate dex certificate
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &certutil.Config{
-		CommonName:   "oidc-dex",
-		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-		AltNames: certutil.AltNames{
-			DNSNames: cfg.ClusterConfiguration.APIServer.CertSANs,
-			IPs:      certIPs,
-		},
-		Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	})
+	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
+		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
 	if err != nil {
-		return errors.Errorf("error when creating dex certificate %v", err)
-	}
-	privateKey, err := keyutil.MarshalPrivateKeyToPEM(key)
-	if err != nil {
-		return errors.Errorf("dex private key marshal failed %v", err)
+		return errors.Wrap(err, "could not genenerate dex server cert")
 	}
 
-	// Write certificate into secret resource
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      certName,
-			Namespace: metav1.NamespaceSystem,
-		},
-		Type: v1.SecretTypeTLS,
-		Data: map[string][]byte{
-			v1.TLSCertKey:              pkiutil.EncodeCertPEM(cert),
-			v1.TLSPrivateKeyKey:        privateKey,
-			v1.ServiceAccountRootCAKey: pkiutil.EncodeCertPEM(caCert),
-		},
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
-	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Errorf("error when creating dex secret %v", err)
+	// Create or update secret resource
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, certCommonName); err != nil {
+		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 
 	return nil
@@ -108,17 +75,17 @@ func CreateDexCert() error {
 
 // GetDexImage returns dex image registry
 func GetDexImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "caasp-dex",
+	return images.GetGenericImage(skuba.ImageRepository, imageName,
 		kubernetes.CurrentAddonVersion(kubernetes.Dex))
 }
 
-// GetClientSecretGangway returns client secret which is used by
+// GenerateClientSecret returns client secret which is used by
 // auth client (gangway) to authenticate to auth server (dex)
 //
 // Due to this issue https://github.com/dexidp/dex/issues/1099
 // client secret is not configurable through environment variable
 // so, replace client secret in configmap by rendering
-func GetClientSecretGangway() string {
+func GenerateClientSecret() string {
 	b := make([]byte, 12)
 	rand.Read(b)
 	return fmt.Sprintf("%x", b)

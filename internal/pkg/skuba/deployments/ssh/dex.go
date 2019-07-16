@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -32,7 +33,12 @@ func init() {
 }
 
 func dexDeploy(t *Target, data interface{}) error {
-	if err := dex.CreateDexCert(); err != nil {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+	err = dex.CreateCert(client, skuba.PkiDir(), skuba.KubeadmInitConfFile())
+	if err != nil {
 		return errors.Wrap(err, "unable to create dex certificate")
 	}
 

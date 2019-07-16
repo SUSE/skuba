@@ -90,7 +90,7 @@ test: test-unit test-e2e
 
 .PHONY: test-unit
 test-unit:
-	$(GO) test $(GOMODFLAG) -coverprofile=coverage.out $(PROJECT_PATH)/{cmd,pkg,internal}/...
+	$(GO) test $(GOMODFLAG) -race -coverprofile=coverage.out $(PROJECT_PATH)/{cmd,pkg,internal}/...
 
 .PHONY: test-unit-coverage
 test-unit-coverage: test-unit

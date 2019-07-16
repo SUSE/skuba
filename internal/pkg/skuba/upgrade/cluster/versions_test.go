@@ -177,6 +177,7 @@ func TestNextAvailableVersionsForVersion(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(fmt.Sprintf("Upgrade %s with %v available versions", tt.currentClusterVersion.String(), tt.availableVersions), func(t *testing.T) {
 			nextPatch, nextMinor, nextMajor, err := nextAvailableVersionsForVersion(tt.currentClusterVersion, tt.availableVersions)
 			if err != nil {

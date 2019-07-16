@@ -88,6 +88,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 		},
 	}
 	for _, tt := range nodes {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			clientset := fake.NewSimpleClientset(&v1.Node{
 				ObjectMeta: metav1.ObjectMeta{
@@ -285,6 +286,7 @@ func TestAllWorkerNodesTolerateVersionWithVersioningInfo(t *testing.T) {
 		},
 	}
 	for _, tt := range nodes {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			allWorkerNodesTolerateVersionWithVersioningInfo := allWorkerNodesTolerateVersionWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
 			if !reflect.DeepEqual(allWorkerNodesTolerateVersionWithVersioningInfo, tt.expectedResult) {
@@ -378,6 +380,7 @@ func TestAllControlPlanesMatchVersionWithVersioningInfo(t *testing.T) {
 		},
 	}
 	for _, tt := range nodes {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			allControlPlanesMatchVersionWithVersioningInfo := AllControlPlanesMatchVersionWithVersioningInfo(tt.nodeVersionInfoMap, tt.currentClusterVersion)
 			if !reflect.DeepEqual(allControlPlanesMatchVersionWithVersioningInfo, tt.expectedResult) {

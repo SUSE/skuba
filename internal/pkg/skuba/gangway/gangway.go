@@ -19,40 +19,45 @@ package gangway
 
 import (
 	"crypto/rand"
-	"crypto/x509"
 	"encoding/base64"
-	"net"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/client-go/util/keyutil"
-	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/SUSE/skuba/pkg/skuba"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
 )
 
 const (
-	certName   = "oidc-gangway-cert"
-	secretName = "oidc-gangway-secret"
+	imageName = "gangway"
+
+	certCommonName = "oidc-gangway-cert"
+	secretName     = "oidc-gangway-secret"
 
 	sessionKey = "session-key"
 )
 
-// CreateGangwaySessionKey generates session key
-func CreateGangwaySessionKey() error {
+// GenerateSessionKey generates session key
+func GenerateSessionKey() ([]byte, error) {
 	key := make([]byte, 32)
 	_, err := rand.Read(key)
 	if err != nil {
-		return errors.Errorf("unable to generate session key %v", err)
+		return nil, errors.Errorf("unable to generate session key %v", err)
 	}
 
+	return key, nil
+}
+
+// CreateOrUpdateSessionKeyToSecret create/update session key to secret
+func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) error {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      secretName,
@@ -63,76 +68,41 @@ func CreateGangwaySessionKey() error {
 		},
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
 	if err := apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Wrap(err, "error when creating gangway secret")
+		return errors.Wrap(err, "error when create/update session key to secret resource")
 	}
 
 	return nil
 }
 
-// CreateGangwayCert creates a signed certificate for gangway
+// CreateCert creates a signed certificate for gangway
 // with kubernetes CA certificate and key
-func CreateGangwayCert() error {
+func CreateCert(
+	client clientset.Interface,
+	pkiPath, kubeadmInitConfPath string,
+) error {
 	// Load kubernetes CA
-	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk("pki", "ca")
+	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(pkiPath, constants.CACertAndKeyBaseName)
 	if err != nil {
 		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
 	}
 
 	// Load kubeadm-init.conf to get certificate SANs
-	cfg, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
+	cfg, err := node.LoadInitConfigurationFromFile(kubeadmInitConfPath)
 	if err != nil {
-		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
-	}
-	certIPs := make([]net.IP, 0)
-	for _, san := range cfg.ClusterConfiguration.APIServer.CertSANs {
-		if ip := net.ParseIP(san); ip != nil {
-			certIPs = append(certIPs, ip)
-		}
+		return errors.Wrapf(err, "could not parse %s file", kubeadmInitConfPath)
 	}
 
 	// Generate gangway certificate
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &certutil.Config{
-		CommonName:   "oidc-gangway",
-		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-		AltNames: certutil.AltNames{
-			DNSNames: cfg.ClusterConfiguration.APIServer.CertSANs,
-			IPs:      certIPs,
-		},
-		Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	})
+	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
+		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
 	if err != nil {
-		return errors.Errorf("error when creating gangway certificate %v", err)
-	}
-	privateKey, err := keyutil.MarshalPrivateKeyToPEM(key)
-	if err != nil {
-		return errors.Errorf("gangway private key marshal failed %v", err)
+		return errors.Wrap(err, "could not genenerate gangway server cert")
 	}
 
-	// Write certificate into secret resource
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      certName,
-			Namespace: metav1.NamespaceSystem,
-		},
-		Type: v1.SecretTypeTLS,
-		Data: map[string][]byte{
-			v1.TLSCertKey:              pkiutil.EncodeCertPEM(cert),
-			v1.TLSPrivateKeyKey:        privateKey,
-			v1.ServiceAccountRootCAKey: pkiutil.EncodeCertPEM(caCert),
-		},
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
-	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
-		return errors.Errorf("error when creating gangway secret %v", err)
+	// Create or update certificate to secret
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretName); err != nil {
+		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 
 	return nil
@@ -140,6 +110,6 @@ func CreateGangwayCert() error {
 
 // GetGangwayImage returns gangway image registry
 func GetGangwayImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "gangway",
+	return images.GetGenericImage(skuba.ImageRepository, imageName,
 		kubernetes.CurrentAddonVersion(kubernetes.Gangway))
 }
