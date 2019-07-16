@@ -13,14 +13,6 @@ class Kubectl:
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
 
-    def get_pods(self):
-        print("gets pods using kubectl")
-        try:
-            self._run_kubectl("get po -o wide")
-        except Exception as ex:
-            print("Received the following error {}".format(ex))
-
-
     def create_deployment(self, name, image):
         print("create a new deployment {}".format(name))
         try:
