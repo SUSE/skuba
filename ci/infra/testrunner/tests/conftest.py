@@ -13,6 +13,16 @@ def pytest_addoption(parser):
     parser.addoption("--platform", action="store",help="target platform" )
 
 @pytest.fixture
+def setup(request, platform, skuba):
+    platform.provision()
+    def cleanup():
+        platform.cleanup()
+    request.addfinalizer(cleanup)
+
+    skuba.cluster_init()
+    skuba.node_bootstrap()
+
+@pytest.fixture
 def conf(request):
     """Builds a conf object from a yaml file"""
     path = request.config.getoption("vars")
