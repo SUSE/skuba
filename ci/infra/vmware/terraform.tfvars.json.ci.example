@@ -29,7 +29,6 @@
         "serverapps_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Server-Applications/15-SP1/x86_64/update/"
     },
     "packages": [
-        "patterns-caasp-Node",
         "ca-certificates-suse"
     ],
     "authorized_keys": [],

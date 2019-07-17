@@ -97,7 +97,6 @@ variable "packages" {
   default = [
     "kernel-default",
     "-kernel-default-base",
-    "patterns-caasp-Node",
   ]
 
   description = "list of additional packages to install"

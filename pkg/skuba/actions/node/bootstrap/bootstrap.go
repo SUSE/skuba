@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
@@ -49,6 +50,13 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	initConfiguration, err := LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
+	}
+
+	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+		KubernetesVersion: kubernetes.MajorMinorVersion(version.MustParseSemantic(initConfiguration.KubernetesVersion)),
+	})
+	if err != nil {
+		return err
 	}
 
 	versionToDeploy := kubernetes.LatestVersion()
