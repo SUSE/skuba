@@ -39,10 +39,11 @@ import (
 const (
 	imageName = "gangway"
 
-	certCommonName = "oidc-gangway-cert"
-	secretName     = "oidc-gangway-secret"
+	certCommonName = "oidc-gangway"
+	secretCertName = "oidc-gangway-cert"
 
-	sessionKey = "session-key"
+	sessionKey    = "session-key"
+	secretKeyName = "oidc-gangway-secret"
 )
 
 // GenerateSessionKey generates session key
@@ -60,7 +61,7 @@ func GenerateSessionKey() ([]byte, error) {
 func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) error {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
+			Name:      secretKeyName,
 			Namespace: metav1.NamespaceSystem,
 		},
 		Data: map[string][]byte{
@@ -101,7 +102,7 @@ func CreateCert(
 	}
 
 	// Create or update certificate to secret
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretName); err != nil {
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
 		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 

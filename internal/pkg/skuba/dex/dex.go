@@ -37,7 +37,7 @@ const (
 	imageName = "caasp-dex"
 
 	certCommonName = "oidc-dex"
-	secretName     = "oidc-dex-cert"
+	secretCertName = "oidc-dex-cert"
 )
 
 // CreateCert creates a signed certificate for dex
@@ -66,7 +66,7 @@ func CreateCert(
 	}
 
 	// Create or update secret resource
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, certCommonName); err != nil {
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
 		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 
