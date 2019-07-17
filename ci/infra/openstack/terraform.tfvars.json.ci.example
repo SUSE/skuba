@@ -30,7 +30,7 @@
         "kernel-default",
         "-kernel-default-base",
         "ca-certificates-suse",
-        "patterns-caasp-Node"
+        "patterns-caasp-Node-1.15"
     ],
     "authorized_keys": [],
     "ntp_servers": [

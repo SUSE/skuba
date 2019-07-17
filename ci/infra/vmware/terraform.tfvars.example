@@ -54,7 +54,7 @@ repositories = {}
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
-  "patterns-caasp-Node"
+  "patterns-caasp-Node-1.15"
 ]
 
 # ssh keys to inject into all the nodes
