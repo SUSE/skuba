@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"fmt"
 	"log"
 	"sort"
 
@@ -186,4 +187,9 @@ func LatestVersion() *version.Version {
 func IsVersionAvailable(kubernetesVersion *version.Version) bool {
 	_, ok := Versions[kubernetesVersion.String()]
 	return ok
+}
+
+// MajorMinorVersion returns a KubernetesVersion without the patch level
+func MajorMinorVersion(kubernetesVersion *version.Version) string {
+	return fmt.Sprintf("%d.%d", kubernetesVersion.Major(), kubernetesVersion.Minor())
 }

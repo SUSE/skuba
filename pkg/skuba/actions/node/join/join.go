@@ -45,7 +45,7 @@ import (
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
 	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
 	_, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
-		KubernetesVersion: currentClusterVersion.String(),
+		KubernetesVersion: kubernetes.MajorMinorVersion(currentClusterVersion),
 	})
 	if err != nil {
 		return err

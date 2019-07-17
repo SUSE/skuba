@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
@@ -52,7 +53,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	}
 
 	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
-		KubernetesVersion: initConfiguration.KubernetesVersion,
+		KubernetesVersion: kubernetes.MajorMinorVersion(version.MustParseSemantic(initConfiguration.KubernetesVersion)),
 	})
 	if err != nil {
 		return err
