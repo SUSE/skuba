@@ -145,6 +145,7 @@ resource "vsphere_virtual_machine" "lb" {
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
+  depends_on = ["vsphere_virtual_machine.lb"]
   count = "${var.lbs}"
 
   connection {
@@ -158,5 +159,25 @@ resource "null_resource" "lb_wait_cloudinit" {
     inline = [
       "cloud-init status --wait > /dev/null",
     ]
+  }
+}
+
+resource "null_resource" "haproxy_ready" {
+  depends_on = ["null_resource.lb_wait_cloudinit"]
+  count = "${var.lbs}"
+
+  provisioner "local-exec" {
+    environment = {
+      host = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
+    }
+
+    command = <<EOT
+apistatus=$(curl -s "$host:9000/stats;csv" | awk -F ',' '/apiserver,FRONTEND/{print$18}')
+while [ "$apistatus" != "OPEN" ]
+do
+  sleep 5
+  apistatus=$(curl -s "$host:9000/stats;csv" | awk -F ',' '/apiserver,FRONTEND/{print$18}')
+done
+EOT
   }
 }
