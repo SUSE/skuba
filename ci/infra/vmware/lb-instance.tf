@@ -1,35 +1,3 @@
-variable "lbs" {
-  default     = 1
-  description = "Number of load-balancer nodes"
-}
-
-variable "lb_cpus" {
-  default     = 1
-  description = "Number of CPUs used on load-balancer node"
-}
-
-variable "lb_memory" {
-  default     = 2048
-  description = "Amount of memory used on load-balancer node"
-}
-
-variable "lb_disk_size" {
-  default     = 40
-  description = "Size of the root disk in GB on load-balancer node"
-}
-
-variable "lb_repositories" {
-  type = "map"
-
-  default = {
-    sle_server_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
-    basesystem_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
-    ha_pool            = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
-    sle_server_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
-    basesystem_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
-  }
-}
-
 data "template_file" "lb_repositories_template" {
   count    = "${length(var.lb_repositories)}"
   template = "${file("cloud-init/repository.tpl")}"

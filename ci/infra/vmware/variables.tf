@@ -59,6 +59,21 @@ variable "masters" {
   description = "Number of master nodes"
 }
 
+variable "master_cpus" {
+  default     = 4
+  description = "Number of CPUs used on master node"
+}
+
+variable "master_memory" {
+  default     = 8192
+  description = "Amount of memory used on master node"
+}
+
+variable "master_disk_size" {
+  default     = 50
+  description = "Size of the root disk in GB on master node"
+}
+
 variable "workers" {
   default     = 1
   description = "Number of worker nodes"
@@ -79,19 +94,30 @@ variable "worker_disk_size" {
   description = "Size of the root disk in GB on worker node"
 }
 
-variable "master_cpus" {
-  default     = 4
-  description = "Number of CPUs used on master node"
+variable "lbs" {
+  default     = 1
+  description = "Number of load-balancer nodes"
 }
 
-variable "master_memory" {
-  default     = 8192
-  description = "Amount of memory used on master node"
+variable "lb_cpus" {
+  default     = 1
+  description = "Number of CPUs used on load-balancer node"
 }
 
-variable "master_disk_size" {
-  default     = 50
-  description = "Size of the root disk in GB on master node"
+variable "lb_memory" {
+  default     = 2048
+  description = "Amount of memory used on load-balancer node"
+}
+
+variable "lb_disk_size" {
+  default     = 40
+  description = "Size of the root disk in GB on load-balancer node"
+}
+
+variable "lb_repositories" {
+  type = "map"
+
+  default = {}
 }
 
 #### To be moved to separate vsphere.tf? ####
