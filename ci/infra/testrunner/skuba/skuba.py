@@ -16,11 +16,13 @@ class Skuba:
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
-            raise FileNotFoundError(Format.alert("skuba not found at {}".format(self.binpath)))
+            raise FileNotFoundError(Format.alert(
+                "skuba not found at {}".format(self.binpath)))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise Exception(Format.alert("test-cluster not found. Please run bootstrap and try again"))
+            raise Exception(Format.alert(
+                "test-cluster not found. Please run bootstrap and try again"))
 
     @staticmethod
     def build(conf):
@@ -28,7 +30,8 @@ class Skuba:
         utils = Utils(conf)
         utils.runshellcommand("rm -fr go")
         utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-        utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
+        utils.runshellcommand(
+            "cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
         utils.gorun("go version")
         print("Building skuba")
         utils.gorun("make")
@@ -51,12 +54,12 @@ class Skuba:
         dirs = [os.path.join(conf.workspace, "test-cluster"),
                 os.path.join(conf.workspace, "go"),
                 os.path.join(conf.workspace, "logs"),
-                #TODO: move this to utils as ssh_cleanup
+                # TODO: move this to utils as ssh_cleanup
                 os.path.join(conf.workspace, "ssh-agent-sock")]
 
         cleanup_failure = False
         for dir in dirs:
-            try: 
+            try:
                 utils.runshellcommand("rm -rf {}".format(dir))
             except Exception as ex:
                 cleanup_failure = True
@@ -67,11 +70,13 @@ class Skuba:
             raise Exception("Failure(s) during cleanup")
 
     @step
-    def cluster_init(self):
-
+    def cluster_init(self, kubernetes_version="1.15.0"):
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
-        cmd = "cluster init --control-plane {} test-cluster".format(self.platform.get_lb_ipaddr())
+
+        cmd = "cluster init --control-plane {} --kubernetes-version {} \
+                 test-cluster".format(
+            self.platform.get_lb_ipaddr(), kubernetes_version)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
@@ -96,12 +101,12 @@ class Skuba:
 
         if nr >= len(ip_addrs):
             raise Exception(Format.alert("Node {role}-{nr} no deployed in "
-                      "infrastructure".format(role=role, nr=nr)))
+                                         "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} \
-               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr, 
-                                   username=self.conf.nodeuser)
-        try: 
+               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
+                                      username=self.conf.nodeuser)
+        try:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
@@ -124,7 +129,7 @@ class Skuba:
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
 
-        try: 
+        try:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
@@ -140,11 +145,11 @@ class Skuba:
 
         if nr >= len(ip_addrs):
             raise Exception(Format.alert("Node {role}-{nr} not deployed in "
-                      "infrastructure".format(role=role, nr=nr)))
+                                         "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node reset --user {username} --sudo --target {ip}".format(
-                ip=ip_addrs[nr], username=self.conf.nodeuser)
-        try: 
+            ip=ip_addrs[nr], username=self.conf.nodeuser)
+        try:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
@@ -163,7 +168,7 @@ class Skuba:
         output = self.utils.runshellcommand_withoutput(cmd)
         return output.count(role)
 
-    def _run_skuba(self, cmd, cwd=None):
+    def _run_skuba(self, cmd, cwd=None, output=False):
         """Running skuba command in cwd.
         The cwd defautls to {workspace}/test-cluster but can be overrided
         for example, for the init command that must run in {workspace}
@@ -171,9 +176,14 @@ class Skuba:
         self._verify_skuba_bin_dependency()
 
         if cwd is None:
-           cwd=self.cwd
+            cwd = self.cwd
 
-        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
+        env = {"SSH_AUTH_SOCK": os.path.join(
+            self.conf.workspace, "ssh-agent-sock")}
 
-        self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
-
+        if output:
+            return self.utils.runshellcommand_withoutput(
+                self.binpath + " " + cmd, cwd=cwd, env=env
+            )
+        self.utils.runshellcommand(self.binpath + " " + cmd, cwd=cwd, env=env)
+        return None

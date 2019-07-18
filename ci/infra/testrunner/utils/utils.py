@@ -18,7 +18,7 @@ def step(f):
         global _stepdepth
         _stepdepth += 1
         print("{} entering {} {}".format(Format.DOT * _stepdepth, f.__name__,
-                                  f.__doc__ or ""))
+                                         f.__doc__ or ""))
         r = f(*args, **kwargs)
         print("{}  exiting {}".format(Format.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
@@ -57,10 +57,12 @@ class Utils:
 
         for service in logs.get("services", []):
             try:
-                self.ssh_run(ip_address, f"sudo journalctl -xeu {service} > {service}.log")
+                self.ssh_run(
+                    ip_address, f"sudo journalctl -xeu {service} > {service}.log")
                 self.scp_file(ip_address, f"{service}.log", store_path)
             except Exception as ex:
-                print(f"Error while collecting {service}.log from {ip_address}\n {ex}")
+                print(
+                    f"Error while collecting {service}.log from {ip_address}\n {ex}")
                 logging_errors = True
 
         return logging_errors
@@ -82,7 +84,8 @@ class Utils:
             cwd = os.path.join(self.conf.workspace, cwd)
 
         if not os.path.exists(cwd):
-            raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
+            raise Exception(Format.alert(
+                "Directory {} does not exists".format(cwd)))
 
         print(Format.alert("$ {} > {}".format(cwd, cmd)))
         subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
@@ -91,14 +94,14 @@ class Utils:
         public_key_path = self.conf.ssh_key_option + ".pub"
         key_fn = self.conf.ssh_key_option
         self.runshellcommand("chmod 400 " + key_fn)
-        with open(public_key_path ) as f:
+        with open(public_key_path) as f:
             pubkey = f.read().strip()
         return pubkey
 
     def gorun(self, cmd=None, extra_env=None):
         """Running go command in {workspace}/go/src/github.com/SUSE/skuba"""
         env = {
-            'GOPATH': os.path.join(self.conf.workspace,'go'),
+            'GOPATH': os.path.join(self.conf.workspace, 'go'),
             'PATH': os.environ['PATH'],
             'HOME': os.environ['HOME']
         }
@@ -139,14 +142,18 @@ class Utils:
                f'{local_dir_path}')
         self.runshellcommand(cmd)
 
-    def runshellcommand_withoutput(self, cmd, ignore_errors=True):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    def runshellcommand_withoutput(
+            self, cmd, ignore_errors=True, env=None, cwd=None
+    ):
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, env=env, cwd=cwd)
         output, err = p.communicate()
         rc = p.returncode
         if not ignore_errors:
             if rc != 0:
                 print(err)
-                raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
+                raise RuntimeError(Format.alert(
+                    "Cannot run command {}{}\033[0m".format(cmd)))
         return output.decode()
 
     def ssh_sock_fn(self):
@@ -167,7 +174,8 @@ class Utils:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
         print("adding id_shared ssh key")
-        self.runshellcommand("ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
+        self.runshellcommand(
+            "ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
 
     @timeout(30)
     @step
@@ -180,10 +188,12 @@ class Utils:
         self.runshellcommand('cat /etc/resolv.conf')
 
         try:
-            r = requests.get('http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
+            r = requests.get(
+                'http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
             r.raise_for_status()
         except (requests.HTTPError, requests.Timeout) as err:
             print(err)
-            print(Format.alert('Meta Data service unavailable could not get external IP addr{}'))
+            print(Format.alert(
+                'Meta Data service unavailable could not get external IP addr{}'))
         else:
             print('External IP addr: {}'.format(r.text))
