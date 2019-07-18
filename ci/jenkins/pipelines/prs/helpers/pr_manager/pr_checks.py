@@ -24,9 +24,11 @@ class PrChecks:
 
         print(f'PR-{pr_number} is from a fork.')
 
-    def check_employee_emails(self, pr_number):
+    def check_pr_details(self, pr_number):
         """
-        Checks to verify that SUSE employees are using their @suse email for their commits.
+        Performs the following checks for every commits in a given PR
+        - Checks to verify that SUSE employees are using their @suse email for their commits.
+        - Checks that the commit body is not empty
         :param pr_number: Number of the PR to look up
         :return:
         """
@@ -36,18 +38,45 @@ class PrChecks:
         for commit in pr.get_commits():
             sha = commit.sha
             author = commit.author
+            title = message = commit.commit.message
             # Not sure why we need to use the nested commit for the email
             email = commit.commit.author.email
             user_id = f'{author.login}({email})'
 
-            if email_pattern.fullmatch(email):
-                print(f'Commit {sha} is from SUSE employee {user_id}. Moving on...')
-                continue
+            # This could be probably smarter but commit contains something like the following
+            # message="$commit_title\n\n$long_commit_message" and as such maybe we can split it and
+            # check for the following limits: title max 50 chars, body max 72 chars per line and at
+            # least as long as the commit title to avoid commit message bodies full of whitespaces
+            try:
+                title, body = message.split('\n\n', 1)
+            except ValueError:
+                print('No commit body was detected')
 
-            print(f'Checking if {user_id} is part of the SUSE organization...')
+            print(f'Checking commit "{sha}: {title}"')
 
-            if self.org.has_in_members(commit.author):
-                print(f'{user_id} is part of SUSE organization but a SUSE e-mail address was not used for commit: {sha}')
+            if not email_pattern.fullmatch(email):
+                print(f'Checking if {user_id} is part of the SUSE organization...')
+
+                if self.org.has_in_members(commit.author):
+                    print(f'{user_id} is part of SUSE organization but a SUSE e-mail address was not used for commit: {sha}')
+                    sys.exit(1)
+
+            title = title.split('(bsc#') # Title may contain (bsc#XXXXXXXX) references so we need to exclude these
+            if len(title[0]) > 50:
+                print('Commit message title should be less than 50 characters (excluding the bsc# reference)')
                 sys.exit(1)
 
-        print(f'PR-{pr_number} commit email(s) verified.')
+            # No body detected. Nothing else to do here.
+            if not body:
+                continue
+
+            if len(body) < len(title):
+                print('Commit message body is too short')
+                sys.exit(1)
+
+            for body_line in body.splitlines():
+                if len(body_line) > 72:
+                    print('Each line in the commit body should be less than 72 characters')
+                    sys.exit(1)
+
+        print(f'PR-{pr_number} commits verified.')

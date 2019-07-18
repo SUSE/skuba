@@ -43,8 +43,8 @@ def check_pr(args):
 
         if args.is_fork:
             pr_checks.check_pr_from_fork(CHANGE_ID)
-        if args.employee_email:
-            pr_checks.check_employee_emails(CHANGE_ID)
+        if args.check_pr_details:
+            pr_checks.check_pr_details(CHANGE_ID)
     else:
         print(f'No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
@@ -102,7 +102,7 @@ def parse_args():
     # Parse check-pr command
     checks_parser = subparsers.add_parser('check-pr', help='Check to make sure the PR meets certain standards')
     checks_parser.add_argument('--is-fork', action='store_true')
-    checks_parser.add_argument('--employee-email', action='store_true')
+    checks_parser.add_argument('--check-pr-details', action='store_true')
     checks_parser.set_defaults(func=check_pr)
 
     # Parse merge-prs command
