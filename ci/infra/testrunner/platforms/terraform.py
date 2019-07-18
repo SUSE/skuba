@@ -21,7 +21,11 @@ class Terraform:
         return ""
 
     def _cleanup_platform(self):
-        """Platform specific cleanup. Expected to be overriden by platforms"""
+        """Platform specific cleanup. Expected to be overridden by platforms"""
+
+    def _get_platform_logs(self):
+        """Platform specific logs to collect. Expected to be overridden by platforms"""
+        return False
 
     def cleanup(self):
         """ Clean up """
@@ -71,6 +75,11 @@ class Terraform:
 
                 if logging_error:
                     logging_errors = logging_error
+
+        platform_log_error = self._get_platform_logs()
+
+        if platform_log_error:
+            logging_errors = platform_log_error
 
         return logging_errors
 
