@@ -19,6 +19,7 @@ package skuba
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -117,4 +118,39 @@ func GangwayDir() string {
 
 func GangwayManifestfile() string {
 	return filepath.Join(GangwayDir(), "gangway.yaml")
+}
+
+// CloudDir returns the reletive location for cloud config files
+func CloudDir() string {
+	return "cloud"
+}
+
+// CloudReadmeFile returns the README.md location for cloud integrations
+func CloudReadmeFile() string {
+	return path.Join(CloudDir(), "README.md")
+}
+
+// OpenstackDir returns the location for the openstack cloud integrations
+func OpenstackDir() string {
+	return path.Join(CloudDir(), "openstack")
+}
+
+// OpenstackReadmeFile returns the location for the openstack cloud integrations README.md
+func OpenstackReadmeFile() string {
+	return path.Join(OpenstackDir(), "README.md")
+}
+
+// OpenstackCloudConfFile returns the default location of the openstack cloud integrations .conf file
+func OpenstackCloudConfFile() string {
+	return path.Join(OpenstackDir(), "openstack.conf")
+}
+
+// OpenstackCloudConfTemplateFile returns the default location of the openstack cloud integrations .conf.template file
+func OpenstackCloudConfTemplateFile() string {
+	return path.Join(OpenstackDir(), "openstack.conf.template")
+}
+
+// OpenstackConfigRuntimeFile returns the location the openstack.conf is stored on nodes in the cluster
+func OpenstackConfigRuntimeFile() string {
+	return path.Join("/etc/kubernetes", "openstack.conf")
 }

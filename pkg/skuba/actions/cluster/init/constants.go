@@ -21,11 +21,14 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
+type ScaffoldFile struct {
+	Location    string
+	Content     string
+	DoNotRender bool
+}
+
 var (
-	scaffoldFiles = []struct {
-		Location string
-		Content  string
-	}{
+	scaffoldFiles = []ScaffoldFile{
 		{
 			Location: skuba.KubeadmInitConfFile(),
 			Content:  kubeadmInitConf,
@@ -61,6 +64,23 @@ var (
 		{
 			Location: skuba.GangwayManifestfile(),
 			Content:  gangwayManifest,
+		},
+	}
+
+	cloudScaffoldFiles = map[string][]ScaffoldFile{
+		"openstack": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.OpenstackCloudConfTemplateFile(),
+				Content:  openstackCloudConfTemplate,
+			},
+			{
+				Location: skuba.OpenstackReadmeFile(),
+				Content:  openstackReadme,
+			},
 		},
 	}
 )

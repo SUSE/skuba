@@ -5,7 +5,7 @@ init - Initialize skuba structure for cluster deployment
 
 # SYNOPSIS
 **init**
-[**--help**|**-h**] [**--control-plane**]
+[**--help**|**-h**] [**--control-plane**] [**--cloud-provider**]
 *init* *<node-name>* [--control-plane fqdn]
 
 # DESCRIPTION
@@ -18,3 +18,6 @@ init - Initialize skuba structure for cluster deployment
 
 **--control-plane**
   (Required) The control plane location (IP/FQDN) that will load balance the master nodes
+
+**--cloud-provider string**
+  Enable cloud provider integration with the chosen cloud. Valid values: openstack

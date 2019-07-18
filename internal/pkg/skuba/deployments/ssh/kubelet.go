@@ -19,6 +19,9 @@ package ssh
 
 import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh/assets"
+
+	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 func init() {
@@ -49,6 +52,16 @@ func kubeletConfigure(t *Target, data interface{}) error {
 			return err
 		}
 	}
+
+	if cloud.HasCloudIntegration() {
+		if err := t.target.UploadFile(skuba.OpenstackCloudConfFile(), skuba.OpenstackConfigRuntimeFile()); err != nil {
+			return err
+		}
+		if _, _, err = t.ssh("chmod", "0400", skuba.OpenstackConfigRuntimeFile()); err != nil {
+			return err
+		}
+	}
+
 	_, _, err = t.ssh("systemctl", "daemon-reload")
 	return err
 }
