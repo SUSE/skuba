@@ -6,7 +6,7 @@
 """
 
 import sys
-from argparse import ArgumentParser
+from argparse import (ArgumentParser, REMAINDER)
 
 from skuba import Skuba
 from platforms import Platform
@@ -69,6 +69,8 @@ def test(options):
     TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
             verbose=options.verbose, collect=options.collect)
 
+def ssh(options):
+    Platform.get_platform(options.conf, options.platform).ssh_run(role=options.role, nr=options.node, cmd=" ".join(options.cmd))
 
 def main():
     help_str = """
@@ -136,6 +138,11 @@ def main():
     cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
                                          help="reset node reverting state previous to bootstap/join.")
     cmd_reset_node.set_defaults(func=reset_node)
+
+    ssh_args = ArgumentParser(add_help=False)
+    ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
+    cmd_ssh = commands.add_parser("ssh", parents=[node_args, ssh_args], help="Execute command in node via ssh.")
+    cmd_ssh.set_defaults(func=ssh)
 
     test_args = ArgumentParser(add_help=False)
     test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")

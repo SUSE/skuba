@@ -166,6 +166,14 @@ class Terraform:
         role_key = "ip_"+role+"s"
         return self.state["modules"][0]["outputs"][role_key]["value"]
 
+
+    def ssh_run(self, role, nr, cmd):
+        ip_addrs = self.get_nodes_ipaddrs(role)
+        if nr >= len(ip_addrs):
+            raise ValueError(f'Node {role}-{nr} not deployed in platform')
+
+        self.utils.ssh_run(ip_addrs[nr], cmd)
+
     @step
     def _fetch_terraform_output(self):
         cmd = ("{env_setup};"
