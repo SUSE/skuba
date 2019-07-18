@@ -19,7 +19,7 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
       </script>
     </chroot-scripts>
   </scripts>
-  
+
   <bootloader>
     <global>
       <generic_mbr>true</generic_mbr>
@@ -149,11 +149,10 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
     </products>
     <instsource/>
     <patterns config:type="list">
-      <pattern>base</pattern>    
+      <pattern>base</pattern>
       <pattern>enhanced_base</pattern>
       <pattern>minimal_base</pattern>
       <pattern>basesystem</pattern>
-      <pattern>SUSE-CaaSP-Node</pattern>
     </patterns>
   </software>
 
