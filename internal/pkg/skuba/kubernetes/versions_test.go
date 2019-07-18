@@ -57,6 +57,7 @@ func TestAvailableVersionsForMap(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			availableVersions := AvailableVersionsForMap(tt.kubernetesVersions)
 			if !reflect.DeepEqual(availableVersions, tt.expectedAvailableVersions) {
@@ -75,6 +76,7 @@ func TestLatestVersion(t *testing.T) {
 func TestCurrentComponentVersion(t *testing.T) {
 	components := []Component{ContainerRuntime, Kubelet, Hyperkube, Etcd, CoreDNS, Pause}
 	for _, component := range components {
+		component := component // Parallel testing
 		t.Run(fmt.Sprintf("component %q has a version assigned", component), func(t *testing.T) {
 			componentVersion := CurrentComponentVersion(component)
 			_, err := version.ParseGeneric(componentVersion)
@@ -88,6 +90,7 @@ func TestCurrentComponentVersion(t *testing.T) {
 func TestCurrentAddonVersion(t *testing.T) {
 	addons := []Addon{Tooling, Cilium, Kured, Dex, Gangway}
 	for _, addon := range addons {
+		addon := addon // Parallel testing
 		t.Run(fmt.Sprintf("addon %q has a version assigned", addon), func(t *testing.T) {
 			addonVersion := CurrentAddonVersion(addon)
 			_, err := version.ParseGeneric(addonVersion)

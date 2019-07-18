@@ -64,7 +64,7 @@ func NewInitCmd() *cobra.Command {
 				CiliumOperatorImage: cilium.GetCiliumOperatorImage(),
 				KuredImage:          kured.GetKuredImage(),
 				DexImage:            dex.GetDexImage(),
-				GangwayClientSecret: dex.GetClientSecretGangway(),
+				GangwayClientSecret: dex.GenerateClientSecret(),
 				GangwayImage:        gangway.GetGangwayImage(),
 				KubernetesVersion:   kubernetesVersion.String(),
 				ImageRepository:     skuba.ImageRepository,

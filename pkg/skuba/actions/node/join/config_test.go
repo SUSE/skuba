@@ -115,6 +115,7 @@ func Test_documentMapToJoinConfiguration(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := documentMapToJoinConfiguration(tt.args.gvkmap, tt.args.allowDeprecated)
 			if (err != nil) != tt.wantErr {

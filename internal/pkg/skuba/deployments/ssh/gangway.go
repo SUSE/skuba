@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -32,10 +33,20 @@ func init() {
 }
 
 func gangwayDeploy(t *Target, data interface{}) error {
-	if err := gangway.CreateGangwaySessionKey(); err != nil {
-		return errors.Wrap(err, "unable to create gangway session key")
+	key, err := gangway.GenerateSessionKey()
+	if err != nil {
+		return errors.Wrap(err, "unable to generate gangway session key")
 	}
-	if err := gangway.CreateGangwayCert(); err != nil {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+	err = gangway.CreateOrUpdateSessionKeyToSecret(client, key)
+	if err != nil {
+		return errors.Wrap(err, "unable to create/update gangway session key to secret")
+	}
+	err = gangway.CreateCert(client, skuba.PkiDir(), skuba.KubeadmInitConfFile())
+	if err != nil {
 		return errors.Wrap(err, "unable to create gangway certificate")
 	}
 

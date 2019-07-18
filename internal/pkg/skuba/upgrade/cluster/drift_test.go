@@ -130,6 +130,7 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(fmt.Sprintf("Test upgrade feasible for %s with %v nodes", tt.currentClusterVersion.String(), tt.nodesVersionInfo), func(t *testing.T) {
 			driftedNodes := driftedNodesWithVersions(tt.currentClusterVersion, tt.nodesVersionInfo)
 			if !reflect.DeepEqual(driftedNodes, tt.expectedDriftedNodes) {

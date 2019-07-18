@@ -149,6 +149,7 @@ func TestNodesVersionAligned(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			aligned := nodesVersionAligned(tt.currentClusterVersion, tt.allNodesVersioningInfo, tt.nodeConsidered)
 			if aligned != tt.expectedAligned {
@@ -289,6 +290,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			nodeVersionInfoUpdate, err := controlPlaneUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
 			if err == nil && tt.expectedError {
@@ -336,6 +338,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 		},
 	}
 	for _, tt := range versions {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			nodeVersionInfoUpdate, err := workerUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
 			if err == nil && tt.expectedError {
