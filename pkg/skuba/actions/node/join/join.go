@@ -33,6 +33,8 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/pkg/skuba/actions"
+	"github.com/SUSE/skuba/pkg/skuba/cloud"
 	"github.com/pkg/errors"
 )
 
@@ -98,6 +100,9 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	}
 	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
 	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
+	if cloud.HasCloudIntegration(actions.Join) {
+		setCloudConfiguration(joinConfiguration)
+	}
 	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
 	if err != nil {
 		return "", errors.Wrap(err, "could not marshal configuration")
@@ -171,4 +176,8 @@ func createBootstrapToken(target string) (string, error) {
 	}
 
 	return bootstrapTokenRaw, nil
+}
+
+func setCloudConfiguration(joinConfiguration *kubeadmapi.JoinConfiguration) {
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "external"
 }

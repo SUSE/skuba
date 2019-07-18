@@ -37,8 +37,10 @@ import (
 type initOptions struct {
 	ControlPlane      string
 	KubernetesVersion string
+	CloudProvider     string
 }
 
+// NewInitCmd creates a new `skuba cluster init` cobra command
 func NewInitCmd() *cobra.Command {
 	initOptions := initOptions{}
 
@@ -58,6 +60,7 @@ func NewInitCmd() *cobra.Command {
 
 			initConfig := cluster.InitConfiguration{
 				ClusterName:         args[0],
+				CloudProvider:       initOptions.CloudProvider,
 				ControlPlane:        initOptions.ControlPlane,
 				CiliumImage:         cilium.GetCiliumImage(),
 				CiliumInitImage:     cilium.GetCiliumInitImage(),
@@ -83,6 +86,7 @@ func NewInitCmd() *cobra.Command {
 	if skuba.BuildType == "development" {
 		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
 	}
+	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: openstack")
 	cmd.MarkFlagRequired("control-plane")
 
 	return cmd

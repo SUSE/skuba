@@ -31,6 +31,8 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/pkg/skuba/actions"
+	"github.com/SUSE/skuba/pkg/skuba/cloud"
 	"github.com/pkg/errors"
 )
 
@@ -49,6 +51,10 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	initConfiguration, err := LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
+	}
+
+	if cloud.HasCloudIntegration(actions.Bootstrap) {
+		setCloudConfiguration(initConfiguration)
 	}
 
 	versionToDeploy := kubernetes.LatestVersion()
@@ -109,6 +115,16 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
+	if cloud.HasCloudIntegration(actions.Bootstrap) {
+		err = target.Apply(
+			nil,
+			"cloud.deploy-controller-manager",
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, versionToDeploy.String())
 	return nil
 }
@@ -135,4 +151,8 @@ func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguratio
 		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
 	}
 	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = "NodeRestriction,PodSecurityPolicy"
+}
+
+func setCloudConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
+	initConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "external"
 }
