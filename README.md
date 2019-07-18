@@ -34,7 +34,7 @@ The terraform based deployments are taking care of fulfilling these requirements
 ## Installation
 
 ```sh
-go get -d github.com/SUSE/skuba
+go get github.com/SUSE/skuba/cmd/skuba
 ```
 
 ### Development
