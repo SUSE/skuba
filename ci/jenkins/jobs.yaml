@@ -6,6 +6,7 @@
     platform: openstack
     jobs:
         - '{name}-test'
+        - '{name}-test-vmware'
         - '{name}-update-unit'
         - '{name}-update-acceptance'
         - '{name}-code-lint'
