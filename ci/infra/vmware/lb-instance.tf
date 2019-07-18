@@ -145,7 +145,8 @@ resource "vsphere_virtual_machine" "lb" {
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
-  count = "${var.lbs}"
+  depends_on = ["vsphere_virtual_machine.lb"]
+  count      = "${var.lbs}"
 
   connection {
     host  = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
