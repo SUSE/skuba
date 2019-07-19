@@ -7,6 +7,8 @@ from utils.utils import (step, Utils)
 
 class Skuba:
 
+    SKUBA_VERBOSE = "-v5"
+
     def __init__(self, conf, platform):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
@@ -77,9 +79,9 @@ class Skuba:
         if kubernetes_version != "":
             kubernetes_version = "--kubernetes-version {}".format(kubernetes_version)
 
-        cmd = "cluster init --control-plane {} \
+        cmd = "{} cluster init --control-plane {} \
                  test-cluster {}".format(
-            self.platform.get_lb_ipaddr(), kubernetes_version)
+            self.SKUBA_VERBOSE, self.platform.get_lb_ipaddr(), kubernetes_version)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
@@ -89,8 +91,8 @@ class Skuba:
         self._verify_bootstrap_dependency()
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
-        cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=master0_ip, username=self.conf.nodeuser)
+        cmd = "{} node bootstrap --user {username} --sudo --target \
+                 {ip} my-master-0".format(self.SKUBA_VERBOSE, ip=master0_ip, username=self.conf.nodeuser)
         self._run_skuba(cmd)
 
     @step
