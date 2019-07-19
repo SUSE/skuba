@@ -22,6 +22,7 @@ import (
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
@@ -32,15 +33,10 @@ import (
 )
 
 // Remove removes a node from the cluster
-func Remove(target string, drainTimeout time.Duration) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
-
+func Remove(client clientset.Interface, target string, drainTimeout time.Duration) error {
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
 	if err != nil {
-		return errors.Wrapf(err, "could not get node %s", target)
+		return errors.Wrapf(err, "[remove-node] could not get node %s", target)
 	}
 
 	_, isMaster := node.ObjectMeta.Labels[kubeadmconstants.LabelNodeRoleMaster]
@@ -49,6 +45,7 @@ func Remove(target string, drainTimeout time.Duration) error {
 		nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 		})
+
 		if err != nil {
 			return errors.Wrapf(err, "could not retrieve master node list")
 		}
