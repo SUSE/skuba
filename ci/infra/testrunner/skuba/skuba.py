@@ -70,12 +70,15 @@ class Skuba:
             raise Exception("Failure(s) during cleanup")
 
     @step
-    def cluster_init(self, kubernetes_version="1.15.0"):
+    def cluster_init(self, kubernetes_version=""):
         print("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
 
-        cmd = "cluster init --control-plane {} --kubernetes-version {} \
-                 test-cluster".format(
+        if kubernetes_version != "":
+            kubernetes_version = "--kubernetes-version {}".format(kubernetes_version)
+
+        cmd = "cluster init --control-plane {} \
+                 test-cluster {}".format(
             self.platform.get_lb_ipaddr(), kubernetes_version)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
