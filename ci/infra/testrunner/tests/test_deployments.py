@@ -12,7 +12,7 @@ def test_nginx_deployment(setup, skuba, kubectl):
     workers = skuba.num_of_nodes("worker")
     assert masters == 1
     assert workers == 2
-    kubectl.create_deployment("nginx", "nginx:stable-alpine")
+    timeout(60)(kubectl.create_deployment("nginx", "nginx:stable-alpine"))()
     kubectl.scale_deployment("nginx", workers)
     kubectl.expose_deployment("nginx", 80)
     kubectl.wait_deployment("nginx", 3)

@@ -15,13 +15,14 @@ class Kubectl:
 
 
     def create_deployment(self, name, image):
-        print("create a new deployment {}".format(name))
-        try:
-            self._run_kubectl("create deployment {name}  --image={image}"
-                                .format(name=name, image=image))
-        except Exception as ex:
-            raise Exception("Error executing cmd {}") from ex
-
+        def _():
+            print("create a new deployment {}".format(name))
+            try:
+                self._run_kubectl("create deployment {name}  --image={image}"
+                                    .format(name=name, image=image))
+            except Exception as ex:
+                raise Exception("Error executing cmd {}") from ex
+        return _
 
     def scale_deployment(self, name, replicas):
         print("scale deployment {}".format(name))
