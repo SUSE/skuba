@@ -40,7 +40,6 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 	}
 
 	_, isMaster := node.ObjectMeta.Labels[kubeadmconstants.LabelNodeRoleMaster]
-
 	if isMaster {
 		nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
