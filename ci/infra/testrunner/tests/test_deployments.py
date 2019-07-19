@@ -3,7 +3,6 @@ from skuba import Skuba
 from kubectl import Kubectl
 import pytest
 import time
-from timeout_decorator import timeout
 
 def test_nginx_deployment(setup, skuba, kubectl):
     skuba.node_join(role="worker", nr=0)
