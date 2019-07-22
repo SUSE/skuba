@@ -49,7 +49,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		}
 
 		if len(nodes.Items) == 1 {
-			return errors.New(fmt.Sprintf("could not remove last master of the cluster"))
+			return errors.New("could not remove last master of the cluster")
 		}
 	}
 
