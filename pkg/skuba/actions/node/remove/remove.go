@@ -39,8 +39,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		return errors.Wrapf(err, "[remove-node] could not get node %s", target)
 	}
 
-	_, isMaster := node.ObjectMeta.Labels[kubeadmconstants.LabelNodeRoleMaster]
-	if isMaster {
+	if kubernetes.IsControlPlane(node) {
 		nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 		})
@@ -49,7 +48,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 			return errors.Wrapf(err, "could not retrieve master node list")
 		}
 
-		if len(nodes.Items) < 2 {
+		if len(nodes.Items) == 1 {
 			return errors.New(fmt.Sprintf("could not remove last master of the cluster"))
 		}
 	}
