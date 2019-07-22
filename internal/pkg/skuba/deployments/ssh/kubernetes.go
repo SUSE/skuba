@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/pkg/errors"
+
+	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 )
 
 type KubernetesUploadSecretsErrorBehavior uint

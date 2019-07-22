@@ -22,10 +22,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/klog"
-
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog"
 )
 
 func CreateJob(name string, spec batchv1.JobSpec) (*batchv1.Job, error) {

@@ -20,13 +20,12 @@ package etcd
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
-
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/pkg/errors"
 )
 
 func RemoveMember(node *v1.Node) error {

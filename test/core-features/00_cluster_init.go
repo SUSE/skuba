@@ -5,13 +5,14 @@ import (
 	"os"
 	"time"
 
-	testlib "github.com/SUSE/skuba/test/lib"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	testlib "github.com/SUSE/skuba/test/lib"
 )
 
 var _ = ginkgo.Describe("Create Skuba Cluster", func() {

@@ -2,16 +2,17 @@ package lib
 
 import (
 	"fmt"
-	"github.com/SUSE/skuba/pkg/skuba"
+	"os"
+	"os/exec"
+	"path/filepath"
+
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pkg/errors"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
-	"os"
-	"os/exec"
-	"path/filepath"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func getEnvWithDefault(variable string, defaultValue string) string {

@@ -18,13 +18,13 @@
 package node
 
 import (
-	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
-
 	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+
+	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func AddTargetInformationToInitConfigurationWithClusterVersion(target *deployments.Target, initConfiguration *kubeadmapi.InitConfiguration, clusterVersion *version.Version) error {

@@ -21,13 +21,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/etcd"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/pkg/errors"
 )
 
 // Remove removes a node from the cluster

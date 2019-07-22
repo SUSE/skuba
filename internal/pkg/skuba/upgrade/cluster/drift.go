@@ -18,9 +18,10 @@
 package cluster
 
 import (
+	"k8s.io/apimachinery/pkg/util/version"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"k8s.io/apimachinery/pkg/util/version"
 )
 
 func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersionInfo kubernetes.NodeVersionInfoMap) []kubernetes.NodeVersionInfo {

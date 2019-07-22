@@ -18,11 +18,11 @@
 package kubernetes
 
 import (
+	"github.com/pkg/errors"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
 
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
 )
 
 func GetAdminClientSet() (*clientset.Clientset, error) {

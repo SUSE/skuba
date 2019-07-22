@@ -18,6 +18,7 @@
 package kubeadm
 
 import (
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,7 +29,6 @@ import (
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/pkg/errors"
 )
 
 // GetClusterConfiguration returns the cluster configuration from the `kubeadm-config` ConfigMap
