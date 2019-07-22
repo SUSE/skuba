@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -29,7 +30,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func Apply(target *deployments.Target) error {

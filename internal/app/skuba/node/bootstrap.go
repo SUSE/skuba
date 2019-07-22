@@ -19,7 +19,6 @@ package node
 
 import (
 	"github.com/spf13/cobra"
-
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"

@@ -21,13 +21,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/reset"
-
-	"k8s.io/klog"
 )
 
 type resetOptions struct {

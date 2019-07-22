@@ -20,10 +20,11 @@ package cluster
 import (
 	"os"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
+
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
 // Status prints the status of the cluster on the standard output by reading the

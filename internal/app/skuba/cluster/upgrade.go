@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 	"github.com/spf13/cobra"
+
+	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 )
 
 func NewUpgradeCmd() *cobra.Command {

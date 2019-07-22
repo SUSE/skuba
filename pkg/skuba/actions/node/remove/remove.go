@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
@@ -29,7 +30,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/etcd"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/pkg/errors"
 )
 
 // Remove removes a node from the cluster

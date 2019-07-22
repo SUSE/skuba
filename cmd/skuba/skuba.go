@@ -23,10 +23,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/klog"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/app/skuba"
 )
