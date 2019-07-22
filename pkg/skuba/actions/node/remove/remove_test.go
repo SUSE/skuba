@@ -19,35 +19,35 @@ package remove
 
 import (
 	"testing"
- 
-	"k8s.io/client-go/kubernetes/fake"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func Test_RemoveMasterNode(t *testing.T) {
-	node1 := v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "master-1", Labels: map[string]string{"node-role.kubernetes.io/master": "" }}}
+	node1 := v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "master-1", Labels: map[string]string{"node-role.kubernetes.io/master": ""}}}
 
 	test := []struct {
-		name			string
-		target			string
-		clientset		*fake.Clientset
-		errorExpected	bool
-		errorMessage	string
+		name          string
+		target        string
+		clientset     *fake.Clientset
+		errorExpected bool
+		errorMessage  string
 	}{
 		{
-			name:			"remove last master from cluster",
-			target: 		"master-1",
-			clientset:		fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{node1}}),
-			errorExpected: 	true,
-			errorMessage: 	"could not remove last master of the cluster",
+			name:          "remove last master from cluster",
+			target:        "master-1",
+			clientset:     fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{node1}}),
+			errorExpected: true,
+			errorMessage:  "could not remove last master of the cluster",
 		},
 		{
-			name:			"cannot get node",
-			target: 		"master-2",
-			clientset:		fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{node1}}),
-			errorExpected: 	true,
-			errorMessage: 	"[remove-node] could not get node master-2: nodes \"master-2\" not found",
+			name:          "cannot get node",
+			target:        "master-2",
+			clientset:     fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{node1}}),
+			errorExpected: true,
+			errorMessage:  "[remove-node] could not get node master-2: nodes \"master-2\" not found",
 		},
 	}
 
@@ -68,4 +68,3 @@ func Test_RemoveMasterNode(t *testing.T) {
 		})
 	}
 }
-

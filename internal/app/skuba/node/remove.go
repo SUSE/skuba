@@ -23,8 +23,8 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
-	node "github.com/SUSE/skuba/pkg/skuba/actions/node/remove"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	node "github.com/SUSE/skuba/pkg/skuba/actions/node/remove"
 )
 
 type removeOptions struct {
