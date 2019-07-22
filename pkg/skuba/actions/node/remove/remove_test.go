@@ -42,19 +42,27 @@ func Test_RemoveMasterNode(t *testing.T) {
 			errorExpected: 	true,
 			errorMessage: 	"could not remove last master of the cluster",
 		},
+		{
+			name:			"cannot get node",
+			target: 		"master-2",
+			clientset:		fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{node1}}),
+			errorExpected: 	true,
+			errorMessage: 	"[remove-node] could not get node master-2: nodes \"master-2\" not found",
+		},
 	}
 
 	for _, tt := range test {
+		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			actual := Remove(tt.clientset, tt.target, 0)
-			if tt.errorExpected && actual.Error() == "" {
+			err := Remove(tt.clientset, tt.target, 0)
+			if tt.errorExpected && err == nil {
 				t.Errorf("error expected on %s, but no error reported", tt.name)
 				return
-			} else if !tt.errorExpected && actual.Error() != "" {
-				t.Errorf("error not expected on %s, but an error was reported (%s)", tt.name, actual.Error())
+			} else if !tt.errorExpected && err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%s)", tt.name, err.Error())
 				return
-			} else if tt.errorExpected && actual.Error() != tt.errorMessage {
-				t.Errorf("(%v) expected on %s, but different error message reported (%v)", tt.errorMessage, tt.name, actual.Error())
+			} else if tt.errorExpected && err.Error() != tt.errorMessage {
+				t.Errorf("(%v) expected on %s, but different error message reported (%v)", tt.errorMessage, tt.name, err.Error())
 				return
 			}
 		})
