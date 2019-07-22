@@ -24,7 +24,6 @@ import (
 	"k8s.io/klog"
 
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/remove"
-
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
