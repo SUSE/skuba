@@ -55,7 +55,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
 
 	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
-		KubernetesVersion: kubernetes.MajorMinorVersion(versionToDeploy),
+		KubernetesVersion: versionToDeploy.String(),
 	})
 	if err != nil {
 		return err

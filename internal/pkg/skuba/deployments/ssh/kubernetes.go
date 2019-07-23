@@ -22,8 +22,10 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
 type KubernetesUploadSecretsErrorBehavior uint
@@ -38,6 +40,7 @@ func init() {
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
 	stateMap["kubernetes.install-base-packages"] = kubernetesInstallBasePackages
 	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
+	stateMap["kubernetes.install-intermediate-node-pattern"] = kubernetesInstallIntermediateNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 }
 
@@ -76,8 +79,24 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 	if !ok {
 		return errors.New("couldn't access kubernetes base OS configuration")
 	}
+
 	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s", kubernetesBaseOSConfiguration.KubernetesVersion),
+		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))),
+		// to be able to install a fresh 1.14 cluster we have to explicitly install the wanted kubeadm version
+		fmt.Sprintf("kubernetes-kubeadm=%s", kubernetesBaseOSConfiguration.KubernetesVersion), // TODO: remove this line after we're out of the beta phase
+	)
+	return err
+}
+
+func kubernetesInstallIntermediateNodePattern(t *Target, data interface{}) error {
+	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
+	if !ok {
+		return errors.New("couldn't access kubernetes base OS configuration")
+	}
+	kubeadmVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubeadmVersion))
+	kubernetesVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))
+	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
+		fmt.Sprintf("patterns-caasp-Node-%s-%s", kubernetesVersion, kubeadmVersion),
 	)
 	return err
 }
