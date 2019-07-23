@@ -45,3 +45,19 @@ This list is not comprehensive, meaning if you want to include more detail than 
 ## Go style
 
 This will be checked automatically by our CI linter bot.
+
+## Releasing
+
+In order to create a new release:
+* Update the VERSION file:
+  echo "x.y.z" > VERSION
+* Commit with the message "Bump version: x.y.z", being x.y.z the version. Please use semantic versioning.
+  git commit -m "Bump version: x.y.z" -s
+* Tag with vx.y.z
+  git tag vx.y.z
+* Push
+  git push --tags origin master
+* Create the changelog:
+  make suse-package 
+* Add a new release at https://github.com/SUSE/skuba/releases with the contents from the file ci/packaging/suse/obs_files/skuba.changes.append
+* Use the files in ci/packaging/suse/obs_files to update the skuba package 
