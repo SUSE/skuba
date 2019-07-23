@@ -25,6 +25,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 )
 
 type InitConfiguration struct {
@@ -41,6 +42,7 @@ type InitConfiguration struct {
 	ImageRepository     string
 	EtcdImageTag        string
 	CoreDNSImageTag     string
+	CloudProvider       string
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
@@ -53,13 +55,23 @@ func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Wrapf(err, "cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
+
+	scaffoldFilesToWrite := scaffoldFiles
+	if len(initConfiguration.CloudProvider) > 0 {
+		if cloudScaffoldFiles, found := cloudScaffoldFiles[initConfiguration.CloudProvider]; found {
+			scaffoldFilesToWrite = append(scaffoldFilesToWrite, cloudScaffoldFiles...)
+		} else {
+			klog.Fatalf("unknown cloud provider integration provided: %s", initConfiguration.CloudProvider)
+		}
+	}
+
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {
 		return errors.Wrapf(err, "could not create cluster directory %q", initConfiguration.ClusterName)
 	}
 	if err := os.Chdir(initConfiguration.ClusterName); err != nil {
 		return errors.Wrapf(err, "could not change to cluster directory %q", initConfiguration.ClusterName)
 	}
-	for _, file := range scaffoldFiles {
+	for _, file := range scaffoldFilesToWrite {
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {
