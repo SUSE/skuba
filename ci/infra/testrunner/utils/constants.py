@@ -32,10 +32,12 @@ class BaseConfig:
         obj.master = BaseConfig.NodeConfig()
         obj.worker = BaseConfig.NodeConfig()
         obj.test = BaseConfig.Test()
+        obj.log = BaseConfig.Log()
 
         config_classes = (
             BaseConfig.NodeConfig,
             BaseConfig.Test,
+            BaseConfig.Log,
             BaseConfig.Openstack,
             BaseConfig.Terraform,
             BaseConfig.Skuba,
@@ -85,6 +87,14 @@ class BaseConfig:
         def __init__(self):
             super().__init__()
             self.no_destroy = False
+
+    class Log:
+        def __init__(self):
+            super().__init__()
+            self.level = "INFO"
+            self.quiet = False
+            self.file  = "testrunner.log"
+            self.overwrite = False
 
     class VMware:
         def __init__(self):

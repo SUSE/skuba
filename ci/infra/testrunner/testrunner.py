@@ -11,7 +11,7 @@ from argparse import (ArgumentParser, REMAINDER)
 from skuba import Skuba
 from platforms import Platform
 from tests import TestDriver
-from utils import (BaseConfig, Utils)
+from utils import (BaseConfig, Logger, Utils)
 
 __version__ = "0.0.3"
 
@@ -87,6 +87,8 @@ def main():
                         default="openstack",
                         choices=["openstack", "vmware", "bare-metal", "libvirt"],
                         help="The platform you're targeting. Defaults to openstack")
+    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"]) 
 
     # Sub commands
     commands = parser.add_subparsers()
@@ -156,6 +158,9 @@ def main():
 
     options = parser.parse_args()
     conf = BaseConfig(options.yaml_path)
+
+    Logger.config_logger(conf, level=options.log_level)
+
     options.conf = conf
     options.func(options)
 
