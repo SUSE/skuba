@@ -15,7 +15,6 @@ class Kubectl:
 
 
     def create_deployment(self, name, image):
-        print("create a new deployment {}".format(name))
         try:
             self._run_kubectl("create deployment {name}  --image={image}"
                                 .format(name=name, image=image))
@@ -24,7 +23,6 @@ class Kubectl:
 
 
     def scale_deployment(self, name, replicas):
-        print("scale deployment {}".format(name))
         try:
             self._run_kubectl("scale deployment {name} --replicas={replicas}"
                              .format(name=name, replicas=replicas))
@@ -33,7 +31,6 @@ class Kubectl:
 
 
     def expose_deployment(self, name, port, nodeType="NodePort"):
-        print("expose deployment {}".format(name))
         try:
             self._run_kubectl("expose deployment {name} --port={port} --type={nodeType}"
                              .format(name=name, port=port, nodeType=nodeType))
@@ -42,7 +39,6 @@ class Kubectl:
 
 
     def wait_deployment(self, name, timeout):
-        print("wait deployment {}".format(name))
         try:
             self._run_kubectl("wait --for=condition=available deploy/{name} --timeout={timeout}m"
                              .format(name=name, timeout=timeout))
@@ -51,7 +47,6 @@ class Kubectl:
 
 
     def count_available_replicas(self, name):
-        print("count available replicas of deployment {}".format(name))
         try:
             result = self._run_kubectl("get deployment/{name} | jq '.status.availableReplicas'"
                                        .format(name=name))
@@ -61,7 +56,6 @@ class Kubectl:
 
 
     def get_service_port(self, name):
-        print("get port for deployment {}".format(name))
         try:
             result = self._run_kubectl("get service/{name} | jq '.spec.ports[0].nodePort'"
                                        .format(name=name))

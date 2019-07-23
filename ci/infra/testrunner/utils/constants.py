@@ -70,6 +70,7 @@ class BaseConfig:
     class Terraform:
         def __init__(self):
             super().__init__()
+            self.retries = 5
             self.internal_net = None
             self.mirror = None
             self.stack_name = None

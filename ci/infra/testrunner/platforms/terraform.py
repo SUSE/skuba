@@ -1,11 +1,14 @@
 import hcl
 import json
+import logging
 import os
 import subprocess
 
 from timeout_decorator import timeout
 
 from utils import (Format, step, Utils)
+
+logger = logging.getLogger('testrunner')
 
 
 class Terraform:
@@ -34,22 +37,24 @@ class Terraform:
             self._cleanup_platform()
         except Exception as ex:
             cleanup_failure = True
-            print(Format.alert("Received the following error {}".format(ex)))
-            print("Attempting to finish cleanup")
+            logger.warning("Received the following error: '{}'\nAttempting to finish cleanup".format(ex))
 
         dirs = [os.path.join(self.conf.workspace, "tfout"),
                 self.tfjson_path]
 
-        for tmp_dir in dirs:
-            try:
-                self.utils.runshellcommand("rm -rf {}".format(tmp_dir))
-            except Exception as ex:
-                cleanup_failure = True
-                print("Received the following error {}".format(ex))
-                print("Attempting to finish cleanup")
-
         if cleanup_failure:
             raise Exception(Format.alert("Failure(s) during cleanup"))
+        cleanup_failure = False
+        for dir in dirs:
+            try: 
+                self.utils.runshellcommand("rm -rf {}".format(dir))
+            except Exception as ex:
+                cleanup_failure = True
+                logger.warning("Received the following error: '{}'\nAttempting to finish cleanup".format(ex))
+
+        if cleanup_failure:
+            raise Exception("Failure(s) during cleanup")
+
 
     @timeout(600)
     @step
@@ -66,7 +71,7 @@ class Terraform:
 
         if not os.path.isdir(self.conf.log_dir):
             os.mkdir(self.conf.log_dir)
-            print(f"Created log dir {self.conf.log_dir}")
+            logger.info(f"Created log dir {self.conf.log_dir}")
 
         for node_type in node_ips:
             for ip_address in node_ips[node_type]:
@@ -87,23 +92,22 @@ class Terraform:
     def provision(self, num_master=-1, num_worker=-1):
         """ Create and apply terraform plan"""
         if num_master > -1 or num_worker > -1:
-            print("Overriding number of nodes")
+            logger.warning("Overriding number of nodes")
             if num_master > -1:
                 self.conf.master.count = num_master
-                print("   Masters:{} ".format(num_master))
+                logger.warning("   Masters:{} ".format(num_master))
 
             if num_worker > -1:
                 self.conf.worker.count = num_worker
-                print("   Workers:{} ".format(num_worker))
+                logger.warning("   Workers:{} ".format(num_worker))
 
-        print("Init terraform")
         self._check_tf_deployed()
         
         self.utils.setup_ssh()
 
         init_cmd = "terraform init"
         if self.conf.terraform.plugin_dir:
-            print("Installing plugins from {}".format(self.conf.terraform.plugin_dir))
+            logger.info("Installing plugins from {}".format(self.conf.terraform.plugin_dir))
             init_cmd = init_cmd+" -plugin-dir="+self.conf.terraform.plugin_dir
         self._runshellcommandterraform(init_cmd)
 
@@ -121,18 +125,15 @@ class Terraform:
 
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
-            print(Format.alert("Run terraform plan - execution # {}".format(retry)))
             self._runshellcommandterraform(plan_cmd)
-            print(Format.alert("Run terraform apply - execution # {}".format(retry)))
             try:
                 self._runshellcommandterraform(apply_cmd)
                 break
 
-            except Exception:
-                print("Failed terraform apply n. %d" % retry)
+            except Exception as ex :
+                logger.warning("Failed terraform apply attempt {}/5".format(retry))
                 if retry == 4:
-                    print(Format.alert("Failed Openstack Terraform deployment"))
-                    raise
+                    raise Exception("Failed Openstack Terraform deployment") from ex
             finally:
                 self._fetch_terraform_output()
 
@@ -142,14 +143,14 @@ class Terraform:
 
         if not os.path.isdir(node_log_dir_path):
             os.mkdir(node_log_dir_path)
-            print(f"Created log dir {node_log_dir_path}")
+            logger.info(f"Created log dir {node_log_dir_path}")
 
         return node_log_dir_path
 
     def _load_tfstate(self):
         if self.state is None:
             fn = os.path.join(self.tfdir, "terraform.tfstate")
-            print("Reading {}".format(fn))
+            logger.debug("Reading configuration from {}".format(fn))
             with open(fn) as f:
                 self.state = json.load(f)
 

@@ -14,15 +14,11 @@ class Platform:
         elif platform.lower() == "vmware":
             platform = VMware(conf)
         elif platform.lower() == "bare-metal":
-            # TODO platform = Bare_metal(conf, utils)
-            print("Todo: bare-metal is not available")
-            sys.exit(0)
+            raise Exception("bare-metal is not available")
         elif platform.lower() == "libvirt":
-            # TODO platform = Livbirt(conf, utils)
-            print("Todo: libvirt is not available")
-            sys.exit(0)
+            raise Exception("libvirt is not available")
         else:
-            raise Exception(Format.alert("Platform Error: {} is not applicable".format(platform)))
+            raise Exception("Platform Error: {} is not recognized".format(platform))
 
         return platform
 

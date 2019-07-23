@@ -17,7 +17,7 @@ __version__ = "0.0.3"
 
 
 def info(options):
-    Utils(options.conf).info()
+    print(Utils(options.conf).info())
 
 
 def cleanup(options):
@@ -43,7 +43,7 @@ def bootstrap(options):
 
 
 def cluster_status(options):
-    Skuba(options.conf, options.platform).cluster_status()
+    print(Skuba(options.conf, options.platform).cluster_status())
 
 
 def get_logs(options):
