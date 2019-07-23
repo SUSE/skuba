@@ -25,13 +25,26 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
+// HasCloudIntegration checks if the cluster has a cloud integration
 func HasCloudIntegration() bool {
 	if _, err := os.Stat(skuba.OpenstackCloudConfFile()); err == nil {
-		os.Chmod(skuba.OpenstackCloudConfFile(), 0400)
 		return true
 	} else if _, err := os.Stat(skuba.OpenstackCloudConfTemplateFile()); err == nil {
 		klog.Fatalf("%q file exists, but %q file does not. Please create this file with the expected contents to enable cloud integration", skuba.OpenstackCloudConfTemplateFile(), skuba.OpenstackCloudConfFile())
 	}
-
 	return false
+}
+
+// ConfigHasRestrictedPermissions returns true if
+func ConfigHasRestrictedPermissions(file string) bool {
+	info, err := os.Stat(file)
+	if err != nil {
+		return false
+	}
+	mode := info.Mode()
+	var mask os.FileMode = 077
+	if (mode & mask) > 0 {
+		return false
+	}
+	return true
 }

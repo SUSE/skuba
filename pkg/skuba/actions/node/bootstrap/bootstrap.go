@@ -68,6 +68,9 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	}
 
 	if cloud.HasCloudIntegration() {
+		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
+			return errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
+		}
 		setCloudConfiguration(initConfiguration)
 		setCloudConfigurationPath(initConfiguration)
 	}

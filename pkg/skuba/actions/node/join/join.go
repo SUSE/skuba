@@ -109,6 +109,9 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
 	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
 	if cloud.HasCloudIntegration() {
+		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
+			return "", errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
+		}
 		setCloudConfiguration(joinConfiguration)
 	}
 	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)

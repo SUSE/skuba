@@ -87,6 +87,7 @@ func Init(initConfiguration InitConfiguration) error {
 			return errors.Wrap(err, "unable to render template")
 		}
 		f.WriteString(str)
+		f.Chmod(0600)
 		f.Close()
 	}
 
