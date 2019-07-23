@@ -69,22 +69,24 @@ class Kubectl:
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
 
-
     def test_service(self, name, path="/", worker=0):
-        print("curl deployment {}".format(name))
-        ip_address = self.platform.get_nodes_ipaddrs("worker")
+        ip_addresses = self.platform.get_nodes_ipaddrs("worker")
+        if worker >= len(ip_address):
+            raise ValueError("Node worker-{} not deployed".format(worker))
+
         port = self.get_service_port(name)
+        shell_cmd = "curl {ip}:{port}{path}".format(ip=ip_address[worker],port=port,path=path)
         try:
-            return self.utils.runshellcommand_withoutput("curl {ip}:{port}{path}"
-                                                        .format(ip=ip_address[worker],port=port,path=path), False)
+            return self.utils.runshellcommand(shell_cmd, output=True)
         except Exception as ex:
-            raise Exception("Error executing cmd {}") from ex
-
-
+            raise Exception("Error testing service {} with path {} at node {}"
+                                .format(name, path, ip_address)) from ex
+ 
     def _run_kubectl(self, command):
+        shell_cmd="kubectl --kubeconfig={cwd}/test-cluster/admin.conf -o json {command}"
+            .format(command=command,cwd=self.conf.workspace)
         try:
-            return self.utils.runshellcommand_withoutput("kubectl --kubeconfig={cwd}/test-cluster/admin.conf -o json {command}"
-                                                        .format(command=command,cwd=self.conf.workspace), False)
+            return self.utils.runshellcommand(shell_cmd, output=True)
         except Exception as ex:
-            raise Exception("Error executing cmd {}") from ex
+            raise Exception("Error executing cmd {}".format(shell_cmd)) from ex
 

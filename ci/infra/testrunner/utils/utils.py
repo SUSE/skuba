@@ -65,7 +65,7 @@ class Utils:
 
         return logging_errors
 
-    def runshellcommand(self, cmd, cwd=None, env=None):
+    def runshellcommand(self, cmd, cwd=None, env=None, output=False, ignore_errors=False):
         """Running shell command in {workspace} if cwd == None
            Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
                cwd is None, cmd will run in {workspace}
@@ -74,19 +74,30 @@ class Utils:
         cmd -- command to run
         cwd -- dir to run the cmd
         env -- environment variables
+        ignore_errors -- don't rise exception if command fails
         """
         if not cwd:
             cwd = self.conf.workspace
-
+ 
         if not os.path.isabs(cwd):
             cwd = os.path.join(self.conf.workspace, cwd)
-
+ 
         if not os.path.exists(cwd):
             raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
+ 
+        print("Executing command: {} > {}".format(cwd, cmd))
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, 
+                 env=env, cwd=cwd)
+        
+        print(p.stdout.decode())
+        if p.returncode != 0:
+            print(p.stderr.decode())
+            if not ignore_errors:
+                raise RuntimeError("Cannot run command {}".format(cmd))
 
-        print(Format.alert("$ {} > {}".format(cwd, cmd)))
-        subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
-
+        if output:
+            return p.stdout.decode()
+ 
     def authorized_keys(self):
         public_key_path = self.conf.ssh_key_option + ".pub"
         key_fn = self.conf.ssh_key_option
@@ -138,16 +149,6 @@ class Utils:
                f'--rsync-path="sudo rsync" --ignore-missing-args {self.conf.nodeuser}@{ip_address}:{remote_dir_path} '
                f'{local_dir_path}')
         self.runshellcommand(cmd)
-
-    def runshellcommand_withoutput(self, cmd, ignore_errors=True):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = p.communicate()
-        rc = p.returncode
-        if not ignore_errors:
-            if rc != 0:
-                print(err)
-                raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
-        return output.decode()
 
     def ssh_sock_fn(self):
         return os.path.join(self.conf.workspace, "ssh-agent-sock")

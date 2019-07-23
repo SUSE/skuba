@@ -226,15 +226,12 @@ class Terraform:
 
     def _runshellcommandterraform(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
-        cwd = self.tfdir
-
         # Terraform needs PATH and SSH_AUTH_SOCK
         sock_fn = self.utils.ssh_sock_fn()
         env["SSH_AUTH_SOCK"] = sock_fn
         env["PATH"] = os.environ['PATH']
 
-        print(Format.alert("$ {} > {}".format(cwd, cmd)))
-        subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
+        self.utils.runshellcommand(cmd, cwd=self.tfdir, env=env)
 
     def _check_tf_deployed(self):
         if os.path.exists(self.tfjson_path):

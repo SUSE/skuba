@@ -160,7 +160,7 @@ class Skuba:
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
-        output = self.utils.runshellcommand_withoutput(cmd)
+        output = self.utils.runshellcommand(cmd, output=True)
         return output.count(role)
 
     def _run_skuba(self, cmd, cwd=None):
