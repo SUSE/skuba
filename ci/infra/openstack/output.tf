@@ -1,13 +1,13 @@
-output "hostnames_masters" {
-  value = "${openstack_dns_recordset_v2.master.*.name}"
+output "masters" {
+  value = "${zipmap(
+    openstack_compute_instance_v2.master.*.name,
+    openstack_networking_floatingip_v2.master_ext.*.address)}"
 }
 
-output "ip_masters" {
-  value = ["${openstack_networking_floatingip_v2.master_ext.*.address}"]
-}
-
-output "ip_workers" {
-  value = ["${openstack_networking_floatingip_v2.worker_ext.*.address}"]
+output "workers" {
+  value = "${zipmap(
+    openstack_compute_instance_v2.worker.*.name,
+    openstack_networking_floatingip_v2.worker_ext.*.address)}"
 }
 
 output "ip_internal_load_balancer" {
