@@ -1,5 +1,6 @@
 import pytest
 from skuba import Skuba
+from kubectl import Kubectl
 from platforms import Platform
 from utils import BaseConfig
 
@@ -10,6 +11,16 @@ def pytest_addoption(parser):
     """
     parser.addoption("--vars", action="store",help="vars yaml" )
     parser.addoption("--platform", action="store",help="target platform" )
+
+@pytest.fixture
+def setup(request, platform, skuba):
+    platform.provision()
+    def cleanup():
+        platform.cleanup()
+    request.addfinalizer(cleanup)
+
+    skuba.cluster_init()
+    skuba.node_bootstrap()
 
 @pytest.fixture
 def conf(request):
@@ -26,6 +37,10 @@ def target(request):
 @pytest.fixture
 def skuba(conf, target):
     return Skuba(conf, target)
+
+@pytest.fixture
+def kubectl(conf, target):
+    return Kubectl(conf, target)
 
 @pytest.fixture
 def platform(conf, target):
