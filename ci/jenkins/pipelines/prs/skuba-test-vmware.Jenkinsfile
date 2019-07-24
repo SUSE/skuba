@@ -16,6 +16,7 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         FILTER_SUBDIRECTORY = 'ci/infra/vmware'
+        SHOULD_RUN = false
     }
 
     stages {
@@ -46,11 +47,15 @@ pipeline {
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
         } }
 
+        stage('Check for changes') {
+            steps {
+                SHOULD_RUN = sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+            }
+        }
+
         stage('Cluster Deployment') {
             when {
-                expression {
-                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
-                }
+                expression { return SHOULD_RUN }
             }
             steps {
                 sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
@@ -61,9 +66,7 @@ pipeline {
 
         stage('Run end-to-end tests') {
             when {
-                expression {
-                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
-                }
+                expression { return SHOULD_RUN }
             }
             steps {
                dir("skuba") {
@@ -75,8 +78,12 @@ pipeline {
     }
     post {
         always {
-            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
-            zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
+            script {
+                if (SHOULD_RUN) {
+                    sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
+                    zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
+                }
+            }
         }
         cleanup {
             dir("${WORKSPACE}") {
