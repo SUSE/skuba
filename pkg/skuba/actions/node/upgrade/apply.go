@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -115,11 +116,14 @@ func Apply(target *deployments.Target) error {
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 				return err
 			}
+			if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
+				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
+				return err
+			}
 			err = target.Apply(nil, "skuba-update.start")
 			if err != nil {
 				return err
 			}
-			// TODO: we have to wait for kube-apiserver to be back before continuing
 			err = target.Apply(nil, "kured.unlock")
 			if err != nil {
 				return err
@@ -165,11 +169,14 @@ func Apply(target *deployments.Target) error {
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 				return err
 			}
+			if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
+				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
+				return err
+			}
 			err = target.Apply(nil, "skuba-update.start")
 			if err != nil {
 				return err
 			}
-			// TODO: we have to wait for kube-apiserver to be back before continuing
 			err = target.Apply(nil, "kured.unlock")
 			if err != nil {
 				return err

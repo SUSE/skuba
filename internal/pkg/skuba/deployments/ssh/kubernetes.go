@@ -20,9 +20,12 @@ package ssh
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -33,6 +36,7 @@ type KubernetesUploadSecretsErrorBehavior uint
 const (
 	KubernetesUploadSecretsFailOnError     KubernetesUploadSecretsErrorBehavior = iota
 	KubernetesUploadSecretsContinueOnError KubernetesUploadSecretsErrorBehavior = iota
+	kubeletTimeOutWait                                                          = 300
 )
 
 func init() {
@@ -42,6 +46,7 @@ func init() {
 	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
 	stateMap["kubernetes.install-intermediate-node-pattern"] = kubernetesInstallIntermediateNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
+	stateMap["kubernetes.wait-for-kubelet"] = kubernetesWaitForKubelet
 }
 
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
@@ -104,4 +109,21 @@ func kubernetesInstallIntermediateNodePattern(t *Target, data interface{}) error
 func kubernetesRestartServices(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "restart", "crio", "kubelet")
 	return err
+}
+
+func kubernetesWaitForKubelet(t *Target, data interface{}) error {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "Error getting client set")
+	}
+	for i := 0; i < kubeletTimeOutWait; i++ {
+		_, err := clientSet.CoreV1().Nodes().Get(t.target.Nodename, metav1.GetOptions{})
+		if err != nil {
+			klog.V(1).Infof("Still waiting for %s node to be registered, continuing...", t.target.Nodename)
+		} else {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return errors.Wrap(err, fmt.Sprintf("Timed out waiting for %s", t.target.Nodename))
 }
