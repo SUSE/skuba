@@ -7,6 +7,11 @@ ifeq ($(GOMOD), off)
 GOMODFLAG=
 endif
 
+#retrieve go version details for version check
+GO_VERSION     := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
+GO_VERSION_MAJ := $(shell echo $(GO_VERSION) | cut -f1 -d'.')
+GO_VERSION_MIN := $(shell echo $(GO_VERSION) | cut -f2 -d'.')
+
 GOFMT ?= gofmt
 TERRAFORM ?= $(shell which terraform 2>/dev/null || which true 2>/dev/null)
 GO_MD2MAN ?= go-md2man
@@ -32,7 +37,7 @@ SKUBA_SRCS = $(shell find $(SKUBA_DIRS) -type f -name '*.go')
 all: install
 
 .PHONY: build
-build:
+build: go-version-check
 	$(GO) build $(GOMODFLAG) $(SKUBA_LDFLAGS) -tags $(TAGS) ./cmd/...
 
 MANPAGES_MD := $(wildcard docs/man/*.md)
@@ -45,7 +50,7 @@ docs/man/%.1: docs/man/%.1.md
 docs: $(MANPAGES)
 
 .PHONY: install
-install:
+install: go-version-check
 	$(GO) install $(GOMODFLAG) $(SKUBA_LDFLAGS) -tags $(TAGS) ./cmd/...
 	$(RM) -f $(GOBINPATH)/kubectl-caasp
 	$(LN) -s $(GOBINPATH)/skuba $(GOBINPATH)/kubectl-caasp
@@ -66,6 +71,11 @@ staging:
 .PHONY: release
 release:
 	make TAGS=release install
+
+.PHONY: go-version-check
+go-version-check:
+	@[ $(GO_VERSION_MAJ) -ge 2 ] || \
+		[ $(GO_VERSION_MAJ) -eq 1 -a $(GO_VERSION_MIN) -ge 12 ] || (echo "FATAL: Go version should be >= 1.12.x" ; exit 1 ; )
 
 .PHONY: lint
 lint:
