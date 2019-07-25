@@ -5,6 +5,7 @@
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
+import logging
 import sys
 from argparse import (ArgumentParser, REMAINDER)
 
@@ -15,6 +16,7 @@ from utils import (BaseConfig, Logger, Utils)
 
 __version__ = "0.0.3"
 
+logger = logging.getLogger("testrunner")
 
 def info(options):
     print(Utils(options.conf).info())
@@ -91,7 +93,7 @@ def main():
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"]) 
 
     # Sub commands
-    commands = parser.add_subparsers()
+    commands = parser.add_subparsers(help="command", dest="command")
 
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
@@ -157,14 +159,16 @@ def main():
     cmd_test.set_defaults(func=test)
 
     options = parser.parse_args()
-    conf = BaseConfig(options.yaml_path)
+    try:
+        conf = BaseConfig(options.yaml_path)
+        Logger.config_logger(conf, level=options.log_level)
+        options.conf = conf
+        options.func(options)
+    except Exception as ex:
+        logger.error("Exception executing testrunner command '{}': {}".format(options.command, ex, exc_info=True))
+        sys.exit(255)
 
-    Logger.config_logger(conf, level=options.log_level)
 
-    options.conf = conf
-    options.func(options)
-
-    sys.exit(0)
 
 
 if __name__ == '__main__':
