@@ -44,18 +44,18 @@ data "template_file" "worker-cloud-init" {
     register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
     username        = "${var.username}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
   }
 }
 
 resource "openstack_blockstorage_volume_v2" "worker_vol" {
-  count = "${var.workers_vol_enabled ? "${var.workers}" : 0 }"
+  count = "${var.workers_vol_enabled ? "${var.workers}" : 0}"
   size  = "${var.workers_vol_size}"
   name  = "vol_${element(openstack_compute_instance_v2.worker.*.name, count.index)}"
 }
 
 resource "openstack_compute_volume_attach_v2" "worker_vol_attach" {
-  count       = "${var.workers_vol_enabled ? "${var.workers}" : 0 }"
+  count       = "${var.workers_vol_enabled ? "${var.workers}" : 0}"
   instance_id = "${element(openstack_compute_instance_v2.worker.*.id, count.index)}"
   volume_id   = "${element(openstack_blockstorage_volume_v2.worker_vol.*.id, count.index)}"
 }
@@ -76,10 +76,7 @@ resource "openstack_compute_instance_v2" "worker" {
     name = "${var.internal_net}"
   }
 
-  security_groups = "${var.enable_openstack_port_security == true ? [
-    "${openstack_compute_secgroup_v2.secgroup_base.name}",
-    "${openstack_compute_secgroup_v2.secgroup_worker.name}",
-  ] : [] }"
+  security_groups = "${var.enable_openstack_port_security == true ? ["${openstack_compute_secgroup_v2.secgroup_base.name}", "${openstack_compute_secgroup_v2.secgroup_worker.name}", ] : []}"
 
   user_data = "${data.template_file.worker-cloud-init.rendered}"
 }

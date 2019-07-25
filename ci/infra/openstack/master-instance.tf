@@ -44,7 +44,7 @@ data "template_file" "master-cloud-init" {
     register_rmt    = "${join("\n", data.template_file.master_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.master_commands.*.rendered)}"
     username        = "${var.username}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
   }
 }
 
@@ -64,10 +64,7 @@ resource "openstack_compute_instance_v2" "master" {
     name = "${var.internal_net}"
   }
 
-  security_groups = "${var.enable_openstack_port_security == true ? [
-    "${openstack_compute_secgroup_v2.secgroup_base.name}",
-    "${openstack_compute_secgroup_v2.secgroup_master.name}",
-  ] : [] }"
+  security_groups = "${var.enable_openstack_port_security == true ? ["${openstack_compute_secgroup_v2.secgroup_base.name}", "${openstack_compute_secgroup_v2.secgroup_master.name}", ] : []}"
 
   user_data = "${data.template_file.master-cloud-init.rendered}"
 }
