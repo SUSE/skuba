@@ -53,14 +53,14 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
 
+	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
+
 	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
-		KubernetesVersion: kubernetes.MajorMinorVersion(version.MustParseSemantic(initConfiguration.KubernetesVersion)),
+		KubernetesVersion: versionToDeploy.String(),
 	})
 	if err != nil {
 		return err
 	}
-
-	versionToDeploy := kubernetes.LatestVersion()
 
 	fmt.Println("[bootstrap] updating init configuration with target information")
 	if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initConfiguration, versionToDeploy); err != nil {

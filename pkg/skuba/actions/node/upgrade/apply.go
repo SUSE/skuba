@@ -87,7 +87,7 @@ func Apply(target *deployments.Target) error {
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
-			}, "kubernetes.install-base-packages")
+			}, "kubernetes.install-intermediate-node-pattern")
 			if err != nil {
 				return err
 			}
@@ -123,7 +123,7 @@ func Apply(target *deployments.Target) error {
 			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
-			}, "kubernetes.install-base-packages")
+			}, "kubernetes.install-intermediate-node-pattern")
 			if err != nil {
 				return err
 			}
