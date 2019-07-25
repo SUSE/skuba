@@ -19,7 +19,6 @@ package skuba
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -31,7 +30,7 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(os.Stderr, "%s\n", skuba.CurrentVersion().String())
+			fmt.Printf("%s\n", skuba.CurrentVersion().String())
 		},
 	}
 }
