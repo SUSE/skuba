@@ -48,7 +48,6 @@ data "template_file" "lb_cloud_init_userdata" {
     dex_backends       = "${join("      ", data.template_file.haproxy_dex_backends_master.*.rendered)}"
     authorized_keys    = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
     repositories       = "${join("\n", data.template_file.lb_repositories.*.rendered)}"
-    packages           = "${join("\n", formatlist("  - %s", var.packages))}"
     username           = "${var.username}"
     password           = "${var.password}"
     ntp_servers        = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
