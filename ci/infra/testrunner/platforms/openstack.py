@@ -18,12 +18,8 @@ class Openstack(Terraform):
 
     @timeout(600)
     def _cleanup_platform(self):
-        cmd = ("source {openrc};"
-               " terraform destroy -auto-approve"
-               " -var internal_net=net-{net}"
-               " -var stack_name={stack}".format(
-                   openrc=self.conf.openstack.openrc,
-                   net=self.conf.terraform.internal_net,
-                   stack=self.conf.terraform.stack_name))
+        cmd = ("destroy -auto-approve"
+               f" -var internal_net=net-{self.conf.terraform.internal_net}"
+               f" -var stack_name={self.conf.terraform.stack_name}")
 
-        self._runshellcommandterraform(cmd)
+        self._run_terraform_command(cmd)

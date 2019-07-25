@@ -17,6 +17,7 @@ class Terraform:
         self.utils = Utils(conf)
         self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
+        self.tfout_path = os.path.join(self.conf.workspace, "tfout")
         self.state = None
 
     def _env_setup_cmd(self):
@@ -43,7 +44,7 @@ class Terraform:
             dirs = [os.path.join(self.conf.workspace, "tfout"),
                 self.tfjson_path]
             for dir in dirs:
-                try: 
+                try:
                     self.utils.runshellcommand("rm -rf {}".format(dir))
                 except Exception as ex:
                     logger.warning("Received the following error: '{}'\n"
@@ -98,29 +99,22 @@ class Terraform:
         
         self.utils.setup_ssh()
 
-        init_cmd = "terraform init"
+        init_cmd = "init"
         if self.conf.terraform.plugin_dir:
-            logger.info("Installing plugins from {}".format(self.conf.terraform.plugin_dir))
-            init_cmd = init_cmd+" -plugin-dir="+self.conf.terraform.plugin_dir
-        self._runshellcommandterraform(init_cmd)
+            logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
+            init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
+        self._run_terraform_command(init_cmd)
 
-        self._runshellcommandterraform("terraform version")
+        self._run_terraform_command("version")
         self._generate_tfvars_file()
-        plan_cmd = ("{env_setup};"
-                    " terraform plan "
-                    " -out {workspace}/tfout".format(
-                        env_setup=self._env_setup_cmd(),
-                        workspace=self.conf.workspace))
-        apply_cmd = ("{env_setup};"
-                     "terraform apply -auto-approve {workspace}/tfout".format(
-                        env_setup=self._env_setup_cmd(),
-                        workspace=self.conf.workspace))
+        plan_cmd = f"plan -out {self.tfout_path}"
+        apply_cmd = f"apply -auto-approve {self.tfout_path}"
 
         # TODO: define the number of retries as a configuration parameter
         for retry in range(1, 5):
-            self._runshellcommandterraform(plan_cmd)
+            self._run_terraform_command(plan_cmd)
             try:
-                self._runshellcommandterraform(apply_cmd)
+                self._run_terraform_command(apply_cmd)
                 break
 
             except Exception as ex :
@@ -170,12 +164,8 @@ class Terraform:
 
     @step
     def _fetch_terraform_output(self):
-        cmd = ("{env_setup};"
-               "terraform output -json >"
-               "{json_f}".format(
-                   env_setup=self._env_setup_cmd(),
-                   json_f=self.tfjson_path))
-        self._runshellcommandterraform(cmd)
+        cmd = f"output -json >{self.tfjson_path}"
+        self._run_terraform_command(cmd)
 
     def _generate_tfvars_file(self):
         """Generate terraform tfvars file"""
@@ -218,8 +208,10 @@ class Terraform:
             for name, url in repos.items():
                 tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
 
-    def _runshellcommandterraform(self, cmd, env={}):
+    def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
+        cmd = f'{self._env_setup_cmd()}; terraform {cmd}'
+
         # Terraform needs PATH and SSH_AUTH_SOCK
         sock_fn = self.utils.ssh_sock_fn()
         env["SSH_AUTH_SOCK"] = sock_fn
@@ -229,7 +221,7 @@ class Terraform:
 
     def _check_tf_deployed(self):
         if os.path.exists(self.tfjson_path):
-            raise Exception(Format.alert("tf file found. Please run cleanup and try again{}"))
+            raise Exception(Format.alert(f"tf file found. Please run cleanup and try again {self.tfjson_path}"))
 
     # TODO: this function is currently not used. Identify points where it should
     # be invoked
