@@ -42,6 +42,7 @@ class PrChecks:
             # Not sure why we need to use the nested commit for the email
             email = commit.commit.author.email
             user_id = f'{author.login}({email})'
+            body = ''
 
             # This could be probably smarter but commit contains something like the following
             # message="$commit_title\n\n$long_commit_message" and as such maybe we can split it and
