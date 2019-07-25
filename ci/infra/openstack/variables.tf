@@ -116,3 +116,8 @@ variable "rmt_server_name" {
   default     = ""
   description = "SUSE Repository Mirroring Server Name"
 }
+
+variable "enable_openstack_port_security" {
+  default     = "true"
+  description = "Enable Port security on OpenStack instances and ports"
+}

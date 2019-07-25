@@ -64,10 +64,10 @@ resource "openstack_compute_instance_v2" "master" {
     name = "${var.internal_net}"
   }
 
-  security_groups = [
+  security_groups = "${var.enable_openstack_port_security == true ? [
     "${openstack_compute_secgroup_v2.secgroup_base.name}",
     "${openstack_compute_secgroup_v2.secgroup_master.name}",
-  ]
+  ] : [] }"
 
   user_data = "${data.template_file.master-cloud-init.rendered}"
 }

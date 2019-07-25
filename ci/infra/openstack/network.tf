@@ -11,7 +11,8 @@ resource "openstack_networking_subnet_v2" "subnet" {
 }
 
 data "openstack_networking_network_v2" "external_network" {
-  name = "${var.external_net}"
+  name                  = "${var.external_net}"
+  port_security_enabled = "${var.enable_openstack_port_security}"
 }
 
 resource "openstack_networking_router_v2" "router" {

@@ -2,9 +2,9 @@ resource "openstack_lb_loadbalancer_v2" "lb" {
   name          = "${var.stack_name}-lb"
   vip_subnet_id = "${openstack_networking_subnet_v2.subnet.id}"
 
-  security_group_ids = [
+  security_group_ids = "${var.enable_openstack_port_security == true ? [
     "${openstack_compute_secgroup_v2.secgroup_master_lb.id}",
-  ]
+  ] : [] }"
 }
 
 resource "openstack_lb_listener_v2" "kube_api_listener" {
