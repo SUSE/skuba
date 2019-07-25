@@ -19,9 +19,15 @@ package ssh
 
 func init() {
 	stateMap["skuba-update.start"] = skubaUpdateStart
+	stateMap["skuba-update.stop"] = skubaUpdateStop
 }
 
 func skubaUpdateStart(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "--now", "skuba-update.timer")
+	return err
+}
+
+func skubaUpdateStop(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "disable", "--now", "skuba-update.timer")
 	return err
 }

@@ -84,6 +84,10 @@ func Apply(target *deployments.Target) error {
 
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			err = target.Apply(nil, "skuba-update.stop")
+			if err != nil {
+				return err
+			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
@@ -107,6 +111,10 @@ func Apply(target *deployments.Target) error {
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 				return err
 			}
+			err = target.Apply(nil, "skuba-update.start")
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		// there is already at least one updated control plane node
@@ -120,6 +128,10 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			err = target.Apply(nil, "skuba-update.stop")
+			if err != nil {
+				return err
+			}
 			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
@@ -138,6 +150,10 @@ func Apply(target *deployments.Target) error {
 				return err
 			}
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
+				return err
+			}
+			err = target.Apply(nil, "skuba-update.start")
+			if err != nil {
 				return err
 			}
 		}
