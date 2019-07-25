@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}-node-upgrade-plan-nightly'
+    name: '{name}-upgrade-nightly'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
@@ -29,4 +29,4 @@
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: skuba
-        script-path: skuba/ci/jenkins/pipelines/skuba-node-upgrade-plan-nightly.Jenkinsfile
+        script-path: skuba/ci/jenkins/pipelines/skuba-upgrade-nightly.Jenkinsfile

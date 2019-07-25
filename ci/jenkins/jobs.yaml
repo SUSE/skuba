@@ -13,6 +13,7 @@
         - '{name}-code-author'
         - '{name}-handle-pr'
         - '{name}-jjb-validation'
+        - '{name}-upgrade-nightly'
 
 - project:
       name: caasp-jobs/caasp-v4-openstack
