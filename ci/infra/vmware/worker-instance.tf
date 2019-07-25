@@ -58,15 +58,15 @@ data "template_file" "worker_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "worker" {
-  count            = "${var.workers}"
-  name             = "${var.stack_name}-worker-${count.index}"
-  num_cpus         = "${var.worker_cpus}"
-  memory           = "${var.worker_memory}"
-  guest_id         = "${var.guest_id}"
-  firmware         = "${var.firmware}"
-  scsi_type        = "${data.vsphere_virtual_machine.template.scsi_type}"
-  resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
-  datastore_id     = "${data.vsphere_datastore.datastore.id}"
+  count                = "${var.workers}"
+  name                 = "${var.stack_name}-worker-${count.index}"
+  num_cpus             = "${var.worker_cpus}"
+  memory               = "${var.worker_memory}"
+  guest_id             = "${var.guest_id}"
+  firmware             = "${var.firmware}"
+  scsi_type            = "${data.vsphere_virtual_machine.template.scsi_type}"
+  resource_pool_id     = "${data.vsphere_resource_pool.pool.id}"
+  datastore_cluster_id = "${data.vsphere_datastore_cluster.datastore_cluster.id}"
 
   clone {
     template_uuid = "${data.vsphere_virtual_machine.template.id}"
