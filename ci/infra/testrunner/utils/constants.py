@@ -113,10 +113,6 @@ class BaseConfig:
     @staticmethod
     def get_var_dict(yaml_path):
         config_yaml_file_path = BaseConfig.get_yaml_path(yaml_path)
-        if not os.path.isfile(config_yaml_file_path):
-            print(Format.alert("You have incorrect -v path for xml file: {}".format(config_yaml_file_path)))
-            raise FileNotFoundError
-
         with open(config_yaml_file_path, 'r') as stream:
             _conf = yaml.safe_load(stream)
         return _conf
@@ -181,7 +177,7 @@ class BaseConfig:
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
-                                          "or set env var WORKSPACE before using testrunner)"))
+                                          " or set env var WORKSPACE before using testrunner)"))
         if not conf.terraform.stack_name:
             raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
 
