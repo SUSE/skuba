@@ -88,6 +88,10 @@ func Apply(target *deployments.Target) error {
 			if err != nil {
 				return err
 			}
+			err = target.Apply(nil, "kured.lock")
+			if err != nil {
+				return err
+			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
@@ -115,6 +119,11 @@ func Apply(target *deployments.Target) error {
 			if err != nil {
 				return err
 			}
+			// TODO: we have to wait for kube-apiserver to be back before continuing
+			err = target.Apply(nil, "kured.unlock")
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		// there is already at least one updated control plane node
@@ -129,6 +138,10 @@ func Apply(target *deployments.Target) error {
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
 			err = target.Apply(nil, "skuba-update.stop")
+			if err != nil {
+				return err
+			}
+			err = target.Apply(nil, "kured.lock")
 			if err != nil {
 				return err
 			}
@@ -153,6 +166,11 @@ func Apply(target *deployments.Target) error {
 				return err
 			}
 			err = target.Apply(nil, "skuba-update.start")
+			if err != nil {
+				return err
+			}
+			// TODO: we have to wait for kube-apiserver to be back before continuing
+			err = target.Apply(nil, "kured.unlock")
 			if err != nil {
 				return err
 			}
