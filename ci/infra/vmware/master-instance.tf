@@ -28,6 +28,7 @@ data "template_file" "master_register_rmt" {
 
 data "template_file" "master_commands" {
   template = "${file("cloud-init/commands.tpl")}"
+  count    = "${join("", var.packages) == "" ? 0 : 1}"
 
   vars {
     packages = "${join(", ", var.packages)}"

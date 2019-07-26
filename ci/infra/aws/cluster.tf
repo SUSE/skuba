@@ -55,12 +55,21 @@ data "template_file" "repositories" {
   }
 }
 
+data "template_file" "commands" {
+  template = "${file("cloud-init/commands.tpl")}"
+  count    = "${join("", var.packages) == "" ? 0 : 1}"
+
+  vars {
+    packages = "${join(", ", var.packages)}"
+  }
+}
+
 data "template_file" "cloud-init" {
   template = "${file("cloud-init/cloud-init.yaml.tpl")}"
 
   vars {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    packages        = "${join(" ", var.packages)}"
+    commands        = "${join("\n", data.template_file.commands.*.rendered)}"
     repositories    = "${length(var.repositories) == 0 ? "\n" : join("\n", data.template_file.repositories.*.rendered)}"
     register_scc    = "${var.caasp_registry_code != "" && var.rmt_server_name == "" ? join("\n", data.template_file.register_scc.*.rendered) : "" }"
     register_rmt    = "${var.rmt_server_name != "" ? join("\n", data.template_file.register_rmt.*.rendered) : ""}"

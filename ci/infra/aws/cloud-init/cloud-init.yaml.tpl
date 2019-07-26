@@ -21,8 +21,7 @@ bootcmd:
 runcmd:
 ${register_scc}
 ${register_rmt}
-  - zypper ref
-  - zypper in -y --no-recommends ${packages}
+${commands}
   - /usr/bin/sed -i -e 's/btrfs/overlay2/g' /etc/crio/crio.conf
 
 final_message: "The system is finally up, after $UPTIME seconds"
