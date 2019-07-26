@@ -56,10 +56,16 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		return err
 	}
 
+	var criConfigure string
+	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		criConfigure = "cri.configure"
+	}
+
 	statesToApply := []string{
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
+		criConfigure,
 		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",

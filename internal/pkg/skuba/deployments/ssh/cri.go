@@ -17,11 +17,49 @@
 
 package ssh
 
+import (
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/pkg/errors"
+	"k8s.io/klog"
+)
+
 func init() {
+	stateMap["cri.configure"] = criConfigure
 	stateMap["cri.start"] = criStart
+	stateMap["cri.reset"] = crioReset
+}
+
+func criConfigure(t *Target, data interface{}) error {
+	criFiles, err := ioutil.ReadDir(skuba.CriDir())
+	if err != nil {
+		return errors.Wrap(err, "Could not read local cri directory: "+skuba.CriDir())
+	}
+	defer t.ssh("rm -rf /tmp/cri.d")
+
+	for _, f := range criFiles {
+		if err := t.target.UploadFile(filepath.Join(skuba.CriDir(), f.Name()), filepath.Join("/tmp/cri.d", f.Name())); err != nil {
+			return err
+		}
+	}
+
+	_, _, err = t.ssh("mv -f /etc/sysconfig/crio /etc/sysconfig/crio.backup")
+	_, _, err = t.ssh("mv -f /tmp/cri.d/default_flags /etc/sysconfig/crio")
+	return err
 }
 
 func criStart(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "--now", "crio")
 	return err
+}
+
+func crioReset(t *Target, data interface{}) error {
+	_, _, err := t.ssh("test -f /etc/sysconfig/crio.backup")
+	if err == nil {
+		_, _, _ = t.ssh("mv -f /etc/sysconfig/crio.backup /etc/sysconfig/crio")
+	}
+	klog.V(1).Info("CRI-O is running with default configuration already. Skipping reset...")
+	return nil
 }
