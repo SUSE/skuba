@@ -50,6 +50,14 @@ class Terraform:
                     logger.warning("Received the following error: '{}'\n"
                                    "Attempting to finish cleanup".format(ex))
 
+    def destroy(self, variables):
+        cmd = "destroy -auto-approve"
+
+        for var in variables:
+            cmd += f" -var {var}"
+
+        self._run_terraform_command(cmd)
+
     @timeout(600)
     @step
     def gather_logs(self):

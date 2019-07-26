@@ -9,17 +9,15 @@ class Openstack(Terraform):
     def __init__(self, conf):
         super().__init__(conf, 'openstack')
         if not os.path.isfile(conf.openstack.openrc):
-            raise ValueError(Format.alert("Your openrc file path \"{}\" does not exist.\n\t    "
-                                          "Check your openrc file path in a configured yaml file".format(conf.openstack.openrc)))
-        self.osconf = conf.openstack
+            raise ValueError(Format.alert(f"Your openrc file path \"{conf.openstack.openrc}\" does not exist.\n\t    "
+                                          "Check your openrc file path in a configured yaml file"))
 
     def _env_setup_cmd(self):
-        return "source {openrc}".format(openrc=self.osconf.openrc)
+        return f"source {self.conf.openstack.openrc}"
 
     @timeout(600)
     def _cleanup_platform(self):
-        cmd = ("destroy -auto-approve"
-               f" -var internal_net=net-{self.conf.terraform.internal_net}"
-               f" -var stack_name={self.conf.terraform.stack_name}")
+        variables = [f"internal_net=net-{self.conf.terraform.internal_net}",
+                     f"stack_name={self.conf.terraform.stack_name}"]
 
-        self._run_terraform_command(cmd)
+        self.destroy(variables)

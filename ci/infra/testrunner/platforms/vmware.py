@@ -24,9 +24,9 @@ class VMware(Terraform):
 
     @timeout(600)
     def _cleanup_platform(self):
-        cmd = f"destroy -auto-approve -var stack_name={self.conf.terraform.stack_name}"
+        variables = [f"stack_name={self.conf.terraform.stack_name}"]
 
-        self._run_terraform_command(cmd)
+        self.destroy(variables)
 
     def _get_platform_logs(self):
         # Get logs from the VMware LB
