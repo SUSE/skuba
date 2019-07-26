@@ -78,8 +78,10 @@ kind: PodSecurityPolicy
 metadata:
   name: suse.caasp.psp.privileged
   annotations:
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+    apparmor.security.beta.kubernetes.io/allowedProfileName: '*'
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: '*'
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
 spec:
   # Privileged
   privileged: true
@@ -189,6 +191,8 @@ metadata:
   annotations:
     seccomp.security.alpha.kubernetes.io/allowedProfileNames: runtime/default
     seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+    apparmor.security.beta.kubernetes.io/allowedProfileName: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
 spec:
   # Privileged
   privileged: false
