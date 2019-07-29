@@ -1,9 +1,11 @@
+import logging
 import os
 
 from platforms.platform import Platform
 from utils.format import Format
 from utils.utils import (step, Utils)
 
+logger = logging.getLogger('testrunner')
 
 class Skuba:
 
@@ -16,13 +18,14 @@ class Skuba:
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
-            raise FileNotFoundError(Format.alert("skuba not found at {}".format(self.binpath)))
+            raise FileNotFoundError("skuba not found at {}".format(self.binpath))
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise Exception(Format.alert("test-cluster not found. Please run bootstrap and try again"))
+            raise Exception("test-cluster not found. Please run bootstrap and try again")
 
     @staticmethod
+    @step
     def build(conf):
         """Buids skuba from source"""
         utils = Utils(conf)
@@ -30,10 +33,10 @@ class Skuba:
         utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
         utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
         utils.gorun("go version")
-        print("Building skuba")
         utils.gorun("make")
 
     @staticmethod
+    @step
     def cleanup(conf):
         """Cleanup skuba working environment"""
         utils = Utils(conf)
@@ -60,8 +63,8 @@ class Skuba:
                 utils.runshellcommand("rm -rf {}".format(dir))
             except Exception as ex:
                 cleanup_failure = True
-                print("Received the following error {}".format(ex))
-                print("Attempting to finish cleaup")
+                logger.warning("Received the following error {}".format(ex))
+                logger.warning("Attempting to finish cleaup")
 
         if cleanup_failure:
             raise Exception("Failure(s) during cleanup")
@@ -69,7 +72,7 @@ class Skuba:
     @step
     def cluster_init(self):
 
-        print("Cleaning up any previous test-cluster dir")
+        logger.debug("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
         cmd = "cluster init --control-plane {} test-cluster".format(self.platform.get_lb_ipaddr())
         # Override work directory, because init must run in the parent directory of the
@@ -149,10 +152,12 @@ class Skuba:
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
 
+    @step
     def cluster_status(self):
         self._verify_bootstrap_dependency()
-        self._run_skuba("cluster status")
+        return self._run_skuba("cluster status")
 
+    @step
     def num_of_nodes(self, role):
 
         if role not in ("master", "worker"):
@@ -160,7 +165,7 @@ class Skuba:
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
-        output = self.utils.runshellcommand_withoutput(cmd)
+        output = self.utils.runshellcommand(cmd)
         return output.count(role)
 
     def _run_skuba(self, cmd, cwd=None):
@@ -175,5 +180,5 @@ class Skuba:
 
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
-        self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
+        return self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
 

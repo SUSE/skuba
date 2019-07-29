@@ -1,4 +1,4 @@
-
+import logging
 import os
 import subprocess
 from functools import wraps
@@ -9,6 +9,8 @@ from timeout_decorator import timeout
 from utils.format import Format
 from utils.constants import Constant
 
+logger = logging.getLogger('testrunner')
+
 _stepdepth = 0
 
 
@@ -17,10 +19,10 @@ def step(f):
     def wrapped(*args, **kwargs):
         global _stepdepth
         _stepdepth += 1
-        print("{} entering {} {}".format(Format.DOT * _stepdepth, f.__name__,
+        logger.debug("{} entering {} {}".format(Format.DOT * _stepdepth, f.__name__,
                                   f.__doc__ or ""))
         r = f(*args, **kwargs)
-        print("{}  exiting {}".format(Format.DOT_EXIT * _stepdepth, f.__name__))
+        logger.debug("{}  exiting {}".format(Format.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
@@ -45,14 +47,14 @@ class Utils:
             try:
                 self.scp_file(ip_address, log, store_path)
             except Exception as ex:
-                print(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logger.debug(f"Error while collecting {log} from {ip_address}\n {ex}")
                 logging_errors = True
 
         for log in logs.get("dirs", []):
             try:
                 self.rsync(ip_address, log, store_path)
             except Exception as ex:
-                print(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logger.debug(f"Error while collecting {log} from {ip_address}\n {ex}")
                 logging_errors = True
 
         for service in logs.get("services", []):
@@ -60,32 +62,10 @@ class Utils:
                 self.ssh_run(ip_address, f"sudo journalctl -xeu {service} > {service}.log")
                 self.scp_file(ip_address, f"{service}.log", store_path)
             except Exception as ex:
-                print(f"Error while collecting {service}.log from {ip_address}\n {ex}")
+                logger.debug(f"Error while collecting {service}.log from {ip_address}\n {ex}")
                 logging_errors = True
 
         return logging_errors
-
-    def runshellcommand(self, cmd, cwd=None, env=None):
-        """Running shell command in {workspace} if cwd == None
-           Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
-               cwd is None, cmd will run in {workspace}
-               cwd is abs path, cmd will run in cwd
-        Keyword arguments:
-        cmd -- command to run
-        cwd -- dir to run the cmd
-        env -- environment variables
-        """
-        if not cwd:
-            cwd = self.conf.workspace
-
-        if not os.path.isabs(cwd):
-            cwd = os.path.join(self.conf.workspace, cwd)
-
-        if not os.path.exists(cwd):
-            raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
-
-        print(Format.alert("$ {} > {}".format(cwd, cmd)))
-        subprocess.check_call(cmd, cwd=cwd, shell=True, env=env)
 
     def authorized_keys(self):
         public_key_path = self.conf.ssh_key_option + ".pub"
@@ -139,15 +119,42 @@ class Utils:
                f'{local_dir_path}')
         self.runshellcommand(cmd)
 
-    def runshellcommand_withoutput(self, cmd, ignore_errors=True):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, err = p.communicate()
-        rc = p.returncode
-        if not ignore_errors:
-            if rc != 0:
-                print(err)
-                raise RuntimeError(Format.alert("Cannot run command {}{}\033[0m".format(cmd)))
-        return output.decode()
+    def runshellcommand(self, cmd, cwd=None, env={}, ignore_errors=False):
+        """Running shell command in {workspace} if cwd == None
+           Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
+               cwd is None, cmd will run in {workspace}
+               cwd is abs path, cmd will run in cwd
+        Keyword arguments:
+        cmd -- command to run
+        cwd -- dir to run the cmd
+        env -- environment variables
+        ignore_errors -- don't raise exception if command fails
+        """
+        if not cwd:
+            cwd = self.conf.workspace
+
+        if not os.path.isabs(cwd):
+            cwd = os.path.join(self.conf.workspace, cwd)
+
+        if not os.path.exists(cwd):
+            raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
+
+        if logging.DEBUG >= logger.level:
+            logger.debug("Executing command\n"
+                         "    cwd: {} \n"
+                         "    env: {}\n"
+                         "    cmd: {}".format(cwd, str(env) if env else "{}", cmd)) 
+        else:
+            logger.info("Executing command {}".format(cmd))
+        
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, 
+                 env=env, cwd=cwd)
+        logger.debug(p.stdout.decode())
+        if p.returncode != 0:
+           logger.error(p.stderr)
+           if not ignore_errors:
+                raise RuntimeError("Error executing command {}".format(cmd))
+        return p.stdout.decode()
 
     def ssh_sock_fn(self):
         return os.path.join(self.conf.workspace, "ssh-agent-sock")
@@ -155,35 +162,34 @@ class Utils:
     @timeout(60)
     @step
     def setup_ssh(self):
-
         self.runshellcommand("chmod 400 " + self.conf.ssh_key_option)
-        print("Starting ssh-agent ")
         # use a dedicated agent to minimize stateful components
         sock_fn = self.ssh_sock_fn()
         try:
             self.runshellcommand("pkill -f 'ssh-agent -a {}'".format(sock_fn))
-            print("Killed previous instance of ssh-agent")
+            logger.warning("Killed previous instance of ssh-agent")
         except:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
-        print("adding id_shared ssh key")
         self.runshellcommand("ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
 
     @timeout(30)
     @step
     def info(self):
         """Node info"""
-        print("Env vars: {}".format(sorted(os.environ)))
+        info_lines  = "Env vars: {}\n".format(sorted(os.environ))
+        info_lines += self.runshellcommand('ip a')
+        info_lines += self.runshellcommand('ip r')
+        info_lines += self.runshellcommand('cat /etc/resolv.conf')
 
-        self.runshellcommand('ip a')
-        self.runshellcommand('ip r')
-        self.runshellcommand('cat /etc/resolv.conf')
-
+        # TODO: the logic for retrieving external is platform depedant and should be
+        # moved to the corresponding platform
         try:
             r = requests.get('http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
             r.raise_for_status()
         except (requests.HTTPError, requests.Timeout) as err:
-            print(err)
-            print(Format.alert('Meta Data service unavailable could not get external IP addr{}'))
+            logger.warning(f'Meta Data service unavailable could not get external IP addr{err}')
         else:
-            print('External IP addr: {}'.format(r.text))
+            info_lines += 'External IP addr: {}'.format(r.text)
+
+        return info_lines

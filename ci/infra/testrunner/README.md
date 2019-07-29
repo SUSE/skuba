@@ -91,8 +91,9 @@ usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-    
+
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
+       [-l {DEBUG,INFO,WARNING,ERROR}]
        {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,ssh,test}
        ...
 
@@ -122,6 +123,9 @@ optional arguments:
                         -v myconfig.yaml
   -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
                         The platform you're targeting. Defaults to openstack
+  -l {DEBUG,INFO,WARNING,ERROR}, --log-level {DEBUG,INFO,WARNING,ERROR}
+                        log level
+
 ```
 
 

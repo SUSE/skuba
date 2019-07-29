@@ -5,19 +5,21 @@
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
+import logging
 import sys
 from argparse import (ArgumentParser, REMAINDER)
 
 from skuba import Skuba
 from platforms import Platform
 from tests import TestDriver
-from utils import (BaseConfig, Utils)
+from utils import (BaseConfig, Logger, Utils)
 
 __version__ = "0.0.3"
 
+logger = logging.getLogger("testrunner")
 
 def info(options):
-    Utils(options.conf).info()
+    print(Utils(options.conf).info())
 
 
 def cleanup(options):
@@ -43,7 +45,7 @@ def bootstrap(options):
 
 
 def cluster_status(options):
-    Skuba(options.conf, options.platform).cluster_status()
+    print(Skuba(options.conf, options.platform).cluster_status())
 
 
 def get_logs(options):
@@ -87,9 +89,11 @@ def main():
                         default="openstack",
                         choices=["openstack", "vmware", "bare-metal", "libvirt"],
                         help="The platform you're targeting. Defaults to openstack")
+    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level", 
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"]) 
 
     # Sub commands
-    commands = parser.add_subparsers()
+    commands = parser.add_subparsers(help="command", dest="command")
 
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
@@ -155,11 +159,16 @@ def main():
     cmd_test.set_defaults(func=test)
 
     options = parser.parse_args()
-    conf = BaseConfig(options.yaml_path)
-    options.conf = conf
-    options.func(options)
+    try:
+        conf = BaseConfig(options.yaml_path)
+        Logger.config_logger(conf, level=options.log_level)
+        options.conf = conf
+        options.func(options)
+    except Exception as ex:
+        logger.error("Exception executing testrunner command '{}': {}".format(options.command, ex, exc_info=True))
+        sys.exit(255)
 
-    sys.exit(0)
+
 
 
 if __name__ == '__main__':

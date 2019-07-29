@@ -32,10 +32,12 @@ class BaseConfig:
         obj.master = BaseConfig.NodeConfig()
         obj.worker = BaseConfig.NodeConfig()
         obj.test = BaseConfig.Test()
+        obj.log = BaseConfig.Log()
 
         config_classes = (
             BaseConfig.NodeConfig,
             BaseConfig.Test,
+            BaseConfig.Log,
             BaseConfig.Openstack,
             BaseConfig.Terraform,
             BaseConfig.Skuba,
@@ -68,6 +70,7 @@ class BaseConfig:
     class Terraform:
         def __init__(self):
             super().__init__()
+            self.retries = 5
             self.internal_net = None
             self.mirror = None
             self.stack_name = None
@@ -86,6 +89,14 @@ class BaseConfig:
             super().__init__()
             self.no_destroy = False
 
+    class Log:
+        def __init__(self):
+            super().__init__()
+            self.level = "INFO"
+            self.quiet = False
+            self.file  = "testrunner.log"
+            self.overwrite = False
+
     class VMware:
         def __init__(self):
             self.env_file = None
@@ -102,10 +113,6 @@ class BaseConfig:
     @staticmethod
     def get_var_dict(yaml_path):
         config_yaml_file_path = BaseConfig.get_yaml_path(yaml_path)
-        if not os.path.isfile(config_yaml_file_path):
-            print(Format.alert("You have incorrect -v path for xml file: {}".format(config_yaml_file_path)))
-            raise FileNotFoundError
-
         with open(config_yaml_file_path, 'r') as stream:
             _conf = yaml.safe_load(stream)
         return _conf
@@ -170,7 +177,7 @@ class BaseConfig:
     def verify(conf):
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
-                                          "or set env var WORKSPACE before using testrunner)"))
+                                          " or set env var WORKSPACE before using testrunner)"))
         if not conf.terraform.stack_name:
             raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
 
