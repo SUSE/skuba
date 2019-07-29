@@ -61,6 +61,12 @@ func Apply(target *deployments.Target) error {
 		return nil
 	}
 
+	// Check if skuba-update.timer is already disabled
+	skubaUpdateWasEnabled, err := target.IsServiceEnabled("skuba-update.timer")
+	if err != nil {
+		return err
+	}
+
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.KuredLockExists()
 	if err != nil {
@@ -92,10 +98,11 @@ func Apply(target *deployments.Target) error {
 
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
-			// FIXME: check if skuba-update is already disabled
-			err = target.Apply(nil, "skuba-update.stop")
-			if err != nil {
-				return err
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.stop")
+				if err != nil {
+					return err
+				}
 			}
 			if !kuredWasLocked {
 				err = target.Apply(nil, "kured.lock")
@@ -130,10 +137,11 @@ func Apply(target *deployments.Target) error {
 				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
 				return err
 			}
-			// FIXME: check if skuba-update was already disabled
-			err = target.Apply(nil, "skuba-update.start")
-			if err != nil {
-				return err
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.start")
+				if err != nil {
+					return err
+				}
 			}
 			if !kuredWasLocked {
 				err = target.Apply(nil, "kured.unlock")
@@ -154,10 +162,11 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
-			// FIXME: check if skuba-update is already disabled
-			err = target.Apply(nil, "skuba-update.stop")
-			if err != nil {
-				return err
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.stop")
+				if err != nil {
+					return err
+				}
 			}
 			if !kuredWasLocked {
 				err = target.Apply(nil, "kured.lock")
@@ -189,10 +198,11 @@ func Apply(target *deployments.Target) error {
 				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
 				return err
 			}
-			// FIXME: check if skuba-update was already disabled
-			err = target.Apply(nil, "skuba-update.start")
-			if err != nil {
-				return err
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.start")
+				if err != nil {
+					return err
+				}
 			}
 			if !kuredWasLocked {
 				err = target.Apply(nil, "kured.unlock")

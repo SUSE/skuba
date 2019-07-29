@@ -29,6 +29,7 @@ type Actionable interface {
 	Apply(data interface{}, states ...string) error
 	UploadFileContents(targetPath, contents string) error
 	DownloadFileContents(sourcePath string) (string, error)
+	IsServiceEnabled(serviceName string) (bool, error)
 }
 
 type TargetCache struct {
@@ -60,4 +61,8 @@ func (t *Target) UploadFileContents(targetPath, contents string) error {
 
 func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
 	return t.Actionable.DownloadFileContents(sourcePath)
+}
+
+func (t *Target) IsServiceEnabled(serviceName string) (bool, error) {
+	return t.Actionable.IsServiceEnabled(serviceName)
 }
