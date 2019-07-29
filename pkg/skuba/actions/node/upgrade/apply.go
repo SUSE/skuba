@@ -28,6 +28,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
@@ -60,6 +61,12 @@ func Apply(target *deployments.Target) error {
 		return nil
 	}
 
+	// Check if a lock on kured already exists
+	kuredWasLocked, err := kured.KuredLockExists()
+	if err != nil {
+		return err
+	}
+
 	// Check if the target node is the first control plane to be updated
 	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
 		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
@@ -85,13 +92,16 @@ func Apply(target *deployments.Target) error {
 
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			// FIXME: check if skuba-update is already disabled
 			err = target.Apply(nil, "skuba-update.stop")
 			if err != nil {
 				return err
 			}
-			err = target.Apply(nil, "kured.lock")
-			if err != nil {
-				return err
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.lock")
+				if err != nil {
+					return err
+				}
 			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
@@ -120,13 +130,16 @@ func Apply(target *deployments.Target) error {
 				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
 				return err
 			}
+			// FIXME: check if skuba-update was already disabled
 			err = target.Apply(nil, "skuba-update.start")
 			if err != nil {
 				return err
 			}
-			err = target.Apply(nil, "kured.unlock")
-			if err != nil {
-				return err
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.unlock")
+				if err != nil {
+					return err
+				}
 			}
 		}
 	} else {
@@ -141,13 +154,16 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			// FIXME: check if skuba-update is already disabled
 			err = target.Apply(nil, "skuba-update.stop")
 			if err != nil {
 				return err
 			}
-			err = target.Apply(nil, "kured.lock")
-			if err != nil {
-				return err
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.lock")
+				if err != nil {
+					return err
+				}
 			}
 			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
@@ -173,13 +189,16 @@ func Apply(target *deployments.Target) error {
 				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
 				return err
 			}
+			// FIXME: check if skuba-update was already disabled
 			err = target.Apply(nil, "skuba-update.start")
 			if err != nil {
 				return err
 			}
-			err = target.Apply(nil, "kured.unlock")
-			if err != nil {
-				return err
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.unlock")
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

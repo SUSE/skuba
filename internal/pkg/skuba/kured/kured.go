@@ -22,9 +22,24 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetKuredImage() string {
 	return images.GetGenericImage(skuba.ImageRepository, "kured",
 		kubernetes.CurrentAddonVersion(kubernetes.Kured))
+}
+
+func KuredLockExists() (bool, error) {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to get admin client set")
+	}
+	kuredDaemonSet, err := clientSet.AppsV1().DaemonSets(metav1.NamespaceSystem).Get("kured", metav1.GetOptions{})
+	if err != nil {
+		return false, errors.Wrap(err, "unable to get kured daemonset")
+	}
+	_, ok := kuredDaemonSet.GetAnnotations()["weave.works/kured-node-lock"]
+	return ok, nil
 }
