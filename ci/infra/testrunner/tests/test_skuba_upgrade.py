@@ -11,7 +11,7 @@ def setup(request, platform, skuba):
     request.addfinalizer(cleanup)
 
 
-def setup_kubernetes_version(skuba, kubernetes_version):
+def setup_kubernetes_version(skuba, kubernetes_version=None):
     """
     Initialize the cluster with the given kubernetes_version, bootstrap it and
     join worker nodes.
@@ -27,11 +27,9 @@ def setup_kubernetes_version(skuba, kubernetes_version):
 
 
 def test_cluster_upgrade_plan_all_fine(setup, skuba):
-    setup_kubernetes_version(skuba, "1.15.0")
+    setup_kubernetes_version(skuba)
     out = skuba.cluster_upgrade()
 
-    assert out.find("Current Kubernetes cluster version: 1.15.0") != -1
-    assert out.find("Latest Kubernetes version: 1.15.0") != -1
     assert out.find(
         "Congratulations! You are already at the latest version available"
     ) != -1
@@ -53,7 +51,7 @@ def test_cluster_upgrade_plan_from_v1_14(setup, skuba):
 
 
 def test_node_upgrade_plan_all_fine(setup, skuba):
-    setup_kubernetes_version(skuba, "1.15.0")
+    setup_kubernetes_version(skuba)
     outs = {}
     for (r, n) in [("master", 0), ("worker",1)]:
         node = "my-{}-{}".format(n,r)
