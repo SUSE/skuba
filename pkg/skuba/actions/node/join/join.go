@@ -44,8 +44,12 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
-	_, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	if err != nil {
+		return err
+	}
+
+	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
 		KubernetesVersion: currentClusterVersion.String(),
 	})
 	if err != nil {
