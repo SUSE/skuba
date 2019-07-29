@@ -77,8 +77,8 @@ class Kubectl:
                                 .format(name, path, ip_address)) from ex
  
     def _run_kubectl(self, command):
-        shell_cmd="kubectl --kubeconfig={cwd}/test-cluster/admin.conf -o json {command}"
-            .format(command=command,cwd=self.conf.workspace)
+        shell_cmd = "kubectl --kubeconfig={cwd}/test-cluster/admin.conf \
+                      -o json {command}".format(command=command, cwd=self.conf.workspace)
         try:
             return self.utils.runshellcommand(shell_cmd, output=True)
         except Exception as ex:
