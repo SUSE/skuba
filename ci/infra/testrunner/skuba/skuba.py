@@ -70,11 +70,15 @@ class Skuba:
             raise Exception("Failure(s) during cleanup")
 
     @step
-    def cluster_init(self):
-
+    def cluster_init(self, kubernetes_version=None):
         logger.debug("Cleaning up any previous test-cluster dir")
         self.utils.runshellcommand("rm -rf {}".format(self.cwd))
-        cmd = "cluster init --control-plane {} test-cluster".format(self.platform.get_lb_ipaddr())
+
+        k8s_version_option = ""
+        if kubernetes_version:
+           k8s_version_option = "--kubernetes-version {}".format(kubernetes_version)
+        cmd = "cluster init --control-plane {} {} test-cluster".format(
+                   self.platform.get_lb_ipaddr(), k8s_version_option)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
@@ -151,6 +155,16 @@ class Skuba:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
+
+    @step
+    def node_upgrade(self, role, nr):
+        self._verify_bootstrap_dependency()
+        return self._run_skuba("node upgrade plan {}-{}".format(role, nr))
+
+    @step
+    def cluster_upgrade(self):
+        self._verify_bootstrap_dependency()
+        return self._run_skuba("cluster upgrade plan")
 
     @step
     def cluster_status(self):

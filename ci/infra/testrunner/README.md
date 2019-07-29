@@ -91,14 +91,15 @@ usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-
+    
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,ssh,test}
+       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade,join-node,remove-node,reset-node,upgrade-node,ssh,test}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,ssh,test}
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade,join-node,remove-node,reset-node,upgrade-node,ssh,test}
+                        command
     info                ip info
     get_logs            gather logs from nodes
     cleanup             cleanup created skuba environment
@@ -110,9 +111,11 @@ positional arguments:
     bootstrap           bootstrap k8s cluster with deployed nodes in your
                         platform
     status              check K8s cluster status
+    cluster-upgrade     plan cluster upgrade
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
     reset-node          reset node reverting state previous to bootstap/join.
+    upgrade-node        plan upgrade kubernetes version in node
     ssh                 Execute command in node via ssh.
     test                execute tests
 

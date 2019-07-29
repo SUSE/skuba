@@ -39,13 +39,16 @@ def build_skuba(options):
 
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-
-    skuba.cluster_init()
+    skuba.cluster_init(kubernetes_version=options.kubernetes_version)
     skuba.node_bootstrap()
 
 
 def cluster_status(options):
     print(Skuba(options.conf, options.platform).cluster_status())
+
+
+def cluster_upgrade(options):
+    print(Skuba(options.conf, options.platform).cluster_upgrade())
 
 
 def get_logs(options):
@@ -65,6 +68,10 @@ def remove_node(options):
 
 def reset_node(options):
     Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
+
+
+def upgrade_node(options):
+    Skuba(options.conf, options.platform).node_upgrade(role=options.role, nr=options.node)
 
 
 def test(options):
@@ -119,10 +126,15 @@ def main():
 
     cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
                         deployed nodes in your platform")
+    cmd_bootstrap.add_argument("-k","--kubernetes-version", help="kubernetes version",
+                        dest="kubernetes_version", default=None)
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
+
+    cmd_upgrade = commands.add_parser("cluster-upgrade", help="plan cluster upgrade")
+    cmd_upgrade.set_defaults(func=cluster_upgrade)
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
@@ -142,6 +154,11 @@ def main():
     cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
                                          help="reset node reverting state previous to bootstap/join.")
     cmd_reset_node.set_defaults(func=reset_node)
+
+
+    cmd_upgrade_node = commands.add_parser("upgrade-node", parents=[node_args],
+                                         help="plan upgrade kubernetes version in node")
+    cmd_upgrade_node.set_defaults(func=upgrade_node)
 
     ssh_args = ArgumentParser(add_help=False)
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
