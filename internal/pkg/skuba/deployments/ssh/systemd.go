@@ -24,7 +24,7 @@ import (
 // IsServiceEnabled returns if a service is enabled
 func (t *Target) IsServiceEnabled(serviceName string) (bool, error) {
 	klog.V(1).Info("checking if skuba-update.timer is enabled")
-	if stdout, _, err := t.silentSsh("systemctl", "is-enabled", serviceName); stdout == "enabled" {
+	if stdout, _, err := t.silentSsh("systemctl", "is-enabled", serviceName, "||", ":"); stdout == "enabled" {
 		return true, err
 	} else {
 		return false, err
