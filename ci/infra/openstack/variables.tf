@@ -116,3 +116,13 @@ variable "rmt_server_name" {
   default     = ""
   description = "SUSE Repository Mirroring Server Name"
 }
+
+variable "cpi_enable" {
+  default     = false
+  description = "Enable CPI integration with OpenStack"
+}
+
+variable "ca_file" {
+  default     = ""
+  description = "Used to specify the path to your custom CA file"
+}
