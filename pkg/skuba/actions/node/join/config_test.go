@@ -46,6 +46,43 @@ nodeRegistration:
   name: worker-0
 `
 
+func Test_LoadJoinConfigurationFromFile(t *testing.T) {
+	tests := []struct {
+		name          string
+		cfgPath       string
+		expectedError bool
+	}{
+		{
+			name:    "normal",
+			cfgPath: "testdata/join.conf",
+		},
+		{
+			name:          "invalid yaml file",
+			cfgPath:       "testdata/invalid.conf",
+			expectedError: true,
+		},
+		{
+			name:          "config path not exist",
+			cfgPath:       "testdata/not-exist.conf",
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := LoadJoinConfigurationFromFile(tt.cfgPath)
+			if tt.expectedError && err == nil {
+				t.Errorf("error expected on %s, but no error reported", tt.name)
+				return
+			} else if !tt.expectedError && err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+		})
+	}
+}
+
 func Test_documentMapToJoinConfiguration(t *testing.T) {
 	type args struct {
 		gvkmap          map[schema.GroupVersionKind][]byte
@@ -97,7 +134,8 @@ func Test_documentMapToJoinConfiguration(t *testing.T) {
 				},
 				ControlPlane: nil,
 			},
-			wantErr: false},
+			wantErr: false,
+		},
 		{
 			name: "Attempt to map another configuration",
 			args: args{

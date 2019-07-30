@@ -64,19 +64,19 @@ func Test_CreateCert(t *testing.T) {
 	}{
 		{
 			name:                "normal case",
-			pkiPath:             "tests",
-			kubeadmInitConfPath: "tests/kubeadm-init.conf",
+			pkiPath:             "testdata",
+			kubeadmInitConfPath: "testdata/kubeadm-init.conf",
 		},
 		{
 			name:                "invalid pki path",
 			pkiPath:             "invalid-pki-path",
-			kubeadmInitConfPath: "tests/kubeadm-init.conf",
+			kubeadmInitConfPath: "testdata/kubeadm-init.conf",
 			expectedError:       true,
 		},
 		{
 			name:                "invalid kubeadm init path",
-			pkiPath:             "tests",
-			kubeadmInitConfPath: "tests/invalid-kubeadm-init-conf-path.conf",
+			pkiPath:             "testdata",
+			kubeadmInitConfPath: "testdata/invalid-kubeadm-init-conf-path.conf",
 			expectedError:       true,
 		},
 	}
