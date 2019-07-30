@@ -32,29 +32,22 @@ class Terraform:
 
     def cleanup(self):
         """ Clean up """
-        cleanup_failure = False
         try:
             self._cleanup_platform()
         except Exception as ex:
             cleanup_failure = True
-            logger.warning("Received the following error: '{}'\nAttempting to finish cleanup".format(ex))
-
-        dirs = [os.path.join(self.conf.workspace, "tfout"),
+            logger.warning("Received the following error: '{}'\n"
+                           "Attempting to finish cleanup".format(ex))
+            raise Exception("Failure(s) during cleanup") from ex
+        finally:
+            dirs = [os.path.join(self.conf.workspace, "tfout"),
                 self.tfjson_path]
-
-        if cleanup_failure:
-            raise Exception(Format.alert("Failure(s) during cleanup"))
-        cleanup_failure = False
-        for dir in dirs:
-            try: 
-                self.utils.runshellcommand("rm -rf {}".format(dir))
-            except Exception as ex:
-                cleanup_failure = True
-                logger.warning("Received the following error: '{}'\nAttempting to finish cleanup".format(ex))
-
-        if cleanup_failure:
-            raise Exception("Failure(s) during cleanup")
-
+            for dir in dirs:
+                try: 
+                    self.utils.runshellcommand("rm -rf {}".format(dir))
+                except Exception as ex:
+                    logger.warning("Received the following error: '{}'\n"
+                                   "Attempting to finish cleanup".format(ex))
 
     @timeout(600)
     @step

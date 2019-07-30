@@ -57,7 +57,6 @@ class Skuba:
                 #TODO: move this to utils as ssh_cleanup
                 os.path.join(conf.workspace, "ssh-agent-sock")]
 
-        cleanup_failure = False
         for dir in dirs:
             try: 
                 utils.runshellcommand("rm -rf {}".format(dir))
@@ -65,9 +64,6 @@ class Skuba:
                 cleanup_failure = True
                 logger.warning("Received the following error {}".format(ex))
                 logger.warning("Attempting to finish cleaup")
-
-        if cleanup_failure:
-            raise Exception("Failure(s) during cleanup")
 
     @step
     def cluster_init(self):
