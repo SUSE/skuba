@@ -55,7 +55,9 @@ provide reasonable values.
 `stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project\
 `authorized_keys` - A list of ssh public keys that will be installed on all nodes\
 `repositories` - Additional repositories that will be added on all nodes\
-`packages` - Additional packages that will be installed on all nodes
+`packages` - Additional packages that will be installed on all nodes\
+`enable_cpi` - Enable Cloud Provider Integration with OpenStack in `cpi.auto.tfvars`\
+`ca_file` - Used to specify the path to your custom CA file in `cpi.auto.tfvars`
 
 ### Please use one of the following options:
 `caasp_registry_code` - Provide SUSE CaaSP Product Registration Code in 
