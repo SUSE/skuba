@@ -22,11 +22,13 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
@@ -59,6 +61,18 @@ func Apply(target *deployments.Target) error {
 		return nil
 	}
 
+	// Check if skuba-update.timer is already disabled
+	skubaUpdateWasEnabled, err := target.IsServiceEnabled("skuba-update.timer")
+	if err != nil {
+		return err
+	}
+
+	// Check if a lock on kured already exists
+	kuredWasLocked, err := kured.KuredLockExists()
+	if err != nil {
+		return err
+	}
+
 	// Check if the target node is the first control plane to be updated
 	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
 		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
@@ -84,6 +98,18 @@ func Apply(target *deployments.Target) error {
 
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.stop")
+				if err != nil {
+					return err
+				}
+			}
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.lock")
+				if err != nil {
+					return err
+				}
+			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
@@ -107,6 +133,22 @@ func Apply(target *deployments.Target) error {
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 				return err
 			}
+			if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
+				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
+				return err
+			}
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.start")
+				if err != nil {
+					return err
+				}
+			}
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.unlock")
+				if err != nil {
+					return err
+				}
+			}
 		}
 	} else {
 		// there is already at least one updated control plane node
@@ -120,6 +162,18 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.stop")
+				if err != nil {
+					return err
+				}
+			}
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.lock")
+				if err != nil {
+					return err
+				}
+			}
 			err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
@@ -139,6 +193,22 @@ func Apply(target *deployments.Target) error {
 			}
 			if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 				return err
+			}
+			if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
+				klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
+				return err
+			}
+			if skubaUpdateWasEnabled {
+				err = target.Apply(nil, "skuba-update.start")
+				if err != nil {
+					return err
+				}
+			}
+			if !kuredWasLocked {
+				err = target.Apply(nil, "kured.unlock")
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
