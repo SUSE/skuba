@@ -9,8 +9,8 @@ import logging
 import sys
 from argparse import (ArgumentParser, REMAINDER)
 
+import platforms
 from skuba import Skuba
-from platforms import Platform
 from tests import TestDriver
 from utils import (BaseConfig, Logger, Utils)
 
@@ -23,12 +23,12 @@ def info(options):
 
 
 def cleanup(options):
-    Platform.get_platform(options.conf, options.platform).cleanup()
+    platforms.get_platform(options.conf, options.platform).cleanup()
     Skuba.cleanup(options.conf)
 
 
 def provision(options):
-    Platform.get_platform(options.conf, options.platform).provision(
+    platforms.get_platform(options.conf, options.platform).provision(
                  num_master=options.master_count,
                  num_worker=options.worker_count)
 
@@ -49,7 +49,7 @@ def cluster_status(options):
 
 
 def get_logs(options):
-    platform_logging_errors = Platform.get_platform(options.conf, options.platform).gather_logs()
+    platform_logging_errors = platforms.get_platform(options.conf, options.platform).gather_logs()
 
     if platform_logging_errors:
         raise Exception("Failure(s) while collecting logs")
@@ -72,7 +72,7 @@ def test(options):
             verbose=options.verbose, collect=options.collect)
 
 def ssh(options):
-    Platform.get_platform(options.conf, options.platform).ssh_run(role=options.role, nr=options.node, cmd=" ".join(options.cmd))
+    platforms.get_platform(options.conf, options.platform).ssh_run(role=options.role, nr=options.node, cmd=" ".join(options.cmd))
 
 def main():
     help_str = """
