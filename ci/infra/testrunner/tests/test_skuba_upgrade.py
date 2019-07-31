@@ -32,7 +32,7 @@ def test_upgrade_plan_all_fine(setup, skuba):
     """
 
     setup_kubernetes_version(skuba)
-    out = skuba.cluster_upgrade_plan()
+    out = skuba.cluster_upgrade()
 
     assert out.find(
         "Congratulations! You are already at the latest version available"
@@ -47,7 +47,7 @@ def test_upgrade_plan_from_previous(setup, skuba):
     setup_kubernetes_version(skuba, PREVIOUS_VERSION)
 
     # cluster upgrade plan
-    out = skuba.cluster_upgrade_plan()
+    out = skuba.cluster_upgrade()
     assert out.find("Current Kubernetes cluster version: {pv}".format(
         pv=PREVIOUS_VERSION)) != -1
     assert out.find("Latest Kubernetes version: {cv}".format(
@@ -61,7 +61,7 @@ def test_upgrade_plan_from_previous(setup, skuba):
     outs = {}
     for (r, n) in [("master", 0), ("worker",1)]:
         node = "my-{}-{}".format(n,r)
-        outs[node] = skuba.node_upgrade_plan(r, n)
+        outs[node] = skuba.node_upgrade("plan", r, n)
 
     master = outs["my-master-0"]
     assert master.find(

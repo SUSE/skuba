@@ -47,8 +47,8 @@ def cluster_status(options):
     print(Skuba(options.conf, options.platform).cluster_status())
 
 
-def cluster_upgrade_plan(options):
-    print(Skuba(options.conf, options.platform).cluster_upgrade_plan())
+def cluster_upgrade(options):
+    Skuba(options.conf, options.platform).cluster_upgrade()
 
 
 def get_logs(options):
@@ -70,8 +70,9 @@ def reset_node(options):
     Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
 
 
-def node_upgrade_plan(options):
-    Skuba(options.conf, options.platform).node_upgrade_plan(role=options.role, nr=options.node)
+def node_upgrade(options):
+    Skuba(options.conf, options.platform).node_upgrade(
+            action=options.upgrade_action, role=options.role, nr=options.node)
 
 
 def test(options):
@@ -133,8 +134,8 @@ def main():
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
 
-    cmd_cluster_upgrade_plan = commands.add_parser("cluster-upgrade-plan", help="plan cluster upgrade")
-    cmd_cluster_upgrade_plan.set_defaults(func=cluster_upgrade_plan)
+    cmd_cluster_upgrade = commands.add_parser("cluster-upgrade", help="Cluster upgrade")
+    cmd_cluster_upgrade.set_defaults(func=cluster_upgrade)
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
@@ -155,10 +156,11 @@ def main():
                                          help="reset node reverting state previous to bootstap/join.")
     cmd_reset_node.set_defaults(func=reset_node)
 
-
-    cmd_node_upgrade_plan = commands.add_parser("node-upgrade-plan", parents=[node_args],
-                                         help="plan upgrade kubernetes version in node")
-    cmd_node_upgrade_plan.set_defaults(func=node_upgrade_plan)
+    cmd_node_upgrade = commands.add_parser("node-upgrade", parents=[node_args],
+                                         help="upgrade kubernetes version in node")
+    cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
+                              help="action: plan or apply upgrade", choices=["plan", "apply"]) 
+    cmd_node_upgrade.set_defaults(func=node_upgrade)
 
     ssh_args = ArgumentParser(add_help=False)
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")

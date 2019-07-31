@@ -111,11 +111,11 @@ positional arguments:
     bootstrap             bootstrap k8s cluster with deployed nodes in your
                           platform
     status                check K8s cluster status
-    cluster-upgrade-plan  plan cluster upgrade
+    cluster-upgrade       cluster upgrade
     join-node             add node in k8s cluster with the given role.
     remove-node           remove node from k8s cluster.
     reset-node            reset node reverting state previous to bootstap/join.
-    node-upgrade-plan     plan upgrade kubernetes version in node
+    node-upgrade          upgrade kubernetes version in node
     ssh                   Execute command in node via ssh.
     test                  execute tests
 
@@ -130,7 +130,6 @@ optional arguments:
                         log level
 
 ```
-
 
 ### Provision
 
@@ -150,6 +149,15 @@ optional arguments:
                         role of the node to be added or deleted. eg: --role
                         master
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
+
+```
+
+### Node Upgrade
+
+```
+  -h, --help            show this help message and exit
+  -a {plan,apply}, --action {plan,apply}
+                        action: plan or apply upgrade
 
 ```
 

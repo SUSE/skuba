@@ -157,14 +157,22 @@ class Skuba:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
 
     @step
-    def node_upgrade_plan(self, role, nr):
+    def node_upgrade(self, action, role, nr):
         self._verify_bootstrap_dependency()
-        return self._run_skuba("node upgrade plan {}-{}".format(role, nr))
+
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role '{}'".format(role))
+        
+        if nr >= self.num_of_nodes(role):
+            raise ValueError("Error: there is no {}-{} \
+                              node in the cluster".format(role, nr))
+
+        return self._run_skuba("node upgrade {} my-{}-{}".format(action, role, nr))
 
     @step
-    def cluster_upgrade_plan(self):
+    def cluster_upgrade(self):
         self._verify_bootstrap_dependency()
-        return self._run_skuba("cluster upgrade plan")
+        return self._run_skuba("cluster upgrade plan".format(action))
 
     @step
     def cluster_status(self):
