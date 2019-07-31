@@ -91,30 +91,33 @@ usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-
+    
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,ssh,test}
+       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,join-node,remove-node,reset-node,ssh,test}
-    info                ip info
-    get_logs            gather logs from nodes
-    cleanup             cleanup created skuba environment
-    provision           provision nodes for cluster in your configured
-                        platform e.g: openstack, vmware.
-    build-skuba         build skuba environment
-                        {workspace}/go/src/github.com/SUSE/skuba and build
-                        skuba in that directory
-    bootstrap           bootstrap k8s cluster with deployed nodes in your
-                        platform
-    status              check K8s cluster status
-    join-node           add node in k8s cluster with the given role.
-    remove-node         remove node from k8s cluster.
-    reset-node          reset node reverting state previous to bootstap/join.
-    ssh                 Execute command in node via ssh.
-    test                execute tests
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
+                          command
+    info                  ip info
+    get_logs              gather logs from nodes
+    cleanup               cleanup created skuba environment
+    provision             provision nodes for cluster in your configured
+                          platform e.g: openstack, vmware.
+    build-skuba           build skuba environment
+                          {workspace}/go/src/github.com/SUSE/skuba and build
+                          skuba in that directory
+    bootstrap             bootstrap k8s cluster with deployed nodes in your
+                          platform
+    status                check K8s cluster status
+    cluster-upgrade       cluster upgrade
+    join-node             add node in k8s cluster with the given role.
+    remove-node           remove node from k8s cluster.
+    reset-node            reset node reverting state previous to bootstap/join.
+    node-upgrade          upgrade kubernetes version in node
+    ssh                   Execute command in node via ssh.
+    test                  execute tests
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -127,7 +130,6 @@ optional arguments:
                         log level
 
 ```
-
 
 ### Provision
 
@@ -147,6 +149,15 @@ optional arguments:
                         role of the node to be added or deleted. eg: --role
                         master
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
+
+```
+
+### Node Upgrade
+
+```
+  -h, --help            show this help message and exit
+  -a {plan,apply}, --action {plan,apply}
+                        action: plan or apply upgrade
 
 ```
 
