@@ -35,7 +35,6 @@ class Terraform(Platform):
     def _provision_platform(self):
         """ Create and apply terraform plan"""
         exception = None
-        print("Init terraform")
         self._check_tf_deployed()
 
         self.utils.setup_ssh()
