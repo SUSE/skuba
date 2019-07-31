@@ -94,30 +94,30 @@ usage:
     
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade,join-node,remove-node,reset-node,upgrade-node,ssh,test}
+       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade,join-node,remove-node,reset-node,upgrade-node,ssh,test}
-                        command
-    info                ip info
-    get_logs            gather logs from nodes
-    cleanup             cleanup created skuba environment
-    provision           provision nodes for cluster in your configured
-                        platform e.g: openstack, vmware.
-    build-skuba         build skuba environment
-                        {workspace}/go/src/github.com/SUSE/skuba and build
-                        skuba in that directory
-    bootstrap           bootstrap k8s cluster with deployed nodes in your
-                        platform
-    status              check K8s cluster status
-    cluster-upgrade     plan cluster upgrade
-    join-node           add node in k8s cluster with the given role.
-    remove-node         remove node from k8s cluster.
-    reset-node          reset node reverting state previous to bootstap/join.
-    upgrade-node        plan upgrade kubernetes version in node
-    ssh                 Execute command in node via ssh.
-    test                execute tests
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
+                          command
+    info                  ip info
+    get_logs              gather logs from nodes
+    cleanup               cleanup created skuba environment
+    provision             provision nodes for cluster in your configured
+                          platform e.g: openstack, vmware.
+    build-skuba           build skuba environment
+                          {workspace}/go/src/github.com/SUSE/skuba and build
+                          skuba in that directory
+    bootstrap             bootstrap k8s cluster with deployed nodes in your
+                          platform
+    status                check K8s cluster status
+    cluster-upgrade-plan  plan cluster upgrade
+    join-node             add node in k8s cluster with the given role.
+    remove-node           remove node from k8s cluster.
+    reset-node            reset node reverting state previous to bootstap/join.
+    node-upgrade-plan     plan upgrade kubernetes version in node
+    ssh                   Execute command in node via ssh.
+    test                  execute tests
 
 optional arguments:
   -h, --help            show this help message and exit

@@ -17,23 +17,23 @@ pipeline {
         } }
 
         parallel {
-            stage('Run Skuba Upgrade All fine Test') {
+            stage('Run Skuba Upgrade Plan All fine Test') {
                 environment {
-                    TERRAFORM_STACK_NAME = "${JOB_NAME}-all-fine-${BUILD_NUMBER}"
+                    TERRAFORM_STACK_NAME = "${JOB_NAME}-plan-all-fine-${BUILD_NUMBER}"
                 }
 
                 steps {
-                    sh(script: 'make -f skuba/ci/Makefile test_upgrade_all_fine', label: 'Skuba Upgrade All fine')
+                    sh(script: 'make -f skuba/ci/Makefile test_upgrade_plan_all_fine', label: 'Skuba Upgrade Plan All fine')
                 }
             }
 
-            stage('Run Skuba Upgrade from previous Test') {
+            stage('Run Skuba Upgrade Plan from previous Test') {
                 environment {
-                    TERRAFORM_STACK_NAME = "${JOB_NAME}-from-previous-${BUILD_NUMBER}"
+                    TERRAFORM_STACK_NAME = "${JOB_NAME}-plan-from-previous-${BUILD_NUMBER}"
                 }
 
                 steps {
-                    sh(script: 'make -f skuba/ci/Makefile test_upgrade_from_previous', label: 'Skuba Upgrade from previous')
+                    sh(script: 'make -f skuba/ci/Makefile test_upgrade_plan_from_previous', label: 'Skuba Upgrade Plan from previous')
                 }
             }
         }

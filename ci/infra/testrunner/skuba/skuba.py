@@ -157,12 +157,12 @@ class Skuba:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
 
     @step
-    def node_upgrade(self, role, nr):
+    def node_upgrade_plan(self, role, nr):
         self._verify_bootstrap_dependency()
         return self._run_skuba("node upgrade plan {}-{}".format(role, nr))
 
     @step
-    def cluster_upgrade(self):
+    def cluster_upgrade_plan(self):
         self._verify_bootstrap_dependency()
         return self._run_skuba("cluster upgrade plan")
 

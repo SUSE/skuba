@@ -66,9 +66,9 @@ post_run: gather_logs cleanup
 
 # e2e Tests
 .PHONY: test_upgrade_plan_all_fine
-test_upgrade_all_fine:
-	${TEST_RUNNER} --platform ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_all_fine
+test_upgrade_plan_all_fine:
+	${TEST_RUNNER} --platform ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_all_fine
 
 .PHONY: test_upgrade_plan_from_previous
-test_upgrade_from_previous:
-	${TEST_RUNNER} --platform ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_from_previous
+test_upgrade_plan_from_previous:
+	${TEST_RUNNER} --platform ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous

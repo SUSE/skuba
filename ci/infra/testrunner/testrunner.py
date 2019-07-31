@@ -47,8 +47,8 @@ def cluster_status(options):
     print(Skuba(options.conf, options.platform).cluster_status())
 
 
-def cluster_upgrade(options):
-    print(Skuba(options.conf, options.platform).cluster_upgrade())
+def cluster_upgrade_plan(options):
+    print(Skuba(options.conf, options.platform).cluster_upgrade_plan())
 
 
 def get_logs(options):
@@ -70,8 +70,8 @@ def reset_node(options):
     Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
 
 
-def upgrade_node(options):
-    Skuba(options.conf, options.platform).node_upgrade(role=options.role, nr=options.node)
+def node_upgrade_plan(options):
+    Skuba(options.conf, options.platform).node_upgrade_plan(role=options.role, nr=options.node)
 
 
 def test(options):
@@ -133,8 +133,8 @@ def main():
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
 
-    cmd_upgrade = commands.add_parser("cluster-upgrade", help="plan cluster upgrade")
-    cmd_upgrade.set_defaults(func=cluster_upgrade)
+    cmd_cluster_upgrade_plan = commands.add_parser("cluster-upgrade-plan", help="plan cluster upgrade")
+    cmd_cluster_upgrade_plan.set_defaults(func=cluster_upgrade_plan)
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
@@ -156,9 +156,9 @@ def main():
     cmd_reset_node.set_defaults(func=reset_node)
 
 
-    cmd_upgrade_node = commands.add_parser("upgrade-node", parents=[node_args],
+    cmd_node_upgrade_plan = commands.add_parser("node-upgrade-plan", parents=[node_args],
                                          help="plan upgrade kubernetes version in node")
-    cmd_upgrade_node.set_defaults(func=upgrade_node)
+    cmd_node_upgrade_plan.set_defaults(func=node_upgrade_plan)
 
     ssh_args = ArgumentParser(add_help=False)
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
