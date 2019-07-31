@@ -886,6 +886,7 @@ data:
       tlsClientCA: /etc/dex/pki/ca.crt
 
     frontend:
+      issuers: {{.ClusterName}}
       theme: "caasp"
       dir: /usr/share/caasp-dex/web
 
@@ -1038,7 +1039,7 @@ metadata:
   namespace: kube-system
 data:
   gangway.yaml: |
-    clusterName: "skuba"
+    clusterName: {{.ClusterName}}
 
     redirectURL: "https://{{.ControlPlane}}:32001/callback"
     scopes: ["openid", "email", "groups", "profile", "offline_access"]
