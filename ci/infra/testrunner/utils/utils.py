@@ -1,5 +1,7 @@
+import glob
 import logging
 import os
+import shutil
 import subprocess
 from functools import wraps
 
@@ -32,6 +34,31 @@ class Utils:
 
     def __init__(self, conf):
         self.conf = conf
+
+    @staticmethod
+    def chmod_recursive(directory, permissions):
+        os.chmod(directory, permissions)
+
+        for file in glob.glob(os.path.join(directory, "**/*"), recursive=True):
+            os.chmod(file, permissions)
+
+    @staticmethod
+    def cleanup_file(file):
+        if os.path.exists(file):
+            logger.info(f"Cleaning up {file}")
+
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                shutil.rmtree(file)
+        else:
+            logger.warning(f"Could not clean up {file}")
+
+    @staticmethod
+    def cleanup_files(files):
+        """Remove any files or dirs in a list if they exist"""
+        for file in files:
+            Utils.cleanup_file(file)
 
     def collect_remote_logs(self, ip_address, logs, store_path):
         """
@@ -69,9 +96,9 @@ class Utils:
 
     def authorized_keys(self):
         public_key_path = self.conf.ssh_key_option + ".pub"
-        key_fn = self.conf.ssh_key_option
-        self.runshellcommand("chmod 400 " + key_fn)
-        with open(public_key_path ) as f:
+        os.chmod(self.conf.ssh_key_option, 0o400)
+
+        with open(public_key_path) as f:
             pubkey = f.read().strip()
         return pubkey
 
@@ -162,7 +189,8 @@ class Utils:
     @timeout(60)
     @step
     def setup_ssh(self):
-        self.runshellcommand("chmod 400 " + self.conf.ssh_key_option)
+        os.chmod(self.conf.ssh_key_option, 0o400)
+
         # use a dedicated agent to minimize stateful components
         sock_fn = self.ssh_sock_fn()
         try:
