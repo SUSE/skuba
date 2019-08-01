@@ -40,17 +40,22 @@ class Utils:
         os.chmod(directory, permissions)
 
         for file in glob.glob(os.path.join(directory, "**/*"), recursive=True):
-            os.chmod(file, permissions)
+            try:
+                os.chmod(file, permissions)
+            except Exception as ex:
+                logger.exception(ex)
 
     @staticmethod
     def cleanup_file(file):
         if os.path.exists(file):
             logger.info(f"Cleaning up {file}")
-
-            if os.path.isfile(file):
-                os.remove(file)
-            else:
-                shutil.rmtree(file)
+            try:
+                if os.path.isfile(file):
+                    os.remove(file)
+                else:
+                    shutil.rmtree(file)
+            except Exception as ex:
+                logger.exception(ex)
         else:
             logger.warning(f"Could not clean up {file}")
 
