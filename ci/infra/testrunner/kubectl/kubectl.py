@@ -72,7 +72,7 @@ class Kubectl:
         port = self.get_service_port(name)
         shell_cmd = "curl {ip}:{port}{path}".format(ip=ip_addresses[worker],port=port,path=path)
         try:
-            return self.utils.runshellcommand(shell_cmd, output=True)
+            return self.utils.runshellcommand(shell_cmd)
         except Exception as ex:
             raise Exception("Error testing service {} with path {} at node {}"
                                 .format(name, path, ip_address)) from ex
