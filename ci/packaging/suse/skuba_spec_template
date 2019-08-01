@@ -60,7 +60,6 @@ Requires:       python3-setuptools
 Requires:       zypper >= 1.14.15
 Requires:       lsof
 BuildArch:      noarch
-Supplements:    skuba
 %{?systemd_requires}
 
 %description update
