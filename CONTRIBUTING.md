@@ -12,6 +12,7 @@ Contributors:
 * The PR is ready for review only when the CI is green. Do not ask for people to review your code if the CI is failing.
 * If CI is not passing, or you need to make more improvements than expected, please add the wip label.
 * Once the CI is green, feel free to assign specific reviewers to your PR to signal it is ready.
+* Do NOT merge pull requests.  CI will automatically merge the PR once tests pass and approvals are received.
 
 Maintainers:
 * Devote time to regular code review and make your reviews impactful. Look at the big picture, don't get hung up on style alone.
