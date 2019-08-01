@@ -9,10 +9,6 @@ timezone: Etc/UTC
 ssh_authorized_keys:
 ${authorized_keys}
 
-# manage_resolv_conf: true
-# resolv_conf:
-#   nameservers: ['8.8.4.4', '8.8.8.8']
-
 # FIXME: zypper repos do not seem to work on the cloud-init in the AWS AMIs
 
 bootcmd:
