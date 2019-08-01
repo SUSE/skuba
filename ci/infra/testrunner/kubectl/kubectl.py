@@ -1,4 +1,5 @@
 import os
+import platforms
 
 from timeout_decorator import timeout
 
@@ -11,7 +12,7 @@ class Kubectl:
     def __init__(self, conf, platform):
         self.conf = conf
         self.utils = Utils(self.conf)
-        self.platform = Platform.get_platform(conf, platform)
+        self.platform = platforms.get_platform(conf, platform)
 
 
     def create_deployment(self, name, image):
