@@ -16,7 +16,7 @@ class Kubectl:
 
     def create_deployment(self, name, image):
         try:
-            self._run_kubectl("create deployment {name}  --image={image}"
+            self._run_kubectl("create deployment {name} --image={image}"
                                 .format(name=name, image=image))
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex

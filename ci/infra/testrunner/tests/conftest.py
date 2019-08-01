@@ -1,7 +1,7 @@
 import pytest
+import platforms
 from skuba import Skuba
 from kubectl import Kubectl
-from platforms import Platform
 from utils import BaseConfig
 
 def pytest_addoption(parser):
@@ -44,5 +44,5 @@ def kubectl(conf, target):
 
 @pytest.fixture
 def platform(conf, target):
-    platform = Platform.get_platform(conf, target)
+    platform = platforms.get_platform(conf, target)
     return platform
