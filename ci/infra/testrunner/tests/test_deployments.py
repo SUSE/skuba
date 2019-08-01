@@ -1,4 +1,3 @@
-from platforms import Platform
 from skuba import Skuba
 from kubectl import Kubectl
 import pytest

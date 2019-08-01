@@ -1,5 +1,6 @@
 import logging
 import os
+import platforms
 
 from platforms.platform import Platform
 from utils.format import Format
@@ -13,7 +14,7 @@ class Skuba:
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
         self.utils = Utils(self.conf)
-        self.platform = Platform.get_platform(conf, platform)
+        self.platform = platforms.get_platform(conf, platform)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
 
     def _verify_skuba_bin_dependency(self):

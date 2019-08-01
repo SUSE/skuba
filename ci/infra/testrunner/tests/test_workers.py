@@ -1,4 +1,3 @@
-from platforms import Platform
 from skuba import Skuba
 import pytest
 import time
