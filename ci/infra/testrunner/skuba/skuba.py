@@ -167,9 +167,9 @@ class Skuba:
         return self._run_skuba("node upgrade {} my-{}-{}".format(action, role, nr))
 
     @step
-    def cluster_upgrade(self):
+    def cluster_upgrade_plan(self):
         self._verify_bootstrap_dependency()
-        return self._run_skuba("cluster upgrade plan".format(action))
+        return self._run_skuba("cluster upgrade plan")
 
     @step
     def cluster_status(self):
