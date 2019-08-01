@@ -66,11 +66,11 @@ class Kubectl:
 
     def test_service(self, name, path="/", worker=0):
         ip_addresses = self.platform.get_nodes_ipaddrs("worker")
-        if worker >= len(ip_address):
+        if worker >= len(ip_addresses):
             raise ValueError("Node worker-{} not deployed".format(worker))
 
         port = self.get_service_port(name)
-        shell_cmd = "curl {ip}:{port}{path}".format(ip=ip_address[worker],port=port,path=path)
+        shell_cmd = "curl {ip}:{port}{path}".format(ip=ip_addresses[worker],port=port,path=path)
         try:
             return self.utils.runshellcommand(shell_cmd, output=True)
         except Exception as ex:
