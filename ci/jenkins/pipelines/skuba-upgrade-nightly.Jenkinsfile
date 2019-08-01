@@ -13,28 +13,20 @@ pipeline {
 
    stages {
         stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
+            sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-prepare-${BUILD_NUMBER}; make -f skuba/ci/Makefile pre_deployment", label: 'Pre Deployment')
         } }
 
         stage('Run All Skuba Upgrade Tests In Parallel') {
             parallel {
                 stage('Run Skuba Upgrade Plan All fine Test') {
-                    environment {
-                        TERRAFORM_STACK_NAME = "${JOB_NAME}-plan-all-fine-${BUILD_NUMBER}"
-                    }
-
                     steps {
-                        sh(script: 'make -f skuba/ci/Makefile test_upgrade_plan_all_fine', label: 'Skuba Upgrade Plan All fine')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-all-fine-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_plan_all_fine", label: 'Skuba Upgrade Plan All fine')
                     }
                 }
 
                 stage('Run Skuba Upgrade Plan from previous Test') {
-                    environment {
-                        TERRAFORM_STACK_NAME = "${JOB_NAME}-plan-from-previous-${BUILD_NUMBER}"
-                    }
-
                     steps {
-                        sh(script: 'make -f skuba/ci/Makefile test_upgrade_plan_from_previous', label: 'Skuba Upgrade Plan from previous')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-from-previous-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_plan_from_previous", label: 'Skuba Upgrade Plan from previous')
                     }
                 }
             }

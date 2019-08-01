@@ -47,8 +47,8 @@ def cluster_status(options):
     print(Skuba(options.conf, options.platform).cluster_status())
 
 
-def cluster_upgrade(options):
-    Skuba(options.conf, options.platform).cluster_upgrade()
+def cluster_upgrade_plan(options):
+    Skuba(options.conf, options.platform).cluster_upgrade_plan()
 
 
 def get_logs(options):
@@ -134,8 +134,8 @@ def main():
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
 
-    cmd_cluster_upgrade = commands.add_parser("cluster-upgrade", help="Cluster upgrade")
-    cmd_cluster_upgrade.set_defaults(func=cluster_upgrade)
+    cmd_cluster_upgrade_plan = commands.add_parser("cluster-upgrade-plan", help="Cluster upgrade plan")
+    cmd_cluster_upgrade_plan.set_defaults(func=cluster_upgrade_plan)
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)

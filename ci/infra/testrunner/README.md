@@ -111,7 +111,7 @@ positional arguments:
     bootstrap             bootstrap k8s cluster with deployed nodes in your
                           platform
     status                check K8s cluster status
-    cluster-upgrade       cluster upgrade
+    cluster-upgrade-plan  cluster upgrade plan
     join-node             add node in k8s cluster with the given role.
     remove-node           remove node from k8s cluster.
     reset-node            reset node reverting state previous to bootstap/join.
