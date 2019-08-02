@@ -121,6 +121,14 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # CRI-O streaming - internal only
+  ingress {
+    from_port   = 10010
+    to_port     = 10010
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
   # master -> worker kubelet communication - internal
   ingress {
     from_port   = 10250
@@ -156,6 +164,14 @@ resource "aws_security_group" "allow_workers_traffic" {
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
+
+  # CRI-O streaming - internal only
+  ingress {
+    from_port   = 10010
+    to_port     = 10010
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
 
   # master -> worker kubelet communication - internal
   ingress {
