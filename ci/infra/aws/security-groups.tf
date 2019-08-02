@@ -111,13 +111,6 @@ resource "aws_security_group" "allow_control_plane_traffic" {
   }
 
   ingress {
-    from_port   = 8285
-    to_port     = 8285
-    protocol    = "udp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
     from_port   = 30000
     to_port     = 32768
     protocol    = "udp"
@@ -166,13 +159,6 @@ resource "aws_security_group" "allow_workers_traffic" {
     from_port   = 10250
     to_port     = 10250
     protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
-    from_port   = 8285
-    to_port     = 8285
-    protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
