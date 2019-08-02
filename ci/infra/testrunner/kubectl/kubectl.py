@@ -63,12 +63,13 @@ class Kubectl:
 
 
     def check_kured_lock(self):
-        self._run_kubectl("-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
+        return self._run_kubectl("-n kube-system get ds/kured",
+            outputformat="-o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
 
 
-    def _run_kubectl(self, command):
+    def _run_kubectl(self, command, outputformat='-o json'):
         shell_cmd = "kubectl --kubeconfig={cwd}/test-cluster/admin.conf \
-                      -o json {command}".format(command=command, cwd=self.conf.workspace)
+                      {format} {command}".format(format=outputformat, command=command, cwd=self.conf.workspace)
         try:
             return self.utils.runshellcommand(shell_cmd)
         except Exception as ex:
