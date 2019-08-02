@@ -163,13 +163,6 @@ resource "aws_security_group" "allow_workers_traffic" {
   }
 
   ingress {
-    from_port   = 2380
-    to_port     = 2380
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
     from_port   = 10250
     to_port     = 10250
     protocol    = "tcp"
