@@ -25,10 +25,21 @@ resource "aws_security_group" "lbports" {
     "Name", "${var.stack_name}-lbport",
     "Class", "SecurityGroup"))}"
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
     to_port     = 32767
     protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 }
@@ -110,9 +121,20 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
-    to_port     = 32768
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
@@ -162,16 +184,20 @@ resource "aws_security_group" "allow_workers_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
-    to_port     = 32768
+    to_port     = 32767
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
-    to_port     = 32768
+    to_port     = 32767
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
