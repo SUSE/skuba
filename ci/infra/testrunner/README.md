@@ -94,11 +94,11 @@ usage:
     
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
+       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade,ssh,test}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade-plan,ssh,test}
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade,ssh,test}
                           command
     info                  ip info
     get_logs              gather logs from nodes
@@ -115,7 +115,7 @@ positional arguments:
     join-node             add node in k8s cluster with the given role.
     remove-node           remove node from k8s cluster.
     reset-node            reset node reverting state previous to bootstap/join.
-    node-upgrade          upgrade kubernetes version in node
+    node-upgrade          plan or apply kubernetes version upgrade in node
     ssh                   Execute command in node via ssh.
     test                  execute tests
 

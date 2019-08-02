@@ -164,7 +164,16 @@ class Skuba:
             raise ValueError("Error: there is no {}-{} \
                               node in the cluster".format(role, nr))
 
-        return self._run_skuba("node upgrade {} my-{}-{}".format(action, role, nr))
+        if action == "plan":
+            cmd = "node upgrade plan my-{}-{}".format(role, nr)
+        elif action == "apply":
+            ip_addrs = self.platform.get_nodes_ipaddrs(role)
+            cmd = "node upgrade apply --user {username} --sudo --target {ip}".format(
+                ip=ip_addrs[nr], username=self.conf.nodeuser)
+        else:
+            raise ValueError("Invalid action '{}'".format(action))
+
+        return self._run_skuba(cmd)
 
     @step
     def cluster_upgrade_plan(self):

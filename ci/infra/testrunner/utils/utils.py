@@ -92,7 +92,7 @@ class Utils:
         key_fn = self.conf.ssh_key_option
         cmd = "ssh " + Constant.SSH_OPTS + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(
             key_fn=key_fn, ip=ipaddr, cmd=cmd, username=self.conf.nodeuser)
-        self.runshellcommand(cmd)
+        return self.runshellcommand(cmd)
 
     def scp_file(self, ip_address, remote_file_path, local_file_path):
         """

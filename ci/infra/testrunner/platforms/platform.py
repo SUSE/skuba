@@ -105,7 +105,7 @@ class Platform:
         if nr >= len(ip_addrs):
             raise ValueError(f'Node {role}-{nr} not deployed in platform')
 
-        self.utils.ssh_run(ip_addrs[nr], cmd)
+        return self.utils.ssh_run(ip_addrs[nr], cmd)
 
     @staticmethod
     def _create_node_log_dir(ip_address, node_type, log_dir_path):
