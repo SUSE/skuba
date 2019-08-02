@@ -87,14 +87,14 @@ At this point we can bootstrap the first master:
 
 ```console
 $ cd my-devenv-cluster
-$ ./skuba node bootstrap --target 3.121.219.168 --sudo --user ec2-user --ignore-preflight-errors NumCPU ip-10-1-1-55.eu-central-1.compute.internal
+$ ./skuba node bootstrap --target 3.121.219.168 --sudo --user ec2-user ip-10-1-1-55.eu-central-1.compute.internal
 ```
 
 And the  you can add a worker node with:
 
 ```console
 $ cd my-devenv-cluster
-$ ./skuba node join --role worker --target 54.93.246.74 --sudo --user ec2-user --ignore-preflight-errors NumCPU ip-10-1-1-157.eu-central-1.compute.internal
+$ ./skuba node join --role worker --target 54.93.246.74 --sudo --user ec2-user ip-10-1-1-157.eu-central-1.compute.internal
 ```
 
 ### Using the cluster

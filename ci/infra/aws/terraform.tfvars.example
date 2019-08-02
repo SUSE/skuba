@@ -7,9 +7,14 @@ authorized_keys = [
 ]
 
 # AWS region
+# A list of region names can be found here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 aws_region = "eu-central-1"
 
 # AWS availability zone
+# You can get AZ name with the following command:
+#    aws ec2 describe-availability-zones --region region-name
+#
+# More information here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#using-regions-availability-zones-describe
 aws_az = "eu-central-1a"
 
 # access key for AWS services
