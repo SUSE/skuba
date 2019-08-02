@@ -145,6 +145,14 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # kubeproxy health check - internal only
+  ingress {
+    from_port   = 10256
+    to_port     = 10256
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
   # range of ports used by kubernetes when allocating services
   # of type `NodePort` - internal
   ingress {
@@ -193,6 +201,14 @@ resource "aws_security_group" "allow_workers_traffic" {
   ingress {
     from_port   = 10250
     to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # kubeproxy health check - internal only
+  ingress {
+    from_port   = 10256
+    to_port     = 10256
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
