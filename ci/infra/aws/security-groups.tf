@@ -102,8 +102,9 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
 
+  # etcd - internal
   ingress {
-    from_port   = 2380
+    from_port   = 2379
     to_port     = 2380
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
