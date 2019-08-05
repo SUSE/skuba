@@ -38,6 +38,7 @@ type initOptions struct {
 	ControlPlane      string
 	KubernetesVersion string
 	CloudProvider     string
+	StrictCapDefaults bool
 }
 
 // NewInitCmd creates a new `skuba cluster init` cobra command
@@ -73,6 +74,7 @@ func NewInitCmd() *cobra.Command {
 				ImageRepository:     skuba.ImageRepository,
 				EtcdImageTag:        kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
 				CoreDNSImageTag:     kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
+				StrictCapDefaults:   initOptions.StrictCapDefaults,
 			}
 
 			err := cluster.Init(initConfig)
@@ -88,6 +90,8 @@ func NewInitCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: openstack")
 	cmd.MarkFlagRequired("control-plane")
+
+	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")
 
 	return cmd
 }

@@ -80,6 +80,14 @@ func PspDir() string {
 	return filepath.Join(AddonsDir(), "psp")
 }
 
+func CriDir() string {
+	return filepath.Join(AddonsDir(), "cri")
+}
+
+func CriDockerDefaultsConfFile() string {
+	return filepath.Join(CriDir(), "default_flags")
+}
+
 func PspUnprivManifestFile() string {
 	return filepath.Join(PspDir(), "podsecuritypolicy-unprivileged.yaml")
 }

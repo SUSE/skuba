@@ -91,6 +91,11 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrap(err, "error writing init configuration")
 	}
 
+	var criConfigure string
+	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		criConfigure = "cri.configure"
+	}
+
 	fmt.Println("[bootstrap] applying init configuration to node")
 	err = target.Apply(
 		bootstrapConfiguration,
@@ -98,6 +103,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
+		criConfigure,
 		"cri.start",
 		"kubelet.configure",
 		"kubelet.enable",

@@ -44,7 +44,15 @@ type Target struct {
 }
 
 func (t *Target) Apply(data interface{}, states ...string) error {
-	return t.Actionable.Apply(data, states...)
+	filteredStates := []string{}
+	for _, s := range states {
+		if s == "" {
+			continue
+		}
+		filteredStates = append(filteredStates, s)
+	}
+
+	return t.Actionable.Apply(data, filteredStates...)
 }
 
 func (t *Target) UploadFile(sourcePath, targetPath string) error {

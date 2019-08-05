@@ -26,5 +26,5 @@ import (
 // Reset the target node
 func Reset(resetConfiguration deployments.ResetConfiguration, target *deployments.Target) error {
 	fmt.Println("[reset] resetting the node")
-	return target.Apply(resetConfiguration, "kubeadm.reset")
+	return target.Apply(resetConfiguration, "cri.reset", "kubeadm.reset")
 }

@@ -65,6 +65,10 @@ var (
 			Location: skuba.GangwayManifestfile(),
 			Content:  gangwayManifest,
 		},
+		{
+			Location: skuba.CriDockerDefaultsConfFile(),
+			Content:  criDockerDefaultsConf,
+		},
 	}
 
 	cloudScaffoldFiles = map[string][]ScaffoldFile{
