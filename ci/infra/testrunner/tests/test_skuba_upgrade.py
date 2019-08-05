@@ -70,7 +70,7 @@ def test_upgrade_plan_from_previous(setup, skuba):
         cv=CURRENT_VERSION)) != -1
     assert master.find(" - apiserver: {pv} -> {cv}".format(
         pv=PREVIOUS_VERSION, cv=CURRENT_VERSION)) != -1
-    assert master.find("  - kubelet: {pv} -> {cv}".format(
+    assert master.find(" - kubelet: {pv} -> {cv}".format(
         pv=PREVIOUS_VERSION, cv=CURRENT_VERSION)) != -1
 
     worker = outs["my-worker-0"]
@@ -78,9 +78,8 @@ def test_upgrade_plan_from_previous(setup, skuba):
         "Current Kubernetes cluster version: {pv}".format(pv=PREVIOUS_VERSION))
     assert worker.find("Latest Kubernetes version: {cv}".format(
         cv=CURRENT_VERSION)) != -1
-    assert worker.find(
-        "  - kubelet: {pv} -> {cv}".format(pv=PREVIOUS_VERSION,
-                                           cv=CURRENT_VERSION)) != -1
+    # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
+    assert worker.find("Node my-worker-0 is up to date")
 
 
 def test_upgrade_apply_all_fine(setup, platform, skuba):
