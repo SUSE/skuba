@@ -20,4 +20,4 @@ setup_python_env() {
 
 setup_python_env
 # use unbuffered output
-stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py $@
+stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/testrunner.py "$@"
