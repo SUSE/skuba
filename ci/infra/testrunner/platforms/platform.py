@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 
 from timeout_decorator import timeout
 
@@ -31,7 +30,7 @@ class Platform:
             logger.warning("Received the following error '{}'\nAttempting to finish cleanup".format(ex))
             raise Exception("Failure(s) during cleanup")
         finally:
-            self._cleanup_files(self.tmp_files)
+            self.utils.cleanup_files(self.tmp_files)
 
     @timeout(600)
     @step
@@ -116,19 +115,6 @@ class Platform:
             logger.info(f"Created log dir {node_log_dir_path}")
 
         return node_log_dir_path
-
-    @staticmethod
-    def _cleanup_files(files):
-        for file in files:
-            if os.path.exists(file):
-                logger.info(f"Cleaning up {file}")
-
-                if os.path.isfile(file):
-                    os.remove(file)
-                else:
-                    shutil.rmtree(file)
-            else:
-                logger.warning(f"Could not clean up {file}")
 
     def _cleanup_platform(self):
         """Platform specific cleanup. Expected to be overridden by platforms"""

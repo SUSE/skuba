@@ -1,8 +1,8 @@
 import logging
 import os
 import platforms
+import shutil
 
-from platforms.platform import Platform
 from utils.format import Format
 from utils.utils import (step, Utils)
 
@@ -28,11 +28,16 @@ class Skuba:
     @staticmethod
     @step
     def build(conf):
-        """Buids skuba from source"""
+        """Builds skuba from source"""
         utils = Utils(conf)
-        utils.runshellcommand("rm -fr go")
-        utils.runshellcommand("mkdir -p go/src/github.com/SUSE")
-        utils.runshellcommand("cp -a {} go/src/github.com/SUSE/".format(conf.skuba.srcpath))
+        go_dir = os.path.join(conf.workspace, "go")
+        src_dir = os.path.join(go_dir, "src/github.com/SUSE")
+
+        # Make a fresh copy of the source code
+        utils.cleanup_file(go_dir)
+        os.makedirs(src_dir, exist_ok=True)
+        shutil.copytree(conf.skuba.srcpath, os.path.join(src_dir, os.path.basename(conf.skuba.srcpath)))
+
         utils.gorun("go version")
         utils.gorun("make")
 
@@ -40,36 +45,25 @@ class Skuba:
     @step
     def cleanup(conf):
         """Cleanup skuba working environment"""
-        utils = Utils(conf)
-        # TODO: check why (and if) the following two commands are needed
-        cmd = 'mkdir -p {}/logs'.format(conf.workspace)
-        utils.runshellcommand(cmd)
 
+        # TODO: check why (and if) the following command is needed
         # This is pretty aggressive but modules are also present
         # in workspace and they lack the 'w' bit so just set
         # everything so we can do whatever we want during cleanup
-        cmd = 'chmod -R 777 {}'.format(conf.workspace)
-        utils.runshellcommand(cmd)
+        Utils.chmod_recursive(conf.workspace, 0o777)
 
-        # TODO: appending workspace is not necessary as runshellcommand has it as workdirectory
         dirs = [os.path.join(conf.workspace, "test-cluster"),
                 os.path.join(conf.workspace, "go"),
                 os.path.join(conf.workspace, "logs"),
                 #TODO: move this to utils as ssh_cleanup
                 os.path.join(conf.workspace, "ssh-agent-sock")]
 
-        for dir in dirs:
-            try: 
-                utils.runshellcommand("rm -rf {}".format(dir))
-            except Exception as ex:
-                cleanup_failure = True
-                logger.warning("Received the following error {}".format(ex))
-                logger.warning("Attempting to finish cleaup")
+        Utils.cleanup_files(dirs)
 
     @step
     def cluster_init(self, kubernetes_version=None):
         logger.debug("Cleaning up any previous test-cluster dir")
-        self.utils.runshellcommand("rm -rf {}".format(self.cwd))
+        self.utils.cleanup_file(self.cwd)
 
         k8s_version_option = ""
         if kubernetes_version:
