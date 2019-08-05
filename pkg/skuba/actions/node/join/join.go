@@ -25,11 +25,13 @@ import (
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -125,7 +127,14 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 		}
 		setCloudConfiguration(joinConfiguration)
 	}
-	finalJoinConfigurationContents, err := kubeadmconfigutil.MarshalKubeadmConfigObject(joinConfiguration)
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get current cluster version")
+	}
+	finalJoinConfigurationContents, err := kubeadmutil.MarshalToYamlForCodecs(joinConfiguration, schema.GroupVersion{
+		Group:   "kubeadm.k8s.io",
+		Version: kubeadm.GetKubeadmApisVersion(currentClusterVersion),
+	}, kubeadmscheme.Codecs)
 	if err != nil {
 		return "", errors.Wrap(err, "could not marshal configuration")
 	}

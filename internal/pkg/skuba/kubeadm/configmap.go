@@ -62,6 +62,14 @@ func GetCurrentClusterVersion() (*version.Version, error) {
 	return version.MustParseSemantic(initCfg.KubernetesVersion), nil
 }
 
+// GetKubeadmApisVersion returns the api version to use in the kubeadm-init.conf
+func GetKubeadmApisVersion(kubernetesVersion *version.Version) string {
+	if kubernetesVersion.LessThan(version.MustParseSemantic("1.15.0")) {
+		return "v1beta1"
+	}
+	return "v1beta2"
+}
+
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
 func GetAPIEndpointsFromConfigMap() ([]string, error) {
 	apiEndpoints := []string{}
