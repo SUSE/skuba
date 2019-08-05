@@ -30,6 +30,7 @@ import (
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
@@ -79,7 +80,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
-		Version: "v1beta1",
+		Version: kubeadm.GetKubeadmApisVersion(version.MustParseSemantic(initConfiguration.KubernetesVersion)),
 	})
 
 	if err != nil {
