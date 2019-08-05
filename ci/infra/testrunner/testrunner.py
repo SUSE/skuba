@@ -66,10 +66,6 @@ def remove_node(options):
     Skuba(options.conf, options.platform).node_remove(role=options.role, nr=options.node)
 
 
-def reset_node(options):
-    Skuba(options.conf, options.platform).node_reset(role=options.role, nr=options.node)
-
-
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
             action=options.upgrade_action, role=options.role, nr=options.node)
@@ -97,8 +93,8 @@ def main():
                         default="openstack",
                         choices=["openstack", "vmware", "bare-metal", "libvirt"],
                         help="The platform you're targeting. Defaults to openstack")
-    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level", 
-                        choices=["DEBUG", "INFO", "WARNING", "ERROR"]) 
+    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level",
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"])
 
     # Sub commands
     commands = parser.add_subparsers(help="command", dest="command")
@@ -144,7 +140,7 @@ def main():
     node_args.add_argument("-n", "--node", dest="node", type=int,
                            help='node to be added or deleted.  eg: -n 0')
 
-    cmd_join_node = commands.add_parser("join-node", parents=[node_args], 
+    cmd_join_node = commands.add_parser("join-node", parents=[node_args],
                                         help="add node in k8s cluster with the given role.")
     cmd_join_node.set_defaults(func=join_node)
 
@@ -152,14 +148,10 @@ def main():
                                        help="remove node from k8s cluster.")
     cmd_rem_node.set_defaults(func=remove_node)
 
-    cmd_reset_node = commands.add_parser("reset-node", parents=[node_args],
-                                         help="reset node reverting state previous to bootstap/join.")
-    cmd_reset_node.set_defaults(func=reset_node)
-
     cmd_node_upgrade = commands.add_parser("node-upgrade", parents=[node_args],
                                          help="upgrade kubernetes version in node")
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
-                              help="action: plan or apply upgrade", choices=["plan", "apply"]) 
+                              help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
 
     ssh_args = ArgumentParser(add_help=False)

@@ -50,7 +50,7 @@ export OS_PASSWORD="YOUR PASSWORD"
 ```
 4. Set `OPENSTACK_OPENRC=/path/to/openrc.sh`
 
-or 
+or
 
 ```
 openstack:
@@ -87,18 +87,18 @@ vmware:
 
 ```
 ./testrunner --help
-usage: 
+usage:
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
-    
+
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade,ssh,test}
+       {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,ssh,test}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,reset-node,node-upgrade,ssh,test}
+  {info,get_logs,cleanup,provision,build-skuba,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,ssh,test}
                           command
     info                  ip info
     get_logs              gather logs from nodes
@@ -114,7 +114,6 @@ positional arguments:
     cluster-upgrade-plan  cluster upgrade plan
     join-node             add node in k8s cluster with the given role.
     remove-node           remove node from k8s cluster.
-    reset-node            reset node reverting state previous to bootstap/join.
     node-upgrade          plan or apply kubernetes version upgrade in node
     ssh                   Execute command in node via ssh.
     test                  execute tests
@@ -142,7 +141,7 @@ optional arguments:
                         number of workers nodes to be deployed. eg: -w 2
 ```
 
-### Node commands (join, remove, reset)
+### Node commands (join, remove)
 ```
   -h, --help            show this help message and exit
   -r {master,worker}, --role {master,worker}
@@ -190,19 +189,19 @@ variables in the yaml file.
 As default, Jenkins has WORKSPACE environment variable so that workspace will be replaced in Jenkins workspace
 ```
    environment {
-        OPENSTACK_OPENRC = credentials('openrc') or VMWARE_ENV_FILE = credentials('vmware-env') 
+        OPENSTACK_OPENRC = credentials('openrc') or VMWARE_ENV_FILE = credentials('vmware-env')
         TERRAFORM_STACK_NAME  = '' #unique name for this pipeline run
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack' or 'vmware'
    }
 ```
 
-### Step to create K8s Cluster and start to use K8s cluster 
-1. Deploy nodes to openstack  
-```ci/infra/testrunner/testrunner provision```  
+### Step to create K8s Cluster and start to use K8s cluster
+1. Deploy nodes to openstack
+```ci/infra/testrunner/testrunner provision```
 2. Build skuba and store at `SKUBA_BINPATH` defaults to $WORKSPACE/go/bin/skuba
 ```ci/infra/testrunner/testrunner build-skuba```
-3. Initialize the control plane 
+3. Initialize the control plane
 ```ci/infra/testrunner/testrunner bootstrap```
 4. Join nodes
 ```ci/infra/testrunner/testrunner join-node --role worker --node 0```

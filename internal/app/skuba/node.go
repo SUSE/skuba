@@ -33,7 +33,6 @@ func NewNodeCmd() *cobra.Command {
 		node.NewBootstrapCmd(),
 		node.NewJoinCmd(),
 		node.NewRemoveCmd(),
-		node.NewResetCmd(),
 		node.NewUpgradeCmd(),
 	)
 

@@ -97,9 +97,9 @@ class Skuba:
                       "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} \
-               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr, 
+               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
                                    username=self.conf.nodeuser)
-        try: 
+        try:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
@@ -122,27 +122,7 @@ class Skuba:
 
         cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
 
-        try: 
-            self._run_skuba(cmd)
-        except Exception as ex:
-            raise Exception("Error executing cmd {}".format(cmd)) from ex
-
-    @step
-    def node_reset(self, role="worker", nr=0):
-        self._verify_bootstrap_dependency()
-
-        ip_addrs = self.platform.get_nodes_ipaddrs(role)
-
-        if nr < 0:
-            raise ValueError("Node number cannot be negative")
-
-        if nr >= len(ip_addrs):
-            raise Exception(Format.alert("Node {role}-{nr} not deployed in "
-                      "infrastructure".format(role=role, nr=nr)))
-
-        cmd = "node reset --user {username} --sudo --target {ip}".format(
-                ip=ip_addrs[nr], username=self.conf.nodeuser)
-        try: 
+        try:
             self._run_skuba(cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
@@ -153,7 +133,7 @@ class Skuba:
 
         if role not in ("master", "worker"):
             raise ValueError("Invalid role '{}'".format(role))
-        
+
         if nr >= self.num_of_nodes(role):
             raise ValueError("Error: there is no {}-{} \
                               node in the cluster".format(role, nr))
@@ -203,4 +183,3 @@ class Skuba:
         env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
 
         return self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
-
