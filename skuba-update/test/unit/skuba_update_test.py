@@ -17,6 +17,7 @@
 
 import json
 from mock import patch, call, mock_open, Mock, ANY
+from collections import namedtuple
 
 from skuba_update.skuba_update import (
     main,
@@ -29,6 +30,7 @@ from skuba_update.skuba_update import (
     is_reboot_needed,
     annotate_updates_available,
     get_update_list,
+    restart_services,
     REBOOT_REQUIRED_PATH,
     ZYPPER_EXIT_INF_UPDATE_NEEDED,
     ZYPPER_EXIT_INF_RESTART_NEEDED,
@@ -156,6 +158,29 @@ def test_main(mock_subprocess, mock_geteuid, mock_args, mock_annotate):
             stdout=None, stderr=None, env=ANY
         ),
     ]
+
+
+@patch('subprocess.Popen')
+@patch('skuba_update.skuba_update.run_zypper_command')
+def test_restart_services_error(mock_zypp_cmd, mock_subprocess, capsys):
+    command_type = namedtuple(
+        'command', ['output', 'error', 'returncode']
+    )
+
+    mock_process = Mock()
+    mock_process.communicate.return_value = (b'', b'restart error msg')
+    mock_process.returncode = 1
+    mock_subprocess.return_value = mock_process
+
+    mock_zypp_cmd.return_value = command_type(
+        output="service1\nservice2",
+        error='',
+        returncode=0
+    )
+
+    restart_services()
+    out, err = capsys.readouterr()
+    assert 'returned non zero exit code' in out
 
 
 @patch('skuba_update.skuba_update.annotate_updates_available')
@@ -356,10 +381,18 @@ def test_node_name_from_machine_id(mock_loads, mock_subprocess):
         exception = True
         assert 'Unexpected format' in str(e)
     assert exception
+    exception = False
+    mock_process.returncode = 1
+    try:
+        node_name_from_machine_id() == 'my-node'
+    except Exception as e:
+        exception = True
+        assert 'Kubectl failed getting nodes list' in str(e)
+    assert exception
 
 
 @patch('subprocess.Popen')
-def test_annotate(mock_subprocess):
+def test_annotate(mock_subprocess, capsys):
     mock_process = Mock()
     mock_process.communicate.return_value = (b'node/my-node-1 annotated',
                                              b'stderr')
@@ -369,6 +402,13 @@ def test_annotate(mock_subprocess):
         'node', 'my-node-1',
         KUBE_DISRUPTIVE_UPDATES_KEY, 'yes'
     ) == 'node/my-node-1 annotated'
+    mock_process.returncode = 1
+    annotate(
+        'node', 'my-node-1',
+        KUBE_DISRUPTIVE_UPDATES_KEY, 'yes'
+    )
+    out, err = capsys.readouterr()
+    assert 'Warning! kubectl returned non zero exit code' in out
 
 
 @patch('skuba_update.skuba_update.node_name_from_machine_id')

@@ -215,7 +215,9 @@ def restart_services():
 
     result = run_zypper_command(['zypper', 'ps', '-sss'], needsOutput=True)
     for service in result.output.splitlines():
-        run_command(['systemctl', 'restart', service], needsOutput=False)
+        cmd = run_command(['systemctl', 'restart', service], needsOutput=False)
+        if cmd.returncode != 0:
+            log('Warning! Service \'{0}\' restart returned non zero exit code')
 
 
 def is_zypper_error(code):
@@ -366,6 +368,9 @@ def node_name_from_machine_id():
         added_env={'KUBECONFIG': KUBECONFIG_PATH}
     )
 
+    if nodes_raw_json.returncode != 0 or not nodes_raw_json.output:
+        raise Exception('Kubectl failed getting nodes list')
+
     formatted = json.loads(nodes_raw_json.output)
 
     try:
@@ -388,6 +393,9 @@ def annotate(resource, resource_name, key, value):
         '{}={}'.format(key, value)],
         added_env={'KUBECONFIG': KUBECONFIG_PATH}
     )
+
+    if ret.returncode != 0:
+        log('Warning! kubectl returned non zero exit code')
 
     return ret.output
 
