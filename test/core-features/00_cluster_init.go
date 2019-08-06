@@ -101,12 +101,6 @@ var _ = ginkgo.Describe("Create Skuba Cluster", func() {
 		gomega.Expect(session).Should(gexec.Exit(0), "skuba removing worker00 failed")
 		gomega.Expect(err).Should(gomega.BeNil(), "skuba removing worker00 failed")
 
-		ginkgo.By("reset worker00 with skuba")
-		session, err = skuba.ResetNode(worker00IP)
-		fmt.Println(session.Wait().Out.Contents())
-		gomega.Expect(session).Should(gexec.Exit(0), "skuba reset worker00 failed")
-		gomega.Expect(err).Should(gomega.BeNil(), "skuba reset worker00 failed")
-
 		ginkgo.By("verify worker00 is not present with skuba status")
 		session, err = skuba.Status()
 		fmt.Println(session.Wait().Out.Contents())

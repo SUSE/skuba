@@ -62,6 +62,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	}
 
 	statesToApply := []string{
+		"kubeadm.reset",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",

@@ -23,13 +23,11 @@ import (
 
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 )
 
 func init() {
 	stateMap["cri.configure"] = criConfigure
 	stateMap["cri.start"] = criStart
-	stateMap["cri.reset"] = crioReset
 }
 
 func criConfigure(t *Target, data interface{}) error {
@@ -45,7 +43,9 @@ func criConfigure(t *Target, data interface{}) error {
 		}
 	}
 
-	_, _, err = t.ssh("mv -f /etc/sysconfig/crio /etc/sysconfig/crio.backup")
+	if _, _, err = t.ssh("mv -f /etc/sysconfig/crio /etc/sysconfig/crio.backup"); err != nil {
+		return err
+	}
 	_, _, err = t.ssh("mv -f /tmp/cri.d/default_flags /etc/sysconfig/crio")
 	return err
 }
@@ -53,13 +53,4 @@ func criConfigure(t *Target, data interface{}) error {
 func criStart(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "--now", "crio")
 	return err
-}
-
-func crioReset(t *Target, data interface{}) error {
-	_, _, err := t.ssh("test -f /etc/sysconfig/crio.backup")
-	if err == nil {
-		_, _, _ = t.ssh("mv -f /etc/sysconfig/crio.backup /etc/sysconfig/crio")
-	}
-	klog.V(1).Info("CRI-O is running with default configuration already. Skipping reset...")
-	return nil
 }

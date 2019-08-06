@@ -33,4 +33,3 @@ reconfiguration in an easy way.
 **skuba-node-bootstrap**(1),
 **skuba-node-join**(1),
 **skuba-node-remove**(1),
-**skuba-node-reset**(1),
