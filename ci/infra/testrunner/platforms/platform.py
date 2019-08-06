@@ -74,6 +74,14 @@ class Platform:
         """
         return []
 
+    def get_num_nodes(self, role):
+        """
+        Get the number of nodes of a  given type
+        :param role: the type of node
+        :return: num of nodes
+        """
+        pass
+
     @step
     def provision(self, num_master=-1, num_worker=-1, retries=4):
         """Provision a cluster"""

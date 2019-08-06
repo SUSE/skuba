@@ -72,6 +72,9 @@ class Terraform(Platform):
         self._load_tfstate()
         return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]
 
+    def get_num_nodes(self, role):
+        return len(self.get_nodes_ipaddrs(role))
+
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
 

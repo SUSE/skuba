@@ -4,6 +4,7 @@ import platforms
 from timeout_decorator import timeout
 
 from platforms.platform import Platform
+from skuba.skuba import Skuba
 from utils.format import Format
 from utils.utils import (step, Utils)
 
@@ -13,6 +14,7 @@ class Kubectl:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.platform = platforms.get_platform(conf, platform)
+        self.skuba = Skuba(conf, platform)
 
 
     def create_deployment(self, name, image):
@@ -67,11 +69,11 @@ class Kubectl:
             outputformat="-o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
 
 
-    def _run_kubectl(self, command, outputformat='-o json'):
-        shell_cmd = "kubectl --kubeconfig={cwd}/test-cluster/admin.conf \
-                      {format} {command}".format(format=outputformat, command=command, cwd=self.conf.workspace)
+    def run_kubectl(self, command):
+        kubeconfig = self.skuba.get_kubeconfig()
+        
+        shell_cmd = "kubectl --kubeconfig={} {}".format(kubeconfig, command)
         try:
             return self.utils.runshellcommand(shell_cmd)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(shell_cmd)) from ex
-

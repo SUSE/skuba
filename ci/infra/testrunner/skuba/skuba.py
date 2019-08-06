@@ -170,6 +170,11 @@ class Skuba:
         output = self.utils.runshellcommand(cmd)
         return output.count(role)
 
+    @step
+    def get_kubeconfig(self):
+         path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
+         return path
+
     def _run_skuba(self, cmd, cwd=None):
         """Running skuba command in cwd.
         The cwd defautls to {workspace}/test-cluster but can be overrided
