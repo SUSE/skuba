@@ -134,39 +134,34 @@ def main():
     cmd_cluster_upgrade_plan.set_defaults(func=cluster_upgrade_plan)
 
     # common parameters for node commands
-    node_args = ArgumentParser(add_help=False)
-    node_args.add_argument("-r", "--role", dest="role",choices=["master", "worker"],
-                           help='role of the node to be added or deleted. eg: --role master')
-    node_args.add_argument("-n", "--node", dest="node", type=int,
-                           help='node to be added or deleted.  eg: -n 0')
+    cmd_join = commands.add_parser("join-node", help="add node in k8s cluster with the given role.")
+    cmd_join.add_argument("-r", "--role", dest="role",choices=["master", "worker"],
+                               help='role of the node to be added or deleted. eg: --role master')
+    cmd_join.add_argument("-n", "--node", dest="node", type=int,
+                               help='node to be added or deleted.  eg: -n 0')
+    cmd_join.set_defaults(func=join_node)
 
-    cmd_join_node = commands.add_parser("join-node", parents=[node_args],
-                                        help="add node in k8s cluster with the given role.")
-    cmd_join_node.set_defaults(func=join_node)
-
-    cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
+    cmd_rem_node = commands.add_parser("remove-node", parents=[cmd_join],
                                        help="remove node from k8s cluster.")
     cmd_rem_node.set_defaults(func=remove_node)
 
-    cmd_node_upgrade = commands.add_parser("node-upgrade", parents=[node_args],
-                                         help="upgrade kubernetes version in node")
+    cmd_node_upgrade = commands.add_parser("node-upgrade", parents=[cmd_join],
+                                           help="upgrade kubernetes version in node")
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                               help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
 
-    ssh_args = ArgumentParser(add_help=False)
-    ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
-    cmd_ssh = commands.add_parser("ssh", parents=[node_args, ssh_args], help="Execute command in node via ssh.")
+    cmd_ssh = commands.add_parser("ssh", parents=[cmd_join], help="Execute command in node via ssh.")
+    cmd_ssh.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
     cmd_ssh.set_defaults(func=ssh)
 
-    test_args = ArgumentParser(add_help=False)
-    test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")
-    test_args.add_argument("-t", "--test", dest="test", help="test to execute")
-    test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
+    cmd_test = commands.add_parser("test", help="execute tests")
+    cmd_test.add_argument("-s", "--suite", dest="test_suite", help="test file name")
+    cmd_test.add_argument("-t", "--test", dest="test", help="test to execute")
+    cmd_test.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
             help="only list tests to be executed")
-    test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
+    cmd_test.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
             help="show all output")
-    cmd_test = commands.add_parser("test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
 
     options = parser.parse_args()
