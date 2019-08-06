@@ -87,13 +87,12 @@ type debugTransport struct {
 }
 
 func (d debugTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	pws := []string{d.ar.clientSecret, d.ar.Password}
+	pws := []string{d.ar.Password}
 	stripPasswords := func(str string) string {
 		res := str
 		for _, s := range pws {
 			res = strings.Replace(res, s, "<REDACTED>", -1)
 		}
-
 		return res
 	}
 
@@ -129,8 +128,8 @@ func defaultTransport() *http.Transport {
 	}
 }
 
-// httpClientForRootCAs returns a HTTP client which bypass SSL/TLS verify
-func httpClientForSkipTLS() (*http.Client, error) {
+// httpClientForSkipTLS returns a HTTP client which bypass SSL/TLS verify
+func httpClientForSkipTLS() *http.Client {
 	transport := defaultTransport()
 	transport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: true,
@@ -138,7 +137,7 @@ func httpClientForSkipTLS() (*http.Client, error) {
 
 	return &http.Client{
 		Transport: transport,
-	}, nil
+	}
 }
 
 // httpClientForRootCAs returns a HTTP client which trusts provided root CAs
@@ -162,10 +161,7 @@ func doAuth(authReq request) (*response, error) {
 	var client *http.Client
 
 	if authReq.InsecureSkipVerify {
-		client, err = httpClientForSkipTLS()
-		if err != nil {
-			return nil, err
-		}
+		client = httpClientForSkipTLS()
 	} else if len(authReq.RootCAData) > 0 {
 		client, err = httpClientForRootCAs(authReq.RootCAData)
 		if err != nil {
