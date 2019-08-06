@@ -41,5 +41,12 @@ this issue is not fixed.
 
 How can we validate this issue is fixed? Please provide the steps and the prove this issue is fixed.
 
+
+## Docs
+
+If docs need to be updated, please add a link to a PR to https://github.com/SUSE/doc-caasp.
+At the time of creating this issue, This PR can be work in progress (set its title to [WIP]...),
+but it needs to be ready in order to merge this PR.
+
 <!-- Remember, if this is a work in progress please pre-append [WIP] to the title until you are ready! 
     If you can, please apply all applicable labels to help reviews out! -->
