@@ -30,6 +30,9 @@ reconfiguration in an easy way.
 # SEE ALSO
 **skuba-cluster-init**(1),
 **skuba-cluster-status**(1),
+**skuba-cluster-upgrade-plan**(1),
 **skuba-node-bootstrap**(1),
 **skuba-node-join**(1),
 **skuba-node-remove**(1),
+**skuba-node-upgrade-plan**(1),
+**skuba-node-upgrade-apply**(1),
