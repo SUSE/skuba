@@ -36,8 +36,8 @@ import (
 const (
 	imageName = "caasp-dex"
 
-	certCommonName = "oidc-dex"
-	secretCertName = "oidc-dex-cert"
+	CertCommonName = "oidc-dex"
+	SecretCertName = "oidc-dex-cert"
 )
 
 // CreateCert creates a signed certificate for dex
@@ -60,13 +60,13 @@ func CreateCert(
 
 	// Generate dex certificate
 	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
-		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
+		CertCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
 	if err != nil {
 		return errors.Wrap(err, "could not genenerate dex server cert")
 	}
 
 	// Create or update secret resource
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, SecretCertName); err != nil {
 		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 

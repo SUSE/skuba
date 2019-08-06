@@ -39,8 +39,8 @@ import (
 const (
 	imageName = "gangway"
 
-	certCommonName = "oidc-gangway"
-	secretCertName = "oidc-gangway-cert"
+	CertCommonName = "oidc-gangway"
+	SecretCertName = "oidc-gangway-cert"
 
 	sessionKey    = "session-key"
 	secretKeyName = "oidc-gangway-secret"
@@ -96,13 +96,13 @@ func CreateCert(
 
 	// Generate gangway certificate
 	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
-		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
+		CertCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
 	if err != nil {
 		return errors.Wrap(err, "could not genenerate gangway server cert")
 	}
 
 	// Create or update certificate to secret
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, SecretCertName); err != nil {
 		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 
