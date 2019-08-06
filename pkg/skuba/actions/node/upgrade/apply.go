@@ -110,6 +110,14 @@ func Apply(target *deployments.Target) error {
 					return err
 				}
 			}
+			err = target.Apply(nil, "gangway.renewCert")
+			if err != nil {
+				return err
+			}
+			err = target.Apply(nil, "dex.renewCert")
+			if err != nil {
+				return err
+			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),

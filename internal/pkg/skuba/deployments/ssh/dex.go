@@ -26,10 +26,14 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+
+	apimachineryerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
 	stateMap["dex.deploy"] = dexDeploy
+	stateMap["dex.renewCert"] = dexRenewCertificate
 }
 
 func dexDeploy(t *Target, data interface{}) error {
@@ -56,5 +60,37 @@ func dexDeploy(t *Target, data interface{}) error {
 	}
 
 	_, _, err = t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/dex.d")
+	return err
+}
+
+const (
+	dexSecretName = "oidc-dex-cert"
+	dexPodLabel   = "app=oidc-dex"
+)
+
+func dexRenewCertificate(t *Target, data interface{}) error {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+
+	_, err = client.CoreV1().Secrets(metav1.NamespaceSystem).Get(dexSecretName, metav1.GetOptions{})
+	if apimachineryerrors.IsAlreadyExists(err) {
+		err = client.CoreV1().Secrets(metav1.NamespaceSystem).Delete(dexSecretName, &metav1.DeleteOptions{})
+		if err != nil {
+			return errors.Wrap(err, "unable to delete dex secret")
+		}
+	}
+
+	err = dex.CreateCert(client, skuba.PkiDir(), skuba.KubeadmInitConfFile())
+	if err != nil {
+		return errors.Wrap(err, "unable to create dex certificate")
+	}
+
+	err = client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: dexPodLabel})
+	if err != nil {
+		return errors.Wrap(err, "unable to delete dex pod")
+	}
+
 	return err
 }

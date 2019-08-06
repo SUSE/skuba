@@ -26,10 +26,14 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+
+	apimachineryerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
 	stateMap["gangway.deploy"] = gangwayDeploy
+	stateMap["gangway.renewCert"] = gangwayRenewCertificate
 }
 
 func gangwayDeploy(t *Target, data interface{}) error {
@@ -64,5 +68,37 @@ func gangwayDeploy(t *Target, data interface{}) error {
 	}
 
 	_, _, err = t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/gangway.d")
+	return err
+}
+
+const (
+	gangwaySecretName = "oidc-gangway-cert"
+	gangwayPodLabel   = "app=oidc-gangway"
+)
+
+func gangwayRenewCertificate(t *Target, data interface{}) error {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+
+	_, err = client.CoreV1().Secrets(metav1.NamespaceSystem).Get(gangwaySecretName, metav1.GetOptions{})
+	if apimachineryerrors.IsAlreadyExists(err) {
+		err = client.CoreV1().Secrets(metav1.NamespaceSystem).Delete(gangwaySecretName, &metav1.DeleteOptions{})
+		if err != nil {
+			return errors.Wrap(err, "unable to delete gangway secret")
+		}
+	}
+
+	err = gangway.CreateCert(client, skuba.PkiDir(), skuba.KubeadmInitConfFile())
+	if err != nil {
+		return errors.Wrap(err, "unable to create gangway certificate")
+	}
+
+	err = client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: gangwayPodLabel})
+	if err != nil {
+		return errors.Wrap(err, "unable to delete gangway pod")
+	}
+
 	return err
 }
