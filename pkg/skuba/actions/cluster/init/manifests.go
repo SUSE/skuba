@@ -1025,7 +1025,7 @@ rules:
   verbs: ["create", "get", "list", "update", "watch"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["oauth2clients", "connectors", "passwords", "refreshtokens"]
-  verbs: ["get", list"]
+  verbs: ["get", "list"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["signingkeies"]
   verbs: ["create", "get", "list", "update"]
