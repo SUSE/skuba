@@ -33,7 +33,7 @@ import (
 
 func init() {
 	stateMap["dex.deploy"] = dexDeploy
-	stateMap["dex.renewCert"] = dexRenewCertificate
+	stateMap["dex.cert.renew"] = dexRenewCertificate
 }
 
 func dexDeploy(t *Target, data interface{}) error {

@@ -33,7 +33,7 @@ import (
 
 func init() {
 	stateMap["gangway.deploy"] = gangwayDeploy
-	stateMap["gangway.renewCert"] = gangwayRenewCertificate
+	stateMap["gangway.cert.renew"] = gangwayRenewCertificate
 }
 
 func gangwayDeploy(t *Target, data interface{}) error {

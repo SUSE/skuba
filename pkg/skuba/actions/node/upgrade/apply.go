@@ -110,11 +110,11 @@ func Apply(target *deployments.Target) error {
 					return err
 				}
 			}
-			err = target.Apply(nil, "gangway.renewCert")
+			err = target.Apply(nil, "gangway.cert.renew")
 			if err != nil {
 				return err
 			}
-			err = target.Apply(nil, "dex.renewCert")
+			err = target.Apply(nil, "dex.cert.renew")
 			if err != nil {
 				return err
 			}
