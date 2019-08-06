@@ -23,6 +23,7 @@ import (
 	"github.com/SUSE/skuba/internal/app/skuba/cluster"
 )
 
+// NewClusterCmd creates a new `skuba cluster` cobra command
 func NewClusterCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cluster",

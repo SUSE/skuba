@@ -89,7 +89,7 @@ func NewInitCmd() *cobra.Command {
 		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
 	}
 	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: openstack")
-	cmd.MarkFlagRequired("control-plane")
+	_ = cmd.MarkFlagRequired("control-plane")
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")
 

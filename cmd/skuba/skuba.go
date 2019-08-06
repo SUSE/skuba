@@ -40,6 +40,7 @@ func newRootCmd() *cobra.Command {
 		skuba.NewVersionCmd(),
 		skuba.NewClusterCmd(),
 		skuba.NewNodeCmd(),
+		skuba.NewAuthCmd(),
 	)
 
 	register(cmd.PersistentFlags(), "v")

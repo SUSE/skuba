@@ -23,6 +23,7 @@ import (
 	"github.com/SUSE/skuba/internal/app/skuba/node"
 )
 
+// NewNodeCmd creates a new `skuba node` cobra command
 func NewNodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node",

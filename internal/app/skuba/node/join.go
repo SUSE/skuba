@@ -32,6 +32,7 @@ type joinOptions struct {
 	ignorePreflightErrors string
 }
 
+// NewBootstrapCmd creates a new `skuba node join` cobra command
 func NewJoinCmd() *cobra.Command {
 	joinOptions := joinOptions{}
 	target := ssh.Target{}
@@ -58,7 +59,7 @@ func NewJoinCmd() *cobra.Command {
 
 	actions.AddCommonFlags(cmd, &joinOptions.ignorePreflightErrors)
 
-	cmd.MarkFlagRequired("role")
+	_ = cmd.MarkFlagRequired("role")
 
 	return cmd
 }

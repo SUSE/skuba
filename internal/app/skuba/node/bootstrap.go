@@ -31,6 +31,7 @@ type bootstrapOptions struct {
 	ignorePreflightErrors string
 }
 
+// NewBootstrapCmd creates a new `skuba node bootstrap` cobra command
 func NewBootstrapCmd() *cobra.Command {
 	bootstrapOptions := bootstrapOptions{}
 	target := ssh.Target{}

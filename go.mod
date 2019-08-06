@@ -1,6 +1,7 @@
 module github.com/SUSE/skuba
 
 require (
+	github.com/coreos/go-oidc v0.0.0-20180117170138-065b426bd416
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/onsi/ginkgo v1.6.0
 	github.com/onsi/gomega v0.0.0-20190113212917-5533ce8a0da3
@@ -8,6 +9,8 @@ require (
 	github.com/spf13/cobra v0.0.0-20180319062004-c439c4fa0937
 	github.com/spf13/pflag v1.0.1
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a
+	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v0.0.0

@@ -24,6 +24,7 @@ import (
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/status"
 )
 
+// NewStatusCmd creates a new `skuba cluster status` cobra command
 func NewStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
