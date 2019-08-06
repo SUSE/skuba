@@ -25,6 +25,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
+// NewVersionCmd creates a new `skuba version` cobra command
 func NewVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",

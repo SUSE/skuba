@@ -27,6 +27,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/upgrade"
 )
 
+// NewUpgradeCmd creates a new `skuba node upgrade` cobra command
 func NewUpgradeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upgrade",

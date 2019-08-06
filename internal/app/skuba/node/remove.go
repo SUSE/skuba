@@ -31,6 +31,7 @@ type removeOptions struct {
 	drainTimeout time.Duration
 }
 
+// NewRemoveCmd creates a new `skuba node remove` cobra command
 func NewRemoveCmd() *cobra.Command {
 	removeOptions := removeOptions{}
 	cmd := &cobra.Command{

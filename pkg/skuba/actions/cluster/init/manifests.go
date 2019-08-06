@@ -894,7 +894,7 @@ data:
       tlsClientCA: /etc/dex/pki/ca.crt
 
     frontend:
-      issuers: {{.ClusterName}}
+      issuer: "SUSE CaaS Platform"
       theme: "caasp"
       dir: /usr/share/caasp-dex/web
 
@@ -925,12 +925,23 @@ data:
           groupAttr: member
           nameAttr: cn
 
+    oauth2:
+      skipApprovalScreen: true
+
     staticClients:
     - id: oidc
       redirectURIs:
       - 'https://{{.ControlPlane}}:32001/callback'
       name: 'OIDC'
       secret: {{.GangwayClientSecret}}
+      trustedPeers:
+      - oidc-cli
+    - id: oidc-cli
+      public: true
+      redirectURIs:
+      - 'urn:ietf:wg:oauth:2.0:oob'
+      name: 'OIDC CLI'
+      secret: swac7qakes7AvucH8bRucucH
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1014,7 +1025,7 @@ rules:
   verbs: ["create", "get", "list", "update", "watch"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["oauth2clients", "connectors", "passwords", "refreshtokens"]
-  verbs: ["list"]
+  verbs: ["get", list"]
 - apiGroups: ["dex.coreos.com"]
   resources: ["signingkeies"]
   verbs: ["create", "get", "list", "update"]
