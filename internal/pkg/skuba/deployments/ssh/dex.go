@@ -18,6 +18,7 @@
 package ssh
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -26,10 +27,13 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
 	stateMap["dex.deploy"] = dexDeploy
+	stateMap["dex.cert.renew"] = dexRenewCertificate
 }
 
 func dexDeploy(t *Target, data interface{}) error {
@@ -56,5 +60,25 @@ func dexDeploy(t *Target, data interface{}) error {
 	}
 
 	_, _, err = t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/dex.d")
+	return err
+}
+
+func dexRenewCertificate(t *Target, data interface{}) error {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+
+	err = dex.CreateCert(client, skuba.PkiDir(), skuba.KubeadmInitConfFile())
+	if err != nil {
+		return errors.Wrap(err, "unable to create dex certificate")
+	}
+
+	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", dex.CertCommonName)}
+	err = client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
+	if err != nil {
+		return errors.Wrap(err, "unable to delete dex pod")
+	}
+
 	return err
 }
