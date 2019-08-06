@@ -160,7 +160,7 @@ class Skuba:
         path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
         return path
 
-    def _run_skuba(self, cmd, cwd=None):
+    def _run_skuba(self, cmd, cwd=None, verbosity=None):
         """Running skuba command in cwd.
         The cwd defautls to {workspace}/test-cluster but can be overrided
         for example, for the init command that must run in {workspace}
@@ -170,6 +170,19 @@ class Skuba:
         if cwd is None:
             cwd = self.cwd
 
+        if verbosity is None:
+            verbosity = self.conf.skuba.verbosity
+        try:
+            v = int(verbosity)
+        except ValueError:
+            raise ValueError(f"verbosity '{verbosity}' is not an int")
+        verbosity = v
+
         env = {"SSH_AUTH_SOCK": self.utils.ssh_sock_fn()}
 
-        return self.utils.runshellcommand(self.binpath + " " + cmd, cwd=cwd, env=env)
+
+        return self.utils.runshellcommand(
+          f"{self.binpath} -v {verbosity} {cmd}",
+          cwd=cwd,
+          env=env,
+          )
