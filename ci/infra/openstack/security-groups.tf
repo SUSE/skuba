@@ -2,6 +2,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
   name        = "caasp-base-${var.stack_name}"
   description = "Basic security group"
 
+  # Allow ping and cilium health checks as well
   rule {
     from_port   = -1
     to_port     = -1
@@ -9,6 +10,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     cidr        = "0.0.0.0/0"
   }
 
+  # sshd
   rule {
     from_port   = 22
     to_port     = 22
@@ -16,13 +18,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     cidr        = "0.0.0.0/0"
   }
 
-  rule {
-    from_port   = 2379
-    to_port     = 2379
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
+  # cilium health check
   rule {
     from_port   = 4240
     to_port     = 4240
@@ -30,9 +26,41 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     cidr        = "0.0.0.0/0"
   }
 
+  # cilium VXLAN
   rule {
     from_port   = 8472
     to_port     = 8472
+    ip_protocol = "udp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  # kubelet - API server -> kubelet communication
+  rule {
+    from_port   = 10250
+    to_port     = 10250
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  # kubeproxy health check
+  rule {
+    from_port   = 10256
+    to_port     = 10256
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  # Range of ports used by kubernetes when
+  # allocating services of type `NodePort`
+  rule {
+    from_port   = 30000
+    to_port     = 32767
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+  rule {
+    from_port   = 30000
+    to_port     = 32767
     ip_protocol = "udp"
     cidr        = "0.0.0.0/0"
   }
@@ -42,6 +70,15 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
   name        = "caasp-master-${var.stack_name}"
   description = "security group for masters"
 
+  # etcd - client communication
+  rule {
+    from_port   = 2379
+    to_port     = 2379
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  # etcd - server-to-server communication
   rule {
     from_port   = 2380
     to_port     = 2380
@@ -49,99 +86,11 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
     cidr        = "0.0.0.0/0"
   }
 
+  # API server
   rule {
     from_port   = 6443
     to_port     = 6444
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8285
-    to_port     = 8285
-    ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
-  }
-}
-
-resource "openstack_compute_secgroup_v2" "secgroup_worker" {
-  name        = "caasp-worker-${var.stack_name}"
-  description = "security group for workers"
-
-  rule {
-    from_port   = 80
-    to_port     = 80
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 443
-    to_port     = 443
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8080
-    to_port     = 8080
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8081
-    to_port     = 8081
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 2380
-    to_port     = 2380
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 10250
-    to_port     = 10250
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 8285
-    to_port     = 8285
-    ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
-  }
-
-  rule {
-    from_port   = 30000
-    to_port     = 32768
-    ip_protocol = "udp"
     cidr        = "0.0.0.0/0"
   }
 }
@@ -150,6 +99,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master_lb" {
   name        = "caasp-master-lb-${var.stack_name}"
   description = "security group for master load balancers"
 
+  # API server
   rule {
     from_port   = 6443
     to_port     = 6443
@@ -157,16 +107,18 @@ resource "openstack_compute_secgroup_v2" "secgroup_master_lb" {
     cidr        = "0.0.0.0/0"
   }
 
+  # dex - OIDC connect
   rule {
-    from_port   = 32001
-    to_port     = 32001
+    from_port   = 32000
+    to_port     = 32000
     ip_protocol = "tcp"
     cidr        = "0.0.0.0/0"
   }
 
+  # gangway (RBAC authenticate)
   rule {
-    from_port   = 32000
-    to_port     = 32000
+    from_port   = 32001
+    to_port     = 32001
     ip_protocol = "tcp"
     cidr        = "0.0.0.0/0"
   }
