@@ -10,7 +10,6 @@
             timeout: 30
             fail: true
     triggers:
-        - timed: 'H * * * *'
     parameters:
         - string:
             name: branch
