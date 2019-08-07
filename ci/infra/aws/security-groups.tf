@@ -45,6 +45,7 @@ resource "aws_security_group" "lbports" {
 }
 
 resource "aws_security_group" "icmp" {
+  # this also allows cilium health checks using the ICMP protocol
   description = "allow ping between instances"
   name        = "${var.stack_name}-icmp"
   vpc_id      = "${aws_vpc.platform.id}"
@@ -121,9 +122,17 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
-  # VXLAN traffic (cilium) - internal
+  # cilium - health check - internal
   ingress {
-    from_port   = 8471
+    from_port   = 4240
+    to_port     = 4240
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # cilium - VXLAN traffic - internal
+  ingress {
+    from_port   = 8472
     to_port     = 8472
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
@@ -173,9 +182,17 @@ resource "aws_security_group" "allow_workers_traffic" {
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
 
-  # VXLAN traffic (cilium) - internal
+  # cilium - health check - internal
   ingress {
-    from_port   = 8471
+    from_port   = 4240
+    to_port     = 4240
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # cilium - VXLAN traffic - internal
+  ingress {
+    from_port   = 8472
     to_port     = 8472
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
