@@ -29,7 +29,7 @@ pipeline {
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Run Conformance')
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Collect Results')
             archiveArtifacts('results/**/*')
-            junit('results/plugins/e2e/results/*.xml')
+            junit('results/plugins/e2e/results/**/*.xml')
             sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Cleanup Cluster')
         } }
 
