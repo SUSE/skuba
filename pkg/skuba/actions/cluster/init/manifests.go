@@ -23,6 +23,8 @@ kind: InitConfiguration
 bootstrapTokens: []
 localAPIEndpoint:
   advertiseAddress: ""
+nodeRegistration:
+  kubeletExtraArgs: {}
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
@@ -37,6 +39,10 @@ apiServer:
     oidc-groups-claim: groups
 clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlane}}:6443
+controllerManager:
+  extraArgs: {}
+scheduler:
+  extraArgs: {}
 dns:
   imageRepository: {{.ImageRepository}}
   imageTag: {{.CoreDNSImageTag}}
@@ -45,6 +51,7 @@ etcd:
   local:
     imageRepository: {{.ImageRepository}}
     imageTag: {{.EtcdImageTag}}
+    extraArgs: {}
 imageRepository: {{.ImageRepository}}
 kubernetesVersion: {{.KubernetesVersion}}
 networking:
@@ -70,6 +77,8 @@ discovery:
 controlPlane:
   localAPIEndpoint:
     advertiseAddress: ""
+nodeRegistration:
+  kubeletExtraArgs: {}
 `
 
 	workerConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
@@ -78,6 +87,8 @@ discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlane}}:6443
     unsafeSkipCAVerification: true
+nodeRegistration:
+  kubeletExtraArgs: {}
 `
 
 	pspPrivManifest = `---
