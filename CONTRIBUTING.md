@@ -72,7 +72,7 @@ Ask for a reviewer. Once reviewed, checkout master branch:
 And tag:
 
   * Tag with vx.y.z
-    git tag vx.y.z
+    git tag -s vx.y.z -m "Tag x.y.z"
 
 * Push
   git push --tags origin master
