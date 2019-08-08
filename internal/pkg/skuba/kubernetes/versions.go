@@ -74,6 +74,25 @@ type KubernetesVersions map[string]KubernetesVersion
 
 var (
 	Versions = KubernetesVersions{
+		"1.15.2": KubernetesVersion{
+			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
+				HyperkubeVersion: "v1.15.2",
+				EtcdVersion:      "3.3.11",
+				CoreDNSVersion:   "1.3.1",
+				PauseVersion:     "3.1",
+			},
+			ComponentsVersion: ComponentsVersion{
+				KubeletVersion:          "1.15.2",
+				ContainerRuntimeVersion: "1.15.2",
+			},
+			AddonsVersion: AddonsVersion{
+				CiliumVersion:  "1.5.3",
+				ToolingVersion: "0.1.0",
+				KuredVersion:   "1.2.0",
+				DexVersion:     "2.16.0",
+				GangwayVersion: "3.1.0",
+			},
+		},
 		"1.15.0": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				HyperkubeVersion: "v1.15.0",
