@@ -34,6 +34,7 @@ import (
 type InitConfiguration struct {
 	ClusterName         string
 	ControlPlane        string
+	PauseImage          string
 	CiliumImage         string
 	CiliumInitImage     string
 	CiliumOperatorImage string
