@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	cilium "github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
@@ -63,6 +64,7 @@ func NewInitCmd() *cobra.Command {
 				ClusterName:         args[0],
 				CloudProvider:       initOptions.CloudProvider,
 				ControlPlane:        initOptions.ControlPlane,
+				PauseImage:          images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, kubernetesVersion)),
 				CiliumImage:         cilium.GetCiliumImage(),
 				CiliumInitImage:     cilium.GetCiliumInitImage(),
 				CiliumOperatorImage: cilium.GetCiliumOperatorImage(),

@@ -58,7 +58,7 @@ useHyperKubeImage: true
 ## Default        : ""
 ## ServiceRestart : crio
 #
-CRIO_OPTIONS=--pause-image=registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4/pause:3.1 --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"
+CRIO_OPTIONS=--pause-image={{.PauseImage}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"
   `
 
 	masterConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
