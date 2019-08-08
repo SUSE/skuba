@@ -49,6 +49,14 @@ This will be checked automatically by our CI linter bot.
 
 ## Releasing
 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ If you are releasing a new kubernetes version, or any other container, +
++ make sure the versions.go has been updated accordingly. See as an      +
++ example:                                                               +
++   https://github.com/SUSE/skuba/pull/573                               +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 In order to create a new release, create a Pull Request with these changes:
 
   * Update the VERSION file:
