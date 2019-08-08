@@ -24,9 +24,11 @@ import (
 	"path/filepath"
 	"text/template"
 
+	versionutil "k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/klog"
+
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 )
 
 type InitConfiguration struct {
@@ -39,12 +41,16 @@ type InitConfiguration struct {
 	DexImage            string
 	GangwayClientSecret string
 	GangwayImage        string
-	KubernetesVersion   string
+	KubernetesVersion   *versionutil.Version
 	ImageRepository     string
 	EtcdImageTag        string
 	CoreDNSImageTag     string
 	CloudProvider       string
 	StrictCapDefaults   bool
+}
+
+func (initConfiguration InitConfiguration) KubernetesVersionAtLeast(version string) bool {
+	return initConfiguration.KubernetesVersion.AtLeast(versionutil.MustParseSemantic(version))
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
