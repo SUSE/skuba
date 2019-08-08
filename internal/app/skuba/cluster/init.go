@@ -70,7 +70,7 @@ func NewInitCmd() *cobra.Command {
 				DexImage:            dex.GetDexImage(),
 				GangwayClientSecret: dex.GenerateClientSecret(),
 				GangwayImage:        gangway.GetGangwayImage(),
-				KubernetesVersion:   kubernetesVersion.String(),
+				KubernetesVersion:   kubernetesVersion,
 				ImageRepository:     skuba.ImageRepository,
 				EtcdImageTag:        kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
 				CoreDNSImageTag:     kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
