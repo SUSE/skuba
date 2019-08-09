@@ -169,8 +169,9 @@ class BaseConfig:
         # TODO: add the path to shared ssh credentials as a configuration parameter
         if conf.ssh_key_option == "id_shared":
             conf.ssh_key_option = os.path.join(conf.skuba.srcpath, "ci/infra/id_shared")
-        elif conf.ssh_key_option == "id_rsa":
-            conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+        elif os.sep not in conf.ssh_key_option:
+            conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh", conf.ssh_key_option)
+        # else assume it's a path somewhere else
 
         return conf
 
