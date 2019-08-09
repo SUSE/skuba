@@ -23,7 +23,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     from_port   = 4240
     to_port     = 4240
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # cilium VXLAN
@@ -31,7 +31,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     from_port   = 8472
     to_port     = 8472
     ip_protocol = "udp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # kubelet - API server -> kubelet communication
@@ -39,7 +39,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     from_port   = 10250
     to_port     = 10250
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # kubeproxy health check
@@ -47,7 +47,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_base" {
     from_port   = 10256
     to_port     = 10256
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # Range of ports used by kubernetes when
@@ -75,7 +75,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
     from_port   = 2379
     to_port     = 2379
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # etcd - server-to-server communication
@@ -83,7 +83,7 @@ resource "openstack_compute_secgroup_v2" "secgroup_master" {
     from_port   = 2380
     to_port     = 2380
     ip_protocol = "tcp"
-    cidr        = "0.0.0.0/0"
+    cidr        = "${var.subnet_cidr}"
   }
 
   # API server
