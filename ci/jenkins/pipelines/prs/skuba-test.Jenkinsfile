@@ -40,28 +40,51 @@ pipeline {
             }
         }}
 
-        stage('Run skuba unit tests') { steps {
-            dir("skuba") {
-              sh(script: 'make test-unit', label: 'make test-unit')
-            }
-        } }
-
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
         } }
 
-        stage('Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
-        } }
 
-        stage('Run end-to-end tests') { steps {
-           dir("skuba") {
-             sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-       } } }
+        stage('Run All Skuba Upgrade Tests In Parallel') {
+            parallel {
+                stage('Run Skuba Upgrade Plan All fine Test') {
+                    steps {
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-all-fine-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_plan_all_fine", label: 'Skuba Upgrade Plan All fine')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-all-fine-${BUILD_NUMBER}; make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
+                    }
+                }
+
+                stage('Run Skuba Upgrade Plan from previous Test') {
+                    steps {
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-from-previous-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_plan_from_previous", label: 'Skuba Upgrade Plan From Previous')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-plan-from-previous-${BUILD_NUMBER}; make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
+                    }
+                }
+
+                stage('Run Skuba Upgrade Apply All fine Test') {
+                    steps {
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-all-fine-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_apply_all_fine", label: 'Skuba Upgrade Apply All fine')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-all-fine-${BUILD_NUMBER}; make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
+                    }
+                }
+
+                stage('Run Skuba Upgrade Apply from previous Test') {
+                    steps {
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-from-previous-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_apply_from_previous", label: 'Skuba Upgrade Apply From Previous')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-from-previous-${BUILD_NUMBER}; make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
+                    }
+                }
+
+                stage('Run Skuba Upgrade Apply With User Lock') {
+                    steps {
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-user-lock-${BUILD_NUMBER}; make -f skuba/ci/Makefile test_upgrade_apply_user_lock", label: 'Skuba Upgrade Apply With User Lock')
+                        sh(script: "export TERRAFORM_STACK_NAME=${JOB_NAME}-apply-user-lock-${BUILD_NUMBER}; make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
+                    }
+                }
+            }
+        }
+
     }
     post {
         always {
