@@ -69,8 +69,6 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 
 	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
 		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))),
-		// to be able to install a fresh 1.14 cluster we have to explicitly install the wanted kubeadm version
-		fmt.Sprintf("kubernetes-kubeadm=%s", kubernetesBaseOSConfiguration.KubernetesVersion), // TODO: remove this line after we're out of the beta phase
 	)
 	return err
 }
