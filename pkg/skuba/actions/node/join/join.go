@@ -64,7 +64,6 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	}
 
 	statesToApply := []string{
-		"kubeadm.reset",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
@@ -92,6 +91,8 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	if joinConfiguration.Role == deployments.MasterRole {
 		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
 	}
+
+	statesToApply = append([]string{"kubeadm.reset"}, statesToApply...)
 
 	fmt.Println("[join] applying states to new node")
 
