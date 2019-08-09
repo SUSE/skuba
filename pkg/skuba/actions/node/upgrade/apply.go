@@ -126,14 +126,6 @@ func Apply(target *deployments.Target) error {
 				if err != nil {
 					return err
 				}
-			} else {
-				err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-					KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
-					KubernetesVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
-				}, "kubernetes.install-base-packages")
-				if err != nil {
-					return err
-				}
 			}
 			err = target.Apply(deployments.UpgradeConfiguration{
 				KubeadmConfigContents: string(initCfgContents),
@@ -142,9 +134,8 @@ func Apply(target *deployments.Target) error {
 				return err
 			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-				KubeadmVersion:    nodeVersionInfoUpdate.Update.APIServerVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Update.APIServerVersion.String(),
-			}, "kubernetes.install-base-packages")
+			}, "kubernetes.install-node-pattern")
 			if err != nil {
 				return err
 			}
@@ -200,22 +191,13 @@ func Apply(target *deployments.Target) error {
 				if err != nil {
 					return err
 				}
-			} else {
-				err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-					KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
-					KubernetesVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
-				}, "kubernetes.install-base-packages")
-				if err != nil {
-					return err
-				}
 			}
 			if err := target.Apply(nil, "kubeadm.upgrade.node"); err != nil {
 				return err
 			}
 			err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-				KubeadmVersion:    nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 				KubernetesVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
-			}, "kubernetes.install-base-packages")
+			}, "kubernetes.install-node-pattern")
 			if err != nil {
 				return err
 			}
