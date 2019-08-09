@@ -169,6 +169,7 @@ def main():
     cmd_test = commands.add_parser("test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
 
+    print("Received arguments: {}".format(sys.argv))
     options = parser.parse_args()
     try:
         conf = BaseConfig(options.yaml_path)
