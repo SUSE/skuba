@@ -36,7 +36,13 @@ type NodeVersionInfoUpdate struct {
 }
 
 func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
-	return reflect.DeepEqual(nviu.Current, nviu.Update)
+	return reflect.DeepEqual(nviu.Current.KubeletVersion, nviu.Update.KubeletVersion) &&
+		reflect.DeepEqual(nviu.Current.APIServerVersion, nviu.Update.APIServerVersion) &&
+		reflect.DeepEqual(nviu.Current.ControllerManagerVersion, nviu.Update.ControllerManagerVersion) &&
+		reflect.DeepEqual(nviu.Current.SchedulerVersion, nviu.Update.SchedulerVersion) &&
+		reflect.DeepEqual(nviu.Current.EtcdVersion, nviu.Update.EtcdVersion) &&
+		nviu.Current.ContainerRuntimeVersion.Major() == nviu.Update.ContainerRuntimeVersion.Major() &&
+		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor()
 }
 
 func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() bool {
