@@ -3,7 +3,7 @@ resource "openstack_lb_loadbalancer_v2" "lb" {
   vip_subnet_id = "${openstack_networking_subnet_v2.subnet.id}"
 
   security_group_ids = [
-    "${openstack_compute_secgroup_v2.secgroup_master_lb.id}",
+    "${openstack_networking_secgroup_v2.load_balancer.id}",
   ]
 }
 
