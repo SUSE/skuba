@@ -19,12 +19,6 @@ variable "ami_name_pattern" {
   description = "Pattern for choosing the AMI image"
 }
 
-variable "ami_owner" {
-  #default     = "679593333241"  # SUSE
-  default     = "013907871322" # amazon
-  description = "AMI owner id"
-}
-
 variable "authorized_keys" {
   type        = "list"
   default     = []

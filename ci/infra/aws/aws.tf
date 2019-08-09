@@ -12,27 +12,3 @@ provider "aws" {
   secret_key = "${var.aws_secret_key}"
   profile    = "default"
 }
-
-###########################################
-# images
-###########################################
-
-data "aws_ami" "latest_ami" {
-  filter {
-    name   = "name"
-    values = ["${var.ami_name_pattern}"]
-  }
-
-  most_recent = true
-  owners      = ["${var.ami_owner}"]
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
