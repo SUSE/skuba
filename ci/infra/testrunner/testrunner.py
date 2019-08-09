@@ -92,6 +92,7 @@ def main():
     parser.add_argument("-p", "--platform",
                         default="openstack",
                         choices=["openstack", "vmware", "bare-metal", "libvirt"],
+                        nargs="?",
                         help="The platform you're targeting. Defaults to openstack")
     parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
@@ -164,7 +165,7 @@ def main():
     test_args.add_argument("-t", "--test", dest="test", help="test to execute")
     test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
             help="only list tests to be executed")
-    test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
+    test_args.add_argument("--verbose", dest="verbose", action="store_true", default=False,
             help="show all output")
     cmd_test = commands.add_parser("test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
