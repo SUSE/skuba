@@ -35,6 +35,17 @@ type NodeVersionInfoUpdate struct {
 	Update  kubernetes.NodeVersionInfo
 }
 
+func (nviu NodeVersionInfoUpdate) HasMajorOrMinorUpdate() bool {
+	if nviu.Current.IsControlPlane() {
+		if nviu.Update.APIServerVersion.Major() > nviu.Current.APIServerVersion.Major() ||
+			nviu.Update.APIServerVersion.Minor() > nviu.Current.APIServerVersion.Minor() {
+			return true
+		}
+	}
+	return nviu.Update.KubeletVersion.Major() > nviu.Current.KubeletVersion.Major() ||
+		nviu.Update.KubeletVersion.Minor() > nviu.Current.KubeletVersion.Minor()
+}
+
 func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
 	return reflect.DeepEqual(nviu.Current, nviu.Update)
 }
