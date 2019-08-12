@@ -18,28 +18,28 @@ class Kubectl:
 
 
     def create_deployment(self, name, image):
-        self._run_kubectl("create deployment {name} --image={image}"
+        self.run_kubectl("create deployment {name} --image={image}"
                           .format(name=name, image=image))
 
     def scale_deployment(self, name, replicas):
-        self._run_kubectl("scale deployment {name} --replicas={replicas}"
+        self.run_kubectl("scale deployment {name} --replicas={replicas}"
                           .format(name=name, replicas=replicas))
 
     def expose_deployment(self, name, port, nodeType="NodePort"):
-        self._run_kubectl("expose deployment {name} --port={port} --type={nodeType}"
+        self.run_kubectl("expose deployment {name} --port={port} --type={nodeType}"
                           .format(name=name, port=port, nodeType=nodeType))
 
     def wait_deployment(self, name, timeout):
-        self._run_kubectl("wait --for=condition=available deploy/{name} --timeout={timeout}m"
+        self.run_kubectl("wait --for=condition=available deploy/{name} --timeout={timeout}m"
                           .format(name=name, timeout=timeout))
 
     def count_available_replicas(self, name):
-        result = self._run_kubectl("get deployment/{name} | jq '.status.availableReplicas'"
+        result = self.run_kubectl("get deployment/{name} | jq '.status.availableReplicas'"
                                    .format(name=name))
         return int(result)
 
     def get_service_port(self, name):
-        result = self._run_kubectl("get service/{name} | jq '.spec.ports[0].nodePort'"
+        result = self.run_kubectl("get service/{name} | jq '.spec.ports[0].nodePort'"
                                    .format(name=name))
         return int(result)
 
@@ -57,15 +57,15 @@ class Kubectl:
                                 .format(name, path, ip_address)) from ex
  
     def lock_kured(self):
-        self._run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
+        self.run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
 
 
     def unlock_kured(self):
-        self._run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock-")
+        self.run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock-")
 
 
     def check_kured_lock(self):
-        return self._run_kubectl("-n kube-system get ds/kured",
+        return self.run_kubectl("-n kube-system get ds/kured",
             outputformat="-o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
 
 
