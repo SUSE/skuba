@@ -74,6 +74,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	statesToApply := []string{
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"bpffs.mount",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",

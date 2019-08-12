@@ -183,6 +183,9 @@ func Apply(target *deployments.Target) error {
 			return err
 		}
 	}
+	if err := target.Apply(nil, "bpffs.mount"); err != nil {
+		return err
+	}
 
 	fmt.Printf("Node %s (%s) successfully upgraded\n", target.Nodename, target.Target)
 
