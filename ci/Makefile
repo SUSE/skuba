@@ -82,5 +82,5 @@ test_upgrade_apply_from_previous:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_from_previous
 
 .PHONY: test_upgrade_apply_user_lock
-test_upgrade_apply_all_fine:
+test_upgrade_apply_user_lock:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_user_lock
