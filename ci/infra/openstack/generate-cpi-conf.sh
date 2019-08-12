@@ -8,10 +8,10 @@ error() { (>&2 echo -e "[ ERROR ] $@") ;}
 if [ -z "${OS_AUTH_URL}" ] || [ -z "${OS_USERNAME}" ] || \
    [ -z "${OS_PASSWORD}" ] || [ -z "${OS_PROJECT_ID}" ] || \
    [ -z "${OS_PRIVATE_SUBNET_ID}" ] || [ -z "${OS_PUBLIC_NET_ID}" ]; then
-  error '$OS_AUTH_URL $OS_USERNAME $OS_PASSWORD $OS_PROJECT_ID'
-  error '$OS_PRIVATE_SUBNET_ID $OS_PUBLIC_NET_ID must be specified'
-  error 'Please download and source your OpenStack RC file'
-  exit 1
+    error '$OS_AUTH_URL $OS_USERNAME $OS_PASSWORD $OS_PROJECT_ID'
+    error '$OS_PRIVATE_SUBNET_ID $OS_PUBLIC_NET_ID must be specified'
+    error 'Please download and source your OpenStack RC file'
+    exit 1
 fi
 
 OPENSTACK_CONF="openstack.conf"
@@ -53,8 +53,8 @@ umask 022
 if [ -z "${TR_STACK}" ] || [ -z "${TR_LB_IP}" ] || \
    [ -z "$TR_MASTER_IPS" ] || [ -z "$TR_WORKER_IPS" ] || \
    [ -z "${TR_USERNAME}" ]; then
-  error '$TR_STACK $TR_LB_IP $TR_MASTER_IPS $TR_WORKER_IPS must be specified'
-  exit 1
+    error '$TR_STACK $TR_LB_IP $TR_MASTER_IPS $TR_WORKER_IPS must be specified'
+    exit 1
 fi
 
 info "### Run following commands to bootstrap skuba cluster:\n"
@@ -64,16 +64,16 @@ cmd " cd ${TR_STACK}-cluster"
 
 i=0
 for MASTER in $TR_MASTER_IPS; do
-  if [ $i -eq "0" ]; then
-    cmd " skuba node bootstrap --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-0"
-  else
-    cmd " skuba node join --role master --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-${i}"
-  fi
-  ((++i))
+    if [ $i -eq "0" ]; then
+        cmd " skuba node bootstrap --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-0"
+    else
+        cmd " skuba node join --role master --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-${i}"
+    fi
+    ((++i))
 done
 
 i=0
 for WORKER in $TR_WORKER_IPS; do
-  cmd " skuba node join --role worker --target ${WORKER} --sudo --user ${TR_USERNAME} caasp-worker-${TR_STACK}-${i}"
-  ((++i))
+    cmd " skuba node join --role worker --target ${WORKER} --sudo --user ${TR_USERNAME} caasp-worker-${TR_STACK}-${i}"
+    ((++i))
 done
