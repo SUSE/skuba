@@ -83,7 +83,7 @@ var (
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion:          "1.15.2",
-				ContainerRuntimeVersion: "1.15.2",
+				ContainerRuntimeVersion: "1.15.0",
 			},
 			AddonsVersion: AddonsVersion{
 				CiliumVersion:  "1.5.3",
