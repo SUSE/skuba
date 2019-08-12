@@ -14,6 +14,6 @@ resource "null_resource" "generate_cloud_provider_conf" {
       OS_PUBLIC_NET_ID     = "${data.openstack_networking_network_v2.external_network.id}"
     }
 
-    command = "bash generate-cloud-provider-conf"
+    command = "bash generate-cpi-conf.sh"
   }
 }
