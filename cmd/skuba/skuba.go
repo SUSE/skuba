@@ -49,7 +49,6 @@ func newRootCmd() *cobra.Command {
 }
 
 func main() {
-	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
 	klog.InitFlags(nil)
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
