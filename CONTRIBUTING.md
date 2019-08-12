@@ -76,6 +76,8 @@ And tag:
 
 * Push
   git push --tags origin master
+  
+  Note: Assuming origin is github.com/SUSE/skuba 
 
 * Checkout the tag
   git checkout vx.y.z
