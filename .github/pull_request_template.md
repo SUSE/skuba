@@ -23,8 +23,6 @@ Special test cases, manual steps, links to resources or anything else that could
 This is info for QA so that they can validate this. This is **mandatory** if this PR fixes a bug.
 If this is a new feature, a good description in "What does this PR do" may be enough.
 
-### Steps to reproduce the bug
-
 ### Related info
 
 Info that can be relevant for QA:
