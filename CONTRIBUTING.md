@@ -56,35 +56,28 @@ This will be checked automatically by our CI linter bot.
 +   https://github.com/SUSE/skuba/pull/573                               +
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+In order to create a new release, perform the following steps:
 
-In order to create a new release, create a Pull Request with these changes:
+* Create a tag:
+  * Tag with `vX.Y.Z`: `git tag -s vX.Y.Z -m "Tag X.Y.Z" <commit>`
+  * Allowed tag format:
+    * `vX.Y.Z-alphaN?`: creates an alpha release (e.g. `v1.0.0-alpha`,
+      `v1.0.0-alpha3`)
+    * `vX.Y.Z-betaN?`: creates a beta release (e.g. `v1.0.0-beta`,
+      `v1.0.0-beta1`)
+    * `vX.Y.Z-rcN?`: creates a release candidate (e.g. `v1.0.0-rc`,
+      `v1.0.0-rc2`)
+    * `vX.Y.Z`: creates a final release
+  * `<commit>` argument can be omitted if you want the tag to point to `HEAD`
 
-  * Update the VERSION file:
-    echo "x.y.z" > VERSION
+* Push the tag: `git push <remote> vX.Y.Z`
+  * Note: `<remote>` should be pointing to the
+    `github.com/SUSE/skuba` repository
 
-  * Commit with the message "Bump version: x.y.z", being x.y.z the version. Please use semantic versioning.
-    git commit -m "Bump version: x.y.z" -s
+* Checkout the tag: `git checkout vX.Y.Z`
 
-Ask for a reviewer. Once reviewed, checkout master branch:
+* Create the changelog: `make suse-package`
 
-    * git checkout master && git pull
+* Add a new release at https://github.com/SUSE/skuba/releases with the contents from the file `ci/packaging/suse/obs_files/skuba.changes.append`
 
-And tag:
-
-  * Tag with vx.y.z
-    git tag -s vx.y.z -m "Tag x.y.z"
-
-* Push
-  git push --tags origin master
-  
-  Note: Assuming origin is github.com/SUSE/skuba 
-
-* Checkout the tag
-  git checkout vx.y.z
-
-* Create the changelog:
-  make suse-package 
-
-* Add a new release at https://github.com/SUSE/skuba/releases with the contents from the file ci/packaging/suse/obs_files/skuba.changes.append
-
-* Use the files in ci/packaging/suse/obs_files to update the skuba package
+* Use the files in `ci/packaging/suse/obs_files` to update the skuba package
