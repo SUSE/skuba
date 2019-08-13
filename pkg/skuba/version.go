@@ -23,35 +23,37 @@ import (
 )
 
 var (
-	Version   string
-	BuildDate string
-	Commit    string
-	Tag       string
+	Version      string
+	BuildDate    string
+	Tag          string
+	AnnotatedTag string
 )
 
 type SkubaVersion struct {
 	Version   string
 	BuildType string
 	BuildDate string
-	Commit    string
 	Tag       string
 	GoVersion string
 }
 
 func CurrentVersion() SkubaVersion {
-	return SkubaVersion{
+	skubaVersion := SkubaVersion{
 		Version:   Version,
 		BuildType: BuildType,
 		BuildDate: BuildDate,
-		Commit:    Commit,
 		Tag:       Tag,
 		GoVersion: runtime.Version(),
 	}
+	if skubaVersion.Version == "" {
+		skubaVersion.Version = fmt.Sprintf("untagged (%s)", AnnotatedTag)
+	}
+	return skubaVersion
 }
 
 func (s SkubaVersion) String() string {
 	if s.Tag == "" {
-		return fmt.Sprintf("skuba version: %s (%s) %s %s %s", s.Version, s.BuildType, s.Commit, s.BuildDate, s.GoVersion)
+		return fmt.Sprintf("skuba version: %s (%s) %s %s", s.Version, s.BuildType, s.BuildDate, s.GoVersion)
 	}
-	return fmt.Sprintf("skuba version: %s (%s) %s (tagged as %q) %s %s", s.Version, s.BuildType, s.Commit, s.Tag, s.BuildDate, s.GoVersion)
+	return fmt.Sprintf("skuba version: %s (%s) (tagged as %q) %s %s", s.Version, s.BuildType, s.Tag, s.BuildDate, s.GoVersion)
 }

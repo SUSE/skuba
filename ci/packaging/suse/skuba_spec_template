@@ -71,6 +71,9 @@ including patches requiring reboot.
 %patch0 -p1
 
 %build
+# TAG and ANNOTATED_TAG envvars are populated so the Makefile will read this information
+export TAG="%%TAG"
+export ANNOTATED_TAG="%%ANNOTATED_TAG"
 mkdir -pv $HOME/go/src/%{go_project}
 cp -avr * $HOME/go/src/%{go_project}
 cd $HOME/go/src/%{go_project}
