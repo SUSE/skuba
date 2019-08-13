@@ -5,11 +5,9 @@
 pipeline {
    agent { node { label 'caasp-team-private' } }
 
-   properties([
-       parameters([
-           string(name: 'E2E_MAKE_TARGET_NAME', defaultValue: 'all', description: 'The make target to run (only e2e related)')
-       ])
-   ])
+   parameters {
+        string(name: 'E2E_MAKE_TARGET_NAME', defaultValue: 'all', description: 'The make target to run (only e2e related)')
+   }
 
    environment {
         SKUBA_BINPATH = "/home/jenkins/go/bin/skuba"
@@ -25,7 +23,7 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
-        stage("Run Skuba ${E2E_MAKE_TARGET_NAME} Test") {
+        stage('Run Skuba e2e Test') {
             steps {
                 sh(script: "make -f skuba/ci/Makefile ${E2E_MAKE_TARGET_NAME}", label: "${E2E_MAKE_TARGET_NAME}")
                 sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
