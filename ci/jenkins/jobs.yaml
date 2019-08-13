@@ -13,7 +13,6 @@
         - '{name}-code-author'
         - '{name}-handle-pr'
         - '{name}-jjb-validation'
-        - '{name}-upgrade-nightly'
 
 - project:
       name: caasp-jobs/caasp-v4-openstack
@@ -36,6 +35,19 @@
           - '{name}-conformance'
           - '{name}-nightly'
           - '{name}-update-nightly'
+
+- project:
+    name: caasp-jobs/e2e/caasp-v4-openstack
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    platform: openstack
+    jobs:
+        - '{name}-test_upgrade_plan_all_fine-nightly'
+        - '{name}-test_upgrade_plan_from_previous-nightly'
+        - '{name}-test_upgrade_apply_all_fine-nightly'
+        - '{name}-test_upgrade_apply_from_previous-nightly'
+        - '{name}-test_upgrade_apply_user_lock-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb
