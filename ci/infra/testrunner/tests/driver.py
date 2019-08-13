@@ -1,5 +1,10 @@
 import os
-import pytest 
+import pytest
+
+
+FILEPATH = os.path.realpath(__file__)
+TESTRUNNER_DIR = os.path.dirname(os.path.dirname(FILEPATH))
+
 
 class PyTestOpts:
 
@@ -8,8 +13,6 @@ class PyTestOpts:
     COLLECT_TESTS = "--collect-only"
 
 class TestDriver:
-
-
     def __init__(self, conf, platform):
         self.conf = conf
         self.platform = platform
@@ -44,5 +47,8 @@ class TestDriver:
 
         # Path must be the last argument
         opts.append(test_path)
+
+        # Before running the tests, switch to the directory of the testrunner.py
+        os.chdir(TESTRUNNER_DIR)
 
         pytest.main(args=opts) 

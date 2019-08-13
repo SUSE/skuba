@@ -56,19 +56,6 @@ class Kubectl:
             raise Exception("Error testing service {} with path {} at node {}"
                                 .format(name, path, ip_address)) from ex
  
-    def lock_kured(self):
-        self._run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
-
-
-    def unlock_kured(self):
-        self._run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock-")
-
-
-    def check_kured_lock(self):
-        return self._run_kubectl("-n kube-system get ds/kured",
-            outputformat="-o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
-
-
     def run_kubectl(self, command):
         kubeconfig = self.skuba.get_kubeconfig()
         
