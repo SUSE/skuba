@@ -28,6 +28,7 @@ reconfiguration in an easy way.
   Node handling commands.
 
 # SEE ALSO
+**skuba-auth-login**(1),
 **skuba-cluster-init**(1),
 **skuba-cluster-status**(1),
 **skuba-cluster-upgrade-plan**(1),
