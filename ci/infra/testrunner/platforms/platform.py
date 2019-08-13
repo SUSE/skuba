@@ -31,6 +31,7 @@ class Platform:
             raise Exception("Failure(s) during cleanup")
         finally:
             self.utils.cleanup_files(self.tmp_files)
+            self.utils.ssh_cleanup()
 
     @timeout(600)
     @step

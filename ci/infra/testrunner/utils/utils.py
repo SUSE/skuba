@@ -1,9 +1,11 @@
 import glob
+import hashlib
 import logging
 import os
 import shutil
 import subprocess
 from functools import wraps
+from tempfile import gettempdir
 
 import requests
 from timeout_decorator import timeout
@@ -64,6 +66,23 @@ class Utils:
         """Remove any files or dirs in a list if they exist"""
         for file in files:
             Utils.cleanup_file(file)
+
+    def ssh_cleanup(self):
+        """Remove ssh sock files"""
+        # TODO: also kill ssh agent here? maybe move pkill to kill_ssh_agent()?
+        sock_file = self.ssh_sock_fn()
+        sock_dir = os.path.dirname(sock_file)
+        try:
+            Utils.cleanup_file(sock_file)
+            # also remove tempdir if it's empty afterwards
+            if 0 == len(os.listdir(sock_dir)):
+                os.rmdir(sock_dir)
+            else:
+                logger.warning(f"Dir {sock_dir} not empty; leaving it")
+        except FileNotFoundError:
+            pass
+        except OSError as ex:
+            logger.exception(ex)
 
     def collect_remote_logs(self, ip_address, logs, store_path):
         """
@@ -189,7 +208,21 @@ class Utils:
         return p.stdout.decode()
 
     def ssh_sock_fn(self):
-        return os.path.join(self.conf.workspace, "ssh-agent-sock")
+        """generate path to ssh socket
+
+        A socket path can't be over 107 chars on Linux, so generate a short
+        hash of the workspace and use that in $TMPDIR (usually /tmp) so we have
+        a predictable, test-unique, fixed-length path.
+        """
+        path = os.path.join(
+            gettempdir(),
+            hashlib.md5(self.conf.workspace.encode()).hexdigest(),
+            "ssh-agent-sock"
+        )
+        maxl = 107
+        if len(path) > maxl:
+            raise Exception(f"Socket path '{path}' len {len(path)} > {maxl}")
+        return path
 
     @timeout(60)
     @step
@@ -198,6 +231,23 @@ class Utils:
 
         # use a dedicated agent to minimize stateful components
         sock_fn = self.ssh_sock_fn()
+        # be sure directory containing socket exists and socket doesn't exist
+        if os.path.exists(sock_fn):
+            try:
+                if os.path.isdir(sock_fn):
+                    os.path.rmdir(sock_fn)  # rmdir only removes an empty dir
+                else:
+                    os.path.remove(sock_fn)
+            except FileNotFoundError:
+                pass
+        try:
+            os.mkdir(os.path.dirname(sock_fn), mode=0o700)
+        except FileExistsError:
+            if os.path.isdir(os.path.dirname(sock_fn)):
+                pass
+            else:
+                raise
+        # clean up old ssh agent process(es)
         try:
             self.runshellcommand("pkill -f 'ssh-agent -a {}'".format(sock_fn))
             logger.warning("Killed previous instance of ssh-agent")
