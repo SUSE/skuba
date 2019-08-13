@@ -20,6 +20,8 @@ package upgrade
 import (
 	"fmt"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
@@ -27,18 +29,19 @@ import (
 func Plan(nodeName string) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
 
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	if err != nil {
+		return err
+	}
 	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(nodeName)
 	if err != nil {
 		return err
 	}
 
-	if nodeVersionInfoUpdate.Current.IsControlPlane() {
-		fmt.Printf("Current Kubernetes cluster version: %s\n", nodeVersionInfoUpdate.Current)
-		fmt.Printf("Latest Kubernetes version: %s\n", nodeVersionInfoUpdate.Update)
-	} else {
-		fmt.Printf("Current worker node version: %s\n", nodeVersionInfoUpdate.Current)
-		fmt.Printf("Current cluster version: %s\n", nodeVersionInfoUpdate.Update)
-	}
+	fmt.Printf("Current Kubernetes cluster version: %s\n", currentClusterVersion.String())
+	fmt.Printf("Latest Kubernetes version: %s\n", kubernetes.LatestVersion().String())
+	fmt.Println()
+	fmt.Printf("Current Node version: %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String())
 	fmt.Println()
 
 	if nodeVersionInfoUpdate.IsUpdated() {
