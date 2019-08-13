@@ -26,6 +26,7 @@ var (
 	Version   string
 	BuildDate string
 	Commit    string
+	Tag       string
 )
 
 type SkubaVersion struct {
@@ -33,6 +34,7 @@ type SkubaVersion struct {
 	BuildType string
 	BuildDate string
 	Commit    string
+	Tag       string
 	GoVersion string
 }
 
@@ -42,10 +44,14 @@ func CurrentVersion() SkubaVersion {
 		BuildType: BuildType,
 		BuildDate: BuildDate,
 		Commit:    Commit,
+		Tag:       Tag,
 		GoVersion: runtime.Version(),
 	}
 }
 
 func (s SkubaVersion) String() string {
-	return fmt.Sprintf("skuba version: %s (%s) %s %s %s", s.Version, s.BuildType, s.Commit, s.BuildDate, s.GoVersion)
+	if s.Tag == "" {
+		return fmt.Sprintf("skuba version: %s (%s) %s %s %s", s.Version, s.BuildType, s.Commit, s.BuildDate, s.GoVersion)
+	}
+	return fmt.Sprintf("skuba version: %s (%s) %s (tagged as %q) %s %s", s.Version, s.BuildType, s.Commit, s.Tag, s.BuildDate, s.GoVersion)
 }

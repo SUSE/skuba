@@ -22,11 +22,13 @@ GOBINPATH    := $(shell $(GO) env GOPATH)/bin
 VERSION      := $(shell cat VERSION)
 COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
 BUILD_DATE   := $(shell date +%Y%m%d)
+TAG          := $(shell git show-ref --tags | grep $(COMMIT) | awk '{print $2}' | cut -d/ -f3)
 TAGS         := development
 PROJECT_PATH := github.com/SUSE/skuba
 SKUBA_LDFLAGS = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
                           -X=$(PROJECT_PATH)/pkg/skuba.Commit=$(COMMIT) \
-                          -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE)"
+                          -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE) \
+                          -X=$(PROJECT_PATH)/pkg/skuba.Tag=$(TAG)"
 
 SKUBA_DIRS    = cmd pkg internal test
 
