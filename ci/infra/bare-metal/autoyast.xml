@@ -122,8 +122,8 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
     <setup_before_proposal config:type="boolean">true</setup_before_proposal>
     <managed config:type="boolean">false</managed>
     <routing>
-      <ipv4_forward config:type="boolean">false</ipv4_forward>
-      <ipv6_forward config:type="boolean">false</ipv6_forward>
+      <ipv4_forward config:type="boolean">true</ipv4_forward>
+      <ipv6_forward config:type="boolean">true</ipv6_forward>
     </routing>
   </networking>
 
