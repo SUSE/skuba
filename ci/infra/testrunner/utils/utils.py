@@ -59,7 +59,7 @@ class Utils:
             except Exception as ex:
                 logger.exception(ex)
         else:
-            logger.warning(f"Could not clean up {file}")
+            logger.warning(f"Nothing to clean up for {file}")
 
     @staticmethod
     def cleanup_files(files):
@@ -237,7 +237,7 @@ class Utils:
                 if os.path.isdir(sock_fn):
                     os.path.rmdir(sock_fn)  # rmdir only removes an empty dir
                 else:
-                    os.path.remove(sock_fn)
+                    os.remove(sock_fn)
             except FileNotFoundError:
                 pass
         try:
