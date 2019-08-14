@@ -52,11 +52,11 @@ class Skuba:
         # everything so we can do whatever we want during cleanup
         Utils.chmod_recursive(conf.workspace, 0o777)
 
-        dirs = [os.path.join(conf.workspace, "test-cluster"),
-                os.path.join(conf.workspace, "go"),
-                os.path.join(conf.workspace, "logs"),
-                #TODO: move this to utils as ssh_cleanup
-                os.path.join(conf.workspace, "ssh-agent-sock")]
+        dirs = [
+            os.path.join(conf.workspace, "test-cluster"),
+            os.path.join(conf.workspace, "go"),
+            os.path.join(conf.workspace, "logs"),
+        ]
 
         Utils.cleanup_files(dirs)
 
@@ -185,6 +185,6 @@ class Skuba:
         if cwd is None:
            cwd=self.cwd
 
-        env = {"SSH_AUTH_SOCK": os.path.join(self.conf.workspace, "ssh-agent-sock")}
+        env = {"SSH_AUTH_SOCK": self.utils.ssh_sock_fn()}
 
         return self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
