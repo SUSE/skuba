@@ -53,9 +53,11 @@ class Utils:
         if os.path.exists(file):
             logger.info(f"Cleaning up {file}")
             try:
-                if os.path.isfile(file):
+                try:
+                    # Attempt to remove the file first, because a socket (e.g.
+                    # ssh-agent) is not a file but has to be removed like one.
                     os.remove(file)
-                else:
+                except IsADirectoryError:
                     shutil.rmtree(file)
             except Exception as ex:
                 logger.exception(ex)
@@ -191,7 +193,7 @@ class Utils:
             logger.info("Executing command {}".format(cmd))
 
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
-                           env=env, cwd=cwd)
+                 env=env, cwd=cwd)
         logger.debug(p.stdout.decode())
         if p.returncode != 0:
             logger.error(p.stderr)
