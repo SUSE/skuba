@@ -25,6 +25,9 @@ vmware:
   env_file: "" #os.getenv("VMWARE_ENV_FILE")
   template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("VMWARE_TEMPLATE_NAME")
 
+log:
+  level: DEBUG
+
 # node settings
 lb:
   count: 1
