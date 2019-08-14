@@ -6,7 +6,9 @@ import shutil
 from utils.format import Format
 from utils.utils import (step, Utils)
 
+
 logger = logging.getLogger('testrunner')
+
 
 class Skuba:
 
@@ -23,23 +25,7 @@ class Skuba:
 
     def _verify_bootstrap_dependency(self):
         if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise Exception("test-cluster not found. Please run bootstrap and try again")
-
-    @staticmethod
-    @step
-    def build(conf):
-        """Builds skuba from source"""
-        utils = Utils(conf)
-        go_dir = os.path.join(conf.workspace, "go")
-        src_dir = os.path.join(go_dir, "src/github.com/SUSE")
-
-        # Make a fresh copy of the source code
-        utils.cleanup_file(go_dir)
-        os.makedirs(src_dir, exist_ok=True)
-        shutil.copytree(conf.skuba.srcpath, os.path.join(src_dir, os.path.basename(conf.skuba.srcpath)))
-
-        utils.gorun("go version")
-        utils.gorun("make")
+            raise ValueError("test-cluster not found. Please run bootstrap and try again")
 
     @staticmethod
     @step
@@ -67,9 +53,8 @@ class Skuba:
 
         k8s_version_option = ""
         if kubernetes_version:
-           k8s_version_option = "--kubernetes-version {}".format(kubernetes_version)
-        cmd = "cluster init --control-plane {} {} test-cluster".format(
-                   self.platform.get_lb_ipaddr(), k8s_version_option)
+            k8s_version_option = "--kubernetes-version {}".format(kubernetes_version)
+        cmd = "cluster init --control-plane {} {} test-cluster".format(self.platform.get_lb_ipaddr(), k8s_version_option)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
@@ -93,12 +78,12 @@ class Skuba:
             raise ValueError("Node number cannot be negative")
 
         if nr >= len(ip_addrs):
-            raise Exception(Format.alert("Node {role}-{nr} no deployed in "
-                      "infrastructure".format(role=role, nr=nr)))
+            raise Exception(Format.alert("Node {role}-{nr} is not deployed in "
+                                         "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node join --role {role} --user {username} --sudo --target {ip} \
                my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
-                                   username=self.conf.nodeuser)
+                                      username=self.conf.nodeuser)
         try:
             self._run_skuba(cmd)
         except Exception as ex:
@@ -172,8 +157,8 @@ class Skuba:
 
     @step
     def get_kubeconfig(self):
-         path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
-         return path
+        path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
+        return path
 
     def _run_skuba(self, cmd, cwd=None):
         """Running skuba command in cwd.
@@ -183,8 +168,8 @@ class Skuba:
         self._verify_skuba_bin_dependency()
 
         if cwd is None:
-           cwd=self.cwd
+            cwd = self.cwd
 
         env = {"SSH_AUTH_SOCK": self.utils.ssh_sock_fn()}
 
-        return self.utils.runshellcommand(self.binpath + " "+ cmd, cwd=cwd, env=env)
+        return self.utils.runshellcommand(self.binpath + " " + cmd, cwd=cwd, env=env)

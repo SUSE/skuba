@@ -7,16 +7,18 @@
 
 import logging
 import sys
-from argparse import (ArgumentParser, REMAINDER)
+from argparse import REMAINDER, ArgumentParser
+
 
 import platforms
 from skuba import Skuba
 from tests import TestDriver
-from utils import (BaseConfig, Logger, Utils)
+from utils import BaseConfig, Logger, Utils
 
 __version__ = "0.0.3"
 
 logger = logging.getLogger("testrunner")
+
 
 def info(options):
     print(Utils(options.conf).info())
@@ -29,12 +31,8 @@ def cleanup(options):
 
 def provision(options):
     platforms.get_platform(options.conf, options.platform).provision(
-                 num_master=options.master_count,
-                 num_worker=options.worker_count)
-
-
-def build_skuba(options):
-    Skuba.build(options.conf)
+        num_master=options.master_count,
+        num_worker=options.worker_count)
 
 
 def bootstrap(options):
@@ -52,31 +50,37 @@ def cluster_upgrade_plan(options):
 
 
 def get_logs(options):
-    platform_logging_errors = platforms.get_platform(options.conf, options.platform).gather_logs()
+    platform_logging_errors = platforms.get_platform(
+        options.conf, options.platform).gather_logs()
 
     if platform_logging_errors:
         raise Exception("Failure(s) while collecting logs")
 
 
 def join_node(options):
-    Skuba(options.conf, options.platform).node_join(role=options.role, nr=options.node)
+    Skuba(options.conf, options.platform).node_join(
+        role=options.role, nr=options.node)
 
 
 def remove_node(options):
-    Skuba(options.conf, options.platform).node_remove(role=options.role, nr=options.node)
+    Skuba(options.conf, options.platform).node_remove(
+        role=options.role, nr=options.node)
 
 
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
-            action=options.upgrade_action, role=options.role, nr=options.node)
+        action=options.upgrade_action, role=options.role, nr=options.node)
 
 
 def test(options):
     TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
-            verbose=options.verbose, collect=options.collect)
+                                                   verbose=options.verbose, collect=options.collect)
+
 
 def ssh(options):
-    platforms.get_platform(options.conf, options.platform).ssh_run(role=options.role, nr=options.node, cmd=" ".join(options.cmd))
+    platforms.get_platform(options.conf, options.platform).ssh_run(
+        role=options.role, nr=options.node, cmd=" ".join(options.cmd))
+
 
 def main():
     help_str = """
@@ -91,9 +95,10 @@ def main():
                         help='path for platform yaml file. Default is vars.yaml. eg: -v myconfig.yaml')
     parser.add_argument("-p", "--platform",
                         default="openstack",
-                        choices=["openstack", "vmware", "bare-metal", "libvirt"],
+                        choices=["openstack", "vmware",
+                                 "bare-metal", "libvirt"],
                         help="The platform you're targeting. Defaults to openstack")
-    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help ="log level",
+    parser.add_argument("-l", "--log-level", dest="log_level", default=None, help="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
 
     # Sub commands
@@ -105,7 +110,8 @@ def main():
     cmd_log = commands.add_parser("get_logs",  help="gather logs from nodes")
     cmd_log.set_defaults(func=get_logs)
 
-    cmd_cleanup = commands.add_parser("cleanup", help="cleanup created skuba environment")
+    cmd_cleanup = commands.add_parser(
+        "cleanup", help="cleanup created skuba environment")
     cmd_cleanup.set_defaults(func=cleanup)
 
     cmd_provision = commands.add_parser("provision", help="provision nodes for cluster in "
@@ -116,26 +122,22 @@ def main():
     cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
                                help='number of workers nodes to be deployed. eg: -w 2')
 
-    cmd_build = commands.add_parser("build-skuba", help="build skuba environment \
-                        {workspace}/go/src/github.com/SUSE/skuba and build skuba \
-                        in that directory")
-    cmd_build.set_defaults(func=build_skuba)
-
     cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
                         deployed nodes in your platform")
-    cmd_bootstrap.add_argument("-k","--kubernetes-version", help="kubernetes version",
-                        dest="kubernetes_version", default=None)
+    cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
+                               dest="kubernetes_version", default=None)
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
 
-    cmd_cluster_upgrade_plan = commands.add_parser("cluster-upgrade-plan", help="Cluster upgrade plan")
+    cmd_cluster_upgrade_plan = commands.add_parser(
+        "cluster-upgrade-plan", help="Cluster upgrade plan")
     cmd_cluster_upgrade_plan.set_defaults(func=cluster_upgrade_plan)
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
-    node_args.add_argument("-r", "--role", dest="role",choices=["master", "worker"],
+    node_args.add_argument("-r", "--role", dest="role", choices=["master", "worker"],
                            help='role of the node to be added or deleted. eg: --role master')
     node_args.add_argument("-n", "--node", dest="node", type=int,
                            help='node to be added or deleted.  eg: -n 0')
@@ -149,9 +151,9 @@ def main():
     cmd_rem_node.set_defaults(func=remove_node)
 
     cmd_node_upgrade = commands.add_parser("node-upgrade", parents=[node_args],
-                                         help="upgrade kubernetes version in node")
+                                           help="upgrade kubernetes version in node")
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
-                              help="action: plan or apply upgrade", choices=["plan", "apply"])
+                                  help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
 
     ssh_args = ArgumentParser(add_help=False)
@@ -160,13 +162,15 @@ def main():
     cmd_ssh.set_defaults(func=ssh)
 
     test_args = ArgumentParser(add_help=False)
-    test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")
+    test_args.add_argument(
+        "-s", "--suite", dest="test_suite", help="test file name")
     test_args.add_argument("-t", "--test", dest="test", help="test to execute")
     test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
-            help="only list tests to be executed")
+                           help="only list tests to be executed")
     test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-            help="show all output")
-    cmd_test = commands.add_parser("test", parents=[test_args], help="execute tests")
+                           help="show all output")
+    cmd_test = commands.add_parser(
+        "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
 
     options = parser.parse_args()
@@ -176,10 +180,9 @@ def main():
         options.conf = conf
         options.func(options)
     except Exception as ex:
-        logger.error("Exception executing testrunner command '{}': {}".format(options.command, ex, exc_info=True))
+        logger.error("Exception executing testrunner command '{}': {}".format(
+            options.command, ex, exc_info=True))
         sys.exit(255)
-
-
 
 
 if __name__ == '__main__':

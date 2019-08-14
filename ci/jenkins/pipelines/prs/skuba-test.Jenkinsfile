@@ -8,6 +8,9 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
+        SKUBA_BIN_PATH = "/home/jenkins/go/bin/skuba"
+        GINKGO_BIN_PATH = "${WORKSPACE}/skuba/ginkgo"
+        IP_FROM_TF_STATE = "TRUE"
         OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack'
@@ -49,6 +52,7 @@ pipeline {
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+            sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
         } }
 
         stage('Cluster Deployment') { steps {
@@ -60,7 +64,8 @@ pipeline {
         stage('Run end-to-end tests') { steps {
            dir("skuba") {
              sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
+             sh(script: "make setup-ssh", label: "Setup SSH")
+             sh(script: "make test-e2e", label: "End-to-end tests")
        } } }
     }
     post {

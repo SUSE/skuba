@@ -16,10 +16,6 @@ all: deploy bootstrap
 bootstrap_environment:
 	${TEST_RUNNER} --platform ${PLATFORM} bootstrap
 
-.PHONY: build_skuba
-build_skuba:
-	${TEST_RUNNER} --platform ${PLATFORM} build-skuba
-
 .PHONY: create_environment
 create_environment:
 	${TEST_RUNNER} --platform ${PLATFORM} provision
@@ -56,7 +52,7 @@ pre_deployment: info
 pr_checks: git_rebase_check
 
 .PHONY: deploy
-deploy: create_environment build_skuba
+deploy: create_environment
 
 .PHONY: bootstrap
 bootstrap: bootstrap_environment
