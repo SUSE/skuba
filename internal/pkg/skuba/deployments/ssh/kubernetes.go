@@ -68,7 +68,7 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 	}
 
 	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))),
+		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion))),
 	)
 	return err
 }
@@ -78,10 +78,10 @@ func kubernetesInstallIntermediateNodePattern(t *Target, data interface{}) error
 	if !ok {
 		return errors.New("couldn't access kubernetes base OS configuration")
 	}
-	kubeadmVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubeadmVersion))
-	kubernetesVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))
+	updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
+	currentVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion))
 	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s-%s", kubernetesVersion, kubeadmVersion),
+		fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion),
 	)
 	return err
 }
