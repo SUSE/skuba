@@ -8,7 +8,7 @@ CURRENT_VERSION = "1.15.0"
 
 @pytest.fixture
 def setup(request, platform, skuba):
-    platform.provision(num_master=1, num_worker=1)
+    platform.provision(num_master=3, num_worker=3)
 
     def cleanup():
         platform.cleanup()
@@ -133,17 +133,21 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
     setup_kubernetes_version(skuba, PREVIOUS_VERSION)
 
     # lock kured
-    kubectl.run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
+    kubectl.run_kubectl(
+        "-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
 
     outs = {}
     for (r, n) in [("master", 0), ("worker", 0)]:
         node = "my-{}-{}".format(r, n)
         # disable skuba-update.timer
-        platform.ssh_run(r, n, "sudo systemctl disable --now skuba-update.timer")
+        platform.ssh_run(
+            r, n, "sudo systemctl disable --now skuba-update.timer")
         outs[node] = skuba.node_upgrade("apply", r, n)
-        assert platform.ssh_run(r, n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
+        assert platform.ssh_run(
+            r, n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
 
-    assert kubectl.run_kubectl("-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
+    assert kubectl.run_kubectl(
+        "-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
 
     master = outs["my-master-0"]
     assert master.find("successfully upgraded") != -1
