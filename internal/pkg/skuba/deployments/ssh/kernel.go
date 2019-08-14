@@ -42,6 +42,18 @@ var (
 	}
 )
 
+const (
+	sysctlSourcePath = "/etc/sysctl.conf"
+	sysctlTargetPath = "/etc/sysctl.d/00-defaults.conf"
+
+	sysctlWarning = `# Comment added by skuba (CaaS Platform)
+# This file contents have been moved to /etc/sysctl.d/00-defaults.conf
+
+# Settings placed here have precedence over anything else, so please think twice
+# before altering this file.
+`
+)
+
 func init() {
 	stateMap["kernel.load-modules"] = kernelLoadModules
 	stateMap["kernel.configure-parameters"] = kernelConfigureParameters
@@ -57,6 +69,22 @@ func kernelLoadModules(t *Target, data interface{}) error {
 }
 
 func kernelConfigureParameters(t *Target, data interface{}) error {
+	sysctlContents, err := t.DownloadFileContents(sysctlSourcePath)
+	if err != nil {
+		return err
+	}
+	// Since we want the original contents of `/etc/sysctl.conf` on `/etc/sysctl.d/00-defaults.conf`,
+	// if we don't perform this check, this operation would not be idempotent, as if it was ran twice
+	// we would end up with the warning in `/etc/sysctl.d/00-defaults` instead of the original contents
+	// of `/etc/sysctl.conf`.
+	if sysctlContents != sysctlWarning {
+		if _, _, err := t.ssh(fmt.Sprintf("mv %s %s", sysctlSourcePath, sysctlTargetPath)); err != nil {
+			return err
+		}
+		if err := t.UploadFileContents(sysctlSourcePath, sysctlWarning); err != nil {
+			return err
+		}
+	}
 	for parameterName, parameter := range parameters {
 		if err := configureParameter(t, parameterName, parameter.Attribute, parameter.Value); err != nil {
 			return err
