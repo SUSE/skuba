@@ -3,7 +3,7 @@ import time
 
 
 PREVIOUS_VERSION = "1.14.1"
-CURRENT_VERSION = "1.15.0"
+CURRENT_VERSION = "1.15.2"
 
 
 @pytest.fixture
