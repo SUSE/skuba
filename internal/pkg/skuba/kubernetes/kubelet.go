@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"strings"
 
@@ -36,7 +37,8 @@ func DisarmKubelet(node *v1.Node) error {
 }
 
 func disarmKubeletJobName(node *v1.Node) string {
-	return fmt.Sprintf("caasp-kubelet-disarm-%s", node.ObjectMeta.Name)
+	return fmt.Sprintf("caasp-kubelet-disarm-%x",
+		sha1.Sum([]byte(node.ObjectMeta.Name)))
 }
 
 func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
