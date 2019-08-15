@@ -63,32 +63,40 @@ post_run: gather_logs cleanup
 # e2e Tests
 .PHONY: test_upgrade_plan_all_fine
 test_upgrade_plan_all_fine:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_all_fine
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_skuba_upgrade.py --test test_upgrade_plan_all_fine
 
 .PHONY: test_upgrade_plan_from_previous
 test_upgrade_plan_from_previous:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous
 
 .PHONY: test_upgrade_apply_all_fine
 test_upgrade_apply_all_fine:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_all_fine
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_skuba_upgrade.py --test test_upgrade_apply_all_fine
 
 .PHONY: test_upgrade_apply_from_previous
 test_upgrade_apply_from_previous:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_from_previous
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_skuba_upgrade.py --test test_upgrade_apply_from_previous
 
 .PHONY: test_upgrade_apply_user_lock
 test_upgrade_apply_user_lock:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_user_lock
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_skuba_upgrade.py --test test_upgrade_apply_user_lock
 
 .PHONY: test_cilium
 test_cilium:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_cilium.py
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_cilium.py
 
 .PHONY: test_deployments
 test_deployments:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_deployments.py
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --suite test_deployments.py
 
 .PHONY: test_dockercaps
 test_dockercaps:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_dockercaps.py
+
+.PHONY: test_prs
+test_prs:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs
+
+.PHONY: test_nightly
+test_nightly:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests
