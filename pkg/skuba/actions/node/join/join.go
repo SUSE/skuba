@@ -74,6 +74,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"kubeadm.join",
 		"cni.cilium-update-configmap",
 		"skuba-update.start",
+		"kubernetes.wait-for-node-ready",
 	}
 
 	client, err := kubernetes.GetAdminClientSet()

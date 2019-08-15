@@ -134,6 +134,14 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
+	// finally wait for the node to be in Ready state
+	err = target.Apply(nil,
+		"kubernetes.wait-for-node-ready",
+	)
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, versionToDeploy.String())
 	return nil
 }

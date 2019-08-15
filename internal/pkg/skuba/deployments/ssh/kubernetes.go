@@ -47,6 +47,7 @@ func init() {
 	stateMap["kubernetes.install-intermediate-node-pattern"] = kubernetesInstallIntermediateNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 	stateMap["kubernetes.wait-for-kubelet"] = kubernetesWaitForKubelet
+	stateMap["kubernetes.wait-for-node-ready"] = kubernetesWaitForNodeReady
 }
 
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
@@ -122,6 +123,28 @@ func kubernetesWaitForKubelet(t *Target, data interface{}) error {
 			klog.V(1).Infof("Still waiting for %s node to be registered, continuing...", t.target.Nodename)
 		} else {
 			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return errors.Wrap(err, fmt.Sprintf("Timed out waiting for %s", t.target.Nodename))
+}
+
+func kubernetesWaitForNodeReady(t *Target, data interface{}) error {
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "Error getting client set")
+	}
+	for i := 0; i < kubeletTimeOutWait; i++ {
+		node, err := clientSet.CoreV1().Nodes().Get(t.target.Nodename, metav1.GetOptions{})
+		if err != nil {
+			klog.V(1).Infof("Still waiting for %s node to be registered, continuing...", t.target.Nodename)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		for _, condition := range node.Status.Conditions {
+			if condition.Type == "Ready" && condition.Status == "True" {
+				return nil
+			}
 		}
 		time.Sleep(1 * time.Second)
 	}
