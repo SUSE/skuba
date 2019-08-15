@@ -53,4 +53,7 @@ class TestDriver:
         # Before running the tests, switch to the directory of the testrunner.py
         os.chdir(TESTRUNNER_DIR)
 
-        pytest.main(args=opts)
+        result = pytest.main(args=opts)
+
+        if result > 0:
+            raise AssertionError("Running {} failed.\nExit Code: {}".format(test_path, result))
