@@ -28,6 +28,8 @@ import (
 const (
 	CRISocket  = "/var/run/crio/crio.sock"
 	SUSECNIDir = "/usr/lib/cni"
+	// MaxNodeNameLength is the maximum node name length accepted by kubelet.
+	MaxNodeNameLength = 63
 )
 
 func KubeadmInitConfFile() string {
