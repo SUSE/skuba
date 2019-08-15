@@ -9,9 +9,9 @@ from tempfile import gettempdir
 
 import requests
 from timeout_decorator import timeout
-
-from utils.format import Format
 from utils.constants import Constant
+from utils.format import Format
+
 
 logger = logging.getLogger('testrunner')
 
@@ -24,9 +24,10 @@ def step(f):
         global _stepdepth
         _stepdepth += 1
         logger.debug("{} entering {} {}".format(Format.DOT * _stepdepth, f.__name__,
-                                  f.__doc__ or ""))
+                                                f.__doc__ or ""))
         r = f(*args, **kwargs)
-        logger.debug("{}  exiting {}".format(Format.DOT_EXIT * _stepdepth, f.__name__))
+        logger.debug("{}  exiting {}".format(
+            Format.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
     return wrapped
@@ -98,22 +99,26 @@ class Utils:
             try:
                 self.scp_file(ip_address, log, store_path)
             except Exception as ex:
-                logger.debug(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logger.debug(
+                    f"Error while collecting {log} from {ip_address}\n {ex}")
                 logging_errors = True
 
         for log in logs.get("dirs", []):
             try:
                 self.rsync(ip_address, log, store_path)
             except Exception as ex:
-                logger.debug(f"Error while collecting {log} from {ip_address}\n {ex}")
+                logger.debug(
+                    f"Error while collecting {log} from {ip_address}\n {ex}")
                 logging_errors = True
 
         for service in logs.get("services", []):
             try:
-                self.ssh_run(ip_address, f"sudo journalctl -xeu {service} > {service}.log")
+                self.ssh_run(
+                    ip_address, f"sudo journalctl -xeu {service} > {service}.log")
                 self.scp_file(ip_address, f"{service}.log", store_path)
             except Exception as ex:
-                logger.debug(f"Error while collecting {service}.log from {ip_address}\n {ex}")
+                logger.debug(
+                    f"Error while collecting {service}.log from {ip_address}\n {ex}")
                 logging_errors = True
 
         return logging_errors
@@ -125,19 +130,6 @@ class Utils:
         with open(public_key_path) as f:
             pubkey = f.read().strip()
         return pubkey
-
-    def gorun(self, cmd=None, extra_env=None):
-        """Running go command in {workspace}/go/src/github.com/SUSE/skuba"""
-        env = {
-            'GOPATH': os.path.join(self.conf.workspace,'go'),
-            'PATH': os.environ['PATH'],
-            'HOME': os.environ['HOME']
-        }
-
-        if extra_env:
-            env.update(extra_env)
-
-        self.runshellcommand(cmd, cwd="go/src/github.com/SUSE/skuba", env=env)
 
     def ssh_run(self, ipaddr, cmd):
         key_fn = self.conf.ssh_key_option
@@ -188,22 +180,22 @@ class Utils:
             cwd = os.path.join(self.conf.workspace, cwd)
 
         if not os.path.exists(cwd):
-            raise Exception(Format.alert("Directory {} does not exists".format(cwd)))
+            raise FileNotFoundError(Format.alert("Directory {} does not exists".format(cwd)))
 
         if logging.DEBUG >= logger.level:
             logger.debug("Executing command\n"
                          "    cwd: {} \n"
                          "    env: {}\n"
-                         "    cmd: {}".format(cwd, str(env) if env else "{}", cmd)) 
+                         "    cmd: {}".format(cwd, str(env) if env else "{}", cmd))
         else:
             logger.info("Executing command {}".format(cmd))
-        
-        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, 
-                 env=env, cwd=cwd)
+
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+                           env=env, cwd=cwd)
         logger.debug(p.stdout.decode())
         if p.returncode != 0:
-           logger.error(p.stderr)
-           if not ignore_errors:
+            logger.error(p.stderr)
+            if not ignore_errors:
                 raise RuntimeError("Error executing command {}".format(cmd))
         return p.stdout.decode()
 
@@ -254,13 +246,14 @@ class Utils:
         except:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
-        self.runshellcommand("ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
+        self.runshellcommand(
+            "ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
 
     @timeout(30)
     @step
     def info(self):
         """Node info"""
-        info_lines  = "Env vars: {}\n".format(sorted(os.environ))
+        info_lines = "Env vars: {}\n".format(sorted(os.environ))
         info_lines += self.runshellcommand('ip a')
         info_lines += self.runshellcommand('ip r')
         info_lines += self.runshellcommand('cat /etc/resolv.conf')
@@ -268,10 +261,12 @@ class Utils:
         # TODO: the logic for retrieving external is platform depedant and should be
         # moved to the corresponding platform
         try:
-            r = requests.get('http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
+            r = requests.get(
+                'http://169.254.169.254/2009-04-04/meta-data/public-ipv4', timeout=2)
             r.raise_for_status()
         except (requests.HTTPError, requests.Timeout) as err:
-            logger.warning(f'Meta Data service unavailable could not get external IP addr{err}')
+            logger.warning(
+                f'Meta Data service unavailable could not get external IP addr{err}')
         else:
             info_lines += 'External IP addr: {}'.format(r.text)
 
