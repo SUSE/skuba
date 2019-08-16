@@ -2,6 +2,7 @@ import hcl
 import json
 import logging
 import os
+import shutil
 
 from platforms.platform import Platform
 from utils import (Format, step)
@@ -150,3 +151,13 @@ class Terraform(Platform):
     def _verify_tf_dependency(self):
         if not os.path.exists(self.tfjson_path):
             raise Exception(Format.alert("tf file not found. Please run terraform and try again{}"))
+
+    def copy_configuration(self, new_dir: str):
+        """Copy the terraform configuration files to the given directory.
+
+        """
+        dirname = os.path.basename(self.tfdir)
+        src = f"{self.tfdir}"
+        tgt = f"{new_dir}/{dirname}"
+        logger.info(f"Copying configuration: {src} --> {tgt}")
+        shutil.copytree(src, tgt)

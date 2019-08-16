@@ -27,17 +27,16 @@ def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
     kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
 
-def test_upgrade_plan_all_fine(bootstrap, skuba, kubectl):
+def test_upgrade_plan_all_fine(cluster):
     """
     Starting from a up-to-date cluster, check what cluster/node plan report.
     """
+    with cluster() as c:
+        out = c.skuba.cluster_upgrade_plan()
 
-    setup_kubernetes_version(skuba, kubectl)
-    out = skuba.cluster_upgrade_plan()
-
-    assert out.find(
-        "Congratulations! You are already at the latest version available"
-    ) != -1
+        assert out.find(
+            "Congratulations! You are already at the latest version available"
+        ) != -1
 
 
 def test_upgrade_plan_from_previous(bootstrap, skuba, kubectl):

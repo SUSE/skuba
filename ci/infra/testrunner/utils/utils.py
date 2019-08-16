@@ -50,6 +50,7 @@ class Utils:
 
     @staticmethod
     def cleanup_file(file):
+        success = True
         if os.path.exists(file):
             logger.info(f"Cleaning up {file}")
             try:
@@ -61,14 +62,15 @@ class Utils:
                     shutil.rmtree(file)
             except Exception as ex:
                 logger.exception(ex)
+                success = False
         else:
             logger.warning(f"Nothing to clean up for {file}")
+        return success
 
     @staticmethod
     def cleanup_files(files):
         """Remove any files or dirs in a list if they exist"""
-        for file in files:
-            Utils.cleanup_file(file)
+        return all([Utils.cleanup_file(file) for file in files])
 
     def ssh_cleanup(self):
         """Remove ssh sock files"""
