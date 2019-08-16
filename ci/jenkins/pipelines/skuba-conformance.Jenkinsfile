@@ -11,6 +11,7 @@ pipeline {
     stages {
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
+            sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
         } }
 
         stage('Cluster Deployment') { steps {
