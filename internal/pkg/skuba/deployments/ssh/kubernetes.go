@@ -43,7 +43,6 @@ func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
 	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
-	stateMap["kubernetes.install-intermediate-node-pattern"] = kubernetesInstallIntermediateNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 	stateMap["kubernetes.wait-for-kubelet"] = kubernetesWaitForKubelet
 }
@@ -67,22 +66,14 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 		return errors.New("couldn't access kubernetes base OS configuration")
 	}
 
-	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion))),
-	)
-	return err
-}
-
-func kubernetesInstallIntermediateNodePattern(t *Target, data interface{}) error {
-	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
-	if !ok {
-		return errors.New("couldn't access kubernetes base OS configuration")
-	}
-	updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
 	currentVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion))
-	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion),
-	)
+	patternName := fmt.Sprintf("patterns-caasp-Node-%s", currentVersion)
+
+	if kubernetesBaseOSConfiguration.UpdatedVersion != "" {
+		updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
+		patternName = fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion)
+	}
+	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force", patternName)
 	return err
 }
 
