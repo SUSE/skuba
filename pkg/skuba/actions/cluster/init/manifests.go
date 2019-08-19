@@ -874,6 +874,22 @@ spec:
                   fieldPath: spec.nodeName
           command:
             - /usr/bin/kured
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            # The initial delay for the liveness probe is intentionally large to
+            # avoid an endless kill & restart cycle if in the event that the initial
+            # bootstrapping takes longer than expected.
+            initialDelaySeconds: 120
+            failureThreshold: 10
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 60
 `
 	dexManifest = `---
 apiVersion: v1
