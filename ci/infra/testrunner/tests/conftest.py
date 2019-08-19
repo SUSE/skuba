@@ -27,6 +27,7 @@ def setup(request, platform, skuba):
 def provision(request, platform):
     platform.provision()
     def cleanup():
+        platform.gather_logs()
         platform.cleanup()
     request.addfinalizer(cleanup)
 
