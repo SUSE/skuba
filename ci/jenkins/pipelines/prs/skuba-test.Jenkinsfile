@@ -77,6 +77,7 @@ pipeline {
             dir("${WORKSPACE}") {
                 deleteDir()
             }
+            sh(script: "rm -f ${SKUBA_BIN_PATH}; ", label: 'Remove built skuba')
         }
         failure {
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")

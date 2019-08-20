@@ -44,6 +44,7 @@ pipeline {
             dir("${WORKSPACE}") {
                 deleteDir()
             }
+            sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
         }
     }
 }
