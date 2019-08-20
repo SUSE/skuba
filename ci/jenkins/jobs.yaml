@@ -48,6 +48,9 @@
         - '{name}-test_upgrade_apply_all_fine-nightly'
         - '{name}-test_upgrade_apply_from_previous-nightly'
         - '{name}-test_upgrade_apply_user_lock-nightly'
+        - '{name}-test_cilium-nightly'
+        - '{name}-test_deployments-nightly'
+        - '{name}-test_dockercaps-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb
