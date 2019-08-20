@@ -52,7 +52,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	}
 
 	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
-		KubernetesVersion: currentClusterVersion.String(),
+		CurrentVersion: currentClusterVersion.String(),
 	})
 	if err != nil {
 		return err

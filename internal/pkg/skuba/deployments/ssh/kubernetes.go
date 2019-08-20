@@ -42,9 +42,7 @@ const (
 func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
-	stateMap["kubernetes.install-base-packages"] = kubernetesInstallBasePackages
 	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
-	stateMap["kubernetes.install-intermediate-node-pattern"] = kubernetesInstallIntermediateNodePattern
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 	stateMap["kubernetes.wait-for-kubelet"] = kubernetesWaitForKubelet
 }
@@ -62,47 +60,20 @@ func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior)
 	}
 }
 
-func kubernetesInstallBasePackages(t *Target, data interface{}) error {
-	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
-	if !ok {
-		return errors.New("couldn't access kubernetes base OS configuration")
-	}
-
-	t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("kubernetes-kubeadm=%s", kubernetesBaseOSConfiguration.KubeadmVersion),
-		fmt.Sprintf("cri-o=%s", kubernetesBaseOSConfiguration.KubernetesVersion),
-		fmt.Sprintf("kubernetes-client=%s", kubernetesBaseOSConfiguration.KubernetesVersion),
-		fmt.Sprintf("kubernetes-common=%s", kubernetesBaseOSConfiguration.KubernetesVersion),
-		fmt.Sprintf("kubernetes-kubelet=%s", kubernetesBaseOSConfiguration.KubernetesVersion),
-	)
-	// FIXME: do not ignore error, beta3 to beta4 package conflicts
-	return nil
-}
-
 func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
 	if !ok {
 		return errors.New("couldn't access kubernetes base OS configuration")
 	}
 
-	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s", kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))),
-		// to be able to install a fresh 1.14 cluster we have to explicitly install the wanted kubeadm version
-		fmt.Sprintf("kubernetes-kubeadm=%s", kubernetesBaseOSConfiguration.KubernetesVersion), // TODO: remove this line after we're out of the beta phase
-	)
-	return err
-}
+	currentVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion))
+	patternName := fmt.Sprintf("patterns-caasp-Node-%s", currentVersion)
 
-func kubernetesInstallIntermediateNodePattern(t *Target, data interface{}) error {
-	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
-	if !ok {
-		return errors.New("couldn't access kubernetes base OS configuration")
+	if kubernetesBaseOSConfiguration.UpdatedVersion != "" {
+		updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
+		patternName = fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion)
 	}
-	kubeadmVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubeadmVersion))
-	kubernetesVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.KubernetesVersion))
-	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force",
-		fmt.Sprintf("patterns-caasp-Node-%s-%s", kubernetesVersion, kubeadmVersion),
-	)
+	_, _, err := t.ssh("zypper", "--non-interactive", "install", "--force", patternName)
 	return err
 }
 

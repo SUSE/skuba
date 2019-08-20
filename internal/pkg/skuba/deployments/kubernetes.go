@@ -18,6 +18,6 @@
 package deployments
 
 type KubernetesBaseOSConfiguration struct {
-	KubeadmVersion    string
-	KubernetesVersion string
+	UpdatedVersion string
+	CurrentVersion string
 }
