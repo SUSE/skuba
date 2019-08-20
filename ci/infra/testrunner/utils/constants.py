@@ -83,6 +83,7 @@ class BaseConfig:
             super().__init__()
             self.binpath = None
             self.srcpath = None
+            self.verbosity = 5
 
     class Test:
         def __init__(self):
