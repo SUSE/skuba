@@ -16,6 +16,7 @@ def pytest_addoption(parser):
 def provision(request, platform):
     platform.provision()
     def cleanup():
+        platform.gather_logs()
         platform.cleanup()
     request.addfinalizer(cleanup)
 
