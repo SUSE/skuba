@@ -15,7 +15,7 @@ def setup(request, platform, skuba):
     request.addfinalizer(cleanup)
 
 
-def setup_kubernetes_version(skuba, kubernetes_version=None):
+def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
     """
     Initialize the cluster with the given kubernetes_version, bootstrap it and
     join worker nodes.
@@ -24,14 +24,15 @@ def setup_kubernetes_version(skuba, kubernetes_version=None):
     skuba.cluster_init(kubernetes_version)
     skuba.node_bootstrap()
     skuba.node_join(role="worker", nr=0)
+    kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
 
-def test_upgrade_plan_all_fine(setup, skuba):
+def test_upgrade_plan_all_fine(setup, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what cluster/node plan report.
     """
 
-    setup_kubernetes_version(skuba)
+    setup_kubernetes_version(skuba, kubectl)
     out = skuba.cluster_upgrade_plan()
 
     assert out.find(
@@ -39,12 +40,12 @@ def test_upgrade_plan_all_fine(setup, skuba):
     ) != -1
 
 
-def test_upgrade_plan_from_previous(setup, skuba):
+def test_upgrade_plan_from_previous(setup, skuba, kubectl):
     """
     Starting from an outdated cluster, check what cluster/node plan report.
     """
 
-    setup_kubernetes_version(skuba, PREVIOUS_VERSION)
+    setup_kubernetes_version(skuba, kubectl, PREVIOUS_VERSION)
 
     # cluster upgrade plan
     out = skuba.cluster_upgrade_plan()
@@ -82,12 +83,12 @@ def test_upgrade_plan_from_previous(setup, skuba):
     assert worker.find("Node my-worker-0 is up to date")
 
 
-def test_upgrade_apply_all_fine(setup, platform, skuba):
+def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what node upgrade apply reports.
     """
 
-    setup_kubernetes_version(skuba)
+    setup_kubernetes_version(skuba, kubectl)
 
     # node upgrade apply
     outs = {}
@@ -106,12 +107,12 @@ def test_upgrade_apply_all_fine(setup, platform, skuba):
     ) != -1
 
 
-def test_upgrade_apply_from_previous(setup, platform, skuba):
+def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.
     """
 
-    setup_kubernetes_version(skuba, PREVIOUS_VERSION)
+    setup_kubernetes_version(skuba, kubectl, PREVIOUS_VERSION)
 
     outs = {}
     for (r, n) in [("master", 0), ("worker", 0)]:
@@ -130,7 +131,7 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
     Starting from an outdated cluster, check what node upgrade apply reports.
     """
 
-    setup_kubernetes_version(skuba, PREVIOUS_VERSION)
+    setup_kubernetes_version(skuba, kubectl, PREVIOUS_VERSION)
 
     # lock kured
     kubectl.run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
