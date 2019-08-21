@@ -30,6 +30,7 @@ pipeline {
             archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+            junit('skuba/ci/infra/testrunner/*.xml')
             sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
         }
         cleanup {
