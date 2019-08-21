@@ -221,24 +221,35 @@ func allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo Node
 	return true
 }
 
-// AllControlPlanesMatchVersion checks that all control planes are on the same version, and that they match the current cluster version
-func AllControlPlanesMatchVersion(currentClusterVersion *version.Version) (bool, error) {
+// AllControlPlanesMatchVersion checks that all control planes are on the same version, and that they match a cluster version
+func AllControlPlanesMatchVersion(clusterVersion *version.Version) (bool, error) {
 	allNodesVersioningInfo, err := AllNodesVersioningInfo()
 	if err != nil {
 		return false, err
 	}
-	return AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion), nil
+	return AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion), nil
 }
 
-// AllControlPlanesMatchVersionWithVersioningInfo checks that all control planes are on the same version, and that they match the current cluster version
+// AllControlPlanesMatchVersionWithVersioningInfo checks that all control planes are on the same version, and that they match a cluster version
 // With the addition of passing in a NodeVersionInfoMap to make it easily testable
-func AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, currentClusterVersion *version.Version) bool {
+func AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
 	for _, nodeInfo := range allNodesVersioningInfo {
 		// skip workers
 		if !nodeInfo.IsControlPlane() {
 			continue
 		}
-		if !nodeInfo.ToleratesClusterVersion(currentClusterVersion) {
+		if !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+			return false
+		}
+	}
+	return true
+}
+
+// AllNodesMatchVersionWithVersioningInfo returns if all nodes match a specific kubernetes version
+// This can be used to determine e.g. if an upgrade is ongoing
+func AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
+	for _, version := range allNodesVersioningInfo {
+		if !version.EqualsClusterVersion(clusterVersion) {
 			return false
 		}
 	}

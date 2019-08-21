@@ -18,6 +18,7 @@
 package node
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -33,6 +34,14 @@ import (
 type NodeVersionInfoUpdate struct {
 	Current kubernetes.NodeVersionInfo
 	Update  kubernetes.NodeVersionInfo
+}
+
+type MissingControlPlaneUpgradeError struct {
+	NodeName string
+}
+
+func (e *MissingControlPlaneUpgradeError) Error() string {
+	return fmt.Sprintf("%s is not upgradeable until all control plane nodes are upgraded", e.NodeName)
 }
 
 func (nviu NodeVersionInfoUpdate) HasMajorOrMinorUpdate() bool {
@@ -152,16 +161,29 @@ func controlPlaneUpdateStatusWithAvailableVersions(currentClusterVersion *versio
 	}, nil
 }
 
-func workerUpdateStatus(currentClusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node) (NodeVersionInfoUpdate, error) {
-	return workerUpdateStatusWithAvailableVersions(currentClusterVersion, allNodesVersioningInfo, node, kubernetes.StaticVersionInquirer{})
+func workerUpdateStatus(clusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node) (NodeVersionInfoUpdate, error) {
+	return workerUpdateStatusWithAvailableVersions(clusterVersion, allNodesVersioningInfo, node, kubernetes.StaticVersionInquirer{})
 }
 
-func workerUpdateStatusWithAvailableVersions(currentClusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node, versionInquirer kubernetes.VersionInquirer) (NodeVersionInfoUpdate, error) {
+func workerUpdateStatusWithAvailableVersions(clusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node, versionInquirer kubernetes.VersionInquirer) (NodeVersionInfoUpdate, error) {
+	// Checking worker nodes for updates is a bit different than checking a control plane node.
+	// It can be that an upgrade has already been started on the control plane
+	// or that all nodes are still on the same version (no upgrade started yet).
+	// First we need to check if an upgrade has aready been started
+	// This can be determined by kubernetes.AllNodesMatchClusterVersion(allNodesVersioningInfo, clusterVersion)
+	allNodesMatchCurrentClusterVersion := kubernetes.AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion)
 	// Check that all control plane nodes have at least the current cluster version we plan to
 	// upgrade this worker node to. If not, they need to be fully upgraded first
-	controlPlanesMatchVersion := kubernetes.AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion)
-	if !controlPlanesMatchVersion {
-		return NodeVersionInfoUpdate{}, errors.New("at least one control plane does not tolerate the current cluster version")
+	controlPlanesMatchVersion := kubernetes.AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion)
+	// Check if there is a newer version
+	versionCompare, err := clusterVersion.Compare(kubernetes.LatestVersion().String())
+	if err != nil {
+		return NodeVersionInfoUpdate{}, err
+	}
+	if versionCompare < 0 && (allNodesMatchCurrentClusterVersion || !controlPlanesMatchVersion) {
+		return NodeVersionInfoUpdate{}, &MissingControlPlaneUpgradeError{
+			NodeName: node.Name,
+		}
 	}
 
 	// Worker nodes only update themselves to the `currentClusterVersion`. They get updated after
@@ -172,6 +194,6 @@ func workerUpdateStatusWithAvailableVersions(currentClusterVersion *version.Vers
 	if !ok {
 		return NodeVersionInfoUpdate{}, errors.New("could not find node on the list of all nodes")
 	}
-	res.Update = versionInquirer.NodeVersionInfoForClusterVersion(node, currentClusterVersion)
+	res.Update = versionInquirer.NodeVersionInfoForClusterVersion(node, clusterVersion)
 	return res, nil
 }

@@ -33,16 +33,17 @@ func Plan(nodeName string) error {
 	if err != nil {
 		return err
 	}
-	currentVersion := currentClusterVersion.String()
-	latestVersion := kubernetes.LatestVersion().String()
-	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
-	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
-	fmt.Println()
-
 	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(nodeName)
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("Current Kubernetes cluster version: %s\n", currentClusterVersion.String())
+	fmt.Printf("Latest Kubernetes version: %s\n", kubernetes.LatestVersion().String())
+	fmt.Println()
+	fmt.Printf("Current Node version: %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String())
+	fmt.Println()
+
 	if nodeVersionInfoUpdate.IsUpdated() {
 		fmt.Printf("Node %s is up to date\n", nodeName)
 	} else {

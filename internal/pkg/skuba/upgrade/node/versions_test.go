@@ -308,6 +308,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 }
 
 func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
+	latestVersion := kubernetes.LatestVersion().String()
 	var versions = []struct {
 		name                          string
 		currentClusterVersion         *version.Version
@@ -318,14 +319,33 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 		expectedError                 bool
 	}{
 		{
-			name:                   "worker; no upgrades available",
-			currentClusterVersion:  version.MustParseSemantic("v1.14.0"),
-			versionInquirer:        versionInquirer("1.14.0"),
-			allNodesVersioningInfo: nodeVersionMap(map[string]string{}, map[string]string{"worker1": "1.14.0"}),
+			name:                   "worker same version as control plane; upgrades available",
+			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
+			versionInquirer:        versionInquirer("1.14.1", "1.15.0"),
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.1"}, map[string]string{"worker1": "1.14.1"}),
+			node:                   workerNode("worker1"),
+			expectedError:          true,
+		},
+		{
+			name:                   "one worker same version as control plane; other worker has upgrade available",
+			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
+			versionInquirer:        versionInquirer("1.14.1", "1.15.0"),
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.14.1", "worker2": "1.15.0"}),
 			node:                   workerNode("worker1"),
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
-				Current: nodeVersion("worker1", "1.14.0", worker),
-				Update:  nodeVersion("worker1", "1.14.0", worker),
+				Current: nodeVersion("worker1", "1.14.1", worker),
+				Update:  nodeVersion("worker1", "1.15.0", worker),
+			},
+		},
+		{
+			name:                   "worker; no upgrades available",
+			currentClusterVersion:  version.MustParseSemantic(latestVersion),
+			versionInquirer:        versionInquirer(latestVersion),
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{}, map[string]string{"worker1": latestVersion}),
+			node:                   workerNode("worker1"),
+			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
+				Current: nodeVersion("worker1", latestVersion, worker),
+				Update:  nodeVersion("worker1", latestVersion, worker),
 			},
 		},
 		{
