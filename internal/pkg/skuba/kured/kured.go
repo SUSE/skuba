@@ -18,28 +18,44 @@
 package kured
 
 import (
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
-
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
 )
 
-func GetKuredImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "kured",
-		kubernetes.CurrentAddonVersion(kubernetes.Kured))
-}
+const (
+	kuredDSName             = "kured"
+	kuredLockAnnotationJson = `{"metadata":{"annotations":{"weave.works/kured-node-lock":"'{\"nodeID\":\"manual\"}'"}}}`
+)
 
-func KuredLockExists() (bool, error) {
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return false, errors.Wrap(err, "unable to get admin client set")
-	}
-	kuredDaemonSet, err := clientSet.AppsV1().DaemonSets(metav1.NamespaceSystem).Get("kured", metav1.GetOptions{})
+func LockExists(client clientset.Interface) (bool, error) {
+	kuredDaemonSet, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Get("kured", metav1.GetOptions{})
 	if err != nil {
 		return false, errors.Wrap(err, "unable to get kured daemonset")
 	}
 	_, ok := kuredDaemonSet.GetAnnotations()["weave.works/kured-node-lock"]
 	return ok, nil
+}
+
+func Lock(client clientset.Interface) error {
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(kuredDSName, types.StrategicMergePatchType, []byte(kuredLockAnnotationJson))
+	if err != nil {
+		return errors.Wrap(err, "unable to patch daemonset with kured locking annotation")
+	}
+	klog.V(1).Info("successfully annotated daemonset with kured locking annotation")
+	return nil
+}
+
+func Unlock(client clientset.Interface) error {
+	// jsonpatch expects a ~1 escape sequence for a forward slash '/'
+	// the annotation we want to remove is 'weave.works/kured-node-lock'
+	payload := []byte(`[{"op":"remove","path":"/metadata/annotations/weave.works~1kured-node-lock"}]`)
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(kuredDSName, types.JSONPatchType, payload)
+	if err != nil {
+		return errors.Wrap(err, "unable to patch daemonset with kured unlocking annotation")
+	}
+	klog.V(1).Info("successfully removed kured locking annotation")
+	return nil
 }

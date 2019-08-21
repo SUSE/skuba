@@ -15,7 +15,7 @@
  *
  */
 
-package join
+package node
 
 import (
 	"reflect"
@@ -45,6 +45,52 @@ nodeRegistration:
     pod-infra-container-image: registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4/pause:3.1
   name: worker-0
 `
+
+func Test_LoadInitConfigurationFromFile(t *testing.T) {
+	tests := []struct {
+		name          string
+		cfgPath       string
+		expectedError bool
+	}{
+		{
+			name:    "normal",
+			cfgPath: "testdata/init.conf",
+		},
+		{
+			name:    "cluster configuration only",
+			cfgPath: "testdata/cluster.conf",
+		},
+		{
+			name:          "config path not exist",
+			cfgPath:       "testdata/not-exist.conf",
+			expectedError: true,
+		},
+		{
+			name:          "invalid api version",
+			cfgPath:       "testdata/invalid.conf",
+			expectedError: true,
+		},
+		{
+			name:          "not init or cluster configuration",
+			cfgPath:       "testdata/join.conf",
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := LoadInitConfigurationFromFile(tt.cfgPath)
+			if tt.expectedError && err == nil {
+				t.Errorf("error expected on %s, but no error reported", tt.name)
+				return
+			} else if !tt.expectedError && err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+		})
+	}
+}
 
 func Test_LoadJoinConfigurationFromFile(t *testing.T) {
 	tests := []struct {

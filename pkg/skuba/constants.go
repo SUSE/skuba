@@ -70,18 +70,6 @@ func AddonsDir() string {
 	return "addons"
 }
 
-func CniDir() string {
-	return filepath.Join(AddonsDir(), "cni")
-}
-
-func CiliumManifestFile() string {
-	return filepath.Join(CniDir(), "cilium.yaml")
-}
-
-func PspDir() string {
-	return filepath.Join(AddonsDir(), "psp")
-}
-
 func CriDir() string {
 	return filepath.Join(AddonsDir(), "cri")
 }
@@ -90,44 +78,12 @@ func CriDockerDefaultsConfFile() string {
 	return filepath.Join(CriDir(), "default_flags")
 }
 
-func PspUnprivManifestFile() string {
-	return filepath.Join(PspDir(), "podsecuritypolicy-unprivileged.yaml")
-}
-
-func PspPrivManifestFile() string {
-	return filepath.Join(PspDir(), "podsecuritypolicy-privileged.yaml")
-}
-
 func KubeConfigAdminFile() string {
 	return "admin.conf"
 }
 
 func PkiDir() string {
 	return "pki"
-}
-
-func KuredDir() string {
-	return filepath.Join(AddonsDir(), "kured")
-}
-
-func KuredManifestFile() string {
-	return filepath.Join(KuredDir(), "kured.yaml")
-}
-
-func DexDir() string {
-	return filepath.Join(AddonsDir(), "dex")
-}
-
-func DexManifestFile() string {
-	return filepath.Join(DexDir(), "dex.yaml")
-}
-
-func GangwayDir() string {
-	return filepath.Join(AddonsDir(), "gangway")
-}
-
-func GangwayManifestfile() string {
-	return filepath.Join(GangwayDir(), "gangway.yaml")
 }
 
 // CloudDir returns the reletive location for cloud config files

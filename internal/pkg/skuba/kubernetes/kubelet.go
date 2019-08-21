@@ -24,15 +24,16 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func DisarmKubelet(node *v1.Node) error {
+func DisarmKubelet(node *v1.Node, clusterVersion *version.Version) error {
 	return CreateAndWaitForJob(
 		disarmKubeletJobName(node),
-		disarmKubeletJobSpec(node),
+		disarmKubeletJobSpec(node, clusterVersion),
 	)
 }
 
@@ -41,7 +42,7 @@ func disarmKubeletJobName(node *v1.Node) string {
 		sha1.Sum([]byte(node.ObjectMeta.Name)))
 }
 
-func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
+func disarmKubeletJobSpec(node *v1.Node, clusterVersion *version.Version) batchv1.JobSpec {
 	privilegedJob := true
 	return batchv1.JobSpec{
 		Template: v1.PodTemplateSpec{
@@ -49,7 +50,7 @@ func disarmKubeletJobSpec(node *v1.Node) batchv1.JobSpec {
 				Containers: []v1.Container{
 					{
 						Name:  disarmKubeletJobName(node),
-						Image: images.GetGenericImage(skuba.ImageRepository, "skuba-tooling", CurrentAddonVersion(Tooling)),
+						Image: images.GetGenericImage(skuba.ImageRepository, "skuba-tooling", ComponentVersionForClusterVersion(Tooling, clusterVersion)),
 						Command: []string{
 							"/bin/bash", "-c",
 							strings.Join(

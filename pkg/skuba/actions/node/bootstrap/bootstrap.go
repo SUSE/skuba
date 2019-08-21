@@ -15,7 +15,7 @@
  *
  */
 
-package bootstrap
+package node
 
 import (
 	"fmt"
@@ -29,6 +29,7 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -49,7 +50,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		}
 	}
 
-	initConfiguration, err := LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
+	initConfiguration, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
 	if err != nil {
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
@@ -110,27 +111,22 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
-		"psp.deploy",
-		"kured.deploy",
 		"skuba-update.start",
 	)
 	if err != nil {
 		return err
 	}
 
-	err = downloadSecrets(target)
-	if err != nil {
+	if err := downloadSecrets(target); err != nil {
 		return err
 	}
 
-	// deploy the components after downloadSecrets because
-	// we need to generate secrets and certificates
-	err = target.Apply(nil,
-		"cni.deploy",
-		"dex.deploy",
-		"gangway.deploy",
-	)
-	if err != nil {
+	addonConfiguration := addons.AddonConfiguration{
+		ClusterVersion: versionToDeploy,
+		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
+		ClusterName:    initConfiguration.ClusterName,
+	}
+	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
 		return err
 	}
 

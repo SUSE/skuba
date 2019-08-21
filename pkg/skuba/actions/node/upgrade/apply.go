@@ -41,6 +41,11 @@ func Apply(target *deployments.Target) error {
 		return err
 	}
 
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return err
+	}
+
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
 	if err != nil {
 		return err
@@ -68,7 +73,7 @@ func Apply(target *deployments.Target) error {
 	}
 
 	// Check if a lock on kured already exists
-	kuredWasLocked, err := kured.KuredLockExists()
+	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
 		return err
 	}
@@ -105,18 +110,9 @@ func Apply(target *deployments.Target) error {
 				}
 			}
 			if !kuredWasLocked {
-				err = target.Apply(nil, "kured.lock")
-				if err != nil {
+				if err := kured.Lock(client); err != nil {
 					return err
 				}
-			}
-			err = target.Apply(nil, "gangway.cert.renew")
-			if err != nil {
-				return err
-			}
-			err = target.Apply(nil, "dex.cert.renew")
-			if err != nil {
-				return err
 			}
 			if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
 				err = target.Apply(deployments.KubernetesBaseOSConfiguration{
@@ -153,8 +149,7 @@ func Apply(target *deployments.Target) error {
 				}
 			}
 			if !kuredWasLocked {
-				err = target.Apply(nil, "kured.unlock")
-				if err != nil {
+				if err := kured.Unlock(client); err != nil {
 					return err
 				}
 			}
@@ -178,8 +173,7 @@ func Apply(target *deployments.Target) error {
 				}
 			}
 			if !kuredWasLocked {
-				err = target.Apply(nil, "kured.lock")
-				if err != nil {
+				if err := kured.Lock(client); err != nil {
 					return err
 				}
 			}
@@ -215,8 +209,7 @@ func Apply(target *deployments.Target) error {
 				}
 			}
 			if !kuredWasLocked {
-				err = target.Apply(nil, "kured.unlock")
-				if err != nil {
+				if err := kured.Unlock(client); err != nil {
 					return err
 				}
 			}
