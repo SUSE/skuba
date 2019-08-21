@@ -2,6 +2,7 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
+        SKUBA_BINPATH = "/home/jenkins/go/bin/skuba"
         OPENSTACK_OPENRC = credentials('ecp-openrc')
         TERRAFORM_STACK_NAME = "${JOB_NAME.replaceAll("/","-")}-${BUILD_NUMBER}"
         GITHUB_TOKEN = credentials('github-token')
