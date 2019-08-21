@@ -62,7 +62,7 @@ func (initConfiguration InitConfiguration) KubernetesVersionAtLeast(version stri
 //        using the PWD
 func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
-		return errors.Wrapf(err, "cluster configuration directory %q already exists", initConfiguration.ClusterName)
+		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
 
 	scaffoldFilesToWrite := scaffoldFiles
