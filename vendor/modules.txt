@@ -44,8 +44,6 @@ github.com/go-openapi/jsonreference
 github.com/go-openapi/spec
 # github.com/go-openapi/swag v0.17.2
 github.com/go-openapi/swag
-# github.com/go-yaml/yaml v2.1.0+incompatible
-github.com/go-yaml/yaml
 # github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys

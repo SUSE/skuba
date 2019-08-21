@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/go-yaml/yaml"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +34,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+	"sigs.k8s.io/yaml"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
