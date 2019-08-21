@@ -5,6 +5,8 @@ import time
 
 logger = logging.getLogger("testrunner")
 
+
+@pytest.mark.flaky
 def test_cillium(deployment, kubectl):
 
     landing_req='curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'

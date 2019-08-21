@@ -95,4 +95,4 @@ test_dockercaps:
 
 .PHONY: test_integration
 test_integration:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit --filter "not disruptive"
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit --filter "not disruptive and not flaky"

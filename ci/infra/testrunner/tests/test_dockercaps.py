@@ -58,6 +58,7 @@ def setup_manifest():
     p.unlink()
 
 
+@pytest.mark.flaky
 def test_dockercaps(deployment, kubectl, setup_manifest):
     logger.info("Deploy testcases")
     kubectl.run_kubectl(
