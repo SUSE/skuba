@@ -27,7 +27,7 @@ def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
     kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
 
-def test_upgrade_plan_all_fine(setup, skuba, kubectl):
+def test_upgrade_plan_all_fine(bootstrap, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what cluster/node plan report.
     """
@@ -40,7 +40,7 @@ def test_upgrade_plan_all_fine(setup, skuba, kubectl):
     ) != -1
 
 
-def test_upgrade_plan_from_previous(setup, skuba, kubectl):
+def test_upgrade_plan_from_previous(bootstrap, skuba, kubectl):
     """
     Starting from an outdated cluster, check what cluster/node plan report.
     """
@@ -83,7 +83,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl):
     assert worker.find("Node my-worker-0 is up to date")
 
 
-def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
+def test_upgrade_apply_all_fine(bootstrap, platform, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what node upgrade apply reports.
     """
@@ -107,7 +107,7 @@ def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
     ) != -1
 
 
-def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
+def test_upgrade_apply_from_previous(bootstrap, platform, skuba, kubectl):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.
     """
@@ -126,7 +126,7 @@ def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
     assert worker.find("successfully upgraded") != -1
 
 
-def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
+def test_upgrade_apply_user_lock(bootstrap, platform, kubectl, skuba):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.
     """

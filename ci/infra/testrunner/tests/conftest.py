@@ -12,21 +12,11 @@ def pytest_addoption(parser):
     parser.addoption("--vars", action="store",help="vars yaml" )
     parser.addoption("--platform", action="store",help="target platform" )
 
-# TODO: Deprecated. Remove from tests
-@pytest.fixture
-def setup(request, platform, skuba):
-    platform.provision()
-    def cleanup():
-        platform.cleanup()
-    request.addfinalizer(cleanup)
-
-    skuba.cluster_init()
-    skuba.node_bootstrap()
-
 @pytest.fixture
 def provision(request, platform):
     platform.provision()
     def cleanup():
+        platform.gather_logs()
         platform.cleanup()
     request.addfinalizer(cleanup)
 

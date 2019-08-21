@@ -9,7 +9,7 @@ Following pytest's standard test organization, tests must be defined in python f
 See the following example:
 
 ```
-def test_add_worker(setup, skuba):
+def test_add_worker(bootstrap, skuba):
     skuba.node_join(role="worker", nr=0)
     masters = skuba.num_of_nodes("master")
     workers = skuba.num_of_nodes("worker")
