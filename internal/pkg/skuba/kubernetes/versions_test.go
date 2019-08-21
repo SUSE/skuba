@@ -18,7 +18,6 @@
 package kubernetes
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -70,34 +69,6 @@ func TestAvailableVersionsForMap(t *testing.T) {
 func TestLatestVersion(t *testing.T) {
 	if _, ok := Versions[LatestVersion().String()]; !ok {
 		t.Errorf("Versions map --authoritative version mapping-- does not include version %q", LatestVersion().String())
-	}
-}
-
-func TestCurrentComponentVersion(t *testing.T) {
-	components := []Component{ContainerRuntime, Kubelet, Hyperkube, Etcd, CoreDNS, Pause}
-	for _, component := range components {
-		component := component // Parallel testing
-		t.Run(fmt.Sprintf("component %q has a version assigned", component), func(t *testing.T) {
-			componentVersion := CurrentComponentVersion(component)
-			_, err := version.ParseGeneric(componentVersion)
-			if err != nil {
-				t.Errorf("component %q version (%q) parsing failed", component, componentVersion)
-			}
-		})
-	}
-}
-
-func TestCurrentAddonVersion(t *testing.T) {
-	addons := []Addon{Tooling, Cilium, Kured, Dex, Gangway}
-	for _, addon := range addons {
-		addon := addon // Parallel testing
-		t.Run(fmt.Sprintf("addon %q has a version assigned", addon), func(t *testing.T) {
-			addonVersion := CurrentAddonVersion(addon)
-			_, err := version.ParseGeneric(addonVersion)
-			if err != nil {
-				t.Errorf("addon %q version (%q) parsing failed", addon, addonVersion)
-			}
-		})
 	}
 }
 

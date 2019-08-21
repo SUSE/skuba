@@ -28,23 +28,22 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clientset "k8s.io/client-go/kubernetes"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
 	"k8s.io/klog"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 const (
 	ciliumSecretName      = "cilium-secret"
 	ciliumConfigMapName   = "cilium-config"
-	ciliumUpdateLabelsFmt = `{"spec":{"template":{"metadata":{"labels":{"skuba-updated-at":"%v"}}}}}`
+	ciliumUpdateLabelsFmt = `{"spec":{"template":{"metadata":{"labels":{"caasp.suse.com/skuba-updated-at":"%v"}}}}}`
 	etcdEndpointFmt       = "https://%s:2379"
 	etcdCAFileName        = "/tmp/cilium-etcd/ca.crt"
 	etcdCertFileName      = "/tmp/cilium-etcd/tls.crt"
@@ -60,13 +59,13 @@ var (
 )
 
 type EtcdConfig struct {
-	Endpoints []string `yaml:"endpoints"`
-	CAFile    string   `yaml:"ca-file"`
-	CertFile  string   `yaml:"cert-file"`
-	KeyFile   string   `yaml:"key-file"`
+	Endpoints []string `json:"endpoints"`
+	CAFile    string   `json:"ca-file"`
+	CertFile  string   `json:"cert-file"`
+	KeyFile   string   `json:"key-file"`
 }
 
-func CreateCiliumSecret() error {
+func CreateCiliumSecret(client clientset.Interface) error {
 	etcdDir := filepath.Join("pki", "etcd")
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
@@ -93,33 +92,18 @@ func CreateCiliumSecret() error {
 			"ca.crt":            pkiutil.EncodeCertPEM(caCert),
 		},
 	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return errors.Errorf("error when creating cilium secret  %v", err)
 	}
 	return nil
 }
 
-func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
-	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
-	_, err = client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
-	if err != nil {
-		return err
-	}
-
-	klog.V(1).Info("successfully annotated cilium daemonset with current timestamp, which will restart all cilium pods")
-	return nil
+func CiliumSecretExists(client clientset.Interface) (bool, error) {
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(ciliumSecretName, metav1.GetOptions{})
+	return kubernetes.DoesResourceExistWithError(err)
 }
 
-func CreateOrUpdateCiliumConfigMap() error {
+func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 	etcdEndpoints := []string{}
 	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap()
 	if err != nil {
@@ -151,10 +135,6 @@ func CreateOrUpdateCiliumConfigMap() error {
 		},
 		Data: ciliumConfigMapData,
 	}
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
 	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
 		return errors.Wrap(err, "error when creating cilium config ")
 	}
@@ -162,16 +142,25 @@ func CreateOrUpdateCiliumConfigMap() error {
 	return nil
 }
 
-func GetCiliumImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "cilium",
-		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
-}
-func GetCiliumInitImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "cilium-init",
-		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
+func CiliumUpdateConfigMap(client clientset.Interface) error {
+	if err := CreateOrUpdateCiliumConfigMap(client); err != nil {
+		return err
+	}
+	return annotateCiliumDaemonsetWithCurrentTimestamp(client)
 }
 
-func GetCiliumOperatorImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "cilium-operator",
-		kubernetes.CurrentAddonVersion(kubernetes.Cilium))
+func CiliumConfigMapExists(client clientset.Interface) (bool, error) {
+	_, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ciliumConfigMapName, metav1.GetOptions{})
+	return kubernetes.DoesResourceExistWithError(err)
+}
+
+func annotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) error {
+	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
+	if err != nil {
+		return err
+	}
+
+	klog.V(1).Info("successfully annotated cilium daemonset with current timestamp, which will restart all cilium pods")
+	return nil
 }

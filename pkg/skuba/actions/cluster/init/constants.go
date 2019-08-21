@@ -42,30 +42,6 @@ var (
 			Content:  workerConfTemplate,
 		},
 		{
-			Location: skuba.CiliumManifestFile(),
-			Content:  ciliumManifest,
-		},
-		{
-			Location: skuba.PspUnprivManifestFile(),
-			Content:  pspUnprivManifest,
-		},
-		{
-			Location: skuba.PspPrivManifestFile(),
-			Content:  pspPrivManifest,
-		},
-		{
-			Location: skuba.KuredManifestFile(),
-			Content:  kuredManifest,
-		},
-		{
-			Location: skuba.DexManifestFile(),
-			Content:  dexManifest,
-		},
-		{
-			Location: skuba.GangwayManifestfile(),
-			Content:  gangwayManifest,
-		},
-		{
 			Location: skuba.CriDockerDefaultsConfFile(),
 			Content:  criDockerDefaultsConf,
 		},

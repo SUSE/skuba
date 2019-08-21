@@ -220,17 +220,17 @@ func versionInquirer(versions ...string) kubernetes.VersionInquirer {
 			ControlPlaneComponentsVersion: kubernetes.ControlPlaneComponentsVersion{
 				HyperkubeVersion: fmt.Sprintf("v%s", version),
 				EtcdVersion:      "3.3.11",
-				CoreDNSVersion:   "1.2.6",
-				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: kubernetes.ComponentsVersion{
 				ContainerRuntimeVersion: version,
 				KubeletVersion:          version,
+				ToolingVersion:          "0.1.0",
+				CoreDNSVersion:          "1.2.6",
+				PauseVersion:            "3.1",
 			},
 			AddonsVersion: kubernetes.AddonsVersion{
-				CiliumVersion:  "1.5.3",
-				ToolingVersion: "0.1.0",
-				KuredVersion:   "1.2.0",
+				kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},
+				kubernetes.Kured:  &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 			},
 		}
 	}

@@ -15,7 +15,7 @@
  *
  */
 
-package bootstrap
+package node
 
 import (
 	"fmt"
@@ -29,6 +29,7 @@ import (
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmapiv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
 	"k8s.io/kubernetes/cmd/kubeadm/app/componentconfigs"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 )
@@ -43,6 +44,23 @@ func LoadInitConfigurationFromFile(cfgPath string) (*kubeadmapi.InitConfiguratio
 	}
 
 	return BytesToInitConfiguration(b)
+}
+
+// LoadJoinConfigurationFromFile loads versioned JoinConfiguration from file, converts it to internal, defaults and validates it
+func LoadJoinConfigurationFromFile(cfgPath string) (*kubeadmapi.JoinConfiguration, error) {
+	klog.V(1).Infof("loading configuration from %q", cfgPath)
+
+	b, err := ioutil.ReadFile(cfgPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to read config from %q ", cfgPath)
+	}
+
+	gvkmap, err := kubeadmutil.SplitYAMLDocuments(b)
+	if err != nil {
+		return nil, err
+	}
+
+	return documentMapToJoinConfiguration(gvkmap, false)
 }
 
 // BytesToInitConfiguration converts a byte slice to an internal, defaulted and validated InitConfiguration object.
@@ -135,4 +153,32 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 	}
 
 	return initcfg, nil
+}
+
+// documentMapToJoinConfiguration takes a map between GVKs and YAML documents (as returned by SplitYAMLDocuments),
+// finds a JoinConfiguration, decodes it, dynamically defaults it and then validates it prior to return.
+func documentMapToJoinConfiguration(gvkmap map[schema.GroupVersionKind][]byte, allowDeprecated bool) (*kubeadmapi.JoinConfiguration, error) {
+	joinBytes := []byte{}
+	for gvk, bytes := range gvkmap {
+		// not interested in anything other than JoinConfiguration
+		if gvk.Kind != constants.JoinConfigurationKind {
+			continue
+		}
+
+		// verify the validity of the YAML
+		strict.VerifyUnmarshalStrict(bytes, gvk)
+
+		joinBytes = bytes
+	}
+
+	if len(joinBytes) == 0 {
+		return nil, errors.Errorf("no %s found in the supplied config", constants.JoinConfigurationKind)
+	}
+
+	internalcfg := &kubeadmapi.JoinConfiguration{}
+	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), joinBytes, internalcfg); err != nil {
+		return nil, err
+	}
+
+	return internalcfg, nil
 }
