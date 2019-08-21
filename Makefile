@@ -18,20 +18,27 @@ GO_MD2MAN ?= go-md2man
 LN = ln
 RM = rm
 
-GOBINPATH    := $(shell $(GO) env GOPATH)/bin
-VERSION      := $(shell cat VERSION)
-COMMIT       := $(shell git rev-parse --short HEAD 2>/dev/null)
-BUILD_DATE   := $(shell date +%Y%m%d)
-TAGS         := development
-PROJECT_PATH := github.com/SUSE/skuba
-SKUBA_LDFLAGS = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
-                          -X=$(PROJECT_PATH)/pkg/skuba.Commit=$(COMMIT) \
-                          -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE)"
+GOBINPATH     := $(shell $(GO) env GOPATH)/bin
+COMMIT        := $(shell git rev-parse HEAD)
+BUILD_DATE    := $(shell date +%Y%m%d)
+# TAG can be provided as an envvar (provided in the .spec file)
+TAG           ?= $(shell git show-ref --tags | grep $(COMMIT) | awk '{print $2}' | cut -d/ -f3)
+# ANNOTATED_TAG can be provided as an envvar (provided in the .spec file)
+ANNOTATED_TAG ?= $(shell git describe --tag)
+# VERSION is inferred from TAG
+# It accepts tags of type `vX.Y.Z`, `vX.Y.Z-(alpha|beta|rc|...)` and produces X.Y.Z
+VERSION       := $(shell echo $(TAG) | sed -E 's/v(([0-9]\.?)+).*/\1/')
+TAGS          := development
+PROJECT_PATH  := github.com/SUSE/skuba
+SKUBA_LDFLAGS  = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
+                           -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE) \
+                           -X=$(PROJECT_PATH)/pkg/skuba.Tag=$(TAG) \
+                           -X=$(PROJECT_PATH)/pkg/skuba.AnnotatedTag=$(ANNOTATED_TAG)"
 
-SKUBA_DIRS    = cmd pkg internal test
+SKUBA_DIRS     = cmd pkg internal test
 
 # go source files, ignore vendor directory
-SKUBA_SRCS = $(shell find $(SKUBA_DIRS) -type f -name '*.go')
+SKUBA_SRCS     = $(shell find $(SKUBA_DIRS) -type f -name '*.go')
 
 .PHONY: all
 all: install
@@ -88,7 +95,7 @@ lint:
 
 .PHONY: suse-package
 suse-package:
-	ci/packaging/suse/rpmfiles_maker.sh $(VERSION)
+	ci/packaging/suse/rpmfiles_maker.sh "$(VERSION)" "$(TAG)" "$(ANNOTATED_TAG)"
 
 .PHONY: suse-changelog
 suse-changelog:

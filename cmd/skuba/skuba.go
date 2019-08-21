@@ -22,12 +22,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/app/skuba"
+	skubapkg "github.com/SUSE/skuba/pkg/skuba"
 )
 
 func newRootCmd() *cobra.Command {
@@ -49,11 +51,26 @@ func newRootCmd() *cobra.Command {
 }
 
 func main() {
-	fmt.Println("** This is a BETA release and NOT intended for production usage. **")
+	printVersionStatement()
 	klog.InitFlags(nil)
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+func printVersionStatement() {
+	switch {
+	case skubapkg.Tag == "":
+		fmt.Println("** This is an UNTAGGED version and NOT intended for production usage. **")
+	case strings.Contains(skubapkg.Tag, "alpha"):
+		fmt.Println("** This is an ALPHA release and NOT intended for production usage. **")
+	case strings.Contains(skubapkg.Tag, "beta"):
+		fmt.Println("** This is a BETA release and NOT intended for production usage. **")
+	case strings.Contains(skubapkg.Tag, "rc"):
+		fmt.Println("** This is a RC release and NOT intended for production usage. **")
+	case skubapkg.BuildType != "release":
+		fmt.Printf("** This is a tagged version (%s), but is not built in release mode (mode: %q.) **\n", skubapkg.Tag, skubapkg.BuildType)
 	}
 }
 
