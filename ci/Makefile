@@ -93,10 +93,6 @@ test_deployments:
 test_dockercaps:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_dockercaps.py
 
-.PHONY: test_prs
-test_prs:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs
-
-.PHONY: test_nightly
-test_nightly:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests
+.PHONY: test_integration
+test_integration:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --module tests/prs --filter "not disruptive"

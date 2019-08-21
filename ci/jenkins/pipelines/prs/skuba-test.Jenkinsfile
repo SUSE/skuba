@@ -54,9 +54,9 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
-        stage('Run test workers') { steps {
-            sh(script: "make -f skuba/ci/Makefile test_prs", label: "test_prs")
-       } }
+        stage('Run Integration tests') { steps {
+            sh(script: "make -f skuba/ci/Makefile test_integration", label: "test_integration")
+        } }
 
     }
     post {

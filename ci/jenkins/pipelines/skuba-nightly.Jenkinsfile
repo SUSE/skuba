@@ -19,8 +19,8 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
-        stage('Run test Nightly') { steps {
-            sh(script: "make -f skuba/ci/Makefile test_nightly", label: "test_nightly")
+       stage('Run Integration tests') { steps {
+           sh(script: "make -f skuba/ci/Makefile test_integration", label: "test_integration")
        } }
 
    }

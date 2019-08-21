@@ -17,7 +17,7 @@ class TestDriver:
         self.conf = conf
         self.platform = platform
         
-    def run(self, module=None, test_suite=None, test=None, verbose=False, collect=False, skip_setup=None):
+    def run(self, module=None, test_suite=None, test=None, verbose=False, collect=False, skip_setup=None, mark=None):
         opts = []
         
         vars_opt = "--vars={}".format(self.conf.yaml_path)
@@ -34,6 +34,9 @@ class TestDriver:
 
         if skip_setup is not None:
             opts.append(f"--skip-setup={skip_setup}")
+
+        if mark is not None:
+            opts.append(f'-m {mark}')
 
         test_path = module if module is not None else "tests"
 
