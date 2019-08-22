@@ -25,15 +25,27 @@ resource "aws_security_group" "lbports" {
     "Name", "${var.stack_name}-lbport",
     "Class", "SecurityGroup"))}"
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
     to_port     = 32767
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
+    protocol    = "udp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
 }
 
 resource "aws_security_group" "icmp" {
+  # this also allows cilium health checks using the ICMP protocol
   description = "allow ping between instances"
   name        = "${var.stack_name}-icmp"
   vpc_id      = "${aws_vpc.platform.id}"
@@ -102,23 +114,60 @@ resource "aws_security_group" "allow_control_plane_traffic" {
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
 
+  # etcd - internal
   ingress {
-    from_port   = 2380
+    from_port   = 2379
     to_port     = 2380
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # cilium - health check - internal
   ingress {
-    from_port   = 8285
-    to_port     = 8285
+    from_port   = 4240
+    to_port     = 4240
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # cilium - VXLAN traffic - internal
+  ingress {
+    from_port   = 8472
+    to_port     = 8472
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # master -> worker kubelet communication - internal
+  ingress {
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # kubeproxy health check - internal only
+  ingress {
+    from_port   = 10256
+    to_port     = 10256
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
-    to_port     = 32768
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
@@ -133,41 +182,23 @@ resource "aws_security_group" "allow_workers_traffic" {
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
 
+  # cilium - health check - internal
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 4240
+    to_port     = 4240
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # cilium - VXLAN traffic - internal
   ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
+    from_port   = 8472
+    to_port     = 8472
+    protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
-    from_port   = 8081
-    to_port     = 8081
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
-    from_port   = 2380
-    to_port     = 2380
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
+  # master -> worker kubelet communication - internal
   ingress {
     from_port   = 10250
     to_port     = 10250
@@ -175,23 +206,28 @@ resource "aws_security_group" "allow_workers_traffic" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # kubeproxy health check - internal only
   ingress {
-    from_port   = 8285
-    to_port     = 8285
-    protocol    = "udp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
-
-  ingress {
-    from_port   = 30000
-    to_port     = 32768
+    from_port   = 10256
+    to_port     = 10256
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
   ingress {
     from_port   = 30000
-    to_port     = 32768
+    to_port     = 32767
+    protocol    = "tcp"
+    cidr_blocks = ["${var.vpc_cidr_block}"]
+  }
+
+  # range of ports used by kubernetes when allocating services
+  # of type `NodePort` - internal
+  ingress {
+    from_port   = 30000
+    to_port     = 32767
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
@@ -208,6 +244,14 @@ resource "aws_security_group" "elb" {
     "Class", "SecurityGroup"))}"
 
   # HTTP access from anywhere
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTPS access from anywhere
   ingress {
     from_port   = 443
     to_port     = 443
