@@ -80,3 +80,15 @@ test_upgrade_apply_from_previous:
 .PHONY: test_upgrade_apply_user_lock
 test_upgrade_apply_user_lock:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_user_lock
+
+.PHONY: test_cilium
+test_cilium:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_cilium.py
+
+.PHONY: test_deployments
+test_deployments:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_deployments.py
+
+.PHONY: test_dockercaps
+test_dockercaps:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_dockercaps.py
