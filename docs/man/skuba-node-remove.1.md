@@ -9,7 +9,9 @@ remove - remove a node to a state prior to join or bootstrap
 *remove* *node-name*
 
 # DESCRIPTION
-**remove** will remove a node from the cluster via kubernetes
+**remove** will permanently remove a node from the cluster via kubernetes.  Note that this node 
+cannot be added back to the cluster or any other skuba-initiated kubernetes cluster without 
+reinstalling first.
 
 # OPTIONS
 
