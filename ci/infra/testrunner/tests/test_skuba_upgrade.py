@@ -27,6 +27,14 @@ def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
     kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
 
+def node_is_upgraded(kubectl, node_name):
+    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)).find(CURRENT_VERSION) != -1
+
+
+def node_is_ready(kubectl, node_name):
+    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}{{@.type}}={{@.status}};{{end}}'".format(node_name)).find("Ready=True") != -1
+
+
 def test_upgrade_plan_all_fine(bootstrap, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what cluster/node plan report.
@@ -117,7 +125,9 @@ def test_upgrade_apply_from_previous(bootstrap, platform, skuba, kubectl):
     outs = {}
     for (r, n) in [("master", 0), ("worker", 0)]:
         node = "my-{}-{}".format(r, n)
+        assert node_is_ready(kubectl, node)
         outs[node] = skuba.node_upgrade("apply", r, n)
+        assert node_is_upgraded(kubectl, node)
 
     master = outs["my-master-0"]
     assert master.find("successfully upgraded") != -1
@@ -141,7 +151,9 @@ def test_upgrade_apply_user_lock(bootstrap, platform, kubectl, skuba):
         node = "my-{}-{}".format(r, n)
         # disable skuba-update.timer
         platform.ssh_run(r, n, "sudo systemctl disable --now skuba-update.timer")
+        assert node_is_ready(kubectl, node)
         outs[node] = skuba.node_upgrade("apply", r, n)
+        assert node_is_upgraded(kubectl, node)
         assert platform.ssh_run(r, n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
 
     assert kubectl.run_kubectl("-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
