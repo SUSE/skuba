@@ -96,14 +96,14 @@ func NewLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url (required)")
-	cmd.Flags().StringVarP(&cfg.Username, "username", "u", "", "username")
-	cmd.Flags().StringVarP(&cfg.Password, "password", "p", "", "password")
-	cmd.Flags().StringVarP(&cfg.RootCAPath, "root-ca", "r", "", "root certificate authority chain file")
-	cmd.Flags().BoolVarP(&cfg.InsecureSkipVerify, "insecure", "k", false, "insecure SSL connection")
-	cmd.Flags().StringVarP(&cfg.ClusterName, "cluster-name", "n", "local", "kubernetes cluster name")
-	cmd.Flags().StringVarP(&cfg.KubeConfigPath, "kubeconfig", "c", "kubeconf.txt", "kubeconfig path")
-	cmd.Flags().BoolVarP(&cfg.Debug, "debug", "d", false, "debug")
+	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url https://<IP/FQDN>:<Port> (required)")
+	cmd.Flags().StringVarP(&cfg.Username, "username", "u", "", "Username")
+	cmd.Flags().StringVarP(&cfg.Password, "password", "p", "", "Password")
+	cmd.Flags().StringVarP(&cfg.RootCAPath, "root-ca", "r", "", "Root certificate authority chain file")
+	cmd.Flags().BoolVarP(&cfg.InsecureSkipVerify, "insecure", "k", false, "Insecure SSL connection")
+	cmd.Flags().StringVarP(&cfg.ClusterName, "cluster-name", "n", "local", "Kubernetes cluster name")
+	cmd.Flags().StringVarP(&cfg.KubeConfigPath, "kubeconfig", "c", "kubeconf.txt", "Path to save kubeconfig file")
+	cmd.Flags().BoolVarP(&cfg.Debug, "debug", "d", false, "Debug")
 
 	// Disable sorting of flags
 	cmd.Flags().SortFlags = false

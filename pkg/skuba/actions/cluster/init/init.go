@@ -24,11 +24,11 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/pkg/errors"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
 )
 
 type InitConfiguration struct {

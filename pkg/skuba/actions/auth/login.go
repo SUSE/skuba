@@ -25,7 +25,6 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
-	"k8s.io/client-go/tools/clientcmd/api"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
 )
@@ -37,29 +36,39 @@ const (
 	authProviderID = "oidc"
 )
 
+const (
+	defaultScheme = "https"
+
+	defaultAPIServerPort = "6443"
+)
+
 // LoginConfig represents the login configuration
 type LoginConfig struct {
 	DexServer          string
+	Username           string
+	Password           string
 	RootCAPath         string
 	InsecureSkipVerify bool
 	ClusterName        string
-	Username           string
-	Password           string
 	KubeConfigPath     string
 	Debug              bool
 }
 
 // Login do authentication login process
-func Login(cfg LoginConfig) (*api.Config, error) {
+func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	var err error
-	var apiserverURL string
-	var rootCAData []byte = nil
+	var rootCAData []byte
 
 	if !cfg.InsecureSkipVerify && cfg.RootCAPath != "" {
 		rootCAData, err = ioutil.ReadFile(cfg.RootCAPath)
 		if err != nil {
 			return nil, errors.Wrapf(err, "read root CA failed: %s", err)
 		}
+	}
+
+	url, err := url.Parse(cfg.DexServer)
+	if err != nil {
+		return nil, errors.Wrapf(err, "parse url")
 	}
 
 	authResp, err := doAuth(request{
@@ -76,30 +85,24 @@ func Login(cfg LoginConfig) (*api.Config, error) {
 		return nil, errors.Wrapf(err, "auth failed")
 	}
 
-	url, err := url.Parse(cfg.DexServer)
-	if err != nil {
-		return nil, errors.Wrapf(err, "parse url")
-	}
-	apiserverURL = fmt.Sprintf("https://%s:6443", url.Hostname()) // Guess kube-apiserver on port 6443
-
 	// fill out clusters
 	kubeConfig := clientcmdapi.NewConfig()
-	kubeConfig.Clusters[cfg.ClusterName] = &api.Cluster{
-		Server:                   apiserverURL,
+	kubeConfig.Clusters[cfg.ClusterName] = &clientcmdapi.Cluster{
+		Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort), // Guess kube-apiserver on port 6443
 		InsecureSkipTLSVerify:    cfg.InsecureSkipVerify,
 		CertificateAuthorityData: rootCAData,
 	}
 
 	// fill out contexts
-	kubeConfig.Contexts[cfg.ClusterName] = &api.Context{
+	kubeConfig.Contexts[cfg.ClusterName] = &clientcmdapi.Context{
 		Cluster:  cfg.ClusterName,
 		AuthInfo: cfg.Username,
 	}
 	kubeConfig.CurrentContext = cfg.ClusterName
 
 	// fill out auth infos
-	kubeConfig.AuthInfos[cfg.Username] = &api.AuthInfo{
-		AuthProvider: &api.AuthProviderConfig{
+	kubeConfig.AuthInfos[cfg.Username] = &clientcmdapi.AuthInfo{
+		AuthProvider: &clientcmdapi.AuthProviderConfig{
 			Name: authProviderID,
 			Config: map[string]string{
 				"idp-issuer-url": cfg.DexServer,
