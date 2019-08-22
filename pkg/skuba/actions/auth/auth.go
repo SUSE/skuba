@@ -18,16 +18,19 @@
 package auth
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -42,6 +45,9 @@ const (
 	// "out-of-browser" URL "urn:ietf:wg:oauth:2.0:oob"
 	// which triggers dex to display the OAuth2 code in the browser
 	redirectURL = "urn:ietf:wg:oauth:2.0:oob"
+
+	singleConnectorMsg    = "required id=\"password\""
+	multipleConnectorsMsg = "dex-btn-icon--"
 )
 
 // request represents an OAuth2 auth request flow
@@ -51,6 +57,7 @@ type request struct {
 	Password           string
 	RootCAData         []byte
 	InsecureSkipVerify bool
+	AuthConnector      string
 	Debug              bool
 
 	clientID     string
@@ -203,33 +210,52 @@ func doAuth(authReq request) (*response, error) {
 	}
 	defer resp.Body.Close()
 
-	z := html.NewTokenizer(resp.Body)
-
-	var actionLink string
-
-Loop:
-	for {
-		tt := z.Next()
-
-		switch {
-		case tt == html.ErrorToken:
-			// End of the document, we're done
-			break Loop
-		case tt == html.StartTagToken || tt == html.SelfClosingTagToken:
-			t := z.Token()
-
-			switch t.Data {
-			case "form":
-				for _, a := range t.Attr {
-					if a.Key == "action" {
-						actionLink = a.Val
-						break
-					}
-				}
-			}
-		}
+	respDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		return nil, errors.Wrapf(err, "http dump response")
 	}
 
+	loginURL := authReq.IssuerURL
+	if strings.Contains(string(respDump), singleConnectorMsg) {
+		// Handle single connector case
+		c := processSingleConnector(resp.Body)
+		loginURL = loginURL + c.url
+	} else if strings.Contains(string(respDump), multipleConnectorsMsg) {
+		// Handle multiple connectors case
+		connectors := processMultipleConnectors(resp.Body)
+
+		// Bump out interactive mode to let user choose auth connector
+		if authReq.AuthConnector == "" {
+			printConnectors(connectors)
+			fmt.Print("\nEnter authentication connector ID: ")
+
+			reader := bufio.NewReader(os.Stdin)
+			authConnector, err := reader.ReadString('\n')
+			if err != nil {
+				return nil, errors.Wrapf(err, "read user input")
+			}
+			authReq.AuthConnector = strings.TrimSpace(authConnector)
+		}
+
+		match := false
+		for _, c := range connectors {
+			if c.id == authReq.AuthConnector {
+				match = true
+				loginURL = loginURL + c.url
+				break
+			}
+		}
+		if !match {
+			fmt.Println("\nNo matched authentication connector ID")
+			fmt.Printf("Your input is: %s\n", authReq.AuthConnector)
+			printConnectors(connectors)
+			return nil, errors.New("invalid input auth connector ID")
+		}
+	} else {
+		return nil, errors.New("unknown connector resonse")
+	}
+
+	// Do authentication
 	formValues := url.Values{}
 	formValues.Add("login", authReq.Username)
 	formValues.Add("password", authReq.Password)
@@ -242,7 +268,7 @@ Loop:
 		return nil
 	}
 
-	loginResp, err := client.PostForm(authReq.IssuerURL+actionLink, formValues)
+	loginResp, err := client.PostForm(loginURL, formValues)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed on post login url")
 	}
@@ -250,7 +276,7 @@ Loop:
 
 	approvalLocation, err := loginResp.Location()
 	if err != nil {
-		return nil, errors.Wrapf(err, "invalid username or password")
+		return nil, errors.New("invalid username or password")
 	}
 
 	resp, err = client.Get(approvalLocation.String())
@@ -292,4 +318,81 @@ Loop:
 	}
 
 	return result, nil
+}
+
+type connector struct {
+	id  string
+	url string
+}
+
+// processSingleConnector handles single connector case
+// it returns single connector information
+func processSingleConnector(body io.Reader) connector {
+	c := connector{}
+	z := html.NewTokenizer(body)
+
+	for {
+		tt := z.Next()
+		switch {
+		case tt == html.ErrorToken:
+			// End of the document, we're done
+			return c
+		case tt == html.StartTagToken:
+			t := z.Token()
+			switch t.Data {
+			case "form":
+				for _, attr := range t.Attr {
+					if attr.Key == "action" {
+						u, err := url.Parse(attr.Val)
+						path := u.EscapedPath()
+						if err == nil {
+							c.id = path[strings.LastIndex(path, "/")+1:]
+							c.url = attr.Val
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// processMultipleConnectors handles multiple connectors case
+// it returns all connectors information
+func processMultipleConnectors(body io.Reader) []connector {
+	c := make([]connector, 0)
+	z := html.NewTokenizer(body)
+
+	for {
+		tt := z.Next()
+		switch {
+		case tt == html.ErrorToken:
+			// End of the document, we're done
+			return c
+		case tt == html.StartTagToken:
+			t := z.Token()
+			switch t.Data {
+			case "a":
+				// find <a href>
+				for _, attr := range t.Attr {
+					if attr.Key == "href" {
+						u, err := url.Parse(attr.Val)
+						path := u.EscapedPath()
+						if err == nil {
+							c = append(c, connector{
+								id:  path[strings.LastIndex(path, "/")+1:],
+								url: attr.Val,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func printConnectors(connectors []connector) {
+	fmt.Println("Available authentication connector IDs are:")
+	for _, c := range connectors {
+		fmt.Printf("  %s\n", c.id)
+	}
 }

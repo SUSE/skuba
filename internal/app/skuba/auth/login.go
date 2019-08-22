@@ -99,6 +99,7 @@ func NewLoginCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url https://<IP/FQDN>:<Port> (required)")
 	cmd.Flags().StringVarP(&cfg.Username, "username", "u", "", "Username")
 	cmd.Flags().StringVarP(&cfg.Password, "password", "p", "", "Password")
+	cmd.Flags().StringVarP(&cfg.AuthConnector, "auth-connector", "a", "", "Authentication connector ID")
 	cmd.Flags().StringVarP(&cfg.RootCAPath, "root-ca", "r", "", "Root certificate authority chain file")
 	cmd.Flags().BoolVarP(&cfg.InsecureSkipVerify, "insecure", "k", false, "Insecure SSL connection")
 	cmd.Flags().StringVarP(&cfg.ClusterName, "cluster-name", "n", "local", "Kubernetes cluster name")

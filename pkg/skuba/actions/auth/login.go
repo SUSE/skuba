@@ -49,6 +49,7 @@ type LoginConfig struct {
 	Password           string
 	RootCAPath         string
 	InsecureSkipVerify bool
+	AuthConnector      string
 	ClusterName        string
 	KubeConfigPath     string
 	Debug              bool
@@ -79,6 +80,7 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 		Password:           cfg.Password,
 		RootCAData:         rootCAData,
 		InsecureSkipVerify: cfg.InsecureSkipVerify,
+		AuthConnector:      cfg.AuthConnector,
 		Debug:              cfg.Debug,
 	})
 	if err != nil {
