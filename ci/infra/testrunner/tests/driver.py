@@ -17,7 +17,7 @@ class TestDriver:
         self.conf = conf
         self.platform = platform
         
-    def run(self, module="tests", test_suite=None, test=None, verbose=False, collect=False):
+    def run(self, module="tests", test_suite=None, test=None, verbose=False, collect=False, skip_setup=None):
         
         opts = []
         
@@ -32,6 +32,9 @@ class TestDriver:
 
         if collect:
             opts.append(PyTestOpts.COLLECT_TESTS)
+
+        if skip_setup is not None:
+            opts.append(f"--skip-setup={skip_setup}")
 
         test_path = module
 

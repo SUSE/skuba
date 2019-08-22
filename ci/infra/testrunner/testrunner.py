@@ -74,7 +74,8 @@ def node_upgrade(options):
 
 def test(options):
     TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
-                                                   verbose=options.verbose, collect=options.collect)
+                                                   verbose=options.verbose, collect=options.collect,
+                                                   skip_setup=options.skip_setup)
 
 
 def ssh(options):
@@ -169,6 +170,7 @@ def main():
                            help="only list tests to be executed")
     test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
                            help="show all output")
+    test_args.add_argument("--skip-setup", help="setup step to skip")
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
