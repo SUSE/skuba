@@ -2,7 +2,7 @@ resource "aws_elb" "kube_api" {
   connection_draining       = false
   cross_zone_load_balancing = true
   idle_timeout              = 400
-  instances                 = ["${aws_instance.control_plane.id}"]
+  instances                 = ["${aws_instance.control_plane.*.id}"]
   name                      = "${var.stack_name}-elb"
   security_groups           = ["${aws_security_group.elb.id}"]
   subnets                   = ["${aws_subnet.public.0.id}"]
