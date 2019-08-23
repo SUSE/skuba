@@ -1,5 +1,5 @@
 resource "aws_instance" "control_plane" {
-  ami                         = "${data.susepubliccloud_image_ids.sles15sp1_byos.ids[0]}"
+  ami                         = "${data.susepubliccloud_image_ids.sles15sp1_chost_byos.ids[0]}"
   associate_public_ip_address = true
   count                       = "${var.masters}"
   instance_type               = "${var.master_size}"
