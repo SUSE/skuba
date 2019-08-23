@@ -11,9 +11,18 @@ def pytest_addoption(parser):
     """
     parser.addoption("--vars", action="store",help="vars yaml" )
     parser.addoption("--platform", action="store",help="target platform" )
+    parser.addoption("--skip-setup",
+                     choices=['provisioned', 'bootstrapped', 'deployed'],
+                     help="Skip the given setup step.\n"
+                          "'provisioned' For when you have already provisioned the nodes.\n"
+                          "'bootstrapped' For when you have already bootstrapped the cluster.\n"
+                          "'deployed' For when you already have a fully deployed cluster.")
 
 @pytest.fixture
 def provision(request, platform):
+    if request.config.getoption("skip_setup") in ['provisioned', 'bootstrapped', 'deployed']:
+        return
+
     platform.provision()
     def cleanup():
         platform.gather_logs()
@@ -22,13 +31,19 @@ def provision(request, platform):
 
 
 @pytest.fixture
-def bootstrap(provision, skuba):
+def bootstrap(request, provision, skuba):
+    if request.config.getoption("skip_setup") in ['bootstrapped', 'deployed']:
+        return
+
     skuba.cluster_init()
     skuba.node_bootstrap()
 
 
 @pytest.fixture
-def deployment(bootstrap, platform, skuba):
+def deployment(request, bootstrap, platform, skuba):
+    if request.config.getoption("skip_setup") == 'deployed':
+        return
+
     masters = platform.get_num_nodes("master")
     for n in range (1, masters):
         skuba.node_join("master", n)
