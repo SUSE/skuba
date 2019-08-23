@@ -170,7 +170,12 @@ def main():
                            help="only list tests to be executed")
     test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
                            help="show all output")
-    test_args.add_argument("--skip-setup", help="setup step to skip")
+    test_args.add_argument("--skip-setup",
+                           choices=['provisioned', 'bootstrapped', 'deployed'],
+                           help="Skip the given setup step.\n"
+                                "'provisioned' For when you have already provisioned the nodes.\n"
+                                "'bootstrapped' For when you have already bootstrapped the cluster.\n"
+                                "'deployed' For when you already have a fully deployed cluster.")
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
