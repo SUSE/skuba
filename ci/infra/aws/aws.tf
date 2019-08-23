@@ -12,3 +12,8 @@ provider "aws" {
   secret_key = "${var.aws_secret_key}"
   profile    = "default"
 }
+
+resource "aws_key_pair" "kube" {
+  key_name   = "${var.stack_name}-keypair"
+  public_key = "${element(var.authorized_keys, 0)}"
+}

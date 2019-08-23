@@ -274,8 +274,3 @@ resource "aws_security_group" "elb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-resource "aws_key_pair" "kube" {
-  key_name   = "${var.stack_name}-keypair"
-  public_key = "${element(var.authorized_keys, 0)}"
-}
