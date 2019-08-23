@@ -178,4 +178,4 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
         assert node_is_upgraded(kubectl, node)
         assert platform.ssh_run("worker", n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
 
-    assert kubectl.run_kubectl("-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
+    assert kubectl.run_kubectl(r"-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
