@@ -6,8 +6,8 @@ login - Authenticate to a cluster and authorized with kubeconfig
 # SYNOPSIS
 **login**
 [**--help**|**-h**] [**--server|-s**] [**--username|-u**]
-[**--password|-p**] [**--root-ca**|**-r**] [**--insecure**|**-k**]
-[**--cluster-name**|**-n**] [**--kubeconfig**|**-c**]
+[**--password|-p**] [**--auth-connector|-a**] [**--root-ca**|**-r**]
+[**--insecure**|**-k**] [**--cluster-name**|**-n**] [**--kubeconfig**|**-c**]
 *login* [--server https://<ip/fqdn>:<port>] [--username username] [--password password]
 
 # DESCRIPTION
@@ -26,6 +26,9 @@ login - Authenticate to a cluster and authorized with kubeconfig
 
 **--password, -p**
   The authentication password
+
+**--auth-connector, -a**
+  The authentication connector ID
 
 **--root-ca, -r**
   The cluster root certificate authority chain file

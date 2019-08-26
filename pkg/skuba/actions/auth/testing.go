@@ -105,11 +105,50 @@ func openIDHandlerNoScopes() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func authHandler() func(w http.ResponseWriter, r *http.Request) {
+func authSingleConnectorHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		url := fmt.Sprintf("%s://%s", defaultScheme, r.Host)
 
 		http.Redirect(w, r, fmt.Sprintf("%s/auth/local", url)+"?req="+newID(), http.StatusFound)
+	}
+}
+
+func authMultipleConnectorsHandler() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		htmlOutput := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+  		<head>
+    		<title>SUSE CaaS Platform</title>
+  		</head>
+  		<body class="theme-body">
+    		<div class="dex-container">
+			<div class="theme-panel">
+  				<h2 class="theme-heading">Log in to SUSE CaaS Platform </h2>
+  				<div>
+					<div class="theme-form-row">
+						<a href="/auth/local?req=ocg6tiqn525sadbm2ul6h77mk" target="_self">
+							<button class="dex-btn theme-btn-provider">
+								<span class="dex-btn-icon dex-btn-icon--local"></span>
+								<span class="dex-btn-text">Log in with Email</span>
+							</button>
+						</a>
+					</div>
+					<div class="theme-form-row">
+						<a href="/auth/ldap?req=ocg6tiqn525sadbm2ul6h77mk" target="_self">
+							<button class="dex-btn theme-btn-provider">
+								<span class="dex-btn-icon dex-btn-icon--ldap"></span>
+								<span class="dex-btn-text">Log in with openLDAP</span>
+							</button>
+						</a>
+					</div>
+  				</div>
+			</div>
+    		</div>
+		</body>
+		</html>		
+		`)
+		_, _ = w.Write([]byte(htmlOutput))
 	}
 }
 

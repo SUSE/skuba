@@ -37,8 +37,9 @@ import (
 func startServer() *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
-	mux.HandleFunc("/auth", authHandler())
+	mux.HandleFunc("/auth", authSingleConnectorHandler())
 	mux.HandleFunc("/auth/local", authLocalHandler())
+	mux.HandleFunc("/auth/ldap", authLocalHandler())
 	mux.HandleFunc("/token", tokenHandler())
 	mux.HandleFunc("/approval", approvalHandler())
 
@@ -134,6 +135,70 @@ func Test_Login(t *testing.T) {
 			},
 		},
 		{
+			name: "multiple connectors",
+			srvCb: func() *httptest.Server {
+				mux := http.NewServeMux()
+				mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
+				mux.HandleFunc("/auth", authMultipleConnectorsHandler())
+				mux.HandleFunc("/auth/local", authLocalHandler())
+				mux.HandleFunc("/auth/ldap", authLocalHandler())
+				mux.HandleFunc("/token", tokenHandler())
+				mux.HandleFunc("/approval", approvalHandler())
+				return httptest.NewTLSServer(mux)
+			},
+			cfg: LoginConfig{
+				Username:           mockDefaultUsername,
+				Password:           mockDefaultPassword,
+				ClusterName:        "test-cluster-name",
+				InsecureSkipVerify: true,
+				AuthConnector:      "ldap",
+			},
+			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
+				url, _ := url.Parse(dexServerURL)
+
+				kubeConfig := clientcmdapi.NewConfig()
+				kubeConfig.Clusters[clusterName] = &clientcmdapi.Cluster{
+					Server:                fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort),
+					InsecureSkipTLSVerify: true,
+				}
+				kubeConfig.Contexts[clusterName] = &clientcmdapi.Context{
+					Cluster:  clusterName,
+					AuthInfo: mockDefaultUsername,
+				}
+				kubeConfig.CurrentContext = clusterName
+				kubeConfig.AuthInfos[mockDefaultUsername] = &clientcmdapi.AuthInfo{
+					AuthProvider: &clientcmdapi.AuthProviderConfig{
+						Name: authProviderID,
+						Config: map[string]string{
+							"idp-issuer-url": dexServerURL,
+							"client-id":      clientID,
+							"client-secret":  clientSecret,
+							"id-token":       mockIDToken,
+							"refresh-token":  mockRefreshToken,
+						},
+					},
+				}
+				return kubeConfig
+			},
+		},
+		{
+			name: "no matched connector",
+			srvCb: func() *httptest.Server {
+				mux := http.NewServeMux()
+				mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
+				mux.HandleFunc("/auth", authMultipleConnectorsHandler())
+				return httptest.NewTLSServer(mux)
+			},
+			cfg: LoginConfig{
+				Username:           mockDefaultUsername,
+				Password:           mockDefaultPassword,
+				ClusterName:        "test-cluster-name",
+				InsecureSkipVerify: true,
+				AuthConnector:      "ldap123",
+			},
+			expectedError: true,
+		},
+		{
 			name:  "invalid root ca",
 			srvCb: startServer,
 			cfg: LoginConfig{
@@ -181,7 +246,7 @@ func Test_Login(t *testing.T) {
 			srvCb: func() *httptest.Server {
 				mux := http.NewServeMux()
 				mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
-				mux.HandleFunc("/auth", authHandler())
+				mux.HandleFunc("/auth", authSingleConnectorHandler())
 				mux.HandleFunc("/auth/local", authLocalHandler())
 				mux.HandleFunc("/token", tokenHandler())
 				mux.HandleFunc("/approval", approvalHandler())
@@ -229,7 +294,7 @@ func Test_Login(t *testing.T) {
 			srvCb: func() *httptest.Server {
 				mux := http.NewServeMux()
 				mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
-				mux.HandleFunc("/auth", authHandler())
+				mux.HandleFunc("/auth", authSingleConnectorHandler())
 				mux.HandleFunc("/auth/local", authLocalHandler())
 				mux.HandleFunc("/token", tokenHandler())
 				mux.HandleFunc("/approval", approvalInvalidBodyHandler())
