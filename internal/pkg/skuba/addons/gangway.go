@@ -161,6 +161,9 @@ spec:
             - name: gangway-cert-path
               mountPath: /etc/gangway/pki
               readOnly: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
       volumes:
         - name: gangway-config-path
           configMap:
