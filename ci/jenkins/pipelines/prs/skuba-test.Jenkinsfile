@@ -54,6 +54,27 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
+        stage('Cluster Provisioning') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Provision')
+                archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+                archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            }
+        }
+
+        stage('Cluster Bootstrap') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
+            }
+        }
+
+        stage('Join Nodes') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
+            }
+        }
+
+
         stage('Run Integration tests') { steps {
             sh(script: "make -f skuba/ci/Makefile test_integration", label: "test_integration")
         } }
@@ -61,12 +82,10 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            sh(script: "make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
             archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             junit('skuba/ci/infra/testrunner/*.xml')
-            sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
         }
         cleanup {
             dir("${WORKSPACE}@tmp") {
