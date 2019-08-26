@@ -84,7 +84,7 @@ resource "openstack_lb_monitor_v2" "kube_api_monitor" {
   url_path       = "/healthz"
   expected_codes = 200
   delay          = 10
-  timeout        = 5
+  timeout        = 1
   max_retries    = 3
 }
 
@@ -94,7 +94,7 @@ resource "openstack_lb_monitor_v2" "gangway_monitor" {
   url_path       = "/"
   expected_codes = 200
   delay          = 10
-  timeout        = 5
+  timeout        = 1
   max_retries    = 3
 }
 
@@ -104,6 +104,6 @@ resource "openstack_lb_monitor_v2" "dex_monitor" {
   url_path       = "/healthz"
   expected_codes = 200
   delay          = 10
-  timeout        = 5
+  timeout        = 1
   max_retries    = 3
 }
