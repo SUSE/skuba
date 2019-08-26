@@ -52,6 +52,22 @@
         - '{name}-test_deployments-nightly'
         - '{name}-test_dockercaps-nightly'
 
+- project:
+    name: caasp-jobs/e2e/caasp-v4-vmware
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    platform: vmware
+    jobs:
+        - '{name}-test_upgrade_plan_all_fine-nightly'
+        - '{name}-test_upgrade_plan_from_previous-nightly'
+        - '{name}-test_upgrade_apply_all_fine-nightly'
+        - '{name}-test_upgrade_apply_from_previous-nightly'
+        - '{name}-test_upgrade_apply_user_lock-nightly'
+        - '{name}-test_cilium-nightly'
+        - '{name}-test_deployments-nightly'
+        - '{name}-test_dockercaps-nightly'
+
 - job:
     name: caasp-jobs/caasp-jjb
     project-type: pipeline
