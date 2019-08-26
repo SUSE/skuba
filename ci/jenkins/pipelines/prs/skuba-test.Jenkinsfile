@@ -8,9 +8,7 @@ pipeline {
     agent { node { label 'caasp-team-private' } }
 
     environment {
-        SKUBA_BIN_PATH = "/home/jenkins/go/bin/skuba"
-        GINKGO_BIN_PATH = "${WORKSPACE}/skuba/ginkgo"
-        IP_FROM_TF_STATE = "TRUE"
+        SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'openstack'
@@ -19,6 +17,7 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
     }
+
 
     stages {
         stage('Setting GitHub in-progress status') { steps {
@@ -52,32 +51,37 @@ pipeline {
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
-            sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
+            sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
-        stage('Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+        stage('Run Integration tests') { steps {
+            sh(script: "make -f skuba/ci/Makefile test_integration", label: "test_integration")
         } }
 
-        stage('Run end-to-end tests') { steps {
-           dir("skuba") {
-             sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-             sh(script: "make setup-ssh", label: "Setup SSH")
-             sh(script: "make test-e2e", label: "End-to-end tests")
-       } } }
     }
     post {
         always {
-            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
-            zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
+            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+            junit('skuba/ci/infra/testrunner/*.xml')
+            sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
         }
         cleanup {
+            dir("${WORKSPACE}@tmp") {
+                deleteDir()
+            }
+            dir("${WORKSPACE}@script") {
+                deleteDir()
+            }
+            dir("${WORKSPACE}@script@tmp") {
+                deleteDir()
+            }
             dir("${WORKSPACE}") {
                 deleteDir()
             }
-            sh(script: "rm -f ${SKUBA_BIN_PATH}; ", label: 'Remove built skuba')
+            sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
         }
         failure {
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")

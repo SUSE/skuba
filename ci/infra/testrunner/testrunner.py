@@ -73,9 +73,10 @@ def node_upgrade(options):
 
 
 def test(options):
-    TestDriver(options.conf, options.platform).run(test_suite=options.test_suite, test=options.test,
-                                                   verbose=options.verbose, collect=options.collect,
-                                                   skip_setup=options.skip_setup)
+    test_driver = TestDriver(options.conf, options.platform)
+    test_driver.run(module=options.module, test_suite=options.test_suite, test=options.test,
+                    verbose=options.verbose, collect=options.collect, skip_setup=options.skip_setup,
+                    mark=options.mark, junit=options.junit)
 
 
 def ssh(options):
@@ -163,8 +164,10 @@ def main():
     cmd_ssh.set_defaults(func=ssh)
 
     test_args = ArgumentParser(add_help=False)
-    test_args.add_argument(
-        "-s", "--suite", dest="test_suite", help="test file name")
+    test_args.add_argument("-f", "--filter", dest="mark", help="Filter the tests based on markers")
+    test_args.add_argument("-j", "--junit", action="store_true", help="Record the results to a junit xml file")
+    test_args.add_argument("-m", "--module", dest="module", help="folder with the tests")
+    test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")
     test_args.add_argument("-t", "--test", dest="test", help="test to execute")
     test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
                            help="only list tests to be executed")

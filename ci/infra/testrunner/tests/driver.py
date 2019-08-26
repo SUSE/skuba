@@ -12,13 +12,17 @@ class PyTestOpts:
 
     COLLECT_TESTS = "--collect-only"
 
+    JUNIT = f"--junitxml={TESTRUNNER_DIR}/results.xml"
+
+
 class TestDriver:
     def __init__(self, conf, platform):
         self.conf = conf
         self.platform = platform
         
-    def run(self, module="tests", test_suite=None, test=None, verbose=False, collect=False, skip_setup=None):
-        
+    def run(self, module=None, test_suite=None,
+            test=None, verbose=False, collect=False,
+            skip_setup=None, mark=None, junit=False):
         opts = []
         
         vars_opt = "--vars={}".format(self.conf.yaml_path)
@@ -36,7 +40,13 @@ class TestDriver:
         if skip_setup is not None:
             opts.append(f"--skip-setup={skip_setup}")
 
-        test_path = module
+        if junit:
+            opts.append(PyTestOpts.JUNIT)
+
+        if mark is not None:
+            opts.append(f'-m {mark}')
+
+        test_path = module if module is not None else "tests"
 
         if test_suite:
             if not test_suite.endswith(".py"):
@@ -54,4 +64,7 @@ class TestDriver:
         # Before running the tests, switch to the directory of the testrunner.py
         os.chdir(TESTRUNNER_DIR)
 
-        pytest.main(args=opts) 
+        result = pytest.main(args=opts)
+
+        if not junit and result > 0:
+            raise AssertionError("Running {} failed.\nExit Code: {}".format(test_path, result))

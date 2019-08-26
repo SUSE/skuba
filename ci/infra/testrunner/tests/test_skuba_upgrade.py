@@ -45,6 +45,7 @@ def node_is_ready(kubectl, node_name):
     return kubectl.run_kubectl("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}{{@.type}}={{@.status}};{{end}}'".format(node_name)).find("Ready=True") != -1
 
 
+@pytest.mark.disruptive
 def test_upgrade_plan_all_fine(setup, skuba, kubectl, platform):
     """
     Starting from a up-to-date cluster, check what cluster/node plan report.
@@ -58,6 +59,7 @@ def test_upgrade_plan_all_fine(setup, skuba, kubectl, platform):
     ) != -1
 
 
+@pytest.mark.disruptive
 def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
     """
     Starting from an outdated cluster, check what cluster/node plan report.
@@ -100,6 +102,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
         assert worker.find("Node my-worker-{} is up to date".format(n))
 
 
+@pytest.mark.disruptive
 def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what node upgrade apply reports.
@@ -123,6 +126,7 @@ def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
         ) != -1
 
 
+@pytest.mark.disruptive
 def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.
@@ -146,6 +150,7 @@ def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
         assert node_is_upgraded(kubectl, node)
 
 
+@pytest.mark.disruptive
 def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.

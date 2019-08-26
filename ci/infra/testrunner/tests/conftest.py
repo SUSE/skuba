@@ -4,13 +4,14 @@ from skuba import Skuba
 from kubectl import Kubectl
 from utils import BaseConfig
 
+
 def pytest_addoption(parser):
     """
     Adds the option pytest option list.
     This options can be used to initilize fixtures.
     """
-    parser.addoption("--vars", action="store",help="vars yaml" )
-    parser.addoption("--platform", action="store",help="target platform" )
+    parser.addoption("--vars", action="store", help="vars yaml")
+    parser.addoption("--platform", action="store", help="target platform")
     parser.addoption("--skip-setup",
                      choices=['provisioned', 'bootstrapped', 'deployed'],
                      help="Skip the given setup step.\n"
@@ -18,12 +19,14 @@ def pytest_addoption(parser):
                           "'bootstrapped' For when you have already bootstrapped the cluster.\n"
                           "'deployed' For when you already have a fully deployed cluster.")
 
+
 @pytest.fixture
 def provision(request, platform):
     if request.config.getoption("skip_setup") in ['provisioned', 'bootstrapped', 'deployed']:
         return
 
     platform.provision()
+
     def cleanup():
         platform.gather_logs()
         platform.cleanup()
