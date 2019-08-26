@@ -203,6 +203,9 @@ spec:
       - name: dex-cert-path
         secret:
           secretName: oidc-dex-cert
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
 ---
 apiVersion: v1
 kind: Service
