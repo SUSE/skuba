@@ -405,6 +405,9 @@ spec:
       restartPolicy: Always
       serviceAccount: cilium-operator
       serviceAccountName: cilium-operator
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
       volumes:
       # To read the etcd config stored in config maps
       - configMap:
