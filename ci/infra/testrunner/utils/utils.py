@@ -195,8 +195,8 @@ class Utils:
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
                  env=env, cwd=cwd)
         logger.debug(p.stdout.decode())
+        logger.error(p.stderr.decode())
         if p.returncode != 0:
-            logger.error(p.stderr)
             if not ignore_errors:
                 raise RuntimeError("Error executing command {}".format(cmd))
         return p.stdout.decode()
