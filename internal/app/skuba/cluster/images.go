@@ -15,27 +15,25 @@
  *
  */
 
-package main
+package cluster
 
 import (
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
-	"github.com/SUSE/skuba/cmd/skuba/cluster"
+	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/images"
 )
 
-// NewClusterCmd creates a new `skuba cluster` cobra command
-func NewClusterCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cluster",
-		Short: "Commands to handle a cluster",
+// NewImagesCmd creates a `skuba cluster images` cobra command
+func NewImagesCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "images",
+		Short: "Show images to be pulled",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cluster.Images(); err != nil {
+				klog.Errorf("unable to get cluster images: %s", err)
+			}
+		},
+		Args: cobra.NoArgs,
 	}
-
-	cmd.AddCommand(
-		cluster.NewInitCmd(),
-		cluster.NewStatusCmd(),
-		cluster.NewUpgradeCmd(),
-		cluster.NewImagesCmd(),
-	)
-
-	return cmd
 }
