@@ -89,6 +89,19 @@ class Skuba:
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
 
+    def join_nodes(self, masters=None, workers=None):
+        if masters is None:
+            masters = self.platform.get_num_nodes("master")
+        if workers is None:
+            workers = self.platform.get_num_nodes("worker")
+
+        for n in range(1, masters):
+            self.node_join("master", n)
+
+        for n in range(0, workers):
+            self.node_join("worker", n)
+
+
     @step
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()

@@ -36,6 +36,10 @@ git_rebase_check:
 info:
 	${TEST_RUNNER} --platform ${PLATFORM} info
 
+.PHONY: join_nodes
+join_nodes:
+	${TEST_RUNNER} --platform ${PLATFORM} join-nodes
+
 .PHONY: test_jenkins_jobs
 test_jenkins_jobs:
 	jenkins-jobs --ignore-cache test ${JENKINS_JOBS_DIR}/:${JENKINS_JOBS_DIR}/templates/ -o ${JENKINS_JOBS_DIR}/jobs/ --config-xml

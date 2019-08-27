@@ -62,6 +62,11 @@ def join_node(options):
         role=options.role, nr=options.node)
 
 
+def join_nodes(options):
+    skuba = Skuba(options.conf, options.platform)
+    skuba.join_nodes(masters=options.masters, workers=options.workers)
+
+
 def remove_node(options):
     Skuba(options.conf, options.platform).node_remove(
         role=options.role, nr=options.node)
@@ -157,6 +162,18 @@ def main():
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
+
+    # Start Join Nodes
+    cmd_join_nodes = commands.add_parser("join-nodes",
+                                         help="add node in k8s cluster with the given role.")
+    cmd_join_nodes.add_argument("-m", "--masters",
+                                type=int,
+                                help="Specify how many masters to join. Default is all")
+    cmd_join_nodes.add_argument("-w", "--workers",
+                                type=int,
+                                help="Specify how many workers to join. Default is all")
+    cmd_join_nodes.set_defaults(func=join_nodes)
+    # End Join Nodes
 
     ssh_args = ArgumentParser(add_help=False)
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
