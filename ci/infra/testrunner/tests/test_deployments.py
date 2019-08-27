@@ -1,8 +1,5 @@
 import pytest
-import json
 import requests
-
-from kubectl import Kubectl
 
 
 def test_nginx_deployment(deployment, kubectl):
@@ -24,3 +21,13 @@ def test_nginx_deployment(deployment, kubectl):
     r = requests.get(url)
 
     assert "Welcome to nginx" in r.text
+
+    # Cleanup
+    kubectl.run_kubectl("delete --wait --timeout=60s service/nginx")
+    kubectl.run_kubectl("delete --wait --timeout=60s deployments/nginx")
+
+    with pytest.raises(Exception):
+        kubectl.run_kubectl("get service/nginx")
+
+    with pytest.raises(Exception):
+        kubectl.run_kubectl("get deployments/nginx")
