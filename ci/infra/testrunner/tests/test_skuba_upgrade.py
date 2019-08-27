@@ -8,11 +8,11 @@ CURRENT_VERSION = "1.15.2"
 
 @pytest.fixture
 def setup(request, platform, skuba):
-    platform.provision(num_master=3, num_worker=3)
-
     def cleanup():
         platform.cleanup()
     request.addfinalizer(cleanup)
+
+    platform.provision(num_master=3, num_worker=3)
 
 
 def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
