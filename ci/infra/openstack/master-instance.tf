@@ -66,8 +66,8 @@ resource "openstack_compute_instance_v2" "master" {
   }
 
   security_groups = [
-    "${openstack_compute_secgroup_v2.secgroup_base.name}",
-    "${openstack_compute_secgroup_v2.secgroup_master.name}",
+    "${openstack_networking_secgroup_v2.common.id}",
+    "${openstack_networking_secgroup_v2.master_nodes.id}",
   ]
 
   user_data = "${data.template_file.master-cloud-init.rendered}"
