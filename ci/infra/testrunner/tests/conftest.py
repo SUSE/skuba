@@ -25,12 +25,12 @@ def provision(request, platform):
     if request.config.getoption("skip_setup") in ['provisioned', 'bootstrapped', 'deployed']:
         return
 
-    platform.provision()
-
     def cleanup():
         platform.gather_logs()
         platform.cleanup()
     request.addfinalizer(cleanup)
+
+    platform.provision()
 
 
 @pytest.fixture
