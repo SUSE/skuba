@@ -28,6 +28,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	clientset "k8s.io/client-go/kubernetes"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
 	"k8s.io/klog"
@@ -57,6 +58,7 @@ var (
 		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
 		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
+	etcdDir = filepath.Join("pki", "etcd")
 )
 
 type EtcdConfig struct {
@@ -66,8 +68,7 @@ type EtcdConfig struct {
 	KeyFile   string   `yaml:"key-file"`
 }
 
-func CreateCiliumSecret() error {
-	etcdDir := filepath.Join("pki", "etcd")
+func CreateCiliumSecret(client clientset.Interface) error {
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
 		return errors.Errorf("etcd generation retrieval failed %v", err)
@@ -94,23 +95,15 @@ func CreateCiliumSecret() error {
 		},
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return errors.Errorf("error when creating cilium secret  %v", err)
 	}
 	return nil
 }
 
-func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
+func AnnotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) error {
 	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
-	_, err = client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -119,9 +112,9 @@ func AnnotateCiliumDaemonsetWithCurrentTimestamp() error {
 	return nil
 }
 
-func CreateOrUpdateCiliumConfigMap() error {
+func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 	etcdEndpoints := []string{}
-	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap()
+	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to get api endpoints")
 	}
@@ -151,10 +144,7 @@ func CreateOrUpdateCiliumConfigMap() error {
 		},
 		Data: ciliumConfigMapData,
 	}
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
+
 	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
 		return errors.Wrap(err, "error when creating cilium config ")
 	}

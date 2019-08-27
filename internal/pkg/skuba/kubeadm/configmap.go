@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
@@ -71,13 +72,9 @@ func GetKubeadmApisVersion(kubernetesVersion *version.Version) string {
 }
 
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
-func GetAPIEndpointsFromConfigMap() ([]string, error) {
+func GetAPIEndpointsFromConfigMap(client clientset.Interface) ([]string, error) {
 	apiEndpoints := []string{}
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error getting client set")
-	}
-	kubeadmConfig, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config configmap to get apiEndpoints")
 	}
