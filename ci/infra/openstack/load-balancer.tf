@@ -83,9 +83,9 @@ resource "openstack_lb_monitor_v2" "kube_api_monitor" {
   type           = "HTTPS"
   url_path       = "/healthz"
   expected_codes = 200
-  delay          = 10
+  delay          = 3
   timeout        = 1
-  max_retries    = 3
+  max_retries    = 1
 }
 
 resource "openstack_lb_monitor_v2" "gangway_monitor" {
