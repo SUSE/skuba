@@ -2,8 +2,6 @@ module github.com/SUSE/skuba
 
 require (
 	github.com/coreos/go-oidc v0.0.0-20180117170138-065b426bd416
-	github.com/onsi/ginkgo v1.6.0
-	github.com/onsi/gomega v0.0.0-20190113212917-5533ce8a0da3
 	github.com/pkg/errors v0.8.0
 	github.com/spf13/cobra v0.0.0-20180319062004-c439c4fa0937
 	github.com/spf13/pflag v1.0.1
