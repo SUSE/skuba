@@ -9,6 +9,7 @@ resource "aws_instance" "control_plane" {
   user_data                   = "${data.template_cloudinit_config.cfg.rendered}"
 
   tags = "${merge(local.tags, map(
+    format("kubernetes.io/cluster/%v", var.stack_name), "SUSE-terraform",
     "Name", "${var.stack_name}-master-${count.index}",
     "Class", "Instance"))}"
 
