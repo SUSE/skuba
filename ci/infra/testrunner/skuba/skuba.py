@@ -178,7 +178,10 @@ class Skuba:
             raise ValueError(f"verbosity '{verbosity}' is not an int")
         verbosity = v
 
-        env = {"SSH_AUTH_SOCK": self.utils.ssh_sock_fn()}
+        env = {
+            "SSH_AUTH_SOCK": self.utils.ssh_sock_fn(),
+            "PATH": os.environ['PATH']
+        }
 
 
         return self.utils.runshellcommand(
