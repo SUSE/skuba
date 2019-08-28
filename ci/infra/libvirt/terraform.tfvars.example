@@ -37,6 +37,14 @@ password = "linux"
 # }
 repositories = {}
 
+# define the repositories to use for the loadbalancer node
+# EXAMPLE:
+# repositories = {
+#   repository1 = "http://example.my.repo.com/repository3/"
+#   repository2 = "http://example.my.repo.com/repository4/"
+# }
+lb_repositories = {}
+
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
