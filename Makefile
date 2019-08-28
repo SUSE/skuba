@@ -103,7 +103,7 @@ suse-changelog:
 
 # tests
 .PHONY: test
-test: test-unit test-e2e
+test: test-unit
 
 .PHONY: test-unit
 test-unit:
@@ -112,17 +112,3 @@ test-unit:
 .PHONY: test-unit-coverage
 test-unit-coverage: test-unit
 	$(GO) tool cover -html=coverage.out
-
-.PHONY: test-e2e
-test-e2e:
-	./ci/tasks/e2e-tests.py
-
-# this target are called from skuba dir mainly not from CI dir
-# build ginkgo executables from vendor (used in CI)
-.PHONY: build-ginkgo
-build-ginkgo:
-	$(GO) build -o ginkgo ./vendor/github.com/onsi/ginkgo/ginkgo
-
-.PHONY: setup-ssh
-setup-ssh:
-	./ci/tasks/setup-ssh.py
