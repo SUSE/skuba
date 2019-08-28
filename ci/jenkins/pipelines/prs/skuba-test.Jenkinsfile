@@ -62,11 +62,23 @@ pipeline {
             }
         }
 
+       stage('Run Pre Bootstrap Tests') {
+           steps {
+               sh(script: 'make -f skuba/ci/Makefile test_pre_bootstrap', label: 'Test Pre Bootstrap')
+           }
+       }
+
         stage('Cluster Bootstrap') {
             steps {
                 sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
             }
         }
+
+       stage('Run Post Bootstrap Tests') {
+           steps {
+               sh(script: 'make -f skuba/ci/Makefile test_post_bootstrap', label: 'Test Post Bootstrap')
+           }
+       }
 
         stage('Join Nodes') {
             steps {
@@ -82,10 +94,10 @@ pipeline {
     }
     post {
         always {
+            junit('skuba/ci/infra/testrunner/*.xml')
             sh(script: "make --keep-going -f skuba/ci/Makefile post_run", label: 'Post Run')
             archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            junit('skuba/ci/infra/testrunner/*.xml')
         }
         cleanup {
             dir("${WORKSPACE}@tmp") {

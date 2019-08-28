@@ -182,7 +182,7 @@ def main():
 
     test_args = ArgumentParser(add_help=False)
     test_args.add_argument("-f", "--filter", dest="mark", help="Filter the tests based on markers")
-    test_args.add_argument("-j", "--junit", action="store_true", help="Record the results to a junit xml file")
+    test_args.add_argument("-j", "--junit", help="Name of the xml file to record the results to.")
     test_args.add_argument("-m", "--module", dest="module", help="folder with the tests")
     test_args.add_argument("-s", "--suite", dest="test_suite", help="test file name")
     test_args.add_argument("-t", "--test", dest="test", help="test to execute")

@@ -97,6 +97,14 @@ test_deployments:
 test_dockercaps:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_dockercaps.py
 
+.PHONY: test_pre_bootstrap
+test_pre_bootstrap:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit pre_bootstrap --filter "pre_bootstrap and not flaky" --skip-setup deployed
+
+.PHONY: test_post_bootstrap
+test_post_bootstrap:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit post_bootstrap --filter "post_bootstrap and not flaky" --skip-setup deployed
+
 .PHONY: test_integration
 test_integration:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit --filter "not disruptive and not flaky" --skip-setup deployed
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit integration --filter "not disruptive and not flaky" --skip-setup deployed
