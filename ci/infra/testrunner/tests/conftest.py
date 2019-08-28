@@ -43,18 +43,11 @@ def bootstrap(request, provision, skuba):
 
 
 @pytest.fixture
-def deployment(request, bootstrap, platform, skuba):
+def deployment(request, bootstrap, skuba):
     if request.config.getoption("skip_setup") == 'deployed':
         return
 
-    masters = platform.get_num_nodes("master")
-    for n in range (1, masters):
-        skuba.node_join("master", n)
-
-    workers = platform.get_num_nodes("worker")
-    for n in range (0, workers):
-        skuba.node_join("worker", n)
-
+    skuba.join_nodes()
 
 @pytest.fixture
 def conf(request):
