@@ -22,18 +22,18 @@ GOBINPATH     := $(shell $(GO) env GOPATH)/bin
 COMMIT        := $(shell git rev-parse HEAD)
 BUILD_DATE    := $(shell date +%Y%m%d)
 # TAG can be provided as an envvar (provided in the .spec file)
-TAG           ?= $(shell git show-ref --tags | grep $(COMMIT) | awk '{print $2}' | cut -d/ -f3)
-# ANNOTATED_TAG can be provided as an envvar (provided in the .spec file)
-ANNOTATED_TAG ?= $(shell git describe --tag)
-# VERSION is inferred from TAG
+TAG           ?= $(shell git describe --tags --exact-match HEAD 2> /dev/null)
+# CLOSEST_TAG can be provided as an envvar (provided in the .spec file)
+CLOSEST_TAG   ?= $(shell git describe --tags)
+# VERSION is inferred from CLOSEST_TAG
 # It accepts tags of type `vX.Y.Z`, `vX.Y.Z-(alpha|beta|rc|...)` and produces X.Y.Z
-VERSION       := $(shell echo $(TAG) | sed -E 's/v(([0-9]\.?)+).*/\1/')
+VERSION       := $(shell echo $(CLOSEST_TAG) | sed -E 's/v(([0-9]\.?)+).*/\1/')
 TAGS          := development
 PROJECT_PATH  := github.com/SUSE/skuba
 SKUBA_LDFLAGS  = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
                            -X=$(PROJECT_PATH)/pkg/skuba.BuildDate=$(BUILD_DATE) \
                            -X=$(PROJECT_PATH)/pkg/skuba.Tag=$(TAG) \
-                           -X=$(PROJECT_PATH)/pkg/skuba.AnnotatedTag=$(ANNOTATED_TAG)"
+                           -X=$(PROJECT_PATH)/pkg/skuba.ClosestTag=$(CLOSEST_TAG)"
 
 SKUBA_DIRS     = cmd pkg internal test
 
@@ -95,7 +95,7 @@ lint:
 
 .PHONY: suse-package
 suse-package:
-	ci/packaging/suse/rpmfiles_maker.sh "$(VERSION)" "$(TAG)" "$(ANNOTATED_TAG)"
+	ci/packaging/suse/rpmfiles_maker.sh "$(VERSION)" "$(TAG)" "$(CLOSEST_TAG)"
 
 .PHONY: suse-changelog
 suse-changelog:

@@ -23,10 +23,10 @@ import (
 )
 
 var (
-	Version      string
-	BuildDate    string
-	Tag          string
-	AnnotatedTag string
+	Version    string
+	BuildDate  string
+	Tag        string
+	ClosestTag string
 )
 
 type SkubaVersion struct {
@@ -45,8 +45,8 @@ func CurrentVersion() SkubaVersion {
 		Tag:       Tag,
 		GoVersion: runtime.Version(),
 	}
-	if skubaVersion.Version == "" {
-		skubaVersion.Version = fmt.Sprintf("untagged (%s)", AnnotatedTag)
+	if skubaVersion.Tag == "" {
+		skubaVersion.Version = fmt.Sprintf("untagged (%s)", ClosestTag)
 	}
 	return skubaVersion
 }
