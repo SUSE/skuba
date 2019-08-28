@@ -1,6 +1,6 @@
 /**
  * This pipeline verifies on a Github PR:
- *   - skuba unit and integration tests
+ *   - skuba unit and e2e tests
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
@@ -64,15 +64,12 @@ pipeline {
             }
         }
 
-        stage('Run end-to-end tests') {
+        stage('Run e2e tests') {
             when {
                 expression { return SHOULD_RUN }
             }
             steps {
-               dir("skuba") {
-                 sh(script: 'make build-ginkgo', label: 'build ginkgo binary')
-                 sh(script: "make setup-ssh && SKUBA_BIN_PATH=\"${WORKSPACE}/go/bin/skuba\" GINKGO_BIN_PATH=\"${WORKSPACE}/skuba/ginkgo\" IP_FROM_TF_STATE=TRUE make test-e2e", label: "End-to-end tests")
-               }
+               sh(script: "make -f skuba/ci/Makefile test_e2e", label: "test_e2e")
             }
         }
     }
