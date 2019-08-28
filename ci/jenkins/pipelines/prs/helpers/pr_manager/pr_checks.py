@@ -77,7 +77,20 @@ class PrChecks:
                 print('Commit message body is too short')
                 sys.exit(1)
 
-            for body_line in body.splitlines():
+            # strip multi-line '```code```' blocks & lines starting w\ `code`
+            code_pattern = re.compile(
+                r'''
+                 ((?m:^)\s*```)  # multi-line beginning, 0-more whitespace, ```
+                 (?s:.*?)        # non-greedy, zero or more chars, including \n
+                 \1              # whatever matched at the beginning
+                 |               # or...
+                 (?m:^)\s*`      # start of line, optional whitespace, backtick
+                 [^`]+           # oneor more non-backtick chars
+                 `\s*(?m:$)      # and a backtick at the end of the line
+                ''',
+                re.VERBOSE
+                )
+            for body_line in re.sub(code_pattern, '', body).splitlines():
                 if len(body_line) > 72:
                     print('Each line in the commit body should be less than 72 characters')
                     sys.exit(1)
