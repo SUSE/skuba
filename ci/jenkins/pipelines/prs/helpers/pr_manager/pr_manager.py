@@ -36,7 +36,7 @@ def _read_config(config_path):
 def check_pr(args):
     if CHANGE_ID:
         g = Github(GITHUB_TOKEN)
-        org = g. get_organization(GITHUB_ORG)
+        org = g.get_organization(GITHUB_ORG)
         repo = g.get_repo(GITHUB_REPO)
 
         pr_checks = PrChecks(org, repo)
@@ -46,27 +46,30 @@ def check_pr(args):
         if args.check_pr_details:
             pr_checks.check_pr_details(CHANGE_ID)
     else:
-        print(f'No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
+        print('No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
 
 def filter_pr(args):
-    g = Github(GITHUB_TOKEN, per_page=1000)
-    repo = g.get_repo(GITHUB_REPO)
+    if CHANGE_ID:
+        g = Github(GITHUB_TOKEN, per_page=1000)
+        repo = g.get_repo(GITHUB_REPO)
 
-    pull = repo.get_pull(int(CHANGE_ID))
-    changed_files = pull.get_files()
-    files_list = []
+        pull = repo.get_pull(CHANGE_ID)
+        changed_files = pull.get_files()
+        files_list = []
 
-    # change paginated list to normal list
-    for f in changed_files:
-        files_list.append(f.filename)
+        # change paginated list to normal list
+        for f in changed_files:
+            files_list.append(f.filename)
 
-    if any([s for s in files_list if args.filename in s]):
-        msg = "contains"
+        if any([s for s in files_list if args.filename in s]):
+            msg = "contains"
+        else:
+            msg = "does not contain"
+
+        print(f"Pull Request {GITHUB_REPO}#{CHANGE_ID} {msg} changes for {args.filename}")
     else:
-        msg = "does not contain"
-
-    print(f"Pull Request {GITHUB_REPO}#{CHANGE_ID} {msg} changes for {args.filename}")
+        print('No CHANGE_ID was set assuming this is not a PR. Skipping filters...')
 
 
 def merge_prs(args):
