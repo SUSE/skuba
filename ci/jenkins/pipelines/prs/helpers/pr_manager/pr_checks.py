@@ -62,8 +62,10 @@ class PrChecks:
                     print(f'{user_id} is part of SUSE organization but a SUSE e-mail address was not used for commit: {sha}')
                     sys.exit(1)
 
-            title = title.split('(bsc#') # Title may contain (bsc#XXXXXXXX) references so we need to exclude these
-            if len(title[0].rstrip()) > 50:
+            # replace case-insensitive "(bsc#)" (or []) and surrounding spaces
+            # with a single space, then prune leading/trailing spaces
+            title = re.sub(r'\s*[([]\s*(?i:bsc)#\d+\s*[)\]]\s*', ' ', title).strip()
+            if len(title) > 50:
                 print('Commit message title should be less than 50 characters (excluding the bsc# reference)')
                 sys.exit(1)
 
