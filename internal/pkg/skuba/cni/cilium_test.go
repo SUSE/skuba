@@ -174,7 +174,7 @@ func Test_AnnotateCiliumDaemonsetWithCurrentTimestamp(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
 
-			err := AnnotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
+			err := annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
 
 			if tt.errExpected {
 				if err == nil {
@@ -234,10 +234,10 @@ apiEndpoints:
 			debugExpected:       "false",
 			disableIpv4Expected: "false",
 			errExpected:         false,
-			etcdConfigExpected: `endpoints:
-- https://1.2.3.4:2379
-ca-file: /tmp/cilium-etcd/ca.crt
+			etcdConfigExpected: `ca-file: /tmp/cilium-etcd/ca.crt
 cert-file: /tmp/cilium-etcd/tls.crt
+endpoints:
+- https://1.2.3.4:2379
 key-file: /tmp/cilium-etcd/tls.key
 `},
 		{
