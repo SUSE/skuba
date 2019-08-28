@@ -43,10 +43,13 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead
 //        of using the PWD
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
+	coreBootstrapDone := false
+
 	if clientSet, err := kubernetes.GetAdminClientSet(); err == nil {
 		_, err := clientSet.ServerVersion()
 		if err == nil {
-			return errors.New("cluster is already bootstrapped")
+			fmt.Printf("[bootstrap] node %q has already the core components bootstrapped\n", target.Target)
+			coreBootstrapDone = true
 		}
 	}
 
@@ -55,12 +58,39 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return errors.Wrapf(err, "could not parse %s file", skuba.KubeadmInitConfFile())
 	}
 
+	if !coreBootstrapDone {
+		if err := coreBootstrap(initConfiguration, bootstrapConfiguration, target); err != nil {
+			return err
+		}
+	}
+
+	if err := downloadSecrets(target); err != nil {
+		return err
+	}
+
+	fmt.Printf("[bootstrap] deploying core add-ons on node %q\n", target.Target)
+	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
+	addonConfiguration := addons.AddonConfiguration{
+		ClusterVersion: versionToDeploy,
+		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
+		ClusterName:    initConfiguration.ClusterName,
+	}
+	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
+		return err
+	}
+
+	fmt.Printf("[bootstrap] successfully bootstrapped core add-ons on node %q\n", target.Target)
+	return nil
+}
+
+// Takes care of bootstrapping the core components of the nodes, containerized add-ons are
+// not handled here.
+func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
 
-	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	if _, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: versionToDeploy.String(),
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -117,20 +147,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
-	if err := downloadSecrets(target); err != nil {
-		return err
-	}
-
-	addonConfiguration := addons.AddonConfiguration{
-		ClusterVersion: versionToDeploy,
-		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
-		ClusterName:    initConfiguration.ClusterName,
-	}
-	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
-		return err
-	}
-
-	fmt.Printf("[bootstrap] successfully bootstrapped node %q with Kubernetes: %q\n", target.Target, versionToDeploy.String())
+	fmt.Printf("[bootstrap] successfully bootstrapped core components on node %q with Kubernetes: %q\n", target.Target, versionToDeploy.String())
 	return nil
 }
 
