@@ -56,6 +56,7 @@ var (
 		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
 		Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
+	etcdDir = filepath.Join("pki", "etcd")
 )
 
 type EtcdConfig struct {
@@ -66,7 +67,6 @@ type EtcdConfig struct {
 }
 
 func CreateCiliumSecret(client clientset.Interface) error {
-	etcdDir := filepath.Join("pki", "etcd")
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(etcdDir, "ca")
 	if err != nil {
 		return errors.Errorf("etcd generation retrieval failed %v", err)
@@ -92,6 +92,7 @@ func CreateCiliumSecret(client clientset.Interface) error {
 			"ca.crt":            pkiutil.EncodeCertPEM(caCert),
 		},
 	}
+
 	if err = apiclient.CreateOrUpdateSecret(client, secret); err != nil {
 		return errors.Errorf("error when creating cilium secret  %v", err)
 	}
@@ -105,7 +106,7 @@ func CiliumSecretExists(client clientset.Interface) (bool, error) {
 
 func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 	etcdEndpoints := []string{}
-	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap()
+	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to get api endpoints")
 	}
@@ -135,6 +136,7 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 		},
 		Data: ciliumConfigMapData,
 	}
+
 	if err := apiclient.CreateOrUpdateConfigMap(client, ciliumConfigMap); err != nil {
 		return errors.Wrap(err, "error when creating cilium config ")
 	}
