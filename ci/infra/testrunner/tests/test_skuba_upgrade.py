@@ -27,14 +27,12 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
     masters = platform.get_num_nodes("master")
     for n in range (1, masters):
         skuba.node_join("master", n)
-        kubectl.run_kubectl("wait --for=condition=ready nodes {}-{} --timeout=5m".format("my-master", n))
 
     workers = platform.get_num_nodes("worker")
     for n in range (0, workers):
         skuba.node_join("worker", n)
-        kubectl.run_kubectl("wait --for=condition=ready nodes {}-{} --timeout=5m".format("my-worker", n))
-    # FIXME: once Leap on our jenkins workers updates the kubectl version, we can wait for all nodes at once with the `--all` flag
-    #kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
+
+    kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
 
 def node_is_upgraded(kubectl, node_name):
