@@ -51,8 +51,8 @@ pipeline {
            }
        }
 
-       stage('Run Integration tests') { steps {
-           sh(script: "make -f skuba/ci/Makefile test_integration", label: "test_integration")
+       stage('Run e2e tests') { steps {
+           sh(script: "make -f skuba/ci/Makefile test_e2e", label: "test_e2e")
        } }
 
    }
