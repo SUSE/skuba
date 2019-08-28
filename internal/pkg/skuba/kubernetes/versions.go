@@ -30,10 +30,10 @@ type Component string
 
 const (
 	Cilium  Addon = "cilium"
-	Tooling Addon = "tooling"
 	Kured   Addon = "kured"
 	Dex     Addon = "dex"
 	Gangway Addon = "gangway"
+	PSP     Addon = "psp"
 
 	ContainerRuntime Component = "cri-o"
 	Kubelet          Component = "kubelet"
@@ -42,27 +42,29 @@ const (
 	Etcd      Component = "etcd"
 	CoreDNS   Component = "coredns"
 	Pause     Component = "pause"
+
+	Tooling Component = "tooling"
 )
 
 type ControlPlaneComponentsVersion struct {
 	HyperkubeVersion string
 	EtcdVersion      string
-	CoreDNSVersion   string
-	PauseVersion     string
 }
 
 type ComponentsVersion struct {
 	ContainerRuntimeVersion string
 	KubeletVersion          string
+	CoreDNSVersion          string
+	PauseVersion            string
+	ToolingVersion          string
 }
 
-type AddonsVersion struct {
-	CiliumVersion  string
-	ToolingVersion string
-	KuredVersion   string
-	DexVersion     string
-	GangwayVersion string
+type AddonVersion struct {
+	Version         string
+	ManifestVersion uint
 }
+
+type AddonsVersion map[Addon]*AddonVersion
 
 type KubernetesVersion struct {
 	ControlPlaneComponentsVersion ControlPlaneComponentsVersion
@@ -78,57 +80,60 @@ var (
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				HyperkubeVersion: "v1.15.2",
 				EtcdVersion:      "3.3.11",
-				CoreDNSVersion:   "1.3.1",
-				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion:          "1.15.2",
 				ContainerRuntimeVersion: "1.15.0",
+				CoreDNSVersion:          "1.3.1",
+				PauseVersion:            "3.1",
+				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				CiliumVersion:  "1.5.3",
-				ToolingVersion: "0.1.0",
-				KuredVersion:   "1.2.0",
-				DexVersion:     "2.16.0",
-				GangwayVersion: "3.1.0",
+				Cilium:  &AddonVersion{"1.5.3", 0},
+				Kured:   &AddonVersion{"1.2.0", 0},
+				Dex:     &AddonVersion{"2.16.0", 0},
+				Gangway: &AddonVersion{"3.1.0", 0},
+				PSP:     &AddonVersion{"1.0.0", 0},
 			},
 		},
 		"1.15.0": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				HyperkubeVersion: "v1.15.0",
 				EtcdVersion:      "3.3.11",
-				CoreDNSVersion:   "1.3.1",
-				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
 				KubeletVersion:          "1.15.0",
 				ContainerRuntimeVersion: "1.15.0",
+				CoreDNSVersion:          "1.3.1",
+				PauseVersion:            "3.1",
+				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				CiliumVersion:  "1.5.3",
-				ToolingVersion: "0.1.0",
-				KuredVersion:   "1.2.0",
-				DexVersion:     "2.16.0",
-				GangwayVersion: "3.1.0",
+				Cilium:  &AddonVersion{"1.5.3", 0},
+				Kured:   &AddonVersion{"1.2.0", 0},
+				Dex:     &AddonVersion{"2.16.0", 0},
+				Gangway: &AddonVersion{"3.1.0", 0},
+				PSP:     &AddonVersion{"1.0.0", 0},
 			},
 		},
 		"1.14.1": KubernetesVersion{
 			ControlPlaneComponentsVersion: ControlPlaneComponentsVersion{
 				HyperkubeVersion: "v1.14.1",
 				EtcdVersion:      "3.3.11",
-				CoreDNSVersion:   "1.2.6",
-				PauseVersion:     "3.1",
 			},
 			ComponentsVersion: ComponentsVersion{
 				ContainerRuntimeVersion: "1.14.1",
 				KubeletVersion:          "1.14.1",
+				CoreDNSVersion:          "1.2.6",
+				PauseVersion:            "3.1",
+				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				CiliumVersion:  "1.5.3",
-				ToolingVersion: "0.1.0",
-				KuredVersion:   "1.2.0",
-				DexVersion:     "2.16.0",
-				GangwayVersion: "3.1.0",
+				Cilium:  &AddonVersion{"1.5.3", 0},
+				Kured:   &AddonVersion{"1.2.0", 0},
+				Dex:     &AddonVersion{"2.16.0", 0},
+				Gangway: &AddonVersion{"3.1.0", 0},
+				PSP:     &AddonVersion{"1.0.0", 0},
 			},
 		},
 	}
@@ -137,18 +142,20 @@ var (
 func ComponentVersionWithAvailableVersions(component Component, clusterVersion *version.Version, availableVersions KubernetesVersions) string {
 	currentKubernetesVersion := availableVersions[clusterVersion.String()]
 	switch component {
-	case ContainerRuntime:
-		return currentKubernetesVersion.ComponentsVersion.ContainerRuntimeVersion
-	case Kubelet:
-		return currentKubernetesVersion.ComponentsVersion.KubeletVersion
 	case Hyperkube:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.HyperkubeVersion
 	case Etcd:
 		return currentKubernetesVersion.ControlPlaneComponentsVersion.EtcdVersion
+	case ContainerRuntime:
+		return currentKubernetesVersion.ComponentsVersion.ContainerRuntimeVersion
+	case Kubelet:
+		return currentKubernetesVersion.ComponentsVersion.KubeletVersion
 	case CoreDNS:
-		return currentKubernetesVersion.ControlPlaneComponentsVersion.CoreDNSVersion
+		return currentKubernetesVersion.ComponentsVersion.CoreDNSVersion
 	case Pause:
-		return currentKubernetesVersion.ControlPlaneComponentsVersion.PauseVersion
+		return currentKubernetesVersion.ComponentsVersion.PauseVersion
+	case Tooling:
+		return currentKubernetesVersion.ComponentsVersion.ToolingVersion
 	}
 	log.Fatalf("unknown component %q", component)
 	panic("unreachable")
@@ -158,26 +165,16 @@ func ComponentVersionForClusterVersion(component Component, clusterVersion *vers
 	return ComponentVersionWithAvailableVersions(component, clusterVersion, Versions)
 }
 
-func CurrentComponentVersion(component Component) string {
-	return ComponentVersionForClusterVersion(component, LatestVersion())
+func AddonVersionWithAvailableVersions(addon Addon, clusterVersion *version.Version, availableVersions KubernetesVersions) *AddonVersion {
+	currentKubernetesVersion := availableVersions[clusterVersion.String()]
+	if addonVersion, found := currentKubernetesVersion.AddonsVersion[addon]; found {
+		return addonVersion
+	}
+	return nil
 }
 
-func CurrentAddonVersion(addon Addon) string {
-	currentKubernetesVersion := Versions[LatestVersion().String()]
-	switch addon {
-	case Tooling:
-		return currentKubernetesVersion.AddonsVersion.ToolingVersion
-	case Cilium:
-		return currentKubernetesVersion.AddonsVersion.CiliumVersion
-	case Kured:
-		return currentKubernetesVersion.AddonsVersion.KuredVersion
-	case Dex:
-		return currentKubernetesVersion.AddonsVersion.DexVersion
-	case Gangway:
-		return currentKubernetesVersion.AddonsVersion.GangwayVersion
-	}
-	log.Fatalf("unknown addon %q", addon)
-	panic("unreachable")
+func AddonVersionForClusterVersion(addon Addon, clusterVersion *version.Version) *AddonVersion {
+	return AddonVersionWithAvailableVersions(addon, clusterVersion, Versions)
 }
 
 func AvailableVersionsForMap(versions KubernetesVersions) []*version.Version {

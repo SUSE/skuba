@@ -15,36 +15,20 @@
  *
  */
 
-package ssh
+package validate
 
 import (
-	"io/ioutil"
-	"path/filepath"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func init() {
-	stateMap["psp.deploy"] = pspDeploy
-}
-
-func pspDeploy(t *Target, data interface{}) error {
-	pspFiles, err := ioutil.ReadDir(skuba.PspDir())
-	if err != nil {
-		return errors.Wrap(err, "could not read local psp directory")
+// NodeName checks whether the node name is valid and accpetable for kubelet.
+func NodeName(nodename string) error {
+	if len(nodename) > skuba.MaxNodeNameLength {
+		return fmt.Errorf(
+			"invalid node name \"%s\": must be no more than %d characters",
+			nodename, skuba.MaxNodeNameLength)
 	}
-
-	defer t.ssh("rm -rf /tmp/psp.d")
-
-	for _, f := range pspFiles {
-		if err := t.target.UploadFile(filepath.Join(skuba.PspDir(), f.Name()), filepath.Join("/tmp/psp.d", f.Name())); err != nil {
-			return err
-		}
-	}
-
-	_, _, err = t.ssh("kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f /tmp/psp.d")
-	return err
-
+	return nil
 }

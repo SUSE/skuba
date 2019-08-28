@@ -28,30 +28,20 @@ import (
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 type InitConfiguration struct {
-	ClusterName         string
-	ControlPlane        string
-	PauseImage          string
-	CiliumImage         string
-	CiliumInitImage     string
-	CiliumOperatorImage string
-	KuredImage          string
-	DexImage            string
-	GangwayClientSecret string
-	GangwayImage        string
-	KubernetesVersion   *versionutil.Version
-	ImageRepository     string
-	EtcdImageTag        string
-	CoreDNSImageTag     string
-	CloudProvider       string
-	StrictCapDefaults   bool
-}
-
-func (initConfiguration InitConfiguration) KubernetesVersionAtLeast(version string) bool {
-	return initConfiguration.KubernetesVersion.AtLeast(versionutil.MustParseSemantic(version))
+	ClusterName       string
+	ControlPlane      string
+	PauseImage        string
+	KubernetesVersion *versionutil.Version
+	ImageRepository   string
+	EtcdImageTag      string
+	CoreDNSImageTag   string
+	CloudProvider     string
+	StrictCapDefaults bool
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
@@ -102,6 +92,20 @@ func Init(initConfiguration InitConfiguration) error {
 		f.WriteString(str)
 		f.Chmod(0600)
 		f.Close()
+	}
+
+	addonConfiguration := addons.AddonConfiguration{
+		ClusterVersion: initConfiguration.KubernetesVersion,
+		ControlPlane:   initConfiguration.ControlPlane,
+		ClusterName:    initConfiguration.ClusterName,
+	}
+	for addonName, addon := range addons.Addons {
+		if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+			continue
+		}
+		if err := addon.Write(addonConfiguration); err != nil {
+			return errors.Wrapf(err, "could not write %q addon configuration", addonName)
+		}
 	}
 
 	currentDir, err := os.Getwd()

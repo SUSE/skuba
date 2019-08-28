@@ -47,23 +47,18 @@ At the time of creating the issue, this PR can be work in progress (set its titl
 but the documentation needs to be finalized before the PR can be merged. 
 
 
-# Merge restrictions after RC
+# Merge restrictions
 
 (Please do not edit this)
 
-This is the "better safe than sorry" phase, so we will restrict who and what can be merged to prevent unexpected surprises:
+We are in *v4-maintenance phase*, so we will restrict what can be merged to prevent unexpected surprises:
 
-    Who can merge: Release Engineers*
     What can be merged (merge criteria):
-        3 approvals:
-            1 developer
-            1 manager (Nuno, Flavio, Klaus, Markos, Stef, David, Rafa or Jordi)
-            1 QA
+        2 approvals:
+            1 developer: code is fine
+            1 QA: QA is fine
         there is a PR for updating documentation (or a statement that this is not needed)
-        it fixes a P2 bug that has not been target for maintenance
-        the impact is low: for example, it does not touch a piece of code that has an impact on all features
 
-* *Managers will keep the permissions, but they are supposed to give approval. Merging will be done by Release Engineers because they will coordinate the release of the fix.*
 
 <!-- Remember, if this is a work in progress please pre-append [WIP] to the title until you are ready! 
     If you can, please apply all applicable labels to help reviews out! -->

@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/version"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
@@ -33,9 +34,11 @@ import (
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
@@ -72,7 +75,6 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",
-		"cni.cilium-update-configmap",
 		"skuba-update.start",
 	}
 
@@ -101,6 +103,12 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		return err
 	}
 
+	if joinConfiguration.Role == deployments.MasterRole {
+		if err := cni.CiliumUpdateConfigMap(client); err != nil {
+			return err
+		}
+	}
+
 	fmt.Println("[join] node successfully joined the cluster")
 	return nil
 }
@@ -116,21 +124,22 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 		configPath = skuba.TemplatePathForRole(role)
 	}
 
-	joinConfiguration, err := LoadJoinConfigurationFromFile(configPath)
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get current cluster version")
+	}
+
+	joinConfiguration, err := node.LoadJoinConfigurationFromFile(configPath)
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
 	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
-	addTargetInformationToJoinConfiguration(target, role, joinConfiguration)
+	addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion)
 	if cloud.HasCloudIntegration() {
 		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
 			return "", errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
 		}
 		setCloudConfiguration(joinConfiguration)
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
-	if err != nil {
-		return "", errors.Wrap(err, "could not get current cluster version")
 	}
 	finalJoinConfigurationContents, err := kubeadmutil.MarshalToYamlForCodecs(joinConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
@@ -157,14 +166,14 @@ func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadma
 	return err
 }
 
-func addTargetInformationToJoinConfiguration(target *deployments.Target, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration) error {
+func addTargetInformationToJoinConfiguration(target *deployments.Target, role deployments.Role, joinConfiguration *kubeadmapi.JoinConfiguration, clusterVersion *version.Version) error {
 	if joinConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 		joinConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.CurrentComponentVersion(kubernetes.Pause))
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, clusterVersion))
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return errors.Wrap(err, "unable to get os info")

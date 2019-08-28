@@ -63,7 +63,7 @@ class PrChecks:
                     sys.exit(1)
 
             title = title.split('(bsc#') # Title may contain (bsc#XXXXXXXX) references so we need to exclude these
-            if len(title[0]) > 50:
+            if len(title[0].rstrip()) > 50:
                 print('Commit message title should be less than 50 characters (excluding the bsc# reference)')
                 sys.exit(1)
 

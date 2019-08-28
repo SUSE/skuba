@@ -20,27 +20,24 @@ package gangway
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/internal/pkg/skuba/util"
-	"github.com/SUSE/skuba/pkg/skuba"
-	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
 )
 
 const (
-	imageName = "gangway"
-
-	CertCommonName = "oidc-gangway"
-	SecretCertName = "oidc-gangway-cert"
+	certCommonName = "oidc-gangway"
+	secretCertName = "oidc-gangway-cert"
 
 	sessionKey    = "session-key"
 	secretKeyName = "oidc-gangway-secret"
@@ -78,10 +75,7 @@ func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) er
 
 // CreateCert creates a signed certificate for gangway
 // with kubernetes CA certificate and key
-func CreateCert(
-	client clientset.Interface,
-	pkiPath, kubeadmInitConfPath string,
-) error {
+func CreateCert(client clientset.Interface, pkiPath, kubeadmInitConfPath string) error {
 	// Load kubernetes CA
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(pkiPath, constants.CACertAndKeyBaseName)
 	if err != nil {
@@ -96,21 +90,30 @@ func CreateCert(
 
 	// Generate gangway certificate
 	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
-		CertCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
+		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
 	if err != nil {
 		return errors.Wrap(err, "could not genenerate gangway server cert")
 	}
 
 	// Create or update certificate to secret
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, SecretCertName); err != nil {
+	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
 		return errors.Wrap(err, "unable to create/update cert to secret")
 	}
 
 	return nil
 }
 
-// GetGangwayImage returns gangway image registry
-func GetGangwayImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, imageName,
-		kubernetes.CurrentAddonVersion(kubernetes.Gangway))
+func GangwaySecretExists(client clientset.Interface) (bool, error) {
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretKeyName, metav1.GetOptions{})
+	return kubernetes.DoesResourceExistWithError(err)
+}
+
+func GangwayCertExists(client clientset.Interface) (bool, error) {
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
+	return kubernetes.DoesResourceExistWithError(err)
+}
+
+func RestartPods(client clientset.Interface) error {
+	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
+	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
 }

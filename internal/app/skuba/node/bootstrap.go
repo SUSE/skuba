@@ -25,6 +25,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/bootstrap"
+	"github.com/SUSE/skuba/pkg/skuba/actions/validate"
 )
 
 type bootstrapOptions struct {
@@ -40,6 +41,10 @@ func NewBootstrapCmd() *cobra.Command {
 		Use:   "bootstrap <node-name>",
 		Short: "Bootstraps the first master node of the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
+			if err := validate.NodeName(nodenames[0]); err != nil {
+				klog.Fatal(err)
+			}
+
 			bootstrapConfiguration := deployments.BootstrapConfiguration{
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
 			}

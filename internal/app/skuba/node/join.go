@@ -25,6 +25,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/join"
+	"github.com/SUSE/skuba/pkg/skuba/actions/validate"
 )
 
 type joinOptions struct {
@@ -41,6 +42,10 @@ func NewJoinCmd() *cobra.Command {
 		Use:   "join <node-name>",
 		Short: "Joins a new node to the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
+			if err := validate.NodeName(nodenames[0]); err != nil {
+				klog.Fatal(err)
+			}
+
 			joinConfiguration := deployments.JoinConfiguration{
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": joinOptions.ignorePreflightErrors},
 			}

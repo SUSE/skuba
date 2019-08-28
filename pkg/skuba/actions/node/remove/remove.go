@@ -53,6 +53,11 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		}
 	}
 
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve the current cluster version")
+	}
+
 	targetName := node.ObjectMeta.Name
 
 	var isControlPlane bool
@@ -69,7 +74,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		etcd.RemoveMember(node)
 	}
 
-	if err := kubernetes.DisarmKubelet(node); err != nil {
+	if err := kubernetes.DisarmKubelet(node, currentClusterVersion); err != nil {
 		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...\n", err)
 	}
 
@@ -80,10 +85,6 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 		if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
 			return errors.Wrap(err, "[remove-node] could not update cilium-config configmap")
-		}
-
-		if err := cni.AnnotateCiliumDaemonsetWithCurrentTimestamp(client); err != nil {
-			fmt.Printf("[remove-node] could not annonate cilium daemonset: %v\n", err)
 		}
 	}
 
