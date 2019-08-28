@@ -1,8 +1,7 @@
 locals {
   tags = "${merge(
     map("Name", var.stack_name,
-        "Environment", var.stack_name,
-        format("kubernetes.io/cluster/%v", var.stack_name), "owned"),
+        "Environment", var.stack_name),
     var.tags)}"
 }
 

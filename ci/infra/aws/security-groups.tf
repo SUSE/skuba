@@ -178,7 +178,13 @@ resource "aws_security_group" "allow_workers_traffic" {
   name        = "${var.stack_name}-allow-workers-traffic"
   vpc_id      = "${aws_vpc.platform.id}"
 
+  # This security group has the `kubernetes.io/cluster/<cluster-name>` tag,
+  # that makes it the security group that is going to changed by the CPI.
+  # There must be just one security group with this tag, it must be the one
+  # associated to the worker nodes to allow dynamically provisioned ELB to
+  # access them.
   tags = "${merge(local.tags, map(
+    format("kubernetes.io/cluster/%v", var.stack_name), "SUSE-terraform",
     "Name", "${var.stack_name}-control-plane",
     "Class", "SecurityGroup"))}"
 
