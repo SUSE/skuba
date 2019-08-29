@@ -4,7 +4,10 @@ resource "aws_elb" "kube_api" {
   idle_timeout              = 400
   instances                 = ["${aws_instance.control_plane.*.id}"]
   name                      = "${var.stack_name}-elb"
-  security_groups           = ["${aws_security_group.elb.id}"]
+  security_groups           = [
+    "${aws_security_group.elb.id}",
+    "${aws_security_group.egress.id}",
+  ]
   subnets                   = ["${aws_subnet.public.0.id}"]
 
   listener {

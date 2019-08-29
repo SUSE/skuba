@@ -16,11 +16,8 @@ resource "aws_instance" "nodes" {
     "Class", "Instance"))}"
 
   security_groups = [
-    "${aws_security_group.ssh.id}",
-    "${aws_security_group.icmp.id}",
     "${aws_security_group.egress.id}",
-    "${aws_security_group.allow_workers_traffic.id}",
-    "${aws_security_group.lbports.id}",
+    "${aws_security_group.common.id}",
   ]
 
   lifecycle {
