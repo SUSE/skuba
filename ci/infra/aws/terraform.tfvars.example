@@ -32,3 +32,6 @@ aws_secret_key = "ORd..."
 #
 # SUSE Repository Mirroring Server Name (FQDN):
 #rmt_server_name = "rmt.example.com"
+
+iam_profile_master = "caasp-k8s-master-vm-profile"
+iam_profile_worker = "caasp-k8s-worker-vm-profile"

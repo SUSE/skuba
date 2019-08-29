@@ -5,6 +5,7 @@ resource "aws_instance" "nodes" {
   instance_type               = "${var.worker_size}"
   key_name                    = "${aws_key_pair.kube.key_name}"
   source_dest_check           = false
+  iam_instance_profile        = "${var.iam_profile_worker}"
 
   # TODO: remove from the public network once we have bastion hosts
   subnet_id = "${aws_subnet.public.0.id}"
@@ -17,6 +18,7 @@ resource "aws_instance" "nodes" {
   security_groups = [
     "${aws_security_group.egress.id}",
     "${aws_security_group.common.id}",
+    "${aws_security_group.worker.id}",
   ]
 
   lifecycle {
