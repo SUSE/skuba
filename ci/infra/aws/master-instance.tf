@@ -14,11 +14,9 @@ resource "aws_instance" "control_plane" {
     "Class", "Instance"))}"
 
   vpc_security_group_ids = [
-    "${aws_security_group.ssh.id}",
-    "${aws_security_group.icmp.id}",
     "${aws_security_group.egress.id}",
-    "${aws_security_group.allow_https_apiserver.id}",
-    "${aws_security_group.allow_control_plane_traffic.id}",
+    "${aws_security_group.common.id}",
+    "${aws_security_group.master.id}",
   ]
 
   lifecycle {
