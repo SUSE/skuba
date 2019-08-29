@@ -1,3 +1,4 @@
+  - echo "solver.onlyRequires = true" >> /etc/zypp/zypp.conf
   - [ zypper, -n, install, ${packages} ]
   - [ ip, link, delete, docker0 ]
   - iptables -L | grep DOCKER | awk {'print $2'} | xargs -d "\n" -i iptables -X {}
