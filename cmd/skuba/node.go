@@ -15,23 +15,26 @@
  *
  */
 
-package skuba
+package main
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/skuba/internal/app/skuba/auth"
+	"github.com/SUSE/skuba/cmd/skuba/node"
 )
 
-// NewAuthCmd creates a new `skuba auth` cobra command
-func NewAuthCmd() *cobra.Command {
+// NewNodeCmd creates a new `skuba node` cobra command
+func NewNodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "auth",
-		Short: "Commands to handle authentication",
+		Use:   "node",
+		Short: "Commands to handle a specific node",
 	}
 
 	cmd.AddCommand(
-		auth.NewLoginCmd(),
+		node.NewBootstrapCmd(),
+		node.NewJoinCmd(),
+		node.NewRemoveCmd(),
+		node.NewUpgradeCmd(),
 	)
 
 	return cmd

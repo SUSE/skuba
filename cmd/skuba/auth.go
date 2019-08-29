@@ -15,23 +15,24 @@
  *
  */
 
-package skuba
+package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/cmd/skuba/auth"
 )
 
-// NewVersionCmd creates a new `skuba version` cobra command
-func NewVersionCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Print version information",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("%s\n", skuba.CurrentVersion().String())
-		},
+// NewAuthCmd creates a new `skuba auth` cobra command
+func NewAuthCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "auth",
+		Short: "Commands to handle authentication",
 	}
+
+	cmd.AddCommand(
+		auth.NewLoginCmd(),
+	)
+
+	return cmd
 }
