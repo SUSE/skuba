@@ -62,7 +62,7 @@ func Test_RemoveMasterNode(t *testing.T) {
 				t.Errorf("error not expected on %s, but an error was reported (%s)", tt.name, err.Error())
 				return
 			} else if tt.errorExpected && err.Error() != tt.errorMessage {
-				t.Errorf("(%v) expected on %s, but different error message reported (%v)", tt.errorMessage, tt.name, err.Error())
+				t.Errorf("returned error (%v) does not match the expected one (%v)", err.Error(), tt.errorMessage)
 				return
 			}
 		})
