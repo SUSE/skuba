@@ -1,5 +1,5 @@
 resource "openstack_networking_secgroup_v2" "load_balancer" {
-  name        = "${var.stack_name}-caasp_common_secgroup"
+  name        = "${var.stack_name}-caasp_lb_secgroup"
   description = "Common security group for CaaSP load balancer"
 }
 
