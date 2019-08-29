@@ -10,6 +10,8 @@ class PyTestOpts:
 
     SHOW_OUTPUT = "-s"
 
+    VERBOSE = "-v"
+
     COLLECT_TESTS = "--collect-only"
 
 
@@ -31,6 +33,7 @@ class TestDriver:
 
         if verbose:
             opts.append(PyTestOpts.SHOW_OUTPUT)
+            opts.append(PyTestOpts.VERBOSE)
 
         if collect:
             opts.append(PyTestOpts.COLLECT_TESTS)
