@@ -112,6 +112,77 @@ And then you are ready for running some `kubectl` command like:
 $ kubectl get nodes
 ```
 
+## Enable Cloud provider Interface
+
+### Requirements
+
+Before proceeding you must have created IAM policies matching the ones described
+[here](https://github.com/kubernetes/cloud-provider-aws#iam-policy), one
+for the master nodes and one for the worker nodes.
+
+Once this is done you have to specify their name inside of the following
+terraform variables:
+
+  * `iam_profile_master`
+  * `iam_profile_worker`
+
+**Note well:** this must be done before the infrastructure is created.
+
+### Cluster creation
+
+At the time of writing the `skuba cluster bootstrap` command cannot yet create
+cluster definitions that handle the cloud provider interface enablement.
+
+You can however enable that manually:
+
+  * Run `skuba cluster init` in the usual way
+  * Edit the contents of `kubeadm-init.conf`
+  * Edit the contents of `kubeadm-join.conf.d/master.conf.template`
+  * Edit the contents of `kubeadm-join.conf.d/worker.conf.template`
+
+The `kubeadm-init.conf` must be changed to include these sections:
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "aws"
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+apiServer:
+  extraArgs:
+    cloud-provider: "aws"
+controllerManager:
+  extraArgs:
+    cloud-provider: "aws"
+    allocate-node-cidrs: "false"
+```
+
+The `kubeadm-join.conf.d/master.conf.template` and
+the `kubeadm-join.conf.d/worker.conf.template` files must be changed to
+include these sections:
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: JoinConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "aws"
+```
+
+**Note well:** node must be bootstrapped/joined using their FQDN in order to
+have the CPI find them. For example:
+
+```
+$ skuba node bootstrap -u ec2-user -s -t ip-172-28-1-225.eu-central-1.compute.internal ip-172-28-1-225.eu-central-1.compute.internal
+$ skuba node join --role worker -u ec2-user -s -t ip-172-28-1-15.eu-central-1.compute.internal ip-172-28-1-15.eu-central-1.compute.internal
+```
+
+Refer to the [AWS Cloud Provider](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#aws)
+documentation for details on how to use these features in your cluster.
+
 ## Known limitations
 
 ### IP addresses
@@ -123,30 +194,4 @@ the external IPs as `--target`s when initializing or joining the cluster,
 while we must specify the internal DNS names for registering the nodes
 in the cluster.
 
-### Kubernetes cloud provider
-
-The kubernetes cluster deployed with `skuba` does not use the Kubernetes
-cloud provider for AWS. In order to be enable this feature, users need to
-modify the cluster configuration generated with `skuba cluster init`.
-
-```yaml
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: InitConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    cloud-provider: "aws"
----
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.13.0
-apiServer:
-  extraArgs:
-    cloud-provider: "aws"
-controllerManager:
-  extraArgs:
-    cloud-provider: "aws"
-```
-
-Refer to the [AWS Cloud Provider](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#aws)
-documentation for details on how to use these features in your cluster.
 

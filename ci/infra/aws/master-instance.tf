@@ -7,6 +7,7 @@ resource "aws_instance" "control_plane" {
   source_dest_check           = false
   subnet_id                   = "${aws_subnet.public.0.id}"
   user_data                   = "${data.template_cloudinit_config.cfg.rendered}"
+  iam_instance_profile        = "${var.iam_profile_master}"
 
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-master-${count.index}",

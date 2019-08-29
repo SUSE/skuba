@@ -108,3 +108,13 @@ variable "rmt_server_name" {
   default     = ""
   description = "SUSE Repository Mirroring Server Name"
 }
+
+variable "iam_profile_master" {
+  default     = ""
+  description = "IAM profile associated with the master nodes"
+}
+
+variable "iam_profile_worker" {
+  default     = ""
+  description = "IAM profile associated with the worker nodes"
+}
