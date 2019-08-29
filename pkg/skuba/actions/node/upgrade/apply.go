@@ -138,8 +138,8 @@ func Apply(target *deployments.Target) error {
 	}
 	if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
 		err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-			UpdatedVersion: nodeVersionInfoUpdate.Update.APIServerVersion.String(),
-			CurrentVersion: nodeVersionInfoUpdate.Current.APIServerVersion.String(),
+			UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+			CurrentVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
 		}, "kubernetes.install-node-pattern")
 		if err != nil {
 			return err
@@ -156,7 +156,7 @@ func Apply(target *deployments.Target) error {
 		return err
 	}
 	err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-		CurrentVersion: nodeVersionInfoUpdate.Update.APIServerVersion.String(),
+		CurrentVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 	}, "kubernetes.install-node-pattern")
 	if err != nil {
 		return err
