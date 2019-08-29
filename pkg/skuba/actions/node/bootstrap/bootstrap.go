@@ -69,7 +69,10 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	}
 
 	fmt.Printf("[bootstrap] deploying core add-ons on node %q\n", target.Target)
-	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
+	versionToDeploy, err := version.ParseSemantic(initConfiguration.KubernetesVersion)
+	if err != nil {
+		return errors.Wrapf(err, "could not parse semantic version: %s", initConfiguration.KubernetesVersion)
+	}
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: versionToDeploy,
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
@@ -111,7 +114,7 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
-		Version: kubeadm.GetKubeadmApisVersion(version.MustParseSemantic(initConfiguration.KubernetesVersion)),
+		Version: kubeadm.GetKubeadmApisVersion(versionToDeploy),
 	})
 
 	if err != nil {
