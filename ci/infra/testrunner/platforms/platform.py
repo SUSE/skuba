@@ -1,5 +1,6 @@
 import logging
 import os
+import requests
 
 from timeout_decorator import timeout
 
@@ -138,3 +139,15 @@ class Platform:
     def _get_platform_logs(self):
         """Platform specific logs to collect. Expected to be overridden by platforms"""
         return False
+
+    def all_apiservers_responsive(self):
+        """Check if all apiservers are responsive to make sure the load balancer can function correctly"""
+        ip_addrs = self.get_nodes_ipaddrs("master")
+        for ip in ip_addrs:
+            try:
+                response = requests.get("https://{}:6443/healthz".format(ip), verify=False)
+            except requests.exceptions.RequestException:
+                return False
+            if response.status_code != 200:
+                return False
+        return True
