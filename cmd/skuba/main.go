@@ -28,7 +28,6 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
 
-	"github.com/SUSE/skuba/internal/app/skuba"
 	skubapkg "github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -39,10 +38,10 @@ func newRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		skuba.NewVersionCmd(),
-		skuba.NewClusterCmd(),
-		skuba.NewNodeCmd(),
-		skuba.NewAuthCmd(),
+		NewVersionCmd(),
+		NewClusterCmd(),
+		NewNodeCmd(),
+		NewAuthCmd(),
 	)
 
 	register(cmd.PersistentFlags(), "v")

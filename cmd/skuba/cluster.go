@@ -15,12 +15,12 @@
  *
  */
 
-package skuba
+package main
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/skuba/internal/app/skuba/cluster"
+	"github.com/SUSE/skuba/cmd/skuba/cluster"
 )
 
 // NewClusterCmd creates a new `skuba cluster` cobra command

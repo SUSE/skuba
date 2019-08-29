@@ -15,27 +15,23 @@
  *
  */
 
-package skuba
+package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	"github.com/SUSE/skuba/internal/app/skuba/node"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-// NewNodeCmd creates a new `skuba node` cobra command
-func NewNodeCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "node",
-		Short: "Commands to handle a specific node",
+// NewVersionCmd creates a new `skuba version` cobra command
+func NewVersionCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Print version information",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("%s\n", skuba.CurrentVersion().String())
+		},
 	}
-
-	cmd.AddCommand(
-		node.NewBootstrapCmd(),
-		node.NewJoinCmd(),
-		node.NewRemoveCmd(),
-		node.NewUpgradeCmd(),
-	)
-
-	return cmd
 }
