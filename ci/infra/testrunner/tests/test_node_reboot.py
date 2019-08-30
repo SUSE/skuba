@@ -34,7 +34,7 @@ def check_nodes_ready(kubectl):
         time.sleep(5)
 
 
-@timeout(120)
+@timeout(300)
 def check_pods_ready(kubectl):
     while True:
         try:
