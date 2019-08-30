@@ -4,7 +4,7 @@ resource "aws_security_group" "elb" {
   description = "give access to kube api server"
   vpc_id      = "${aws_vpc.platform.id}"
 
-  tags = "${merge(local.tags, map(
+  tags = "${merge(local.basic_tags, map(
     "Name", "${var.stack_name}-elb",
     "Class", "SecurityGroup"))}"
 

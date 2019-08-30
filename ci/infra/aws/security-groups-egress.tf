@@ -3,7 +3,7 @@ resource "aws_security_group" "egress" {
   name        = "${var.stack_name}-egress"
   vpc_id      = "${aws_vpc.platform.id}"
 
-  tags = "${merge(local.tags, map(
+  tags = "${merge(local.basic_tags, map(
     "Name", "${var.stack_name}-egress",
     "Class", "SecurityGroup"))}"
 

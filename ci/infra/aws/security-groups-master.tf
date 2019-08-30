@@ -3,8 +3,8 @@ resource "aws_security_group" "master" {
   name        = "${var.stack_name}-master"
   vpc_id      = "${aws_vpc.platform.id}"
 
-  tags = "${merge(local.tags, map(
-    "Name", "${var.stack_name}-control-plane",
+  tags = "${merge(local.basic_tags, map(
+    "Name", "${var.stack_name}-master",
     "Class", "SecurityGroup"))}"
 
   # etcd - internal
