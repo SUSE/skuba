@@ -24,13 +24,7 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
     skuba.cluster_init(kubernetes_version)
     skuba.node_bootstrap()
 
-    masters = platform.get_num_nodes("master")
-    for n in range (1, masters):
-        skuba.node_join("master", n)
-
-    workers = platform.get_num_nodes("worker")
-    for n in range (0, workers):
-        skuba.node_join("worker", n)
+    skuba.join_nodes()
 
     kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
@@ -101,13 +95,36 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
 
     workers = platform.get_num_nodes("worker")
     for n in range (0, workers):
+        worker = skuba.node_upgrade("plan", "worker", n, ignore_errors=True)
+        # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
+        assert worker.find("Unable to plan node upgrade: my-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
+
+
+@pytest.mark.disruptive
+def test_upgrade_plan_from_previous_with_upgraded_control_plane(setup, skuba, kubectl, platform):
+    """
+    Starting from an updated control plane, check what cluster/node plan report.
+    """
+
+    setup_kubernetes_version(platform, skuba, kubectl, PREVIOUS_VERSION)
+
+    masters = platform.get_num_nodes("master")
+    for n in range (0, masters):
+        node = "my-master-{}".format(n)
+        assert node_is_ready(kubectl, node)
+        master = skuba.node_upgrade("apply", "master", n)
+        assert master.find("successfully upgraded") != -1
+        assert node_is_upgraded(kubectl, platform, node)
+
+    workers = platform.get_num_nodes("worker")
+    for n in range (0, workers):
         worker = skuba.node_upgrade("plan", "worker", n)
         assert worker.find(
             "Current Kubernetes cluster version: {pv}".format(pv=PREVIOUS_VERSION))
         assert worker.find("Latest Kubernetes version: {cv}".format(
             cv=CURRENT_VERSION)) != -1
-        # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
-        assert worker.find("Node my-worker-{} is up to date".format(n))
+        assert worker.find(" - kubelet: {pv} -> {cv}".format(
+            pv=PREVIOUS_VERSION, cv=CURRENT_VERSION)) != -1
 
 
 @pytest.mark.disruptive
