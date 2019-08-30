@@ -29,6 +29,7 @@ resource "aws_security_group" "elb" {
     to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "kubernetes API server"
   }
 
   # Allow access to dex (32000) and gangway (32001)
@@ -37,6 +38,7 @@ resource "aws_security_group" "elb" {
     to_port     = 32001
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "dex and gangway"
   }
 
 }
