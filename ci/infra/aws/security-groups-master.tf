@@ -13,6 +13,7 @@ resource "aws_security_group" "master" {
     to_port     = 2380
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
+    description = "etcd"
   }
 
   # api-server - everywhere
@@ -21,5 +22,6 @@ resource "aws_security_group" "master" {
     to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "kubernetes api-server"
   }
 }

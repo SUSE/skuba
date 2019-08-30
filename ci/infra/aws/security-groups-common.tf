@@ -14,6 +14,7 @@ resource "aws_security_group" "common" {
     protocol        = "icmp"
     security_groups = []
     self            = true
+    description     = "allow ICPM traffic ingress"
   }
 
   egress {
@@ -22,6 +23,7 @@ resource "aws_security_group" "common" {
     protocol        = "icmp"
     security_groups = []
     cidr_blocks     = ["${var.vpc_cidr_block}"]
+    description     = "allow ICPM traffic egress"
   }
 
   # Allow ssh from anywhere
@@ -30,6 +32,7 @@ resource "aws_security_group" "common" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description     = "allow ssh from everywhere"
   }
 
   # cilium - health check - internal
@@ -38,6 +41,7 @@ resource "aws_security_group" "common" {
     to_port     = 4240
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
+    description = "cilium - health check - internal"
   }
 
   # cilium - VXLAN traffic - internal
@@ -46,6 +50,7 @@ resource "aws_security_group" "common" {
     to_port     = 8472
     protocol    = "udp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
+    description = "cilium - VXLAN traffic - internal"
   }
 
   # master -> worker kubelet communication - internal
@@ -54,6 +59,7 @@ resource "aws_security_group" "common" {
     to_port     = 10250
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
+    description = "master to worker kubelet communication - internal"
   }
 
   # kubeproxy health check - internal only
@@ -62,6 +68,7 @@ resource "aws_security_group" "common" {
     to_port     = 10256
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
+    description = "kubeproxy health check - internal only"
   }
 
   # range of ports used by kubernetes when allocating services
@@ -71,6 +78,7 @@ resource "aws_security_group" "common" {
     to_port     = 32767
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "kubernetes NodePort services"
   }
 
   # range of ports used by kubernetes when allocating services
@@ -80,6 +88,7 @@ resource "aws_security_group" "common" {
     to_port     = 32767
     protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "kubernetes NodePort services"
   }
 
 }
