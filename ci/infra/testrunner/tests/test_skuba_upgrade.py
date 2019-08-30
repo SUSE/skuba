@@ -24,13 +24,7 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
     skuba.cluster_init(kubernetes_version)
     skuba.node_bootstrap()
 
-    masters = platform.get_num_nodes("master")
-    for n in range (1, masters):
-        skuba.node_join("master", n)
-
-    workers = platform.get_num_nodes("worker")
-    for n in range (0, workers):
-        skuba.node_join("worker", n)
+    skuba.join_nodes()
 
     kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
 
