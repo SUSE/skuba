@@ -10,6 +10,7 @@ resource "aws_elb" "kube_api" {
   ]
   subnets                   = ["${aws_subnet.public.0.id}"]
 
+  # kube
   listener {
     instance_port     = 6443
     instance_protocol = "tcp"
@@ -17,10 +18,21 @@ resource "aws_elb" "kube_api" {
     lb_protocol       = "tcp"
   }
 
+  # dex - protocol is set to tcp instead of https. Otherwise
+  # we would have to create the SSL certificate right now
   listener {
-    instance_port     = 6443
+    instance_port     = 32000
     instance_protocol = "tcp"
-    lb_port           = 6443
+    lb_port           = 32000
+    lb_protocol       = "tcp"
+  }
+
+  # gangway - protocol is set to tcp instead of https. Otherwise
+  # we would have to create the SSL certificate right now
+  listener {
+    instance_port     = 32001
+    instance_protocol = "tcp"
+    lb_port           = 32001
     lb_protocol       = "tcp"
   }
 
