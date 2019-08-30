@@ -4,6 +4,8 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+def shouldRun = false
+
 pipeline {
     agent { node { label 'caasp-team-private' } }
 
@@ -16,7 +18,6 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         FILTER_SUBDIRECTORY = 'ci/infra/vmware'
-        SHOULD_RUN = false
     }
 
     stages {
@@ -47,15 +48,15 @@ pipeline {
             sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
         } }
 
-        stage('Check for changes') {
-            steps {
-                SHOULD_RUN = sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+        stage('Check for changes') { steps {
+            script {
+                shouldRun = sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") ==~ "contains changes"
             }
-        }
+        } }
 
         stage('Cluster Deployment') {
             when {
-                expression { return SHOULD_RUN }
+                expression { return shouldRun }
             }
             steps {
                 sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
@@ -66,7 +67,7 @@ pipeline {
 
         stage('Run e2e tests') {
             when {
-                expression { return SHOULD_RUN }
+                expression { return shouldRun }
             }
             steps {
                sh(script: "make -f skuba/ci/Makefile test_e2e", label: "test_e2e")
@@ -76,7 +77,7 @@ pipeline {
     post {
         always {
             script {
-                if (SHOULD_RUN) {
+                if (shouldRun) {
                     sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
                     zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
                 }
