@@ -35,13 +35,25 @@ The example below shows a fixture that provides a bootstrapped cluster. It also 
 ```
 @pytest.fixture
 def setup(request, platform, skuba):
-    platform.provision()
     def cleanup():
         platform.cleanup()
     request.addfinalizer(cleanup)
 
+    platform.provision()
     skuba.cluster_init()
     skuba.node_bootstrap()
+```
+
+Note: pytest also allow a more idiomatic way of defining teardown logic in fixtures by using python's `yield` statement instead of registering a finalizer, as shown in the code below. However, finalizer functions have the advantage that they will always be called regardless if the fixture setup code raises an exception, provided they are registered before the exception occurs. Therefore, testrunner encourages using finalizer functions.
+
+```
+@pytest.fixture
+def setup(request, platform, skuba):
+    platform.provision()
+    skuba.cluster_init()
+    skuba.node_bootstrap()
+    yield               # return from fixture
+    platform.cleanup()  # teardown logic
 ```
 
 ## Running tests with the Testrunner
