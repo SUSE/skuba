@@ -45,6 +45,7 @@
     jobs:
         - '{name}-test_upgrade_plan_all_fine-nightly'
         - '{name}-test_upgrade_plan_from_previous-nightly'
+        - '{name}-test_upgrade_plan_from_previous_with_upgraded_control_plane-nightly'
         - '{name}-test_upgrade_apply_all_fine-nightly'
         - '{name}-test_upgrade_apply_from_previous-nightly'
         - '{name}-test_upgrade_apply_user_lock-nightly'
@@ -61,6 +62,7 @@
     jobs:
         - '{name}-test_upgrade_plan_all_fine-nightly'
         - '{name}-test_upgrade_plan_from_previous-nightly'
+        - '{name}-test_upgrade_plan_from_previous_with_upgraded_control_plane-nightly'
         - '{name}-test_upgrade_apply_all_fine-nightly'
         - '{name}-test_upgrade_apply_from_previous-nightly'
         - '{name}-test_upgrade_apply_user_lock-nightly'
