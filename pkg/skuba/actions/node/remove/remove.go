@@ -53,7 +53,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		}
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve the current cluster version")
 	}
@@ -71,15 +71,15 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
-		etcd.RemoveMember(node)
+		etcd.RemoveMember(client, node)
 	}
 
-	if err := kubernetes.DisarmKubelet(node, currentClusterVersion); err != nil {
+	if err := kubernetes.DisarmKubelet(client, node, currentClusterVersion); err != nil {
 		fmt.Printf("[remove-node] failed disarming kubelet: %v; node could be down, continuing with node removal...\n", err)
 	}
 
 	if isControlPlane {
-		if err := kubeadm.RemoveAPIEndpointFromConfigMap(node); err != nil {
+		if err := kubeadm.RemoveAPIEndpointFromConfigMap(client, node); err != nil {
 			return errors.Wrapf(err, "[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
 		}
 

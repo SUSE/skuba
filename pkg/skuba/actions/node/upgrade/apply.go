@@ -47,7 +47,7 @@ func Apply(target *deployments.Target) error {
 		return err
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Println("Fetching the cluster configuration...")
 
-			initCfg, err := kubeadm.GetClusterConfiguration()
+			initCfg, err := kubeadm.GetClusterConfiguration(client)
 			if err != nil {
 				return err
 			}
