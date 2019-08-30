@@ -6,6 +6,11 @@ resource "aws_instance" "nodes" {
   key_name                    = "${aws_key_pair.kube.key_name}"
   source_dest_check           = false
   iam_instance_profile        = "${var.iam_profile_worker}"
+  iam_instance_profile        = "${length(var.iam_profile_worker) == 0 ? local.aws_iam_policy_worker_terraform : var.iam_profile_worker}"
+
+  depends_on = [
+    "aws_iam_policy.worker"
+  ]
 
   # TODO: remove from the public network once we have bastion hosts
   subnet_id = "${aws_subnet.public.0.id}"
