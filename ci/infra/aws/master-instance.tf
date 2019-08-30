@@ -7,7 +7,11 @@ resource "aws_instance" "control_plane" {
   source_dest_check           = false
   subnet_id                   = "${aws_subnet.public.0.id}"
   user_data                   = "${data.template_cloudinit_config.cfg.rendered}"
-  iam_instance_profile        = "${var.iam_profile_master}"
+  iam_instance_profile        = "${length(var.iam_profile_master) == 0 ? local.aws_iam_policy_master_terraform : var.iam_profile_master}"
+
+  depends_on = [
+    "aws_iam_policy.master"
+  ]
 
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-master-${count.index}",

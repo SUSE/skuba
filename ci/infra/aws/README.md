@@ -120,6 +120,13 @@ Before proceeding you must have created IAM policies matching the ones described
 [here](https://github.com/kubernetes/cloud-provider-aws#iam-policy), one
 for the master nodes and one for the worker nodes.
 
+By default these terraform files **do not** create these policies. This is not
+done because some corporate users are entitled to create AWS resources, but
+due to security reasons, they do not have the privileges to create new IAM
+policies.
+
+If you do not have the privileges to create IAM policies you have to request
+to your organization the creation of such policies.
 Once this is done you have to specify their name inside of the following
 terraform variables:
 
@@ -127,6 +134,12 @@ terraform variables:
   * `iam_profile_worker`
 
 **Note well:** this must be done before the infrastructure is created.
+
+
+On the other hand, if you have the privileges to create IAM policies you can
+let these terraform files take care of that for you by doing these operations.
+This is done automatically by leaving the `iam_profile_master` and
+`iam_profile_worker` variables unspecified.
 
 ### Cluster creation
 
