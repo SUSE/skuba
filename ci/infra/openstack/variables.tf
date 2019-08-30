@@ -85,6 +85,11 @@ variable "authorized_keys" {
   description = "SSH keys to inject into all the nodes"
 }
 
+variable "key_pair" {
+  default     = ""
+  description = "SSH key stored in openstack to create the nodes with"
+}
+
 variable "ntp_servers" {
   type        = "list"
   default     = []

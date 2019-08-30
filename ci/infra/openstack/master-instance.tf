@@ -53,6 +53,7 @@ resource "openstack_compute_instance_v2" "master" {
   count      = "${var.masters}"
   name       = "caasp-master-${var.stack_name}-${count.index}"
   image_name = "${var.image_name}"
+  key_pair   = "${var.key_pair}"
 
   depends_on = [
     "openstack_networking_network_v2.network",
