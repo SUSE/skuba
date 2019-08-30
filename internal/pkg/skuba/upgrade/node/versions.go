@@ -65,21 +65,31 @@ func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
 		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor()
 }
 
-func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() bool {
+func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() (bool, error) {
 	isControlPlane := nviu.Current.IsControlPlane()
-	currentClusterVersion, _ := kubeadm.GetCurrentClusterVersion()
-	allControlPlanesMatchVersion, _ := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return false, errors.Wrap(err, "unable to get admin client set")
+	}
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+	if err != nil {
+		return false, errors.Wrap(err, "could not get current cluster version")
+	}
+	allControlPlanesMatchVersion, err := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
+	if err != nil {
+		return false, errors.Wrap(err, "could not check if all control plane versions match")
+	}
 	matchesClusterVersion := (currentClusterVersion.String() == nviu.Current.KubeletVersion.String())
 
-	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion
+	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion, nil
 }
 
 func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
-	clientSet, err := kubernetes.GetAdminClientSet()
+	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return NodeVersionInfoUpdate{}, errors.Wrap(err, "unable to get admin client set")
 	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
@@ -87,7 +97,7 @@ func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	node, err := clientSet.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	node, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
 	if err != nil {
 		return NodeVersionInfoUpdate{}, errors.Wrapf(err, "could not find node %s", nodeName)
 	}

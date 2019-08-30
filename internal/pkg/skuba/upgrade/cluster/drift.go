@@ -43,7 +43,11 @@ func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersi
 // the node version with regards to the current cluster version is only the patch level
 // version, the node won't be included in the list.
 func DriftedNodes() ([]kubernetes.NodeVersionInfo, error) {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return nil, err
+	}
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return []kubernetes.NodeVersionInfo{}, err
 	}

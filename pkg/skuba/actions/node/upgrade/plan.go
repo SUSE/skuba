@@ -29,7 +29,11 @@ import (
 func Plan(nodeName string) error {
 	fmt.Printf("%s\n", skuba.CurrentVersion().String())
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return err
+	}
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}

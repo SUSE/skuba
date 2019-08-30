@@ -25,13 +25,15 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func DisarmKubelet(node *v1.Node, clusterVersion *version.Version) error {
+func DisarmKubelet(client clientset.Interface, node *v1.Node, clusterVersion *version.Version) error {
 	return CreateAndWaitForJob(
+		client,
 		disarmKubeletJobName(node),
 		disarmKubeletJobSpec(node, clusterVersion),
 	)
