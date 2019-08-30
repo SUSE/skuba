@@ -126,7 +126,7 @@ class Skuba:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
 
     @step
-    def node_upgrade(self, action, role, nr):
+    def node_upgrade(self, action, role, nr, ignore_errors=False):
         self._verify_bootstrap_dependency()
 
         if role not in ("master", "worker"):
@@ -145,7 +145,7 @@ class Skuba:
         else:
             raise ValueError("Invalid action '{}'".format(action))
 
-        return self._run_skuba(cmd)
+        return self._run_skuba(cmd, ignore_errors=ignore_errors)
 
     @step
     def cluster_upgrade_plan(self):
@@ -173,7 +173,7 @@ class Skuba:
         path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
         return path
 
-    def _run_skuba(self, cmd, cwd=None, verbosity=None):
+    def _run_skuba(self, cmd, cwd=None, verbosity=None, ignore_errors=False):
         """Running skuba command in cwd.
         The cwd defautls to {workspace}/test-cluster but can be overrided
         for example, for the init command that must run in {workspace}
@@ -201,4 +201,5 @@ class Skuba:
           f"{self.binpath} -v {verbosity} {cmd}",
           cwd=cwd,
           env=env,
+          ignore_errors=ignore_errors,
           )

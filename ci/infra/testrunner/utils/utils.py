@@ -199,6 +199,8 @@ class Utils:
         if p.returncode != 0:
             if not ignore_errors:
                 raise RuntimeError("Error executing command {}".format(cmd))
+            else:
+                return p.stderr.decode()
         return p.stdout.decode()
 
     def ssh_sock_fn(self):
