@@ -3,8 +3,8 @@ resource "aws_security_group" "common" {
   name        = "${var.stack_name}-common"
   vpc_id      = "${aws_vpc.platform.id}"
 
-  tags = "${merge(local.tags, map(
-    "Name", "${var.stack_name}-ssh",
+  tags = "${merge(local.basic_tags, map(
+    "Name", "${var.stack_name}-common",
     "Class", "SecurityGroup"))}"
 
   # Allow ICMP

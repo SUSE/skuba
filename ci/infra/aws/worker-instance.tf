@@ -11,7 +11,6 @@ resource "aws_instance" "nodes" {
   user_data = "${data.template_cloudinit_config.cfg.rendered}"
 
   tags = "${merge(local.tags, map(
-    format("kubernetes.io/cluster/%v", var.stack_name), "SUSE-terraform",
     "Name", "${var.stack_name}-node-${count.index}",
     "Class", "Instance"))}"
 
