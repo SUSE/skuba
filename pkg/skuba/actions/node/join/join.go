@@ -49,7 +49,12 @@ import (
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
 func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		fmt.Println("[join] failed to get admin client set")
+		return err
+	}
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
@@ -76,12 +81,6 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"kubelet.enable",
 		"kubeadm.join",
 		"skuba-update.start",
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		fmt.Print("[join] failed to get admin client set\n")
-		return err
 	}
 
 	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
@@ -124,7 +123,11 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 		configPath = skuba.TemplatePathForRole(role)
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get admin client set")
+	}
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get current cluster version")
 	}

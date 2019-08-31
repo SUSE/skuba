@@ -23,12 +23,13 @@ import (
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
-func RemoveMember(node *v1.Node) error {
+func RemoveMember(client clientset.Interface, node *v1.Node) error {
 	controlPlaneNodes, err := kubernetes.GetControlPlaneNodes()
 	if err != nil {
 		return errors.Wrap(err, "could not get the list of control plane nodes, aborting")
@@ -38,7 +39,7 @@ func RemoveMember(node *v1.Node) error {
 	klog.V(1).Info("removing etcd member from the etcd cluster")
 	for _, controlPlaneNode := range controlPlaneNodes.Items {
 		klog.V(1).Infof("trying to remove etcd member from control plane node %s", controlPlaneNode.ObjectMeta.Name)
-		if err := RemoveMemberFrom(node, &controlPlaneNode); err == nil {
+		if err := RemoveMemberFrom(client, node, &controlPlaneNode); err == nil {
 			klog.V(1).Infof("etcd member for node %s removed from control plane node %s", node.ObjectMeta.Name, controlPlaneNode.ObjectMeta.Name)
 			break
 		} else {
@@ -49,8 +50,9 @@ func RemoveMember(node *v1.Node) error {
 	return nil
 }
 
-func RemoveMemberFrom(node, executorNode *v1.Node) error {
+func RemoveMemberFrom(client clientset.Interface, node, executorNode *v1.Node) error {
 	return kubernetes.CreateAndWaitForJob(
+		client,
 		removeMemberFromJobName(node, executorNode),
 		removeMemberFromJobSpec(node, executorNode),
 	)

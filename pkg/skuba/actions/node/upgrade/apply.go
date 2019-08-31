@@ -47,7 +47,7 @@ func Apply(target *deployments.Target) error {
 		return err
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion()
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,11 @@ func Apply(target *deployments.Target) error {
 	var initCfgContents []byte
 
 	// Check if the target node is the first control plane to be updated
-	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
+	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded()
+	if err != nil {
+		return err
+	}
+	if isFirstControlPlaneUpgrade {
 		var err error
 		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
@@ -92,7 +96,7 @@ func Apply(target *deployments.Target) error {
 		if upgradeable {
 			fmt.Println("Fetching the cluster configuration...")
 
-			initCfg, err := kubeadm.GetClusterConfiguration()
+			initCfg, err := kubeadm.GetClusterConfiguration(client)
 			if err != nil {
 				return err
 			}
@@ -145,7 +149,7 @@ func Apply(target *deployments.Target) error {
 			return err
 		}
 	}
-	if nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded() {
+	if isFirstControlPlaneUpgrade {
 		err = target.Apply(deployments.UpgradeConfiguration{
 			KubeadmConfigContents: string(initCfgContents),
 		}, "kubeadm.upgrade.apply")
