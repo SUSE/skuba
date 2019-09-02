@@ -14,7 +14,7 @@ setup_python_env() {
         python3 -m venv $VENVDIR
     fi
     source ${VENVDIR}/bin/activate
-    pip3 install -r "${SDIR}/requirements.txt"&>/dev/null
+    pip3 install -r "${SDIR}/requirements.txt"
     deactivate
 }
 
