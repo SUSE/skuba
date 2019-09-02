@@ -64,12 +64,12 @@ install: go-version-check
 
 .PHONY: clean
 clean:
-	$(GO) clean -i
+	$(GO) clean -i ./...
 	$(RM) -f ./skuba
 
 .PHONY: distclean
 distclean: clean
-	$(GO) clean -i -cache -testcache -modcache
+	$(GO) clean -i -cache -testcache -modcache ./...
 
 .PHONY: staging
 staging:
