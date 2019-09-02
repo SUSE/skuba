@@ -28,7 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func Test_RemoveMasterNode(t *testing.T) {
+func Test_RemoveNode(t *testing.T) {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kubeadm-config",
