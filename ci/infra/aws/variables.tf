@@ -109,6 +109,11 @@ variable "rmt_server_name" {
   description = "SUSE Repository Mirroring Server Name"
 }
 
+variable "suma_server_name" {
+  default     = ""
+  description = "SUSE Manager Server Name"
+}
+
 variable "iam_profile_master" {
   default     = ""
   description = "IAM profile associated with the master nodes"

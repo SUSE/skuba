@@ -17,6 +17,15 @@ data "template_file" "register_scc" {
   }
 }
 
+data "template_file" "register_suma" {
+  template = "${file("cloud-init/register-suma.tpl")}"
+  count    = "${var.suma_server_name == "" ? 0 : 1}"
+
+  vars {
+    suma_server_name = "${var.suma_server_name}"
+  }
+}
+
 data "template_file" "repositories" {
   count    = "${length(var.repositories) == 0 ? 0 : length(var.repositories)}"
   template = "${file("cloud-init/repository.tpl")}"
@@ -45,6 +54,7 @@ data "template_file" "cloud-init" {
     repositories    = "${length(var.repositories) == 0 ? "\n" : join("\n", data.template_file.repositories.*.rendered)}"
     register_scc    = "${var.caasp_registry_code != "" && var.rmt_server_name == "" ? join("\n", data.template_file.register_scc.*.rendered) : "" }"
     register_rmt    = "${var.rmt_server_name != "" ? join("\n", data.template_file.register_rmt.*.rendered) : ""}"
+    register_suma   = "${var.suma_server_name != "" ? join("\n", data.template_file.register_suma.*.rendered) : ""}"
   }
 }
 
