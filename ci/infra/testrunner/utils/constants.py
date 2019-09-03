@@ -1,4 +1,5 @@
 import os
+
 import yaml
 
 from utils.format import Format
@@ -75,7 +76,7 @@ class BaseConfig:
             self.mirror = None
             self.stack_name = None
             self.tfdir = None
-            self.tfvars = Constant.TERRAFORM_EXAMPLE 
+            self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
 
     class Skuba:
@@ -95,14 +96,13 @@ class BaseConfig:
             super().__init__()
             self.level = "INFO"
             self.quiet = False
-            self.file  = "testrunner.log"
+            self.file = "testrunner.log"
             self.overwrite = False
 
     class VMware:
         def __init__(self):
             self.env_file = None
             self.template_name = None
-
 
     @staticmethod
     def get_yaml_path(yaml_path):
@@ -154,7 +154,7 @@ class BaseConfig:
             conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
 
         if not conf.terraform.tfdir:
-            conf.terraform.tfdir= os.path.join(conf.skuba.srcpath, "ci/infra/")
+            conf.terraform.tfdir = os.path.join(conf.skuba.srcpath, "ci/infra/")
 
         conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 

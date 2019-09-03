@@ -1,7 +1,8 @@
-import hcl
 import json
 import logging
 import os
+
+import hcl
 
 from platforms.platform import Platform
 from utils import (Format, step)
@@ -81,7 +82,7 @@ class Terraform(Platform):
         if role not in ("master", "worker"):
             raise ValueError("Invalid role: {}".format(role))
 
-        role_key = "ip_"+role+"s"
+        role_key = "ip_" + role + "s"
         return self.state["modules"][0]["outputs"][role_key]["value"]
 
     @step

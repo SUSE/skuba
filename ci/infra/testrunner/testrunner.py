@@ -9,7 +9,6 @@ import logging
 import sys
 from argparse import REMAINDER, ArgumentParser
 
-
 import platforms
 from skuba import Skuba
 from tests import TestDriver
@@ -114,7 +113,7 @@ def main():
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
 
-    cmd_log = commands.add_parser("get_logs",  help="gather logs from nodes")
+    cmd_log = commands.add_parser("get_logs", help="gather logs from nodes")
     cmd_log.set_defaults(func=get_logs)
 
     cmd_cleanup = commands.add_parser(

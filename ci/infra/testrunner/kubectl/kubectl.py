@@ -1,10 +1,7 @@
-import os
 import platforms
 
-from platforms.platform import Platform
 from skuba.skuba import Skuba
-from utils.format import Format
-from utils.utils import (step, Utils)
+from utils.utils import (Utils)
 
 
 class Kubectl:
@@ -15,10 +12,9 @@ class Kubectl:
         self.platform = platforms.get_platform(conf, platform)
         self.skuba = Skuba(conf, platform)
 
-
     def run_kubectl(self, command):
         kubeconfig = self.skuba.get_kubeconfig()
-        
+
         shell_cmd = "kubectl --kubeconfig={} {}".format(kubeconfig, command)
         try:
             return self.utils.runshellcommand(shell_cmd)

@@ -1,8 +1,8 @@
 import logging
-import os
-import pytest
 import pathlib
 import textwrap
+
+import pytest
 
 logger = logging.getLogger("testrunner")
 

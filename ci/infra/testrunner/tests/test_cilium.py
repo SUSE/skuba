@@ -1,15 +1,15 @@
 import logging
-import pytest
 import re
 import time
+
+import pytest
 
 logger = logging.getLogger("testrunner")
 
 
 @pytest.mark.flaky
 def test_cillium(deployment, kubectl):
-
-    landing_req='curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
+    landing_req = 'curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
 
     logger.info("Deploy deathstar")
     kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.5/examples/minikube/http-sw-app.yaml")
@@ -36,10 +36,10 @@ def test_cillium(deployment, kubectl):
     assert re.search(r'Controller Status:\s+([0-9]+)/\1 healthy', cilium_status) is not None
 
     for i in range(1, 10):
-        cilium_status = kubectl.run_kubectl(cilium_status_cmd) 
+        cilium_status = kubectl.run_kubectl(cilium_status_cmd)
         all_reachable = re.search(r"Cluster health:\s+({})/\1 reachable".format(node_count), cilium_status)
         if all_reachable:
-           break
+            break
         time.sleep(30)
 
     assert all_reachable

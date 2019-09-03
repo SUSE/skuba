@@ -1,11 +1,9 @@
 import logging
 import os
-import platforms
-import shutil
 
+import platforms
 from utils.format import Format
 from utils.utils import (step, Utils)
-
 
 logger = logging.getLogger('testrunner')
 
@@ -101,7 +99,6 @@ class Skuba:
         for n in range(0, workers):
             self.node_join("worker", n)
 
-
     @step
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
@@ -196,10 +193,9 @@ class Skuba:
             "PATH": os.environ['PATH']
         }
 
-
         return self.utils.runshellcommand(
-          f"{self.binpath} -v {verbosity} {cmd}",
-          cwd=cwd,
-          env=env,
-          ignore_errors=ignore_errors,
-          )
+            f"{self.binpath} -v {verbosity} {cmd}",
+            cwd=cwd,
+            env=env,
+            ignore_errors=ignore_errors,
+        )

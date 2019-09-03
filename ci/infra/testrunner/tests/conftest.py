@@ -1,7 +1,8 @@
 import pytest
+
 import platforms
-from skuba import Skuba
 from kubectl import Kubectl
+from skuba import Skuba
 from utils import BaseConfig
 
 
@@ -28,6 +29,7 @@ def provision(request, platform):
     def cleanup():
         platform.gather_logs()
         platform.cleanup()
+
     request.addfinalizer(cleanup)
 
     platform.provision()
@@ -48,6 +50,7 @@ def deployment(request, bootstrap, skuba):
         return
 
     skuba.join_nodes()
+
 
 @pytest.fixture
 def conf(request):
