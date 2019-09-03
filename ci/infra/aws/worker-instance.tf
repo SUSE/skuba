@@ -20,7 +20,7 @@ resource "aws_instance" "nodes" {
     "Name", "${var.stack_name}-node-${count.index}",
     "Class", "Instance"))}"
 
-  security_groups = [
+  vpc_security_group_ids = [
     "${aws_security_group.egress.id}",
     "${aws_security_group.common.id}",
     "${aws_security_group.worker.id}",
@@ -29,7 +29,9 @@ resource "aws_instance" "nodes" {
   lifecycle {
     create_before_destroy = true
 
-    # ignore_changes = ["associate_public_ip_address"]
+    ignore_changes = [
+      "ami",
+    ]
   }
 
   root_block_device {

@@ -26,7 +26,9 @@ resource "aws_instance" "control_plane" {
   lifecycle {
     create_before_destroy = true
 
-    # ignore_changes = ["associate_public_ip_address"]
+    ignore_changes = [
+      "ami",
+    ]
   }
 
   root_block_device {
