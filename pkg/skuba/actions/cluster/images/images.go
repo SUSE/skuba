@@ -27,30 +27,32 @@ import (
 // Print out list of images that will be pulled
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
 func Images() error {
-	for _, ver := range kubernetes.AvailableVersions() {
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "pause",
-			kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "hyperkube",
-			kubernetes.ComponentVersionForClusterVersion(kubernetes.Hyperkube,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "etcd",
-			kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "coredns",
-			kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "kured",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Kured,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "cilium",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "cilium-init",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "cilium-operator",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "skuba-tooling",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Tooling,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "caasp-dex",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Dex,ver)))
-		fmt.Println(ver,images.GetGenericImage(skuba.ImageRepository, "gangway",
-			kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway,ver)))
+  components := map[kubernetes.Component]string {
+		kubernetes.Hyperkube: "hyperkube",
+		kubernetes.Etcd:      "etcd",
+		kubernetes.CoreDNS:   "coredns",
+		kubernetes.Pause:     "pause",
+		kubernetes.Tooling:   "tooling",
 	}
 
+	addons := map[kubernetes.Addon]string {
+		kubernetes.Cilium:  "cilium",
+		kubernetes.Kured:   "kured",
+		kubernetes.Dex:     "dex",
+		kubernetes.Gangway: "gangway",
+		kubernetes.PSP:     "psp",
+	}
+
+	fmt.Printf("VERSION    IMAGE\n")
+	for _, cv := range kubernetes.AvailableVersions() {
+		for component, componentName := range components {
+			fmt.Printf("%-10v %v\n",cv,images.GetGenericImage(skuba.ImageRepository, componentName,
+				kubernetes.ComponentVersionForClusterVersion(component, cv)))
+		}
+		for addon, addonName := range addons {
+			fmt.Printf("%-10v %v\n",cv,images.GetGenericImage(skuba.ImageRepository, addonName,
+			  kubernetes.AddonVersionForClusterVersion(addon, cv).Version))
+		}
+	}
 	return nil
 }
