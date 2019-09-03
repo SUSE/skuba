@@ -19,9 +19,9 @@ setup_python_env() {
     # Not calling to `pip3` directly because its shebang can exceed 128 characters
     # and this operation will fail. Check: https://github.com/pypa/pip/issues/1773
     python -m pip install -r "${SDIR}/pr_manager/requirements.txt"
-    deactivate
 }
 
 setup_python_env
 # use unbuffered output
-stdbuf -i0 -o0 -e0  ${VENVDIR}/bin/python3 -u ${SDIR}/pr_manager/pr_manager.py $@
+stdbuf -i0 -o0 -e0 python -u ${SDIR}/pr_manager/pr_manager.py "$@"
+deactivate
