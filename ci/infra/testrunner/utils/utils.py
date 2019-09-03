@@ -6,6 +6,7 @@ import shutil
 import subprocess
 from functools import wraps
 from tempfile import gettempdir
+from threading import Thread
 
 import requests
 from timeout_decorator import timeout
@@ -193,16 +194,25 @@ class Utils:
         else:
             logger.info("Executing command {}".format(cmd))
 
-        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
-                           env=env, cwd=cwd)
-        logger.debug(p.stdout.decode())
-        logger.error(p.stderr.decode())
+        stdout, stderr = [], []
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=env, cwd=cwd)
+        stdoutStreamer = Thread(target = self.read_fd, args = (p, p.stdout, logger.debug, stdout))
+        stderrStreamer = Thread(target = self.read_fd, args = (p, p.stderr, logger.error, stderr))
+        stdoutStreamer.start()
+        stderrStreamer.start()
+        stdoutStreamer.join()
+        stderrStreamer.join()
+        # this is redundant, at this point threads were joined and they waited for the subprocess
+        # to exit, however it should not hurt to explicitly wait for it again (no-op).
+        p.wait()
+        stdout, stderr = "".join(stdout), "".join(stderr)
+
         if p.returncode != 0:
             if not ignore_errors:
                 raise RuntimeError("Error executing command {}".format(cmd))
             else:
-                return p.stderr.decode()
-        return p.stdout.decode()
+                return stderr
+        return stdout
 
     def ssh_sock_fn(self):
         """generate path to ssh socket
@@ -220,6 +230,19 @@ class Utils:
         if len(path) > maxl:
             raise Exception(f"Socket path '{path}' len {len(path)} > {maxl}")
         return path
+
+    def read_fd(self, proc, fd, logger_func, output):
+        """Read from fd, logging using logger_func
+
+        Read from fd, until proc is finished. All contents will
+        also be appended onto output."""
+        while True:
+            contents = fd.readline().decode()
+            if contents == '' and proc.poll() is not None:
+                return
+            if contents:
+                output.append(contents)
+                logger_func(contents.strip())
 
     @timeout(60)
     @step
