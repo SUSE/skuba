@@ -18,6 +18,7 @@
 package etcd
 
 import (
+	"crypto/sha1"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -59,7 +60,10 @@ func RemoveMemberFrom(client clientset.Interface, node, executorNode *v1.Node) e
 }
 
 func removeMemberFromJobName(node, executorNode *v1.Node) string {
-	return fmt.Sprintf("caasp-remove-etcd-member-%s-from-%s", node.ObjectMeta.Name, executorNode.ObjectMeta.Name)
+	nodeName := fmt.Sprintf("%x", sha1.Sum([]byte(node.ObjectMeta.Name)))
+	executorNodeName := fmt.Sprintf("%x", sha1.Sum([]byte(executorNode.ObjectMeta.Name)))
+
+	return fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", nodeName, executorNodeName)
 }
 
 func removeMemberFromJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
