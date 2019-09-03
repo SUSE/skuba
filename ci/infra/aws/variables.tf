@@ -123,3 +123,9 @@ variable "iam_profile_worker" {
   default     = ""
   description = "IAM profile associated with the worker nodes"
 }
+
+variable "peer_vpc_ids" {
+  type        = "list"
+  default     = []
+  description = "IDs of a VPCs to connect to via a peering connection"
+}
