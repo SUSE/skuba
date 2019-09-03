@@ -16,7 +16,9 @@ setup_python_env() {
     python3 -m venv $VENVDIR
   fi
   source ${VENVDIR}/bin/activate
-  pip3 install -r "${SDIR}/requirements.txt"
+  # Not calling to `pip3` directly because its shebang can exceed 128 characters
+  # and this operation will fail. Check: https://github.com/pypa/pip/issues/1773
+  python -m pip install -r "${SDIR}/requirements.txt"
   deactivate
 }
 
