@@ -22,6 +22,5 @@ setup_python_env() {
 }
 
 setup_python_env
-# use unbuffered output
-stdbuf -i0 -o0 -e0 python -u ${SDIR}/testrunner.py "$@"
+python -u ${SDIR}/testrunner.py "$@"
 deactivate
