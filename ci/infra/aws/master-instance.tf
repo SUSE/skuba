@@ -37,21 +37,3 @@ resource "aws_instance" "control_plane" {
     delete_on_termination = true
   }
 }
-
-resource "null_resource" "control_plane_wait_cloudinit" {
-  depends_on = ["aws_instance.control_plane"]
-  count      = "${var.masters}"
-
-  connection {
-    host  = "${element(aws_instance.control_plane.*.public_ip, count.index)}"
-    user  = "ec2-user"
-    type  = "ssh"
-    agent = true
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cloud-init status --wait > /dev/null || /bin/true",
-    ]
-  }
-}

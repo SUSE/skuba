@@ -40,21 +40,3 @@ resource "aws_instance" "nodes" {
     delete_on_termination = true
   }
 }
-
-resource "null_resource" "nodes_wait_cloudinit" {
-  depends_on = ["aws_instance.nodes"]
-  count      = "${var.workers}"
-
-  connection {
-    host  = "${element(aws_instance.nodes.*.public_ip, count.index)}"
-    user  = "ec2-user"
-    type  = "ssh"
-    agent = true
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "cloud-init status --wait > /dev/null || /bin/true",
-    ]
-  }
-}
