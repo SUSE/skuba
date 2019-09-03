@@ -35,6 +35,11 @@ secret_key = "<SECRET>"
 authorized_keys = ["ssh-rsa AAAAB3NzaC1y..."]
 ```
 
+
+The terraform files will create a new dedicated VPC for the kubernetes cluster.
+It's possible to join this VPC with other existing ones by specifying the IDs
+of the VPC to join inside of the `peer_vpc_ids` variable.
+
 ### Creating the infrastructure
 
 You can create the infrastructure by _applying_ the script with:

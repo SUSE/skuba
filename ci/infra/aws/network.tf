@@ -58,11 +58,12 @@ resource "aws_route_table" "public" {
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-route-table-public",
     "Class", "RouteTable"))}"
+}
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.platform.id}"
-  }
+resource "aws_route" "public_to_everywhere" {
+  route_table_id         = "${aws_route_table.public.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = "${aws_internet_gateway.platform.id}"
 }
 
 resource "aws_route_table" "private" {
@@ -71,12 +72,14 @@ resource "aws_route_table" "private" {
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-route-table-private",
     "Class", "RouteTable"))}"
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = "${aws_nat_gateway.nat_gw.id}"
-  }
 }
+
+resource "aws_route" "private_to_everywhere" {
+  route_table_id         = "${aws_route_table.private.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = "${aws_internet_gateway.platform.id}"
+}
+
 
 resource "aws_main_route_table_association" "main" {
   route_table_id = "${aws_route_table.public.id}"
