@@ -14,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
 import os
-import sys
+
+from setuptools import setup
+
 
 def version():
     """Return the version. Pass when VERSION file not found"""
@@ -27,16 +28,17 @@ def version():
     except FileNotFoundError:
         return ''
 
+
 setup(
-    name = "skuba-update",
-    version = version(),
-    author = "SUSE Containers Team",
-    author_email = "containers@suse.com",
-    description = "Utility to automatically refresh and update a SUSE CaaSP cluster nodes",
-    long_description = "Wraps zypper to refresh repositories and apply non interactive patches, including patches requiring reboot.",
-    license = "Apache License 2.0",
-    keywords = "CaaSP",
-    url = "https://github.com/SUSE/skuba-update",
+    name="skuba-update",
+    version=version(),
+    author="SUSE Containers Team",
+    author_email="containers@suse.com",
+    description="Utility to automatically refresh and update a SUSE CaaSP cluster nodes",
+    long_description="Wraps zypper to refresh repositories and apply non interactive patches, including patches requiring reboot.",
+    license="Apache License 2.0",
+    keywords="CaaSP",
+    url="https://github.com/SUSE/skuba-update",
     packages=['skuba_update'],
     classifiers=[
         'Intended Audience :: Developers',
@@ -50,7 +52,7 @@ setup(
             ]
         ),
         ('share/fillup-templates', ['skuba_update/sysconfig.skuba-update'])
-    ], entry_points = {
+    ], entry_points={
         'console_scripts': [
             'skuba-update = skuba_update.skuba_update:main'
         ]

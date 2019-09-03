@@ -1,6 +1,7 @@
 import logging
 import os
 
+
 class Logger:
 
     def __init__(self, conf):
@@ -10,7 +11,7 @@ class Logger:
     def config_logger(conf, level=None):
         logger = logging.getLogger("testrunner")
         logger.setLevel(logging.getLevelName("DEBUG"))
-        
+
         if conf.log.file:
             mode = 'a'
             if conf.log.overwrite:
@@ -25,6 +26,3 @@ class Logger:
             console = logging.StreamHandler()
             console.setLevel(logging.getLevelName(level.upper()))
             logger.addHandler(console)
-
-        
-

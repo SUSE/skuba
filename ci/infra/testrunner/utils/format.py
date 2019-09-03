@@ -1,4 +1,3 @@
-
 class Format:
     DOT = '\033[34m●\033[0m'
     DOT_EXIT = '\033[32m●\033[0m'
@@ -7,4 +6,4 @@ class Format:
 
     @staticmethod
     def alert(msg):
-       return ("{}{}{}".format(Format.RED, msg, Format.RED_EXIT))
+        return ("{}{}{}".format(Format.RED, msg, Format.RED_EXIT))

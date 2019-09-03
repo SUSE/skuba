@@ -1,7 +1,7 @@
 import logging
 import os
-import requests
 
+import requests
 from timeout_decorator import timeout
 
 from utils import (step, Utils)
@@ -15,9 +15,11 @@ class Platform:
         self.utils = Utils(conf)
 
         # Which logs will be collected from the nodes
-        self.logs = {"files": [],
-                     "dirs": ["/var/log/pods"],
-                     "services": ["kubelet"]}
+        self.logs = {
+            "files": [],
+            "dirs": ["/var/log/pods"],
+            "services": ["kubelet"]
+        }
 
         # Files that will be deleted during the cleanup stage
         self.tmp_files = []
@@ -39,8 +41,10 @@ class Platform:
     def gather_logs(self):
         logging_errors = False
 
-        node_ips = {"master": self.get_nodes_ipaddrs("master"),
-                    "worker": self.get_nodes_ipaddrs("worker")}
+        node_ips = {
+            "master": self.get_nodes_ipaddrs("master"),
+            "worker": self.get_nodes_ipaddrs("worker")
+        }
 
         if not os.path.isdir(self.conf.log_dir):
             os.mkdir(self.conf.log_dir)

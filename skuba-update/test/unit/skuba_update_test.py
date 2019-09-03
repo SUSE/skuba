@@ -16,9 +16,9 @@
 # limitations under the License.
 
 import json
-from mock import patch, call, mock_open, Mock, ANY
 from collections import namedtuple
 
+from mock import patch, call, mock_open, Mock, ANY
 from skuba_update.skuba_update import (
     main,
     update,
@@ -189,7 +189,7 @@ def test_restart_services_error(mock_zypp_cmd, mock_subprocess, capsys):
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main_annotate_only(
-    mock_subprocess, mock_geteuid, mock_args, mock_annotate
+        mock_subprocess, mock_geteuid, mock_args, mock_annotate
 ):
     args = Mock()
     args.annotate_only = True
@@ -212,7 +212,7 @@ def test_main_annotate_only(
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main_zypper_returns_100(
-    mock_subprocess, mock_geteuid, mock_args, mock_annotate
+        mock_subprocess, mock_geteuid, mock_args, mock_annotate
 ):
     return_values = [(b'', b''), (b'zypper 1.14.15', b'')]
 
@@ -260,7 +260,6 @@ def test_main_zypper_returns_100(
 def test_update_zypper_is_fine_but_created_needreboot(
         mock_subprocess, mock_is_file
 ):
-
     mock_process = Mock()
     mock_process.communicate.return_value = (b'stdout', b'stderr')
 
@@ -486,17 +485,17 @@ def test_annotate_updates_available(mock_subprocess, mock_open, mock_name):
         ),
         call(
             ["kubectl", "annotate", "--overwrite", "node",
-                "mynode", "caasp.suse.com/has-updates=yes"],
+             "mynode", "caasp.suse.com/has-updates=yes"],
             stdout=-1, stderr=-1, env=ANY
         ),
         call(
             ["kubectl", "annotate", "--overwrite", "node",
-                "mynode", "caasp.suse.com/has-security-updates=no"],
+             "mynode", "caasp.suse.com/has-security-updates=no"],
             stdout=-1, stderr=-1, env=ANY
         ),
         call(
             ["kubectl", "annotate", "--overwrite", "node",
-                "mynode", "caasp.suse.com/has-disruptive-updates=yes"],
+             "mynode", "caasp.suse.com/has-disruptive-updates=yes"],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -533,7 +532,7 @@ def test_annotate_updates_bad_xml(mock_subprocess, mock_annotate, mock_name):
 @patch('skuba_update.skuba_update.annotate')
 @patch('subprocess.Popen')
 def test_annotate_updates_security(
-    mock_subprocess, mock_annotate, mock_name
+        mock_subprocess, mock_annotate, mock_name
 ):
     mock_name.return_value = 'mynode'
     mock_process = Mock()
@@ -563,7 +562,7 @@ def test_annotate_updates_security(
 @patch('skuba_update.skuba_update.annotate')
 @patch('subprocess.Popen')
 def test_annotate_updates_available_is_reboot(
-    mock_subprocess, mock_annotate, mock_name
+        mock_subprocess, mock_annotate, mock_name
 ):
     mock_name.return_value = 'mynode'
 

@@ -15,16 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import subprocess
-import re
-import json
 import argparse
-import pkg_resources
+import json
+import os
+import re
+import subprocess
 from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
+
+import pkg_resources
 
 # Since zypper 1.14.0, it will automatically create a `/var/run/reboot-needed`
 # text file whenever one of the applied patches requires the system to be

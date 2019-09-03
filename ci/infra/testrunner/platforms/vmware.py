@@ -31,11 +31,13 @@ class VMware(Terraform):
     def _get_platform_logs(self):
         # Get logs from the VMware LB
         node_ip = self.get_lb_ipaddr()
-        logs = {"files": ["/var/run/cloud-init/status.json",
-                          "/var/log/cloud-init-output.log",
-                          "/var/log/cloud-init.log"],
-                "dirs": [],
-                "services": ["haproxy"]}
+        logs = {
+            "files": ["/var/run/cloud-init/status.json",
+                      "/var/log/cloud-init-output.log",
+                      "/var/log/cloud-init.log"],
+            "dirs": [],
+            "services": ["haproxy"]
+        }
 
         node_log_dir = self._create_node_log_dir(node_ip, "load_balancer", self.conf.log_dir)
         logging_error = self.utils.collect_remote_logs(node_ip, logs, node_log_dir)

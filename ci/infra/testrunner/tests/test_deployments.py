@@ -17,7 +17,7 @@ def test_nginx_deployment(deployment, kubectl):
     wrk_idx = 0
     ip_addresses = kubectl.skuba.platform.get_nodes_ipaddrs("worker")
 
-    url = "{protocol}://{ip}:{port}{path}".format(protocol="http",ip=str(ip_addresses[wrk_idx]),port=str(nodePort),path="/")
+    url = "{protocol}://{ip}:{port}{path}".format(protocol="http", ip=str(ip_addresses[wrk_idx]), port=str(nodePort), path="/")
     r = requests.get(url)
 
     assert "Welcome to nginx" in r.text

@@ -1,13 +1,12 @@
 import os
-import pytest
 
+import pytest
 
 FILEPATH = os.path.realpath(__file__)
 TESTRUNNER_DIR = os.path.dirname(os.path.dirname(FILEPATH))
 
 
 class PyTestOpts:
-
     SHOW_OUTPUT = "-s"
 
     VERBOSE = "-v"
@@ -19,12 +18,12 @@ class TestDriver:
     def __init__(self, conf, platform):
         self.conf = conf
         self.platform = platform
-        
+
     def run(self, module=None, test_suite=None,
             test=None, verbose=False, collect=False,
             skip_setup=None, mark=None, junit=None):
         opts = []
-        
+
         vars_opt = "--vars={}".format(self.conf.yaml_path)
         opts.append(vars_opt)
 
@@ -52,8 +51,8 @@ class TestDriver:
         if test_suite:
             if not test_suite.endswith(".py"):
                 raise ValueError("Test suite must be a python file")
-            test_path = os.path.join(test_path,test_suite)
-        
+            test_path = os.path.join(test_path, test_suite)
+
         if test:
             if not test_suite:
                 raise ValueError("Test suite is required for selecting a test")

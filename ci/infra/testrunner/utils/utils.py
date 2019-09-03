@@ -9,9 +9,9 @@ from tempfile import gettempdir
 
 import requests
 from timeout_decorator import timeout
+
 from utils.constants import Constant
 from utils.format import Format
-
 
 logger = logging.getLogger('testrunner')
 
@@ -30,6 +30,7 @@ def step(f):
             Format.DOT_EXIT * _stepdepth, f.__name__))
         _stepdepth -= 1
         return r
+
     return wrapped
 
 
@@ -193,7 +194,7 @@ class Utils:
             logger.info("Executing command {}".format(cmd))
 
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
-                 env=env, cwd=cwd)
+                           env=env, cwd=cwd)
         logger.debug(p.stdout.decode())
         logger.error(p.stderr.decode())
         if p.returncode != 0:
