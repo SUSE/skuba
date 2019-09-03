@@ -22,6 +22,5 @@ setup_python_env() {
 }
 
 setup_python_env
-# use unbuffered output
-stdbuf -i0 -o0 -e0 python -u ${SDIR}/pr_manager/pr_manager.py "$@"
+python -u ${SDIR}/pr_manager/pr_manager.py "$@"
 deactivate
