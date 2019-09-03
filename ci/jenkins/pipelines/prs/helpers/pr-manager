@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 echo "Starting $0 script"
 
-SDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 VENVDIR=${WORKSPACE:-~}/py3venv
 export VENVDIR=${VENVDIR}
 
@@ -14,8 +16,9 @@ setup_python_env() {
         python3 -m venv $VENVDIR
     fi
     source ${VENVDIR}/bin/activate
-    REQ_PATH="${SDIR}/pr_manager/requirements.txt"
-    pip3 install -r "${REQ_PATH}" &>/dev/null
+    # Not calling to `pip3` directly because its shebang can exceed 128 characters
+    # and this operation will fail. Check: https://github.com/pypa/pip/issues/1773
+    python -m pip install -r "${SDIR}/pr_manager/requirements.txt"
     deactivate
 }
 
