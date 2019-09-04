@@ -24,13 +24,16 @@ import (
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func RemoveMember(client clientset.Interface, node *v1.Node) error {
+func RemoveMember(client clientset.Interface, node *v1.Node, clusterVersion *version.Version) error {
 	controlPlaneNodes, err := kubernetes.GetControlPlaneNodes()
 	if err != nil {
 		return errors.Wrap(err, "could not get the list of control plane nodes, aborting")
@@ -40,7 +43,7 @@ func RemoveMember(client clientset.Interface, node *v1.Node) error {
 	klog.V(1).Info("removing etcd member from the etcd cluster")
 	for _, controlPlaneNode := range controlPlaneNodes.Items {
 		klog.V(1).Infof("trying to remove etcd member from control plane node %s", controlPlaneNode.ObjectMeta.Name)
-		if err := RemoveMemberFrom(client, node, &controlPlaneNode); err == nil {
+		if err := RemoveMemberFrom(client, node, &controlPlaneNode, clusterVersion); err == nil {
 			klog.V(1).Infof("etcd member for node %s removed from control plane node %s", node.ObjectMeta.Name, controlPlaneNode.ObjectMeta.Name)
 			break
 		} else {
@@ -51,11 +54,11 @@ func RemoveMember(client clientset.Interface, node *v1.Node) error {
 	return nil
 }
 
-func RemoveMemberFrom(client clientset.Interface, node, executorNode *v1.Node) error {
+func RemoveMemberFrom(client clientset.Interface, node, executorNode *v1.Node, clusterVersion *version.Version) error {
 	return kubernetes.CreateAndWaitForJob(
 		client,
 		removeMemberFromJobName(node, executorNode),
-		removeMemberFromJobSpec(node, executorNode),
+		removeMemberFromJobSpec(node, executorNode, clusterVersion),
 	)
 }
 
@@ -66,16 +69,15 @@ func removeMemberFromJobName(node, executorNode *v1.Node) string {
 	return fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", nodeName, executorNodeName)
 }
 
-func removeMemberFromJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
+func removeMemberFromJobSpec(node, executorNode *v1.Node, clusterVersion *version.Version) batchv1.JobSpec {
 	return batchv1.JobSpec{
 		Template: v1.PodTemplateSpec{
 			Spec: v1.PodSpec{
 				Containers: []v1.Container{
 					{
 						Name: removeMemberFromJobName(node, executorNode),
-						// FIXME: fetch etcd image repo and tag from the clusterconfiguration in kubeadm-config configmap
 						// FIXME: check that etcd member is part of the member list already
-						Image: "k8s.gcr.io/etcd:3.3.10",
+						Image: images.GetGenericImage(skuba.ImageRepository, "etcd", kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, clusterVersion)),
 						Command: []string{
 							"/bin/sh", "-c",
 							fmt.Sprintf("etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member remove $(etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list | grep ', %s,' | cut -d',' -f1)", node.ObjectMeta.Name),

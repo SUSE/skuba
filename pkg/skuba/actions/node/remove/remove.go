@@ -71,7 +71,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
-		etcd.RemoveMember(client, node)
+		etcd.RemoveMember(client, node, currentClusterVersion)
 	}
 
 	if err := kubernetes.DisarmKubelet(client, node, currentClusterVersion); err != nil {
