@@ -24,8 +24,10 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func RemoveMember(node *v1.Node) error {
@@ -67,9 +69,8 @@ func removeMemberFromJobSpec(node, executorNode *v1.Node) batchv1.JobSpec {
 				Containers: []v1.Container{
 					{
 						Name: removeMemberFromJobName(node, executorNode),
-						// FIXME: fetch etcd image repo and tag from the clusterconfiguration in kubeadm-config configmap
 						// FIXME: check that etcd member is part of the member list already
-						Image: "k8s.gcr.io/etcd:3.3.10",
+						Image: images.GetGenericImage(skuba.ImageRepository, "etcd", kubernetes.CurrentComponentVersion(kubernetes.Etcd)),
 						Command: []string{
 							"/bin/sh", "-c",
 							fmt.Sprintf("etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member remove $(etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list | grep ', %s,' | cut -d',' -f1)", node.ObjectMeta.Name),
