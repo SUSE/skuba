@@ -21,6 +21,9 @@ import (
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 )
 
+// KubernetesVersionAtLeast will panic if the given version is not a semantic
+// one. Thus, before calling this function, make sure that this version comes
+// from a safe place (i.e skuba source code).
 func (renderContext renderContext) KubernetesVersionAtLeast(version string) bool {
 	return renderContext.config.ClusterVersion.AtLeast(versionutil.MustParseSemantic(version))
 }

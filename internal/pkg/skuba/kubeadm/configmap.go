@@ -54,7 +54,7 @@ func GetCurrentClusterVersion(client clientset.Interface) (*version.Version, err
 	if err != nil {
 		return nil, err
 	}
-	return version.MustParseSemantic(initCfg.KubernetesVersion), nil
+	return version.ParseSemantic(initCfg.KubernetesVersion)
 }
 
 // GetKubeadmApisVersion returns the api version to use in the kubeadm-init.conf
