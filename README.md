@@ -6,8 +6,22 @@ Tool to manage the full lifecycle of a cluster.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [CI](/ci/README.md)
-- [Test](test/README.md)
+  * [Development](#development)
+  * [Staging](#staging)
+  * [Release](#release)
+- [Creating a cluster](#creating-a-cluster)
+  * [cluster init](#cluster-init)
+  * [node bootstrap](#node-bootstrap)
+- [Growing a cluster](#growing-a-cluster)
+  * [node join](#node-join)
+    + [master node join](#master-node-join)
+    + [worker node join](#worker-node-join)
+- [Shrinking a cluster](#shrinking-a-cluster)
+  * [node remove](#node-remove)
+- [kubectl-caasp](#kubectl-caasp)
+- [Demo](#demo)
+- [CI](ci/README.md)
+- [Update](skuba-update/README.md)
 
 ## Prerequisites
 
