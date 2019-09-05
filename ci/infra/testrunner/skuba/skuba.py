@@ -1,5 +1,6 @@
 import logging
 import os
+import stat
 
 import platforms
 from utils.format import Format
@@ -45,26 +46,35 @@ class Skuba:
         Utils.cleanup_files(dirs)
 
     @step
-    def cluster_init(self, kubernetes_version=None):
+    def cluster_init(self, kubernetes_version=None, cloud_provider=None):
         logger.debug("Cleaning up any previous test-cluster dir")
         self.utils.cleanup_file(self.cwd)
 
-        k8s_version_option = ""
+        k8s_version_option, cloud_provider_option = "", ""
         if kubernetes_version:
             k8s_version_option = "--kubernetes-version {}".format(kubernetes_version)
-        cmd = "cluster init --control-plane {} {} test-cluster".format(self.platform.get_lb_ipaddr(), k8s_version_option)
+        if cloud_provider:
+            cloud_provider_option = "--cloud-provider {}".format(type(self.platform).__name__.lower())
+
+        cmd = "cluster init --control-plane {} {} {} test-cluster".format(self.platform.get_lb_ipaddr(),
+                                                                          k8s_version_option, cloud_provider_option)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
 
     @step
-    def node_bootstrap(self):
+    def node_bootstrap(self, cloud_provider=None):
         self._verify_bootstrap_dependency()
 
+        if cloud_provider:
+            self.platform.setup_cloud_provider()
+
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
-        cmd = "node bootstrap --user {username} --sudo --target \
-                 {ip} my-master-0".format(ip=master0_ip, username=self.conf.nodeuser)
+        cmd = "node bootstrap --user {nodeuser} --sudo --target \
+                 {ip} caasp-master-{username}-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser,
+                                                        username=self.conf.username)
         self._run_skuba(cmd)
+
 
     @step
     def node_join(self, role="worker", nr=0):
@@ -79,9 +89,9 @@ class Skuba:
             raise Exception(Format.alert("Node {role}-{nr} is not deployed in "
                                          "infrastructure".format(role=role, nr=nr)))
 
-        cmd = "node join --role {role} --user {username} --sudo --target {ip} \
-               my-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
-                                      username=self.conf.nodeuser)
+        cmd = "node join --role {role} --user {nodeuser} --sudo --target {ip} \
+               caasp-{role}-{username}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
+                                      nodeuser=self.conf.nodeuser, username=self.conf.username)
         try:
             self._run_skuba(cmd)
         except Exception as ex:

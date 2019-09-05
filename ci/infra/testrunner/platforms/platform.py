@@ -155,3 +155,6 @@ class Platform:
             if response.status_code != 200:
                 return False
         return True
+
+    def setup_cloud_provider(self):
+        raise ValueError("Cloud provider is not supported for this platform")

@@ -112,3 +112,7 @@ test_post_bootstrap:
 .PHONY: test_e2e
 test_e2e:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit e2e --filter "not disruptive and not flaky" --skip-setup deployed
+
+.PHONY: test_cpi_openstack
+test_cpi_openstack:
+	${TEST_RUNNER} -v vars.yaml -p openstack test --verbose --suite test_cpi_openstack.py
