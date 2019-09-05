@@ -36,8 +36,8 @@ def provision(options):
 
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.cluster_init(kubernetes_version=options.kubernetes_version)
-    skuba.node_bootstrap()
+    skuba.cluster_init(kubernetes_version=options.kubernetes_version, cloud_provider=options.cloud_provider)
+    skuba.node_bootstrap(cloud_provider=options.cloud_provider)
 
 
 def cluster_status(options):
@@ -103,7 +103,7 @@ def main():
                         default="openstack",
                         choices=["openstack", "vmware",
                                  "bare-metal", "libvirt"],
-                        help="The platform you're targeting. Defaults to openstack")
+                        help="The platform you're targeting. Default is openstack")
     parser.add_argument("-l", "--log-level", dest="log_level", default=None, help="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
 
@@ -132,6 +132,8 @@ def main():
                         deployed nodes in your platform")
     cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
                                dest="kubernetes_version", default=None)
+    cmd_bootstrap.add_argument("-c", "--cloud-provider", action='store_true',
+                               help="The cloud provider you're targeting. Default is openstack")
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")

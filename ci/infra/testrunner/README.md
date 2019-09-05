@@ -336,8 +336,19 @@ optional arguments:
   -w WORKER_COUNT, --worker-count WORKER_COUNT
                         number of workers nodes to be deployed. eg: -w 2
 ```
+### Bootstrap
+
+ ```
+optional arguments:
+  -h, --help            show this help message and exit
+  -k KUBERNETES_VERSION, --kubernetes-version KUBERNETES_VERSION
+                        kubernetes version
+  -c, --cloud-provider
+                        The cloud provider will be offered
+```
 
 ### Node commands
+
 ```
   -h, --help            show this help message and exit
   -r {master,worker}, --role {master,worker}

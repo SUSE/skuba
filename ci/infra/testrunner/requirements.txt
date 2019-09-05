@@ -1,5 +1,6 @@
 timeout-decorator
 requests
 pyhcl
-pytest
+pytest==5.1.0
 pyyaml
+pytest-ordering
