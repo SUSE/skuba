@@ -3,6 +3,7 @@
 ## Contents
 
 - [Summary](#summary)
+- [Design](#design)
 - [Configuration](#configuration-parameters)
   - [Work Environment](#work-environment)
   - [Platform](#platform)
@@ -29,6 +30,56 @@
 ## Summary
 
 Testrunner is a CLI tool for setting up an environment for running e2e tests, making transparent the mechanism used for providing the test infrastructure. It can be used as a stand-alone tool, running either locally or as part of a CI pipeline. It provides commands for provisioning the infrastructure, deploying a k8s cluster using `skuba`,  and running tests. It also provides [a library](tests/README.md) for developing `pytest`-based tests.
+
+
+## Design
+
+The `testrunner` is composed by multiple components as described in the figure below:
+* The `testrunner.py` frontend cli application, which receives CLI options, loads a configuration and executes the selected command. The configuration is loaded from a yaml file (by default, [vars.yaml](vars.yaml)) and mixed with the environment variables.
+* A set of supporting classes which offer functionality for setting up and interacting with a cluster and executing tests. These classes wrap external tools such as `skuba`, `terraform`, `kubectl` and `pytests`. The commands offered by the `testrunner.py` cli application mostly expose the functionalities of these classes and add only the required glue code.
+* In the case of the test command, the `testrunner` does not only wrap the `pytest` testing tool ([tests/driver.py](tests/driver.py), but also offers a test library ([tests/conftest.py](tests/conftest.py)) which implements reusable test functionalities as well as `fixtures` to facilitate [test development](tests/README.md). These fixtures use the libraries offered by testrunner for setting up the test infrastructure, deploying the cluster, interact with the cluster and the nodes, cleaning up after execution, execute common validation checks, among others.
+
+The objective of this design is to maintain a clear separation between the following concerns:
+* User interface including configuration (`testrunner.py` and `BaseConfig` class)
+* Wrapping external classes (supporting libraries for `skuba`, `terraform`, `kubectl`)
+* Reusable test functionalities (`conftest.py`)
+* Test logic (diverse test suites)
+
+It is worth noticing that tests can be executed directly using pytest, but it is more convenient to execute them using the testrunner, resulting in a consistent user experience.
+
+```                                           
+                                              | env variables
+                                              v
+              +--------------+         +----------------+     +---------------+
+  CLI options |              |<--------|                |     | Configuration |
+  ----------->|  Testrunner  |         | Initialization |<----|  (vars.yaml)  |
+              |              |----+    |                |     |               |
+              +--------------+    |    +----------------+     +---------------+
+                    |             |
+       Test command |             | Setup commands 
+                    v             v (provision, bootstrap, ...)
+        +--------------+    +--------------+
+        |    pytest    |    |  Supporting  | Wrap skuba, 
+        |    wrapper   |    |  libraries   | terraform,
+        |              |    |              | kubectl
+        +--------------+    +--------------+
+                |                   ^
+   Invokes with |                   | Use
+   cli optons   v                   |
+        +--------------+    +--------------+
+        |              |    |              | reusable test
+        |    pytest    |    | Test library | fixtures
+        |              |    |              |
+        +--------------+    +--------------+
+                |                   ^
+       Execute  |                   |
+                v                   |
+        +--------------+            | Use
+        |              |            |
+        |    Tests     |------------+
+        |              |
+        +--------------+
+```
 
 ## Configuration parameters
 
