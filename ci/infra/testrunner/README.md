@@ -17,11 +17,11 @@
   - [CI setup](#ci-setup)
 - [Usage](#usage)
   - [General CLI options](#general-cli-options)
-  - [Provision](#provision)
+  - [Provision](#provision-command)
   - [Node commands](#node-commands)
-    - [Node Upgrade](#node-upgrade)
-  - [Ssh](#ssh)
-  - [Test](#ssh)
+    - [Node Upgrade](#node-upgrade-command)
+  - [Ssh](#ssh-command)
+  - [Test](#test-command)
 - [Examples](#examples)
   - [Create K8s Cluster](#create-k8s-cluster)
   - [Collect logs](#collect-logs)
@@ -326,7 +326,7 @@ optional arguments:
                         log level
 ```
 
-### Provision
+### Provision command
 
 ```
 optional arguments:
@@ -358,7 +358,7 @@ optional arguments:
 
 ```
 
-#### Node Upgrade
+#### Node Upgrade command
 
 ```
   -h, --help            show this help message and exit
@@ -366,7 +366,7 @@ optional arguments:
                         action: plan or apply upgrade
 ```
 
-### Ssh
+### Ssh command
 
 ```
   -h, --help            show this help message and exit
@@ -378,16 +378,28 @@ optional arguments:
                         last argument for ssh command
 ```
 
-### Test
+### Test command
 
 ```
 optional arguments:
   -h, --help            show this help message and exit
+  -f MARK, --filter MARK
+                        Filter the tests based on markers
+  -j JUNIT, --junit JUNIT
+                        Name of the xml file to record the results to.
+  -m MODULE, --module MODULE
+                        folder with the tests
   -s TEST_SUITE, --suite TEST_SUITE
                         test file name
   -t TEST, --test TEST  test to execute
   -l, --list            only list tests to be executed
   -v, --verbose         show all output
+  --skip-setup {provisioned,bootstrapped,deployed}
+                        Skip the given setup step. 'provisioned' For when you
+                        have already provisioned the nodes. 'bootstrapped' For
+                        when you have already bootstrapped the cluster.
+                        'deployed' For when you already have a fully deployed
+                        cluster.
 ```
 
 
