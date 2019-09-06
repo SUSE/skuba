@@ -44,7 +44,7 @@ def setup(request, platform, skuba):
     skuba.node_bootstrap()
 ```
 
-Note: pytest also allow a more idiomatic way of defining teardown logic in fixtures by using python's `yield` statement instead of registering a finalizer, as shown in the code below. However, finalizer functions have the advantage that they will always be called regardless if the fixture setup code raises an exception, provided they are registered before the exception occurs. Therefore, testrunner encourages using finalizer functions.
+Note: pytest also allow a more idiomatic way of defining teardown logic in fixtures by using python's `yield` statement instead of registering a finalizer, as shown in the code below. However, finalizer functions have the advantage that they will always be called regardless if the fixture setup code raises an exception, provided they are registered before the exception occurs. Therefore, **testrunner encourages using finalizer functions**.
 
 ```
 @pytest.fixture
@@ -55,6 +55,40 @@ def setup(request, platform, skuba):
     yield               # return from fixture
     platform.cleanup()  # teardown logic
 ```
+
+## Reusing already deployed infrastructure
+
+Sometime, it is convenient to reuse an already deployed infrastructure when executing tests. This is a common case while tests are beeing developed (as they must be tested by the developer and errors need to be fixed), or when multiple tests which have no side effects can share the same infrastructure.
+
+To address these uses cases, `testrunner`'s [`test` command](../README.md#test-command) provides the `--skip-setup` option which allows skipping the execution of one or more setup fixtures that setup, whithout having to modify the test or the fixtures. If a fixuture depends on other fixtures, those are also skipped automatically.
+
+Consider the following fixtures:
+
+```
+@pytest.fixture()
+def provision():
+# provision infrastructure
+
+@pytest.fixture()
+def bootstrap(provision, skuba):
+# bootstrap cluster
+
+@pytest.fixture()
+def deployment(bootstrap, platform, skuba)
+# complete cluster deployment
+# joining all nodes
+
+def test_deployment(deployment, skuba:
+# test fully deployed cluster
+
+```
+
+Running the following command will executed the test without executing the cluster deployment fixture and neither of the fixtures it depends (`bootstrap`, `provision`)
+
+```
+testrunner test --skip-setup deployed -t test_deployment
+```
+
 
 ## Running tests with the Testrunner
 
