@@ -27,7 +27,7 @@ import (
 // Print out list of images that will be pulled
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
 func Images() error {
-  components := map[kubernetes.Component]string {
+	components := map[kubernetes.Component]string {
 		kubernetes.Hyperkube: "hyperkube",
 		kubernetes.Etcd:      "etcd",
 		kubernetes.CoreDNS:   "coredns",
@@ -51,7 +51,7 @@ func Images() error {
 		}
 		for addon, addonName := range addons {
 			fmt.Printf("%-10v %v\n",cv,images.GetGenericImage(skuba.ImageRepository, addonName,
-			  kubernetes.AddonVersionForClusterVersion(addon, cv).Version))
+				kubernetes.AddonVersionForClusterVersion(addon, cv).Version))
 		}
 	}
 	return nil
