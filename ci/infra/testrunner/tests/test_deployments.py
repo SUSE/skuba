@@ -8,11 +8,11 @@ def test_nginx_deployment(deployment, kubectl):
     kubectl.run_kubectl("scale deployment nginx --replicas={replicas}".format(replicas=workers))
     kubectl.run_kubectl("expose deployment nginx --port=80 --type=NodePort")
     kubectl.run_kubectl("wait --for=condition=available deploy/nginx --timeout={timeout}m".format(timeout=3))
-    readyReplicas = kubectl.run_kubectl("get deployment/nginx -o jsonpath='{ .status.readyReplicas }'")
+    readyReplicas = kubectl.run_kubectl("get deployment/nginx -o jsonpath='{ .status.readyReplicas }'").stdout
 
     assert int(readyReplicas) == workers
 
-    nodePort = kubectl.run_kubectl("get service/nginx -o jsonpath='{ .spec.ports[0].nodePort }'")
+    nodePort = kubectl.run_kubectl("get service/nginx -o jsonpath='{ .spec.ports[0].nodePort }'").stdout
 
     wrk_idx = 0
     ip_addresses = kubectl.skuba.platform.get_nodes_ipaddrs("worker")

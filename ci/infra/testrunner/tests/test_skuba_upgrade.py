@@ -34,18 +34,18 @@ def node_is_upgraded(kubectl, platform, node_name):
     for attempt in range(10):
         if platform.all_apiservers_responsive():
             # kubernetes might be a little bit slow with updating the NodeVersionInfo
-            version = kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name))
+            version = kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)).stdout
             if version.find(PREVIOUS_VERSION) == 0:
                 time.sleep(2)
             else:
                 break
         else:
             time.sleep(2)
-    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)).find(CURRENT_VERSION) != -1
+    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)).stdout.find(CURRENT_VERSION) != -1
 
 
 def node_is_ready(kubectl, node_name):
-    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}{{@.type}}={{@.status}};{{end}}'".format(node_name)).find("Ready=True") != -1
+    return kubectl.run_kubectl("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}{{@.type}}={{@.status}};{{end}}'".format(node_name)).stdout.find("Ready=True") != -1
 
 
 @pytest.mark.disruptive
@@ -55,7 +55,7 @@ def test_upgrade_plan_all_fine(setup, skuba, kubectl, platform):
     """
 
     setup_kubernetes_version(platform, skuba, kubectl)
-    out = skuba.cluster_upgrade_plan()
+    out = skuba.cluster_upgrade_plan().stdout
 
     assert out.find(
         "Congratulations! You are already at the latest version available"
@@ -71,7 +71,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
     setup_kubernetes_version(platform, skuba, kubectl, PREVIOUS_VERSION)
 
     # cluster upgrade plan
-    out = skuba.cluster_upgrade_plan()
+    out = skuba.cluster_upgrade_plan().stdout
     assert out.find("Current Kubernetes cluster version: {pv}".format(
         pv=PREVIOUS_VERSION)) != -1
     assert out.find("Latest Kubernetes version: {cv}".format(
@@ -84,7 +84,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
     # node upgrade plan
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
-        master = skuba.node_upgrade("plan", "master", n)
+        master = skuba.node_upgrade("plan", "master", n).stdout
         assert master.find(
             "Current Kubernetes cluster version: {pv}".format(pv=PREVIOUS_VERSION))
         assert master.find("Latest Kubernetes version: {cv}".format(
@@ -96,7 +96,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
-        worker = skuba.node_upgrade("plan", "worker", n, ignore_errors=True)
+        worker = skuba.node_upgrade("plan", "worker", n, ignore_errors=True).stderr
         # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
         assert worker.find("Unable to plan node upgrade: my-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
 
@@ -113,13 +113,13 @@ def test_upgrade_plan_from_previous_with_upgraded_control_plane(setup, skuba, ku
     for n in range(0, masters):
         node = "my-master-{}".format(n)
         assert node_is_ready(kubectl, node)
-        master = skuba.node_upgrade("apply", "master", n)
+        master = skuba.node_upgrade("apply", "master", n).stdout
         assert master.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
-        worker = skuba.node_upgrade("plan", "worker", n)
+        worker = skuba.node_upgrade("plan", "worker", n).stdout
         assert worker.find(
             "Current Kubernetes cluster version: {pv}".format(pv=PREVIOUS_VERSION))
         assert worker.find("Latest Kubernetes version: {cv}".format(
@@ -139,14 +139,14 @@ def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
     # node upgrade apply
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
-        master = skuba.node_upgrade("plan", "master", n)
+        master = skuba.node_upgrade("plan", "master", n).stdout
         assert master.find(
             "Node my-master-{} is up to date".format(n)
         ) != -1
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
-        worker = skuba.node_upgrade("plan", "worker", n)
+        worker = skuba.node_upgrade("plan", "worker", n).stdout
         assert worker.find(
             "Node my-worker-{} is up to date".format(n)
         ) != -1
@@ -164,14 +164,14 @@ def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
     for n in range(0, masters):
         node = "my-master-{}".format(n)
         assert node_is_ready(kubectl, node)
-        master = skuba.node_upgrade("apply", "master", n)
+        master = skuba.node_upgrade("apply", "master", n).stdout
         assert master.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
         node = "my-worker-{}".format(n)
-        worker = skuba.node_upgrade("apply", "worker", n)
+        worker = skuba.node_upgrade("apply", "worker", n).stdout
         assert worker.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
 
@@ -193,10 +193,10 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
         # disable skuba-update.timer
         platform.ssh_run("master", n, "sudo systemctl disable --now skuba-update.timer")
         assert node_is_ready(kubectl, node)
-        master = skuba.node_upgrade("apply", "master", n)
+        master = skuba.node_upgrade("apply", "master", n).stdout
         assert master.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
-        assert platform.ssh_run("master", n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
+        assert platform.ssh_run("master", n, "sudo systemctl is-enabled skuba-update.timer || :").stdout.find("disabled") != -1
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
@@ -204,9 +204,9 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
         # disable skuba-update.timer
         platform.ssh_run("worker", n, "sudo systemctl disable --now skuba-update.timer")
         assert node_is_ready(kubectl, node)
-        worker = skuba.node_upgrade("apply", "worker", n)
+        worker = skuba.node_upgrade("apply", "worker", n).stdout
         assert worker.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
-        assert platform.ssh_run("worker", n, "sudo systemctl is-enabled skuba-update.timer || :").find("disabled") != -1
+        assert platform.ssh_run("worker", n, "sudo systemctl is-enabled skuba-update.timer || :").stdout.find("disabled") != -1
 
-    assert kubectl.run_kubectl(r"-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").find("manual") != -1
+    assert kubectl.run_kubectl(r"-n kube-system get ds/kured -o jsonpath='{.metadata.annotations.weave\.works/kured-node-lock}'").stdout.find("manual") != -1

@@ -162,8 +162,8 @@ class Skuba:
 
         test_cluster = os.path.join(self.conf.workspace, "test-cluster")
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
-        output = self.utils.runshellcommand(cmd)
-        return output.count(role)
+        res = self.utils.runshellcommand(cmd)
+        return res.stdout.count(role)
 
     @step
     def get_kubeconfig(self):

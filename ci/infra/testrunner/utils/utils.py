@@ -11,6 +11,7 @@ from threading import Thread
 import requests
 from timeout_decorator import timeout
 
+from utils.command import CommandResult
 from utils.constants import Constant
 from utils.format import Format
 
@@ -207,12 +208,10 @@ class Utils:
         p.wait()
         stdout, stderr = "".join(stdout), "".join(stderr)
 
-        if p.returncode != 0:
-            if not ignore_errors:
-                raise RuntimeError("Error executing command {}".format(cmd))
-            else:
-                return stderr
-        return stdout
+        if p.returncode != 0 and not ignore_errors:
+            raise RuntimeError("Error executing command {}; stdout: {}; stderr: {}".format(cmd, stdout, stderr))
+
+        return CommandResult(p.returncode, stdout, stderr)
 
     def ssh_sock_fn(self):
         """generate path to ssh socket
@@ -282,9 +281,9 @@ class Utils:
     def info(self):
         """Node info"""
         info_lines = "Env vars: {}\n".format(sorted(os.environ))
-        info_lines += self.runshellcommand('ip a')
-        info_lines += self.runshellcommand('ip r')
-        info_lines += self.runshellcommand('cat /etc/resolv.conf')
+        info_lines += self.runshellcommand('ip a').stdout
+        info_lines += self.runshellcommand('ip r').stdout
+        info_lines += self.runshellcommand('cat /etc/resolv.conf').stdout
 
         # TODO: the logic for retrieving external is platform depedant and should be
         # moved to the corresponding platform
