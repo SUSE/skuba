@@ -98,7 +98,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
     for n in range(0, workers):
         worker = skuba.node_upgrade("plan", "worker", n, ignore_errors=True)
         # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
-        assert worker.find("Unable to plan node upgrade: my-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
+        assert worker.stderr.find("Unable to plan node upgrade: my-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
 
 
 @pytest.mark.disruptive
