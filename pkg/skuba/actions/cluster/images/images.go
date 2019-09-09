@@ -19,15 +19,16 @@ package cluster
 
 import (
 	"fmt"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 // Print out list of images that will be pulled
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
 func Images() error {
-	components := map[kubernetes.Component]string {
+	components := map[kubernetes.Component]string{
 		kubernetes.Hyperkube: "hyperkube",
 		kubernetes.Etcd:      "etcd",
 		kubernetes.CoreDNS:   "coredns",
@@ -35,7 +36,7 @@ func Images() error {
 		kubernetes.Tooling:   "tooling",
 	}
 
-	addons := map[kubernetes.Addon]string {
+	addons := map[kubernetes.Addon]string{
 		kubernetes.Cilium:  "cilium",
 		kubernetes.Kured:   "kured",
 		kubernetes.Dex:     "dex",
@@ -46,11 +47,11 @@ func Images() error {
 	fmt.Printf("VERSION    IMAGE\n")
 	for _, cv := range kubernetes.AvailableVersions() {
 		for component, componentName := range components {
-			fmt.Printf("%-10v %v\n",cv,images.GetGenericImage(skuba.ImageRepository, componentName,
+			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, componentName,
 				kubernetes.ComponentVersionForClusterVersion(component, cv)))
 		}
 		for addon, addonName := range addons {
-			fmt.Printf("%-10v %v\n",cv,images.GetGenericImage(skuba.ImageRepository, addonName,
+			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, addonName,
 				kubernetes.AddonVersionForClusterVersion(addon, cv).Version))
 		}
 	}
