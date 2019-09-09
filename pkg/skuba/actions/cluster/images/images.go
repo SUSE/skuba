@@ -36,23 +36,15 @@ func Images() error {
 		kubernetes.Tooling:   "tooling",
 	}
 
-	addons := map[kubernetes.Addon]string{
-		kubernetes.Cilium:  "cilium",
-		kubernetes.Kured:   "kured",
-		kubernetes.Dex:     "dex",
-		kubernetes.Gangway: "gangway",
-		kubernetes.PSP:     "psp",
-	}
-
 	fmt.Printf("VERSION    IMAGE\n")
 	for _, cv := range kubernetes.AvailableVersions() {
 		for component, componentName := range components {
 			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, componentName,
 				kubernetes.ComponentVersionForClusterVersion(component, cv)))
 		}
-		for addon, addonName := range addons {
-			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, addonName,
-				kubernetes.AddonVersionForClusterVersion(addon, cv).Version))
+		for addonName, addonVersion := range kubernetes.Versions[cv.String()].AddonsVersion {
+			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, string(addonName),
+				addonVersion.Version))
 		}
 	}
 	return nil
