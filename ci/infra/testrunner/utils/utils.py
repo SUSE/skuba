@@ -209,7 +209,7 @@ class Utils:
         stdout, stderr = "".join(stdout), "".join(stderr)
 
         if p.returncode != 0 and not ignore_errors:
-            raise RuntimeError("Error executing command {}; stdout: {}; stderr: {}".format(cmd, stdout, stderr))
+            raise RuntimeError("Error executing command {}; retcode: {}; stdout: {}; stderr: {}".format(cmd, p.returncode, stdout, stderr))
 
         return CommandResult(p.returncode, stdout, stderr)
 

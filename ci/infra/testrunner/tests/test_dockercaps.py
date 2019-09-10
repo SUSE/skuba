@@ -69,13 +69,13 @@ def test_dockercaps(deployment, kubectl, setup_manifest):
     pods = ["sle12sp4", "leap", "sle15", "sle15sp1"]
     for container in pods:
         output = kubectl.run_kubectl(
-            "exec -it {} -- su root -c id".format(container)).stdout
+            "exec -it {} -- su root -c id".format(container))
         assert 'uid=0' in output
 
     logger.info("Test: Add a new user to the containers")
     for container in pods:
         output = kubectl.run_kubectl(
-            "exec -it {} -- useradd panos".format(container)).stdout
+            "exec -it {} -- useradd panos".format(container))
         assert 'PAM' not in output
 
     # Remove the testing pods

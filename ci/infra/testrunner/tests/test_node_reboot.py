@@ -38,7 +38,7 @@ def check_nodes_ready(kubectl):
 def check_pods_ready(kubectl):
     while True:
         try:
-            pods = json.loads(kubectl.run_kubectl('get pods --all-namespaces -o json').stdout)['items']
+            pods = json.loads(kubectl.run_kubectl('get pods --all-namespaces -o json'))['items']
 
             for pod in pods:
                 pod_status = pod['status']['phase']
