@@ -14,7 +14,7 @@ pipeline {
         OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         VMWARE_ENV_FILE = credentials('vmware-env')
-        TERRAFORM_STACK_NAME = "${JOB_NAME}-${E2E_MAKE_TARGET_NAME}-${BUILD_NUMBER}"
+        TERRAFORM_STACK_NAME = "${JOB_NAME.replaceAll("/","-")}-${BUILD_NUMBER}"
    }
 
    stages {
