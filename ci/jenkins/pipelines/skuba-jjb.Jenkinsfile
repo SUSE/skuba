@@ -4,7 +4,7 @@ pipeline {
     environment {
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
-        TERRAFORM_STACK_NAME = "${JOB_NAME}-${BUILD_NUMBER}"
+        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(80)
     }
     stages {
         stage('Info') { steps {
