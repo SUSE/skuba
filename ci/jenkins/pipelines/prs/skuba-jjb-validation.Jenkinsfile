@@ -8,7 +8,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = "/var/lib/ca-certificates/ca-bundle.pem"
         PR_CONTEXT = 'jenkins/skuba-jjb-validation'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
-        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(80)
+        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
     }
     stages {
         stage('Setting GitHub in-progress status') { steps {

@@ -13,7 +13,7 @@ pipeline {
         VMWARE_ENV_FILE = credentials('vmware-env')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'vmware'
-        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(80)
+        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         PR_CONTEXT = 'jenkins/skuba-test-vmware'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
