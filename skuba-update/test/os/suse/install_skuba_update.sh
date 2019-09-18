@@ -24,7 +24,11 @@ if [ "$release" = "NAME=\"SLES\"" ]; then
     zypper ref
 fi
 
+<<<<<<< HEAD
 zypper in iputils mailx
+=======
+zypper --non-interactive in iputils mailx
+>>>>>>> Test
 ping -c 3 build.suse.de
 
 zypper in -y python3-setuptools lsof
