@@ -125,7 +125,7 @@ class Skuba:
             raise ValueError("Error: there is no {role}-{nr} \
                               node to remove from cluster".format(role=role, nr=nr))
 
-        cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
+        cmd = "node remove caasp-{role}-{nr}".format(role=role, nr=nr)
 
         try:
             self._run_skuba(cmd)
@@ -144,7 +144,7 @@ class Skuba:
                               node in the cluster".format(role, nr))
 
         if action == "plan":
-            cmd = "node upgrade plan my-{}-{}".format(role, nr)
+            cmd = "node upgrade plan caasp-{}-{}".format(role, nr)
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
             cmd = "node upgrade apply --user {username} --sudo --target {ip}".format(
