@@ -24,6 +24,13 @@ class PrChecks:
 
         print(f'PR-{pr_number} is from a fork.')
 
+    def check_pr_from_collaborator(self, change_author):
+        collaborator = self.repo.has_in_collaborators(change_author)
+
+        if not collaborator:
+            print(f'{change_author} is not a collaborator exiting...')
+            sys.exit(1)
+
     def check_pr_details(self, pr_number):
         """
         Performs the following checks for every commits in a given PR

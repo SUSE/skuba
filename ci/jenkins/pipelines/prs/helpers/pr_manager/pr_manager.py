@@ -12,6 +12,7 @@ from pr_merge import PrMerge
 from pr_status import PrStatus
 
 CHANGE_ID = os.getenv('CHANGE_ID')
+CHANGE_AUTHOR = os.getenv('CHANGE_AUTHOR')
 GITHUB_ORG = 'SUSE'
 GITHUB_REPO = f'{GITHUB_ORG}/skuba'
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
@@ -26,6 +27,7 @@ else:
 
 if CHANGE_ID is not None:
     CHANGE_ID = int(CHANGE_ID)
+
 
 def _read_config(config_path):
     if config_path is None:
@@ -45,6 +47,8 @@ def check_pr(args):
             pr_checks.check_pr_from_fork(CHANGE_ID)
         if args.check_pr_details:
             pr_checks.check_pr_details(CHANGE_ID)
+        if args.collab_check:
+            pr_checks.check_pr_from_collaborator(CHANGE_AUTHOR)
     else:
         print('No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
@@ -106,6 +110,7 @@ def parse_args():
     checks_parser = subparsers.add_parser('check-pr', help='Check to make sure the PR meets certain standards')
     checks_parser.add_argument('--is-fork', action='store_true')
     checks_parser.add_argument('--check-pr-details', action='store_true')
+    checks_parser.add_argument('--collab-check', action='store_true')
     checks_parser.set_defaults(func=check_pr)
 
     # Parse merge-prs command
