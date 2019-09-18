@@ -71,8 +71,7 @@ class Skuba:
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         cmd = "node bootstrap --user {nodeuser} --sudo --target \
-                 {ip} caasp-master-{username}-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser,
-                                                        username=self.conf.username)
+                 {ip} caasp-master-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser)
         self._run_skuba(cmd)
 
 
@@ -90,8 +89,8 @@ class Skuba:
                                          "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node join --role {role} --user {nodeuser} --sudo --target {ip} \
-               caasp-{role}-{username}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
-                                      nodeuser=self.conf.nodeuser, username=self.conf.username)
+               caasp-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
+                                      nodeuser=self.conf.nodeuser)
         try:
             self._run_skuba(cmd)
         except Exception as ex:
