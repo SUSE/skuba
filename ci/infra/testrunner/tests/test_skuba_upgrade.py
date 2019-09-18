@@ -98,7 +98,7 @@ def test_upgrade_plan_from_previous(setup, skuba, kubectl, platform):
     for n in range(0, workers):
         worker = skuba.node_upgrade("plan", "worker", n, ignore_errors=True)
         # If the control plane nodes are not upgraded yet, skuba disallows upgrading a worker
-        assert worker.find("Unable to plan node upgrade: my-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
+        assert worker.find("Unable to plan node upgrade: caasp-worker-{} is not upgradeable until all control plane nodes are upgraded".format(n))
 
 
 @pytest.mark.disruptive
@@ -111,7 +111,7 @@ def test_upgrade_plan_from_previous_with_upgraded_control_plane(setup, skuba, ku
 
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
-        node = "my-master-{}".format(n)
+        node = "caasp-master-{}".format(n)
         assert node_is_ready(kubectl, node)
         master = skuba.node_upgrade("apply", "master", n)
         assert master.find("successfully upgraded") != -1
@@ -141,14 +141,14 @@ def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
     for n in range(0, masters):
         master = skuba.node_upgrade("plan", "master", n)
         assert master.find(
-            "Node my-master-{} is up to date".format(n)
+            "Node caasp-master-{} is up to date".format(n)
         ) != -1
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
         worker = skuba.node_upgrade("plan", "worker", n)
         assert worker.find(
-            "Node my-worker-{} is up to date".format(n)
+            "Node caasp-worker-{} is up to date".format(n)
         ) != -1
 
 
@@ -162,7 +162,7 @@ def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
 
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
-        node = "my-master-{}".format(n)
+        node = "caasp-master-{}".format(n)
         assert node_is_ready(kubectl, node)
         master = skuba.node_upgrade("apply", "master", n)
         assert master.find("successfully upgraded") != -1
@@ -170,7 +170,7 @@ def test_upgrade_apply_from_previous(setup, platform, skuba, kubectl):
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
-        node = "my-worker-{}".format(n)
+        node = "caasp-worker-{}".format(n)
         worker = skuba.node_upgrade("apply", "worker", n)
         assert worker.find("successfully upgraded") != -1
         assert node_is_upgraded(kubectl, platform, node)
@@ -189,7 +189,7 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
 
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
-        node = "my-master-{}".format(n)
+        node = "caasp-master-{}".format(n)
         # disable skuba-update.timer
         platform.ssh_run("master", n, "sudo systemctl disable --now skuba-update.timer")
         assert node_is_ready(kubectl, node)
@@ -200,7 +200,7 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
 
     workers = platform.get_num_nodes("worker")
     for n in range(0, workers):
-        node = "my-worker-{}".format(n)
+        node = "caasp-worker-{}".format(n)
         # disable skuba-update.timer
         platform.ssh_run("worker", n, "sudo systemctl disable --now skuba-update.timer")
         assert node_is_ready(kubectl, node)
