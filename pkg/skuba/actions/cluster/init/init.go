@@ -29,7 +29,6 @@ import (
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 type InitConfiguration struct {
@@ -71,10 +70,6 @@ func Init(initConfiguration InitConfiguration) error {
 		return errors.Wrapf(err, "could not change to cluster directory %q", initConfiguration.ClusterName)
 	}
 	for _, file := range scaffoldFilesToWrite {
-		// If '--strict-capability-defaults' is used, then don't modify the /etc/sysconfig/crio
-		if initConfiguration.StrictCapDefaults && file.Location == skuba.CriDockerDefaultsConfFile() {
-			continue
-		}
 		filePath, _ := filepath.Split(file.Location)
 		if filePath != "" {
 			if err := os.MkdirAll(filePath, 0700); err != nil {

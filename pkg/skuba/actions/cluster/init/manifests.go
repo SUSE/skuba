@@ -58,8 +58,8 @@ useHyperKubeImage: true
 ## Default        : ""
 ## ServiceRestart : crio
 #
-CRIO_OPTIONS=--pause-image={{.PauseImage}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"
-  `
+CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}
+`
 
 	masterConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
