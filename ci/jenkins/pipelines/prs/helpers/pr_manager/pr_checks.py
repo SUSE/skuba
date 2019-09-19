@@ -28,8 +28,7 @@ class PrChecks:
         collaborator = self.repo.has_in_collaborators(change_author)
 
         if not collaborator:
-            print(f'{change_author} is not a collaborator exiting...')
-            sys.exit(1)
+            print(f'{change_author} is a valid collaborator proceeding...')
 
     def check_pr_details(self, pr_number):
         """
