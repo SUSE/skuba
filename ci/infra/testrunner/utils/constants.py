@@ -19,7 +19,7 @@ class BaseConfig:
         obj.yaml_path = yaml_path
         obj.workspace = None
         obj.terraform_json_path = None
-        obj.ssh_key_option = None
+        obj.ssh_key = None
         obj.username = None
         obj.nodeuser = None
         obj.log_dir = None
@@ -166,11 +166,10 @@ class BaseConfig:
         if not conf.terraform.internal_net:
             conf.terraform.internal_net = conf.terraform.stack_name
 
-        # TODO: add the path to shared ssh credentials as a configuration parameter
-        if conf.ssh_key_option == "id_shared":
-            conf.ssh_key_option = os.path.join(conf.skuba.srcpath, "ci/infra/id_shared")
-        elif conf.ssh_key_option == "id_rsa":
-            conf.ssh_key_option = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+        if not conf.ssh_key:
+            conf.ssh_key = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+        else:
+            conf.ssh_key = os.path.expandvars(conf.ssh_key)
 
         return conf
 

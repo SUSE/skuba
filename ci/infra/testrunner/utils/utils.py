@@ -128,15 +128,15 @@ class Utils:
         return logging_errors
 
     def authorized_keys(self):
-        public_key_path = self.conf.ssh_key_option + ".pub"
-        os.chmod(self.conf.ssh_key_option, 0o400)
+        public_key_path = self.conf.ssh_key + ".pub"
+        os.chmod(self.conf.ssh_key, 0o400)
 
         with open(public_key_path) as f:
             pubkey = f.read().strip()
         return pubkey
 
     def ssh_run(self, ipaddr, cmd):
-        key_fn = self.conf.ssh_key_option
+        key_fn = self.conf.ssh_key
         cmd = "ssh " + Constant.SSH_OPTS + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(
             key_fn=key_fn, ip=ipaddr, cmd=cmd, username=self.conf.nodeuser)
         return self.runshellcommand(cmd)
@@ -149,7 +149,7 @@ class Utils:
         :param local_file_path: (str) Path where to store the log
         :return:
         """
-        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.ssh_key_option}"
+        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.ssh_key}"
                f" {self.conf.nodeuser}@{ip_address}:{remote_file_path} {local_file_path}")
         self.runshellcommand(cmd)
 
@@ -161,7 +161,7 @@ class Utils:
         :param local_dir_path: (str) Path where to store the dir
         :return:
         """
-        cmd = (f'rsync -avz --no-owner --no-perms -e "ssh {Constant.SSH_OPTS} -i {self.conf.ssh_key_option}"  '
+        cmd = (f'rsync -avz --no-owner --no-perms -e "ssh {Constant.SSH_OPTS} -i {self.conf.ssh_key}"  '
                f'--rsync-path="sudo rsync" --ignore-missing-args {self.conf.nodeuser}@{ip_address}:{remote_dir_path} '
                f'{local_dir_path}')
         self.runshellcommand(cmd)
@@ -247,7 +247,7 @@ class Utils:
     @timeout(60)
     @step
     def setup_ssh(self):
-        os.chmod(self.conf.ssh_key_option, 0o400)
+        os.chmod(self.conf.ssh_key, 0o400)
 
         # use a dedicated agent to minimize stateful components
         sock_fn = self.ssh_sock_fn()
@@ -275,7 +275,7 @@ class Utils:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
         self.runshellcommand(
-            "ssh-add " + self.conf.ssh_key_option, env={"SSH_AUTH_SOCK": sock_fn})
+            "ssh-add " + self.conf.ssh_key, env={"SSH_AUTH_SOCK": sock_fn})
 
     @timeout(30)
     @step

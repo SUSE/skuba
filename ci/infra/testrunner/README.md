@@ -109,9 +109,7 @@ There are some arguments that are currently at the top level of the configuratio
 
 - log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/testrunner_logs` 
 - nodeuser: the user name used to login into the platform nodes. Optional. 
-- ssh_option: specifies the location of the key used to access nodes. Can have two possible values:
-  - "id_shared": uses the key located at `<skuba src directory>/ci/infra/id_shared` (default)
-  - "id_rsa": uses the user's key located at `$HOME/.ssh/id_rsa`
+- ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 
 #### Terraform
 
@@ -156,7 +154,7 @@ vmware:
 The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of both the source and the binary. Please notice that the source location is used as default location for other configuration elements, such as terraform files, even if the `skuba` binary is specified. 
 
 * binpath: path to skuba binary
-* srcpath: path to skuba source. Used to locate other resources, like terraform configuration, and ssh keys.
+* srcpath: path to skuba source. Used to locate other resources, like terraform configuration.
 * verbosity: verbosity level for skuba command execution
 
 ```
@@ -234,7 +232,7 @@ Be sure you don't specify the `terraform.tfdir` directory, so terraform configur
 You use your `id_rsa` keys to connect to the cluster nodes, as the `shared_id` is not available.
 
 ```
-ssh_option: "id_rsa"
+ssh_key: "path/to/id_rsa"
 ```
 
 #### Open Stack
