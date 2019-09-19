@@ -71,8 +71,7 @@ class Skuba:
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         cmd = "node bootstrap --user {nodeuser} --sudo --target \
-                 {ip} caasp-master-{username}-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser,
-                                                        username=self.conf.username)
+                 {ip} caasp-master-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser)
         self._run_skuba(cmd)
 
 
@@ -90,8 +89,8 @@ class Skuba:
                                          "infrastructure".format(role=role, nr=nr)))
 
         cmd = "node join --role {role} --user {nodeuser} --sudo --target {ip} \
-               caasp-{role}-{username}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
-                                      nodeuser=self.conf.nodeuser, username=self.conf.username)
+               caasp-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
+                                      nodeuser=self.conf.nodeuser)
         try:
             self._run_skuba(cmd)
         except Exception as ex:
@@ -125,7 +124,7 @@ class Skuba:
             raise ValueError("Error: there is no {role}-{nr} \
                               node to remove from cluster".format(role=role, nr=nr))
 
-        cmd = "node remove my-{role}-{nr}".format(role=role, nr=nr)
+        cmd = "node remove caasp-{role}-{nr}".format(role=role, nr=nr)
 
         try:
             self._run_skuba(cmd)
@@ -144,7 +143,7 @@ class Skuba:
                               node in the cluster".format(role, nr))
 
         if action == "plan":
-            cmd = "node upgrade plan my-{}-{}".format(role, nr)
+            cmd = "node upgrade plan caasp-{}-{}".format(role, nr)
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
             cmd = "node upgrade apply --user {username} --sudo --target {ip}".format(
