@@ -1,2 +1,2 @@
-PyGithub==1.43.7
-python-jenkins==1.4.0
+PyGithub
+python-jenkins

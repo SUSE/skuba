@@ -13,6 +13,10 @@ pipeline {
     }
 
     stages {
+        stage('Collaborator Check') { steps {
+            sh(script: "${PR_MANAGER} check-pr --collab-check", label: "Checking if collaborator")
+        }}
+
         stage('Setting GitHub in-progress status') { steps {
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
