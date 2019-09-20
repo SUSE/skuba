@@ -58,9 +58,15 @@ class Terraform(Platform):
         except Exception as ex:
             exception = ex
         finally:
-            self._fetch_terraform_output()
-            if exception:
-                raise exception
+            try:
+                self._fetch_terraform_output()
+            except Exception as inner_ex:
+                # don't override original exception if any
+                if not exception:
+                    exception = inner_ex
+
+        if exception:
+           raise exception
 
     def _load_tfstate(self):
         if self.state is None:
