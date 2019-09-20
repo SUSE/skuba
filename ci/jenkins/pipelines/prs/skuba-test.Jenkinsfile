@@ -20,9 +20,27 @@ pipeline {
 
 
     stages {
-        stage('Collaborator Check') { steps {
-            sh(script: "${PR_MANAGER} check-pr --collab-check", label: "Checking if collaborator")
-        }}
+        stage('Collaborator Check') { steps { script {
+            def membersResponse = httpRequest(
+                url: "https://api.github.com/repos/SUSE/skuba/collaborators/${CHANGE_AUTHOR}",
+                authentication: 'github-token',
+                validResponseCodes: "204:404")
+
+            if (membersResponse.status == 204) {
+                echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
+
+            } else {
+                def allowExecution = input(id: 'userInput', message: "Change author is not a SUSE member: ${CHANGE_AUTHOR}", parameters: [
+                    booleanParam(name: 'allowExecution', defaultValue: false, description: 'Run tests anyway?')
+                ])
+
+                if (!allowExecution) {
+                    echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
+                    error(message: "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed")
+                    return;
+                }
+            }
+        } } }
 
         stage('Setting GitHub in-progress status') { steps {
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
