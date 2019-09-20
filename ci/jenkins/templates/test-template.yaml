@@ -17,6 +17,6 @@
           branch-discovery: no-pr
           disable-pr-notifications: true
           discover-pr-forks-strategy: current
-          discover-pr-forks-trust: contributors
+          discover-pr-forks-trust: permission
           discover-pr-origin: current
           head-filter-regex: ^(master|release\-\d\.\d|PR\-\d+)$
