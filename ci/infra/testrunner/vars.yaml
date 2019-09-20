@@ -1,6 +1,6 @@
 # Infra deployment engine
 workspace: "" # Working directory for testrunner
-ssh_key_option: "id_shared" # "id_shared" or "id_rsa" for your local public key
+ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" # path to ssh keys
 username: ""  # Fill your username
 nodeuser: "sles"  # Default node username
 
