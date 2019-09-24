@@ -58,6 +58,7 @@ Summary:        Utility to automatically refresh and update a skuba cluster
 Group:          System/Management
 Requires:       python3-setuptools
 Requires:       zypper >= 1.14.15
+Requires:       kubernetes-client
 Requires:       lsof
 BuildArch:      noarch
 %{?systemd_requires}
