@@ -83,7 +83,6 @@ data "template_file" "haproxy_dex_backends_master" {
 }
 
 data "template_file" "lb_cloud_init_metadata" {
-  count    = "${var.lbs}"
   template = "${file("cloud-init/metadata.tpl")}"
 
   vars {
@@ -93,7 +92,6 @@ data "template_file" "lb_cloud_init_metadata" {
 }
 
 data "template_file" "lb_cloud_init_userdata" {
-  count    = "${var.lbs}"
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
