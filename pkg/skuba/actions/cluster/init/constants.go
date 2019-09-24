@@ -62,5 +62,6 @@ var (
 				Content:  openstackReadme,
 			},
 		},
+		"aws": {},
 	}
 )

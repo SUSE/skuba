@@ -18,15 +18,9 @@
 package cluster
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/init"
 )
@@ -46,30 +40,17 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <cluster-name> --control-plane <IP/FQDN>",
 		Short: "Initialize skuba structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
-			kubernetesVersion := kubernetes.LatestVersion()
-			if initOptions.KubernetesVersion != "" {
-				var err error
-				kubernetesVersion, err = version.ParseSemantic(initOptions.KubernetesVersion)
-				if err != nil || !kubernetes.IsVersionAvailable(kubernetesVersion) {
-					fmt.Printf("Version %s does not exist or cannot be parsed.\n", initOptions.KubernetesVersion)
-					os.Exit(1)
-				}
-			}
-
-			initConfig := cluster.InitConfiguration{
-				ClusterName:       args[0],
-				CloudProvider:     initOptions.CloudProvider,
-				ControlPlane:      initOptions.ControlPlane,
-				PauseImage:        images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, kubernetesVersion)),
-				KubernetesVersion: kubernetesVersion,
-				ImageRepository:   skuba.ImageRepository,
-				EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
-				CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
-				StrictCapDefaults: initOptions.StrictCapDefaults,
-			}
-
-			err := cluster.Init(initConfig)
+			initConfig, err := cluster.NewInitConfiguration(
+				args[0],
+				initOptions.CloudProvider,
+				initOptions.ControlPlane,
+				initOptions.KubernetesVersion,
+				initOptions.StrictCapDefaults)
 			if err != nil {
+				klog.Fatalf("init failed due to error: %s", err)
+			}
+
+			if err = cluster.Init(initConfig); err != nil {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
 		},
@@ -79,7 +60,7 @@ func NewInitCmd() *cobra.Command {
 	if skuba.BuildType == "development" {
 		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
 	}
-	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: openstack")
+	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: aws, openstack")
 	_ = cmd.MarkFlagRequired("control-plane")
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")

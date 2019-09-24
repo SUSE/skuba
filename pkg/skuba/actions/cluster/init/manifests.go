@@ -23,6 +23,11 @@ kind: InitConfiguration
 bootstrapTokens: []
 localAPIEndpoint:
   advertiseAddress: ""
+{{- if eq .CloudProvider "aws" }}
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "aws"
+{{- end }}
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
@@ -35,6 +40,13 @@ apiServer:
     oidc-ca-file: /etc/kubernetes/pki/ca.crt
     oidc-username-claim: email
     oidc-groups-claim: groups
+{{- if eq .CloudProvider "aws" }}
+    cloud-provider: "aws"
+controllerManager:
+  extraArgs:
+    cloud-provider: "aws"
+    allocate-node-cidrs: "false"
+{{- end }}
 clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlane}}:6443
 dns:
@@ -67,6 +79,11 @@ discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlane}}:6443
     unsafeSkipCAVerification: true
+{{- if eq .CloudProvider "aws" }}
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "aws"
+{{- end }}
 controlPlane:
   localAPIEndpoint:
     advertiseAddress: ""
@@ -78,5 +95,10 @@ discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlane}}:6443
     unsafeSkipCAVerification: true
+{{- if eq .CloudProvider "aws" }}
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "aws"
+{{- end }}
 `
 )
