@@ -23,9 +23,24 @@ pipeline {
                 echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
 
             } else {
-                def allowExecution = input(id: 'userInput', message: "Change author is not a SUSE member: ${CHANGE_AUTHOR}", parameters: [
-                    booleanParam(name: 'allowExecution', defaultValue: false, description: 'Run tests anyway?')
-                ])
+                def allowExecution = false
+
+                try {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        allowExecution = input(id: 'userInput', message: "Change author is not a SUSE member: ${CHANGE_AUTHOR}", parameters: [
+                            booleanParam(name: 'allowExecution', defaultValue: false, description: 'Run tests anyway?')
+                        ])
+                    }
+                } catch(err) {
+                    def user = err.getCauses()[0].getUser()
+                    if('SYSTEM' == user.toString()) {
+                        echo "Timeout while waiting for input"
+                    } else {
+                        allowExecution = false
+                        echo "Unhandled error:\n${err}"
+                    }
+                }
+                
 
                 if (!allowExecution) {
                     echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
