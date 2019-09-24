@@ -27,8 +27,11 @@ import (
 	"github.com/pkg/errors"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 type InitConfiguration struct {
@@ -41,6 +44,28 @@ type InitConfiguration struct {
 	CoreDNSImageTag   string
 	CloudProvider     string
 	StrictCapDefaults bool
+}
+
+func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
+	kubernetesVersion := kubernetes.LatestVersion()
+	if kubernetesDesiredVersion != "" {
+		kubernetesVersion, err := versionutil.ParseSemantic(kubernetesDesiredVersion)
+		if err != nil || !kubernetes.IsVersionAvailable(kubernetesVersion) {
+			return InitConfiguration{}, fmt.Errorf("Version %s does not exist or cannot be parsed.\n", kubernetesDesiredVersion)
+		}
+	}
+
+	return InitConfiguration{
+		ClusterName:       clusterName,
+		CloudProvider:     cloudProvider,
+		ControlPlane:      controlPlane,
+		PauseImage:        images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, kubernetesVersion)),
+		KubernetesVersion: kubernetesVersion,
+		ImageRepository:   skuba.ImageRepository,
+		EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
+		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
+		StrictCapDefaults: strictCapDefaults,
+	}, nil
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
