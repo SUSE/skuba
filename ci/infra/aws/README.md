@@ -148,49 +148,14 @@ This is done automatically by leaving the `iam_profile_master` and
 
 ### Cluster creation
 
-At the time of writing the `skuba cluster bootstrap` command cannot yet create
-cluster definitions that handle the cloud provider interface enablement.
+The cloud provider integration must be enabled when creating the cluster
+definition:
 
-You can however enable that manually:
-
-  * Run `skuba cluster init` in the usual way
-  * Edit the contents of `kubeadm-init.conf`
-  * Edit the contents of `kubeadm-join.conf.d/master.conf.template`
-  * Edit the contents of `kubeadm-join.conf.d/worker.conf.template`
-
-The `kubeadm-init.conf` must be changed to include these sections:
-
-```yaml
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: InitConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    cloud-provider: "aws"
----
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-apiServer:
-  extraArgs:
-    cloud-provider: "aws"
-controllerManager:
-  extraArgs:
-    cloud-provider: "aws"
-    allocate-node-cidrs: "false"
+```
+skuba cluster init --control-plane <ELB created by terraform> --cloud-provider aws my-cluster
 ```
 
-The `kubeadm-join.conf.d/master.conf.template` and
-the `kubeadm-join.conf.d/worker.conf.template` files must be changed to
-include these sections:
-
-```yaml
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: JoinConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    cloud-provider: "aws"
-```
-
-**Note well:** node must be bootstrapped/joined using their FQDN in order to
+**WARNING:** nodes must be bootstrapped/joined using their FQDN in order to
 have the CPI find them. For example:
 
 ```
