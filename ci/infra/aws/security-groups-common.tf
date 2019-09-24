@@ -32,7 +32,7 @@ resource "aws_security_group" "common" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description     = "allow ssh from everywhere"
+    description = "allow ssh from everywhere"
   }
 
   # cilium - health check - internal
@@ -90,6 +90,4 @@ resource "aws_security_group" "common" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "kubernetes NodePort services"
   }
-
 }
-

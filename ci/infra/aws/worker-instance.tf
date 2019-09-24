@@ -9,7 +9,7 @@ resource "aws_instance" "nodes" {
   iam_instance_profile        = "${length(var.iam_profile_worker) == 0 ? local.aws_iam_policy_worker_terraform : var.iam_profile_worker}"
 
   depends_on = [
-    "aws_iam_policy.worker"
+    "aws_iam_policy.worker",
   ]
 
   # TODO: remove from the public network once we have bastion hosts
