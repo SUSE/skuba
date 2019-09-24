@@ -159,7 +159,7 @@ metadata:
   name: oidc-dex
   namespace: kube-system
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: oidc-dex
