@@ -1,9 +1,9 @@
 resource "aws_vpc_peering_connection" "tunnel" {
-  count         = "${length(var.peer_vpc_ids)}"
-  peer_vpc_id   = "${var.peer_vpc_ids[count.index]}"
-  vpc_id        = "${aws_vpc.platform.id}"
-  auto_accept   = true
-  tags          = "${merge(local.tags, map("Class", "VPC-peering-connection"))}"
+  count       = "${length(var.peer_vpc_ids)}"
+  peer_vpc_id = "${var.peer_vpc_ids[count.index]}"
+  vpc_id      = "${aws_vpc.platform.id}"
+  auto_accept = true
+  tags        = "${merge(local.tags, map("Class", "VPC-peering-connection"))}"
 
   accepter {
     allow_remote_vpc_dns_resolution = true

@@ -80,7 +80,6 @@ resource "aws_route" "private_to_everywhere" {
   gateway_id             = "${aws_internet_gateway.platform.id}"
 }
 
-
 resource "aws_main_route_table_association" "main" {
   route_table_id = "${aws_route_table.public.id}"
   vpc_id         = "${aws_vpc.platform.id}"
