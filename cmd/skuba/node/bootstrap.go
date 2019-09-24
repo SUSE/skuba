@@ -51,7 +51,7 @@ func NewBootstrapCmd() *cobra.Command {
 
 			d := target.GetDeployment(nodenames[0])
 			if err := node.Bootstrap(bootstrapConfiguration, d); err != nil {
-				klog.Fatalf("error bootstraping node: %s", err)
+				klog.Fatalf("error bootstrapping node: %s", err)
 			}
 		},
 		Args: cobra.ExactArgs(1),
