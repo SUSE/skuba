@@ -112,7 +112,7 @@ class Platform:
             except Exception as ex:
                 logger.warning(f"Provision attempt {retry}/{retries} failed")
                 if retry == retries:
-                    raise Exception(f"Failed {self.__class__.__name__} deployment") from ex
+                    raise Exception(f"Failed {self.__class__.__name__} provisioning: {ex}") from ex
 
     def ssh_run(self, role, nr, cmd):
         ip_addrs = self.get_nodes_ipaddrs(role)
