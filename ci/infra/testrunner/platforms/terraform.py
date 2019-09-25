@@ -38,8 +38,6 @@ class Terraform(Platform):
         exception = None
         self._check_tf_deployed()
 
-        self.utils.setup_ssh()
-
         init_cmd = "init"
         if self.conf.terraform.plugin_dir:
             logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")

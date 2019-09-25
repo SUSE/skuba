@@ -13,6 +13,7 @@ class Platform:
     def __init__(self, conf):
         self.conf = conf
         self.utils = Utils(conf)
+        self.utils.setup_ssh()
 
         # Which logs will be collected from the nodes
         self.logs = {

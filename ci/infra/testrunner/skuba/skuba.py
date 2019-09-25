@@ -17,6 +17,7 @@ class Skuba:
         self.utils = Utils(self.conf)
         self.platform = platforms.get_platform(conf, platform)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
+        self.utils.setup_ssh()
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
