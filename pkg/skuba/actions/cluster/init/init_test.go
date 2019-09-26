@@ -143,7 +143,7 @@ func TestInitAWSCloudProviderDisabled(t *testing.T) {
 // from the test `ctx` and the `clusterName`, plus the ending name of the `file`.
 // `cloud` holds the name of the CPI - leave empty if CPI is disabled.
 func checkInitConfig(ctx TestFilesystemContext, clusterName, file, cloud string) error {
-	expected := cloud != ""
+	expected := len(cloud) > 0
 	kubeadmInitConfig, err := node.LoadInitConfigurationFromFile(
 		filepath.Join(ctx.WorkDirectory, clusterName, file))
 	if err != nil {
