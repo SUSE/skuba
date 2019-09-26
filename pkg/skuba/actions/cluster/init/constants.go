@@ -62,6 +62,15 @@ var (
 				Content:  openstackReadme,
 			},
 		},
-		"aws": {},
+		"aws": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.AWSReadmeFile(),
+				Content:  awsReadme,
+			},
+		},
 	}
 )

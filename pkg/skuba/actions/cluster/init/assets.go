@@ -28,6 +28,7 @@ This directory contains all supported cloud provider integration configurations
 and instructions.
  
 - [~Openstack~](openstack/README.md)
+- [~AWS~](aws/README.md)
  
 ## Important
  
@@ -35,6 +36,12 @@ If you don't make any change on this directories the cluster will be deployed
 with no specific cloud provider integration.
  
 Only one cloud provider integration is supported for a given cluster.
+
+## Cleanup
+
+By enabling CPI providers your kubernetes cluster will be able to provision cloud
+resources on its own (eg: Load Balancers, Persistent Volumes). You will have to manually
+clean these resources before you destroy the cluster with terraform.
 `, "~", "`")
 
 	openstackReadme = strings.ReplaceAll(`# ~Openstack~ integration
@@ -98,4 +105,10 @@ trust-device-path=false
 bs-version=v2
 ignore-volume-az=true
 `
+
+	awsReadme = strings.ReplaceAll(`# ~AWS~ integration
+ 
+No special operation needs to be performed if you deployed the whole
+infrastructure using the terraform state files provided by SUSE.
+`, "~", "`")
 )
