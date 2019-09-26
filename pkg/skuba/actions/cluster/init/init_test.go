@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
+	constants "github.com/SUSE/skuba/pkg/skuba"
 )
 
 type TestFilesystemContext struct {
@@ -53,6 +54,21 @@ func TestInitAWSCloudProviderEnabled(t *testing.T) {
 
 	if err = Init(initConf); err != nil {
 		t.Errorf("Unexpected error: %v", err)
+	}
+
+	expectedFiles := []string{
+		constants.CloudReadmeFile(),
+		constants.AWSReadmeFile(),
+	}
+	for _, file := range expectedFiles {
+		found, err := doesFileExist(ctx, clusterName, file)
+		if err != nil {
+			t.Errorf("Unexpected error while checking %s presence: %v",
+				file, err)
+		}
+		if !found {
+			t.Errorf("Expected %s to exist", file)
+		}
 	}
 
 	if err := checkInitConfig(ctx, clusterName, "kubeadm-init.conf", "aws"); err != nil {
@@ -91,6 +107,21 @@ func TestInitAWSCloudProviderDisabled(t *testing.T) {
 
 	if err = Init(initConf); err != nil {
 		t.Errorf("Unexpected error: %v", err)
+	}
+
+	notExpectedFiles := []string{
+		constants.CloudReadmeFile(),
+		constants.AWSReadmeFile(),
+	}
+	for _, file := range notExpectedFiles {
+		found, err := doesFileExist(ctx, clusterName, file)
+		if err != nil {
+			t.Errorf("Unexpected error while checking %s presence: %v",
+				file, err)
+		}
+		if found {
+			t.Errorf("Unexpected file %s found", file)
+		}
 	}
 
 	if err := checkInitConfig(ctx, clusterName, "kubeadm-init.conf", ""); err != nil {
@@ -207,4 +238,18 @@ func switchBackAndCleanFilesystem(ctx TestFilesystemContext) {
 	if err := os.RemoveAll(ctx.WorkDirectory); err != nil {
 		fmt.Printf("Cannot remove temporary directory: %v", err)
 	}
+}
+
+// Checks if the specified file exists. Raises an error if something
+// unexpected happens.
+func doesFileExist(ctx TestFilesystemContext, clusterName, file string) (bool, error) {
+	fullpath := filepath.Join(ctx.WorkDirectory, clusterName, file)
+	if _, err := os.Stat(fullpath); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }

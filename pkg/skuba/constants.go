@@ -19,6 +19,7 @@ package skuba
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 
@@ -79,6 +80,17 @@ func CriDockerDefaultsConfFile() string {
 }
 
 func KubeConfigAdminFile() string {
+	// give high precedence to local `admin.conf`
+	if _, err := os.Stat("admin.conf"); os.IsNotExist(err) {
+		env := os.Getenv("KUBECONFIG")
+		if env != "" {
+			return env
+		}
+		// TODO handle error
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".kube", "config")
+	}
+
 	return "admin.conf"
 }
 
@@ -119,4 +131,14 @@ func OpenstackCloudConfTemplateFile() string {
 // OpenstackConfigRuntimeFile returns the location the openstack.conf is stored on nodes in the cluster
 func OpenstackConfigRuntimeFile() string {
 	return path.Join("/etc/kubernetes", "openstack.conf")
+}
+
+// AWSDir returns the location for the AWS cloud integrations
+func AWSDir() string {
+	return path.Join(CloudDir(), "aws")
+}
+
+// AWSReadmeFile returns the location for the AWS cloud integrations README.md
+func AWSReadmeFile() string {
+	return path.Join(AWSDir(), "README.md")
 }
