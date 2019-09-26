@@ -35,42 +35,44 @@ packages:
 write_files:
 - path: /etc/haproxy/haproxy.cfg
   content: |
+    global 
+      log /dev/log local0 debug
+      user haproxy
+      group haproxy
+      daemon
+    
     defaults
-      timeout connect 10s
-      timeout client 86400s
-      timeout server 86400s
-
+      mode      tcp
+      log       global
+      option    redispatch
+      option    tcpka
+      retries   2
+      http-check     expect status 200
+      default-server check check-ssl verify none
+      timeout connect 5s
+      timeout client 5s
+      timeout server 5s
+      timeout tunnel 86400s
+    
     listen stats
       bind    *:9000
       mode    http
       stats   hide-version
       stats   uri       /stats
 
-    frontend apiserver
-      bind :6443
-      default_backend apiserver-backend
-
-    frontend gangway
-      bind :32001
-      default_backend gangway-backend
-
-    frontend dex
-      bind :32000
-      default_backend dex-backend
-
-    backend apiserver-backend
-      option httpchk GET /healthz
-      http-check expect status 200
+    listen apiserver
+      bind    *:6443
+      option  httpchk GET /healthz
       ${apiserver_backends}
 
-    backend gangway-backend
-      option httpchk GET /
-      http-check expect status 200
+    listen gangway
+      bind    *:32001
+      option  httpchk GET /
       ${gangway_backends}
 
-    backend dex-backend
-      option httpchk GET /healthz
-      http-check expect status 200
+    listen dex
+      bind    *:32000
+      option  httpchk GET /healthz
       ${dex_backends}
 
 runcmd:
