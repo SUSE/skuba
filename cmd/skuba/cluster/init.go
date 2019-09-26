@@ -20,6 +20,8 @@ package cluster
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/version"
@@ -36,6 +38,24 @@ type initOptions struct {
 	KubernetesVersion string
 	CloudProvider     string
 	StrictCapDefaults bool
+	RegistryMirror    string
+}
+
+func ParseCrioRegistryConfiguration(config string) cluster.CrioMirrorConfiguration {
+	values := strings.Split(config, ":")
+	if len(values) != 3 {
+		return cluster.CrioMirrorConfiguration{}
+	}
+	insecure, err := strconv.ParseBool(values[2])
+	// Default to secure registry
+	if err != nil {
+		insecure = false
+	}
+	return cluster.CrioMirrorConfiguration{
+		SourceRegistry: values[0],
+		MirrorRegistry: values[1],
+		Insecure:       insecure,
+	}
 }
 
 // NewInitCmd creates a new `skuba cluster init` cobra command
@@ -46,6 +66,7 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <cluster-name> --control-plane <IP/FQDN>",
 		Short: "Initialize skuba structure for cluster deployment",
 		Run: func(cmd *cobra.Command, args []string) {
+			registryConfiguration := ParseCrioRegistryConfiguration(initOptions.RegistryMirror)
 			kubernetesVersion := kubernetes.LatestVersion()
 			if initOptions.KubernetesVersion != "" {
 				var err error
@@ -66,6 +87,7 @@ func NewInitCmd() *cobra.Command {
 				EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
 				CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 				StrictCapDefaults: initOptions.StrictCapDefaults,
+				RegistryMirror:    registryConfiguration,
 			}
 
 			err := cluster.Init(initConfig)
@@ -84,5 +106,11 @@ func NewInitCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")
 
+	// TODO: Might be useful to allow configuring multiple mirror - but that
+	// needs a special syntax - e.g. "source.url:mirror.url"
+
+	// As part of that micro-syntax it should then be possible to also
+	// configure the security of the mirror
+	cmd.Flags().StringVar(&initOptions.RegistryMirror, "registry-mirror", "", "Configure a mirror for a registry to pull container-images from. Syntax: '<source_registry>:<target_registry>:<insecure>' (e.g. 'registry.suse.com:my.registry.org:true' would setup an insecure mirror from registry.suse.com to my.registry.org)")
 	return cmd
 }

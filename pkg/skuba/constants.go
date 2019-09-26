@@ -74,8 +74,16 @@ func CriDir() string {
 	return filepath.Join(AddonsDir(), "cri")
 }
 
+func ContainersDir() string {
+	return filepath.Join(AddonsDir(), "containers")
+}
+
 func CriDockerDefaultsConfFile() string {
 	return filepath.Join(CriDir(), "default_flags")
+}
+
+func CriRegistriesV2ConfFile() string {
+	return filepath.Join(ContainersDir(), "registries.conf")
 }
 
 func KubeConfigAdminFile() string {

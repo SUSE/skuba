@@ -31,6 +31,15 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 )
 
+// This type is used to render a v2 registries.conf file for crio.
+// It will setup a mirror from SourceRegistry -> MirrorRegistry.
+// It will also be used to configure the MirrorRegistry as Insecure if needed.
+type CrioMirrorConfiguration struct {
+	SourceRegistry string
+	MirrorRegistry string
+	Insecure       bool
+}
+
 type InitConfiguration struct {
 	ClusterName       string
 	ControlPlane      string
@@ -41,6 +50,7 @@ type InitConfiguration struct {
 	CoreDNSImageTag   string
 	CloudProvider     string
 	StrictCapDefaults bool
+	RegistryMirror    CrioMirrorConfiguration
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current

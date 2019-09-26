@@ -45,6 +45,10 @@ var (
 			Location: skuba.CriDockerDefaultsConfFile(),
 			Content:  criDockerDefaultsConf,
 		},
+		{
+			Location: skuba.CriRegistriesV2ConfFile(),
+			Content:  criRegistriesV2Template,
+		},
 	}
 
 	cloudScaffoldFiles = map[string][]ScaffoldFile{

@@ -61,6 +61,28 @@ useHyperKubeImage: true
 CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}
 `
 
+	// TODO: This needs to handle `insecure = true` somehow as well - might
+	// need an additional flag
+	criRegistriesV2Template = `# For more information on this configuration file, see containers-registries.conf(5).
+#
+# Registries to search for images that are not fully-qualified.
+# i.e. foobar.com/my_image:latest vs my_image:latest
+unqualified-search-registries = ["docker.io"]
+
+{{ if (ne .RegistryMirror.SourceRegistry "") }}
+[[registry]]
+location = "{{ .RegistryMirror.SourceRegistry }}"
+mirror = [
+  { location = "{{ .RegistryMirror.MirrorRegistry }}", insecure = {{ .RegistryMirror.Insecure }} }
+]
+{{ end }}
+{{ if (eq .RegistryMirror.Insecure true) }}
+[[registry]]
+location = "{{ .RegistryMirror.MirrorRegistry }}"
+insecure = {{ .RegistryMirror.Insecure }}
+{{ end }}
+`
+
 	masterConfTemplate = `apiVersion: kubeadm.k8s.io/v1beta1
 kind: JoinConfiguration
 discovery:
