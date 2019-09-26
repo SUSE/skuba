@@ -50,7 +50,7 @@ type InitConfiguration struct {
 	CoreDNSImageTag   string
 	CloudProvider     string
 	StrictCapDefaults bool
-	RegistryMirror    CrioMirrorConfiguration
+	RegistryMirror    *CrioMirrorConfiguration
 }
 
 // Init creates a cluster definition scaffold in the local machine, in the current
@@ -71,6 +71,10 @@ func Init(initConfiguration InitConfiguration) error {
 		} else {
 			klog.Fatalf("unknown cloud provider integration provided: %s", initConfiguration.CloudProvider)
 		}
+	}
+	// TODO: Nicer checking to see if a regitrymirror is configured
+	if initConfiguration.RegistryMirror != nil {
+		scaffoldFilesToWrite = append(scaffoldFilesToWrite, registriesScaffoldFiles...)
 	}
 
 	if err := os.MkdirAll(initConfiguration.ClusterName, 0700); err != nil {

@@ -45,6 +45,9 @@ var (
 			Location: skuba.CriDockerDefaultsConfFile(),
 			Content:  criDockerDefaultsConf,
 		},
+	}
+
+	registriesScaffoldFiles = []ScaffoldFile{
 		{
 			Location: skuba.CriRegistriesV2ConfFile(),
 			Content:  criRegistriesV2Template,

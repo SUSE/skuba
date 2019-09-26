@@ -41,17 +41,17 @@ type initOptions struct {
 	RegistryMirror    string
 }
 
-func ParseCrioRegistryConfiguration(config string) cluster.CrioMirrorConfiguration {
+func ParseCrioRegistryConfiguration(config string) *cluster.CrioMirrorConfiguration {
 	values := strings.Split(config, ":")
 	if len(values) != 3 {
-		return cluster.CrioMirrorConfiguration{}
+		return nil
 	}
 	insecure, err := strconv.ParseBool(values[2])
 	// Default to secure registry
 	if err != nil {
 		insecure = false
 	}
-	return cluster.CrioMirrorConfiguration{
+	return &cluster.CrioMirrorConfiguration{
 		SourceRegistry: values[0],
 		MirrorRegistry: values[1],
 		Insecure:       insecure,

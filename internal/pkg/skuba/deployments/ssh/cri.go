@@ -47,6 +47,17 @@ func criConfigure(t *Target, data interface{}) error {
 		return err
 	}
 	_, _, err = t.ssh("mv -f /tmp/cri.d/default_flags /etc/sysconfig/crio")
+
+	containersFiles, err := ioutil.ReadDir(skuba.ContainersDir())
+	if err != nil {
+		return errors.Wrap(err, "Could not read local containers directory: "+skuba.ContainersDir())
+	}
+	for _, f := range containersFiles {
+		if err := t.target.UploadFile(filepath.Join(skuba.ContainersDir(), f.Name()), filepath.Join("/tmp/containers", f.Name())); err != nil {
+			return err
+		}
+	}
+	_, _, err = t.ssh("mv -f /tmp/containers/* /etc/containers/")
 	return err
 }
 
