@@ -42,6 +42,7 @@ func newRootCmd() *cobra.Command {
 		NewClusterCmd(),
 		NewNodeCmd(),
 		NewAuthCmd(),
+		NewAddonCmd(),
 	)
 
 	register(cmd.PersistentFlags(), "v")
