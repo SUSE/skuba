@@ -20,7 +20,7 @@ init - Initialize skuba structure for cluster deployment
   (Required) The control plane location (IP/FQDN) that will load balance the master nodes
 
 **--cloud-provider string**
-  Enable cloud provider integration with the chosen cloud. Valid values: openstack
+  Enable cloud provider integration with the chosen cloud. Valid values: aws, openstack
 
 **--strict-capability-defaults**
   All the containers will start with CRI-O default capabilities
