@@ -24,6 +24,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
@@ -77,6 +78,13 @@ func Plan() error {
 			fmt.Printf("  - %s is running kubelet %s and is not cordoned\n", node.Nodename, node.KubeletVersion.String())
 		}
 	}
+
+	updatedAddons, err := addon.UpdatedAddons(kubernetes.LatestVersion())
+	if err != nil {
+		return err
+	}
+	fmt.Println()
+	addon.PrintAddonUpdates(updatedAddons)
 
 	return nil
 }

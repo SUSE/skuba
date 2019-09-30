@@ -54,29 +54,11 @@ func Plan() error {
 		return errors.Errorf("Not all nodes match clusterVersion %s", currentVersion)
 	}
 
-	updatedAddons, err := addon.UpdatedAddons()
+	updatedAddons, err := addon.UpdatedAddons(currentClusterVersion)
 	if err != nil {
 		return err
 	}
-
-	if addon.HasAddonUpdate(updatedAddons) {
-		fmt.Println("Addon upgrades:")
-		for addonName, versions := range updatedAddons.Updated {
-			currentVersion := updatedAddons.Current[addonName].Version
-			currentManifest := updatedAddons.Current[addonName].ManifestVersion
-			updatedVersion := versions.Version
-			updatedManifest := versions.ManifestVersion
-			hasVersionUpdate := addon.HasAddonVersionUpdateWithAddon(updatedAddons, addonName)
-			hasManifestUpdate := addon.HasAddonManifestUpdateWithAddon(updatedAddons, addonName)
-			if hasVersionUpdate && !hasManifestUpdate {
-				fmt.Printf("  - %s: %s -> %s\n", addonName, currentVersion, updatedVersion)
-			} else if hasVersionUpdate || hasManifestUpdate {
-				fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, currentVersion, updatedVersion, currentManifest, updatedManifest)
-			}
-		}
-	} else {
-		fmt.Println("Congratulations! Addons are already at the latest version available")
-	}
+	addon.PrintAddonUpdates(updatedAddons)
 
 	return nil
 }
