@@ -35,6 +35,7 @@ func NewUpgradeCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		newUpgradePlanCmd(),
+		newUpgradeApplyCmd(),
 	)
 
 	return cmd
@@ -47,6 +48,20 @@ func newUpgradePlanCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := addons.Plan(); err != nil {
 				fmt.Printf("Unable to plan addon upgrade: %s\n", err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.NoArgs,
+	}
+}
+
+func newUpgradeApplyCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "apply",
+		Short: "Apply addon upgrade",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := addons.Apply(); err != nil {
+				fmt.Printf("Unable to Apply addons upgrade: %s\n", err)
 				os.Exit(1)
 			}
 		},
