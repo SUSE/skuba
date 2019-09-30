@@ -18,9 +18,11 @@
 package addon
 
 import (
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
+	"fmt"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	skubaconfig "github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"k8s.io/apimachinery/pkg/util/version"
 )
 
 type AddonVersionInfoUpdate struct {
@@ -28,17 +30,9 @@ type AddonVersionInfoUpdate struct {
 	Updated kubernetes.AddonsVersion
 }
 
-func UpdatedAddons() (AddonVersionInfoUpdate, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return AddonVersionInfoUpdate{}, err
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
-	if err != nil {
-		return AddonVersionInfoUpdate{}, err
-	}
-	currentVersion := currentClusterVersion.String()
-	latestAddonVersions := kubernetes.Versions[currentVersion].AddonsVersion
+func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, error) {
+	clusterVersionString := clusterVersion.String()
+	latestAddonVersions := kubernetes.Versions[clusterVersionString].AddonsVersion
 
 	skubaConfig, err := skubaconfig.GetSkubaConfiguration()
 	if err != nil {
@@ -59,19 +53,40 @@ func UpdatedAddons() (AddonVersionInfoUpdate, error) {
 	return aviu, nil
 }
 
-func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
+func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
+	if hasAddonUpdate(updatedAddons) {
+		fmt.Println("Addon upgrades:")
+		for addonName, versions := range updatedAddons.Updated {
+			currentVersion := updatedAddons.Current[addonName].Version
+			currentManifest := updatedAddons.Current[addonName].ManifestVersion
+			updatedVersion := versions.Version
+			updatedManifest := versions.ManifestVersion
+			hasVersionUpdate := hasAddonVersionUpdateWithAddon(updatedAddons, addonName)
+			hasManifestUpdate := hasAddonManifestUpdateWithAddon(updatedAddons, addonName)
+			if hasVersionUpdate && !hasManifestUpdate {
+				fmt.Printf("  - %s: %s -> %s\n", addonName, currentVersion, updatedVersion)
+			} else if hasVersionUpdate || hasManifestUpdate {
+				fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, currentVersion, updatedVersion, currentManifest, updatedManifest)
+			}
+		}
+	} else {
+		fmt.Println("Congratulations! Addons (for the current cluster version) are already at the latest version available")
+	}
+}
+
+func hasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
 	for addon, _ := range aviu.Updated {
-		if HasAddonManifestUpdateWithAddon(aviu, addon) || HasAddonVersionUpdateWithAddon(aviu, addon) {
+		if hasAddonManifestUpdateWithAddon(aviu, addon) || hasAddonVersionUpdateWithAddon(aviu, addon) {
 			return true
 		}
 	}
 	return false
 }
 
-func HasAddonManifestUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
+func hasAddonManifestUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
 	return aviu.Updated[addon].ManifestVersion > aviu.Current[addon].ManifestVersion
 }
 
-func HasAddonVersionUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
+func hasAddonVersionUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
 	return aviu.Updated[addon].Version > aviu.Current[addon].Version
 }
