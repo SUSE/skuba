@@ -27,6 +27,9 @@ reconfiguration in an easy way.
 **node**
   Node handling commands.
 
+**addon**
+  Addon handling commands.
+
 # SEE ALSO
 **skuba-auth-login**(1),
 **skuba-cluster-init**(1),
@@ -37,3 +40,4 @@ reconfiguration in an easy way.
 **skuba-node-remove**(1),
 **skuba-node-upgrade-plan**(1),
 **skuba-node-upgrade-apply**(1),
+**skuba-addon-upgrade-plan**(1),
