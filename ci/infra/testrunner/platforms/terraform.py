@@ -25,7 +25,7 @@ class Terraform(Platform):
         self.tmp_files = [self.tfout_path,
                           self.tfjson_path]
 
-    def destroy(self, variables):
+    def destroy(self, variables=[]):
         cmd = "destroy -auto-approve"
 
         for var in variables:
