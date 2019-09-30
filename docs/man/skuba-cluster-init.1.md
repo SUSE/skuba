@@ -21,3 +21,6 @@ init - Initialize skuba structure for cluster deployment
 
 **--cloud-provider string**
   Enable cloud provider integration with the chosen cloud. Valid values: openstack
+
+**--strict-capability-defaults**
+  All the containers will start with CRI-O default capabilities
