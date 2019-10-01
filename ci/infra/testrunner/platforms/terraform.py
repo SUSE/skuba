@@ -130,9 +130,13 @@ class Terraform(Platform):
                 else:
                     tfvars[k] = v
 
+        # if registry code specified, repositories are not needed
+        if self.conf.packages.registry_code:
+            tfvars["caasp_registry_code"] = self.conf.packages.registry_code
+            tfvars["repositories"] = {}
+
         # Update mirror urls
         repos = tfvars.get("repositories", {})
-
         if self.conf.packages.maintenance:
            for name, url in self.conf.packages.maintenance.items():
                repos[name] = url

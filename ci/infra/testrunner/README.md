@@ -122,6 +122,7 @@ The `packages` section configures the source of the packages to be installed in 
     repo2: url/to/repo2
 ```
 * mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
+* registry_code: code use for registering CaaSP product. If specified, the registries from the tfvars are ignored. Additional repositories can still be defined using the `maintenance` configuration parameter.
 
 #### Terraform
 
