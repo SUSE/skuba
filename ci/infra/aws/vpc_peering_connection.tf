@@ -26,9 +26,16 @@ resource "aws_route" "peer_to_k8s" {
   vpc_peering_connection_id = "${element(aws_vpc_peering_connection.tunnel.*.id, count.index)}"
 }
 
-resource "aws_route" "k8s_to_peer" {
+resource "aws_route" "public_subnet_to_peer" {
   count                     = "${length(var.peer_vpc_ids)}"
   route_table_id            = "${aws_route_table.public.id}"
+  destination_cidr_block    = "${element(data.aws_vpc.peer.*.cidr_block, count.index)}"
+  vpc_peering_connection_id = "${element(aws_vpc_peering_connection.tunnel.*.id, count.index)}"
+}
+
+resource "aws_route" "private_subnet_to_peer" {
+  count                     = "${length(var.peer_vpc_ids)}"
+  route_table_id            = "${aws_route_table.private.id}"
   destination_cidr_block    = "${element(data.aws_vpc.peer.*.cidr_block, count.index)}"
   vpc_peering_connection_id = "${element(aws_vpc_peering_connection.tunnel.*.id, count.index)}"
 }
