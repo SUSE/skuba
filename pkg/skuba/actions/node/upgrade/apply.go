@@ -31,13 +31,10 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
-	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
 )
 
 func Apply(target *deployments.Target) error {
-	fmt.Printf("%s\n", skuba.CurrentVersion().String())
-
 	if err := fillTargetWithNodeName(target); err != nil {
 		return err
 	}
