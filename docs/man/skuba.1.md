@@ -41,3 +41,4 @@ reconfiguration in an easy way.
 **skuba-node-upgrade-plan**(1),
 **skuba-node-upgrade-apply**(1),
 **skuba-addon-upgrade-plan**(1),
+**skuba-addon-upgrade-apply**(1)
