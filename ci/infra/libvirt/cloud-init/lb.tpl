@@ -39,49 +39,10 @@ ${repositories}
 packages:
   - haproxy
 
-write_files:
-- path: /etc/haproxy/haproxy.cfg
-  content: |
-    defaults
-      timeout connect 10s
-      timeout client 86400s
-      timeout server 86400s
-
-    listen stats
-      bind    *:9000
-      mode    http
-      stats   hide-version
-      stats   uri       /stats
-
-    frontend apiserver
-      bind :6443
-      default_backend apiserver-backend
-
-    frontend gangway
-      bind :32001
-      default_backend gangway-backend
-
-    frontend dex
-      bind :32000
-      default_backend dex-backend
-
-    backend apiserver-backend
-      option httpchk GET /healthz
-      ${apiserver_backends}
-
-    backend gangway-backend
-      option httpchk GET /
-      ${gangway_backends}
-
-    backend dex-backend
-      option httpchk GET /healthz
-      ${dex_backends}
-
 runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
   # start another service by either `enable --now` or `start` will create a
   # deadlock. Instead, we have to use the `--no-block-` flag.
-  - [ systemctl, enable, --now, --no-block, haproxy ]
   - [ systemctl, disable, --now, --no-block, firewalld ]
   # The template machine should have been cleaned up, so no machine-id exists
   - [ dbus-uuidgen, --ensure ]
