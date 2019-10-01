@@ -57,7 +57,7 @@ func Apply() error {
 		return errors.Wrap(err, "[apply] Could not fetch cluster configuration")
 	}
 
-	updatedAddons, err := addon.UpdatedAddons()
+	updatedAddons, err := addon.UpdatedAddons(currentClusterVersion)
 	if err != nil {
 		return err
 	}
