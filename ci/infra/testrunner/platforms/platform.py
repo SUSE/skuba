@@ -25,6 +25,10 @@ class Platform:
         # Files that will be deleted during the cleanup stage
         self.tmp_files = []
 
+    def add_nodes(self, role, count):
+        """Add nodes of the given type"""
+        self._add_nodes(role, abs(count))
+
     @step
     def cleanup(self):
         """Clean up"""
@@ -114,12 +118,21 @@ class Platform:
                 if retry == retries:
                     raise Exception(f"Failed {self.__class__.__name__} provisioning: {ex}") from ex
 
+    def remove_nodes(self, role, count):
+        """Remove nodes of the given type"""
+        self._remove_nodes(role, abs(count))
+
     def ssh_run(self, role, nr, cmd):
         ip_addrs = self.get_nodes_ipaddrs(role)
         if nr >= len(ip_addrs):
             raise ValueError(f'Node {role}-{nr} not deployed in platform')
 
         return self.utils.ssh_run(ip_addrs[nr], cmd)
+
+    @staticmethod
+    def _check_role(role):
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role: {}".format(role))
 
     @staticmethod
     def _create_node_log_dir(ip_address, node_type, log_dir_path):
@@ -130,6 +143,12 @@ class Platform:
             logger.info(f"Created log dir {node_log_dir_path}")
 
         return node_log_dir_path
+
+    def _add_node(self, node_type):
+        """Expected to be overridden"""
+
+    def _remove_node(self, node_type):
+        """Expected to be overridden"""
 
     def _cleanup_platform(self):
         """Platform specific cleanup. Expected to be overridden by platforms"""

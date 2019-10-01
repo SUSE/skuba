@@ -33,22 +33,52 @@ class Terraform(Platform):
 
         self._run_terraform_command(cmd)
 
-    def _provision_platform(self):
-        """ Create and apply terraform plan"""
+    def _add_nodes(self, role, count):
+        tfvars_path = os.path.join(self.tfdir, "terraform.tfvars.json")
+
+        num_nodes = self.get_num_nodes(role)
+
+        with open(tfvars_path) as f:
+            tfvars = json.load(f)
+
+            if role == 'master':
+                tfvars['masters'] = num_nodes + count
+            elif role == 'worker':
+                tfvars['workers'] = num_nodes + count
+
+            with open(tfvars_path, "w") as f:
+                json.dump(tfvars, f)
+
+        self._plan_and_apply()
+
+    def _remove_nodes(self, role, count):
+        tfvars_path = os.path.join(self.tfdir, "terraform.tfvars.json")
+
+        num_nodes = self.get_num_nodes(role)
+
+        with open(tfvars_path) as f:
+            tfvars = json.load(f)
+
+            if role == 'master':
+                if (num_nodes - count) > 0:
+                    tfvars['masters'] = num_nodes - count
+                else:
+                    raise Exception(Format.alert("Can't remove the last master"))
+            elif role == 'worker':
+                if (num_nodes - count) > 0:
+                    tfvars['workers'] = num_nodes - count
+                else:
+                    raise Exception(Format.alert("Can't remove the last worker"))
+
+            with open(tfvars_path, "w") as f:
+                json.dump(tfvars, f)
+
+        self._plan_and_apply()
+
+    def _plan_and_apply(self):
         exception = None
-        self._check_tf_deployed()
-
-        init_cmd = "init"
-        if self.conf.terraform.plugin_dir:
-            logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
-            init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
-        self._run_terraform_command(init_cmd)
-
-        self._run_terraform_command("version")
-        self._generate_tfvars_file()
         plan_cmd = f"plan -out {self.tfout_path}"
         apply_cmd = f"apply -auto-approve {self.tfout_path}"
-
         self._run_terraform_command(plan_cmd)
 
         try:
@@ -64,7 +94,21 @@ class Terraform(Platform):
                     exception = inner_ex
 
         if exception:
-           raise exception
+            raise exception
+
+    def _provision_platform(self):
+        """ Create and apply terraform plan"""
+        self._check_tf_deployed()
+
+        init_cmd = "init"
+        if self.conf.terraform.plugin_dir:
+            logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
+            init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
+        self._run_terraform_command(init_cmd)
+
+        self._run_terraform_command("version")
+        self._generate_tfvars_file()
+        self._plan_and_apply()
 
     def _load_tfstate(self):
         if self.state is None:
@@ -83,8 +127,7 @@ class Terraform(Platform):
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
 
-        if role not in ("master", "worker"):
-            raise ValueError("Invalid role: {}".format(role))
+        self._check_role(role)
 
         role_key = "ip_" + role + "s"
         return self.state["modules"][0]["outputs"][role_key]["value"]
