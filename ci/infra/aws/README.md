@@ -11,6 +11,12 @@ this is done by `cloud-init` through a terraform variable called `authorized_key
 All the instances have a `root` and a `ec2-user` user. The `ec2-user` user can
 perform `sudo` without specifying a password.
 
+Only the master nodes have a public IP associated with. All the worker nodes
+are located on a private subnet.
+
+The network structure resembles the one describe inside of this
+[AWS document](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenario2.html).
+
 ## Load balancer
 
 The deployment will also create a AWS load balancer sitting in front of the
@@ -75,15 +81,12 @@ elb_address = k8s-elb-1487845812.eu-central-1.elb.amazonaws.com
 nodes.private_dns = [
     ip-10-1-1-157.eu-central-1.compute.internal
 ]
-nodes.public_ip = [
-    54.93.246.74
-]
 ```
 
-Then you can initialize the cluster with `skuba cluster init`, using the Load Balancer (`lb_dns_name` in the Terraform output) as the control plane endpoint:
+Then you can initialize the cluster with `skuba cluster init`, using the Load Balancer (`elb_address` in the Terraform output) as the control plane endpoint:
 
 ```console
-$ skuba cluster init --control-plane k8s-elb-1487845812.eu-central-1.elb.amazonaws.com  my-devenv-cluster
+$ skuba cluster init --control-plane k8s-elb-1487845812.eu-central-1.elb.amazonaws.com --cloud-provider aws my-devenv-cluster
 ** This is a BETA release and NOT intended for production usage. **
 [init] configuration files written to /home/user/my-devenv-cluster
 ```
@@ -92,14 +95,14 @@ At this point we can bootstrap the first master:
 
 ```console
 $ cd my-devenv-cluster
-$ ./skuba node bootstrap --target 3.121.219.168 --sudo --user ec2-user ip-10-1-1-55.eu-central-1.compute.internal
+$ skuba node bootstrap --user ec2-user --sudo --target ip-10-1-1-55.eu-central-1.compute.internal ip-10-1-1-55.eu-central-1.compute.internal
 ```
 
 And the  you can add a worker node with:
 
 ```console
 $ cd my-devenv-cluster
-$ ./skuba node join --role worker --target 54.93.246.74 --sudo --user ec2-user ip-10-1-1-157.eu-central-1.compute.internal
+$ skuba node join --role worker --user ec2-user --sudo --target ip-10-1-1-157.eu-central-1.compute.internal ip-10-1-1-157.eu-central-1.compute.internal
 ```
 
 ### Using the cluster
@@ -161,6 +164,7 @@ have the CPI find them. For example:
 ```
 $ skuba node bootstrap -u ec2-user -s -t ip-172-28-1-225.eu-central-1.compute.internal ip-172-28-1-225.eu-central-1.compute.internal
 $ skuba node join --role worker -u ec2-user -s -t ip-172-28-1-15.eu-central-1.compute.internal ip-172-28-1-15.eu-central-1.compute.internal
+...
 ```
 
 Refer to the [AWS Cloud Provider](https://kubernetes.io/docs/concepts/cluster-administration/cloud-providers/#aws)
@@ -177,4 +181,6 @@ the external IPs as `--target`s when initializing or joining the cluster,
 while we must specify the internal DNS names for registering the nodes
 in the cluster.
 
+### Availability zones
 
+Right now all the nodes are created inside of the same availability zone.

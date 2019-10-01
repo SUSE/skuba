@@ -10,6 +10,7 @@ resource "aws_instance" "control_plane" {
   iam_instance_profile        = "${length(var.iam_profile_master) == 0 ? local.aws_iam_policy_master_terraform : var.iam_profile_master}"
 
   depends_on = [
+    "aws_internet_gateway.platform",
     "aws_iam_policy.master",
   ]
 

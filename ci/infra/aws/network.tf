@@ -41,9 +41,8 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  availability_zone       = "${element(data.aws_availability_zones.az.names, 0)}"
-  cidr_block              = "${var.private_subnet}"
-  map_public_ip_on_launch = true
+  availability_zone = "${element(data.aws_availability_zones.az.names, 0)}"
+  cidr_block        = "${var.private_subnet}"
 
   tags = "${merge(local.tags, map(
     "Name", "${var.stack_name}-subnet-private-${element(data.aws_availability_zones.az.names, 0)}",
@@ -74,10 +73,10 @@ resource "aws_route_table" "private" {
     "Class", "RouteTable"))}"
 }
 
-resource "aws_route" "private_to_everywhere" {
+resource "aws_route" "private_nat_gateway" {
   route_table_id         = "${aws_route_table.private.id}"
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.platform.id}"
+  nat_gateway_id         = "${aws_nat_gateway.nat_gw.id}"
 }
 
 resource "aws_main_route_table_association" "main" {
