@@ -23,12 +23,9 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func Plan(nodeName string) error {
-	fmt.Printf("%s\n", skuba.CurrentVersion().String())
-
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return err

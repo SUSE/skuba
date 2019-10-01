@@ -26,12 +26,9 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func Plan() error {
-	fmt.Printf("%s\n", skuba.CurrentVersion().String())
-
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return err
