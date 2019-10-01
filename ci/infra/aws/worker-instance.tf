@@ -5,7 +5,6 @@ resource "aws_instance" "nodes" {
   instance_type               = "${var.worker_size}"
   key_name                    = "${aws_key_pair.kube.key_name}"
   source_dest_check           = false
-  iam_instance_profile        = "${var.iam_profile_worker}"
   iam_instance_profile        = "${length(var.iam_profile_worker) == 0 ? local.aws_iam_policy_worker_terraform : var.iam_profile_worker}"
 
   depends_on = [
