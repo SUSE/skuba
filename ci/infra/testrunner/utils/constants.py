@@ -28,14 +28,15 @@ class BaseConfig:
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
         obj.skuba = BaseConfig.Skuba()
-
         obj.lb = BaseConfig.NodeConfig()
         obj.master = BaseConfig.NodeConfig()
         obj.worker = BaseConfig.NodeConfig()
         obj.test = BaseConfig.Test()
         obj.log = BaseConfig.Log()
+        obj.packages = BaseConfig.Packages()
 
         config_classes = (
+            BaseConfig.Packages,
             BaseConfig.NodeConfig,
             BaseConfig.Test,
             BaseConfig.Log,
@@ -73,7 +74,6 @@ class BaseConfig:
             super().__init__()
             self.retries = 5
             self.internal_net = None
-            self.mirror = None
             self.stack_name = None
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE
@@ -103,6 +103,11 @@ class BaseConfig:
         def __init__(self):
             self.env_file = None
             self.template_name = None
+
+
+    class Packages:
+        def __init__(self):
+            self.mirror = None
 
     @staticmethod
     def get_yaml_path(yaml_path):

@@ -6,6 +6,7 @@
 - [Design](#design)
 - [Configuration](#configuration-parameters)
   - [Work Environment](#work-environment)
+  - [Packages](#packages)
   - [Platform](#platform)
     - [Terraform](#terraform)
     - [Openstack](#openstack)
@@ -111,12 +112,16 @@ There are some arguments that are currently at the top level of the configuratio
 - nodeuser: the user name used to login into the platform nodes. Optional. 
 - ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 
+#### Packages
+The `packages` section configures the source of the packages to be installed in the nodes:
+
+* mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
+
 #### Terraform
 
 General setting for terraform-based platforms such as [Openstack](#openstack) and [VMware](#vmware). 
 
 * internal_net: name of the network used when provisioning the platform. Defaults to `stack_name`
-* mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. If not specified, the `username` is used.

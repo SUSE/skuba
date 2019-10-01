@@ -13,12 +13,14 @@ skuba:
 # platform settings
 terraform:
   internal_net: "" # name of the internal network
-# disable mirrors
-# mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
   plugin_dir: "" # path to the terraform plugin dir
   stack_name: "" # name of the stack
   tfdir: ""  # path to terraform templates
   tfvars: "" # terraform vars
+
+packages:
+# disable mirrors
+# mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
 
 openstack:
   openrc: "" #os.getenv("OPENSTACK_OPENRC")

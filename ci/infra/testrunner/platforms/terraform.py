@@ -131,9 +131,9 @@ class Terraform(Platform):
 
         # Update mirror urls
         repos = tfvars.get("repositories")
-        if self.conf.terraform.mirror and repos is not None:
+        if self.conf.packages.mirror and repos is not None:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
+                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.packages.mirror)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
