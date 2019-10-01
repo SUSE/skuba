@@ -76,12 +76,19 @@ func Plan() error {
 		}
 	}
 
-	updatedAddons, err := addon.UpdatedAddons(kubernetes.LatestVersion())
+	// fetch addon upgrades for the next available cluster version
+	nextClusterVersion := upgradePath[0]
+	updatedAddons, err := addon.UpdatedAddons(nextClusterVersion)
 	if err != nil {
 		return err
 	}
 	fmt.Println()
-	addon.PrintAddonUpdates(updatedAddons)
+	if addon.HasAddonUpdate(updatedAddons) {
+		fmt.Printf("Addon upgrades for %s:\n", nextClusterVersion.String())
+		addon.PrintAddonUpdates(updatedAddons)
+	} else {
+		fmt.Printf("Congratulations! Addons for %s are already at the latest version available\n", nextClusterVersion.String())
+	}
 
 	return nil
 }
