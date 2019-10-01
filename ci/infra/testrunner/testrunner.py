@@ -34,6 +34,16 @@ def provision(options):
         num_worker=options.worker_count)
 
 
+def provision_nodes(options):
+    platform = platforms.get_platform(options.conf, options.platform)
+    platform.add_nodes(options.role, options.count)
+
+
+def deprovision_nodes(options):
+    platform = platforms.get_platform(options.conf, options.platform)
+    platform.remove_nodes(options.role, options.count)
+
+
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
     skuba.cluster_init(kubernetes_version=options.kubernetes_version, cloud_provider=options.cloud_provider)
@@ -127,6 +137,20 @@ def main():
                                help='number of masters nodes to be deployed. eg: -m 2')
     cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
                                help='number of workers nodes to be deployed. eg: -w 2')
+
+    # Start node management
+    node_management_args = ArgumentParser(add_help=False)
+    node_management_args.add_argument("role", choices=["master", "worker"],
+                                      help="role of the nodes to be provisioned.")
+    node_management_args.add_argument("count", type=int, default=1,
+                                      help="number of nodes to be provisioned.")
+    cmd_provision_nodes = commands.add_parser("provision-nodes", parents=[node_management_args],
+                                              help="provision additional nodes of a give type")
+    cmd_provision_nodes.set_defaults(func=provision_nodes)
+    cmd_deprovision_nodes = commands.add_parser("deprovision-nodes", parents=[node_management_args],
+                                                help="deprovision nodes of a give type")
+    cmd_deprovision_nodes.set_defaults(func=deprovision_nodes)
+    # End node management
 
     cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
                         deployed nodes in your platform")
