@@ -130,8 +130,13 @@ class Terraform(Platform):
                     tfvars[k] = v
 
         # Update mirror urls
-        repos = tfvars.get("repositories")
-        if self.conf.packages.mirror and repos is not None:
+        repos = tfvars.get("repositories", {})
+
+        if self.conf.packages.maintenance:
+           for name, url in self.conf.packages.maintenance.items():
+               repos[name] = url
+
+        if self.conf.packages.mirror and repos:
             for name, url in repos.items():
                 tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.packages.mirror)
 

@@ -108,6 +108,7 @@ class BaseConfig:
     class Packages:
         def __init__(self):
             self.mirror = None
+            self.maintenance = None
 
     @staticmethod
     def get_yaml_path(yaml_path):

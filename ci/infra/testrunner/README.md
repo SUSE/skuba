@@ -115,6 +115,12 @@ There are some arguments that are currently at the top level of the configuratio
 #### Packages
 The `packages` section configures the source of the packages to be installed in the nodes:
 
+* maintenance: repositories to be added to the installation repositories for installing maintenance updates. It takes the form of a map:
+```
+  maintenance:
+    repo1: url/to/repo1
+    repo2: url/to/repo2
+```
 * mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 
 #### Terraform
