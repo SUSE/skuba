@@ -24,7 +24,8 @@ variable "lb_repositories" {
   default = {
     sle_server_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
     basesystem_pool    = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
-    ha_pool            = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Module-HA/15/x86_64/product/"
+    ha_pool            = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Products/SLE-Product-HA/15-SP1/x86_64/product/"
+    ha_updates         = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-HA/15-SP1/x86_64/update/"
     sle_server_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
     basesystem_updates = "http://ibs-mirror.prv.suse.net/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
   }
@@ -42,7 +43,7 @@ data "template_file" "lb_repositories_template" {
 
 data "template_file" "haproxy_apiserver_backends_master" {
   count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:6443 check check-ssl verify none\n"
+  template = "server $${fqdn} $${ip}:6443\n"
 
   vars = {
     fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
@@ -56,7 +57,7 @@ data "template_file" "haproxy_apiserver_backends_master" {
 
 data "template_file" "haproxy_gangway_backends_master" {
   count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:32001 check check-ssl verify none\n"
+  template = "server $${fqdn} $${ip}:32001\n"
 
   vars = {
     fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
@@ -70,7 +71,7 @@ data "template_file" "haproxy_gangway_backends_master" {
 
 data "template_file" "haproxy_dex_backends_master" {
   count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:32000 check check-ssl verify none\n"
+  template = "server $${fqdn} $${ip}:32000\n"
 
   vars = {
     fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
@@ -91,17 +92,24 @@ data "template_file" "lb_cloud_init_metadata" {
   }
 }
 
+data "template_file" "lb_haproxy_cfg" {
+  template = "${file("cloud-init/haproxy.cfg.tpl")}"
+
+  vars {
+    apiserver_backends = "${join("  ", data.template_file.haproxy_apiserver_backends_master.*.rendered)}"
+    gangway_backends   = "${join("  ", data.template_file.haproxy_gangway_backends_master.*.rendered)}"
+    dex_backends       = "${join("  ", data.template_file.haproxy_dex_backends_master.*.rendered)}"
+  }
+}
+
 data "template_file" "lb_cloud_init_userdata" {
   template = "${file("cloud-init/lb.tpl")}"
 
   vars {
-    apiserver_backends = "${join("      ", data.template_file.haproxy_apiserver_backends_master.*.rendered)}"
-    gangway_backends   = "${join("      ", data.template_file.haproxy_gangway_backends_master.*.rendered)}"
-    dex_backends       = "${join("      ", data.template_file.haproxy_dex_backends_master.*.rendered)}"
-    authorized_keys    = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories       = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
-    packages           = "${join("\n", formatlist("  - %s", var.packages))}"
-    ntp_servers        = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
+    authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
+    repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
+    packages        = "${join("\n", formatlist("  - %s", var.packages))}"
+    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
 
@@ -156,6 +164,34 @@ resource "null_resource" "lb_wait_cloudinit" {
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
+    ]
+  }
+}
+
+resource "null_resource" "lb_push_haproxy_cfg" {
+  depends_on = ["null_resource.lb_wait_cloudinit"]
+  count      = "${var.lbs}"
+
+  triggers = {
+    master_count = "${var.masters}"
+  }
+
+  connection {
+    host  = "${element(vsphere_virtual_machine.lb.*.guest_ip_addresses.0, count.index)}"
+    user  = "${var.username}"
+    type  = "ssh"
+    agent = true
+  }
+
+  provisioner "file" {
+    content     = "${data.template_file.lb_haproxy_cfg.rendered}"
+    destination = "/tmp/haproxy.cfg"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /tmp/haproxy.cfg /etc/haproxy/haproxy.cfg",
+      "sudo systemctl enable haproxy && sudo systemctl restart haproxy",
     ]
   }
 }
