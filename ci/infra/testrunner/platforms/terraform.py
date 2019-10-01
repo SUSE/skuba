@@ -146,6 +146,9 @@ class Terraform(Platform):
                 url_parsed = urlparse(url)
                 url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
                 tfvars["repositories"][name] = url_updated.geturl()
+	
+        if self.conf.packages.certificates:
+            tfvars["packages"].append(self.conf.packages.certificates)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""

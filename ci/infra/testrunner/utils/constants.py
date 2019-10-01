@@ -110,6 +110,7 @@ class BaseConfig:
             self.mirror = None
             self.maintenance = None
             self.registry_code = None
+            self.certificates = None
 
     @staticmethod
     def get_yaml_path(yaml_path):

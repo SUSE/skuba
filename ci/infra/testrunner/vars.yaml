@@ -21,6 +21,7 @@ terraform:
 packages:
 # disable mirrors
 # mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
+  certificates: "ca-certificates-suse"
 
 openstack:
   openrc: "" #os.getenv("OPENSTACK_OPENRC")
