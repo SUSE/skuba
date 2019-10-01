@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 import hcl
 
@@ -138,7 +139,9 @@ class Terraform(Platform):
 
         if self.conf.packages.mirror and repos:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.packages.mirror)
+                url_parsed = urlparse(url)
+                url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
+                tfvars["repositories"][name] = url_updated.geturl()
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
