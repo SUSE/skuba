@@ -54,27 +54,22 @@ func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, err
 }
 
 func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
-	if hasAddonUpdate(updatedAddons) {
-		fmt.Println("Addon upgrades:")
-		for addonName, versions := range updatedAddons.Updated {
-			currentVersion := updatedAddons.Current[addonName].Version
-			currentManifest := updatedAddons.Current[addonName].ManifestVersion
-			updatedVersion := versions.Version
-			updatedManifest := versions.ManifestVersion
-			hasVersionUpdate := hasAddonVersionUpdateWithAddon(updatedAddons, addonName)
-			hasManifestUpdate := hasAddonManifestUpdateWithAddon(updatedAddons, addonName)
-			if hasVersionUpdate && !hasManifestUpdate {
-				fmt.Printf("  - %s: %s -> %s\n", addonName, currentVersion, updatedVersion)
-			} else if hasVersionUpdate || hasManifestUpdate {
-				fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, currentVersion, updatedVersion, currentManifest, updatedManifest)
-			}
+	for addonName, versions := range updatedAddons.Updated {
+		currentVersion := updatedAddons.Current[addonName].Version
+		currentManifest := updatedAddons.Current[addonName].ManifestVersion
+		updatedVersion := versions.Version
+		updatedManifest := versions.ManifestVersion
+		hasVersionUpdate := hasAddonVersionUpdateWithAddon(updatedAddons, addonName)
+		hasManifestUpdate := hasAddonManifestUpdateWithAddon(updatedAddons, addonName)
+		if hasVersionUpdate && !hasManifestUpdate {
+			fmt.Printf("  - %s: %s -> %s\n", addonName, currentVersion, updatedVersion)
+		} else if hasVersionUpdate || hasManifestUpdate {
+			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, currentVersion, updatedVersion, currentManifest, updatedManifest)
 		}
-	} else {
-		fmt.Println("Congratulations! Addons (for the current cluster version) are already at the latest version available")
 	}
 }
 
-func hasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
+func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
 	for addon, _ := range aviu.Updated {
 		if hasAddonManifestUpdateWithAddon(aviu, addon) || hasAddonVersionUpdateWithAddon(aviu, addon) {
 			return true

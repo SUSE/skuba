@@ -55,7 +55,12 @@ func Plan() error {
 	if err != nil {
 		return err
 	}
-	addon.PrintAddonUpdates(updatedAddons)
+	if addon.HasAddonUpdate(updatedAddons) {
+		fmt.Printf("Addon upgrades for %s:\n", currentVersion)
+		addon.PrintAddonUpdates(updatedAddons)
+	} else {
+		fmt.Printf("Congratulations! Addons for %s are already at the latest version available\n", currentVersion)
+	}
 
 	return nil
 }
