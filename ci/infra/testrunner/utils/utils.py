@@ -48,12 +48,12 @@ class Utils:
             try:
                 os.chmod(file, permissions)
             except Exception as ex:
-                logger.exception(ex)
+                logger.debug(ex)
 
     @staticmethod
     def cleanup_file(file):
         if os.path.exists(file):
-            logger.info(f"Cleaning up {file}")
+            logger.debug(f"Cleaning up {file}")
             try:
                 try:
                     # Attempt to remove the file first, because a socket (e.g.
@@ -62,9 +62,9 @@ class Utils:
                 except IsADirectoryError:
                     shutil.rmtree(file)
             except Exception as ex:
-                logger.exception(ex)
+                logger.debug(ex)
         else:
-            logger.warning(f"Nothing to clean up for {file}")
+            logger.debug(f"Nothing to clean up for {file}")
 
     @staticmethod
     def cleanup_files(files):
@@ -87,7 +87,7 @@ class Utils:
         except FileNotFoundError:
             pass
         except OSError as ex:
-            logger.exception(ex)
+            logger.debug(ex)
 
     def collect_remote_logs(self, ip_address, logs, store_path):
         """
