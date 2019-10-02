@@ -55,6 +55,9 @@ pipeline {
                 deleteDir()
             }
         }
+        unstable {
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+        }
         failure {
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }

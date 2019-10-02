@@ -138,6 +138,9 @@ pipeline {
             }
             sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
         }
+        unstable {
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+        }
         failure {
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
