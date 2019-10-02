@@ -278,6 +278,18 @@ or as an environment variable: `export VMWARE_ENV_FILE=/path/to/vmware-env.sh`
 
 3. Be sure to use the `-p` or `--platform` argument when invoking `testrunner` and set it to `vmware`, otherwise `openstack` is used. 
 
+#### Libvirt
+
+`testruner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. Moreover, the version of this plugin must be compatible with the version of terraform used by skuba (and by extension, the testrunner) which as of today is `0.11`. [This version](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) has been tested to work. Notice it requires an updated version of libvirt (4.1.0 or above). 
+
+Once the plugin is installed locally, it must be made available to terraform by copying the plugin binary to `ci/infra/libvirt/terraform.d/plugins/linux_<arch>/`, where `<arch>` is the architecture of the computer where terraform is running (e.g. `amd64`).
+
+**Note**: setting the `tf_plugin_dir` parameter in the `testrunner` configuration as shown bellow **will not work**. The reason is that terraform will disable the [default discovery process](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery) and therefore the other required plugings will not be available.
+```
+terraform:
+  plugin_dir: "/path/to/libvirt/provider"
+```
+
 ### Jenkins Setup
 
 In your Jenkins file, you need to set up environment variables which will replace options in the yaml file. This is more convenient than having to edit the yaml file in the CI pipeline. 
