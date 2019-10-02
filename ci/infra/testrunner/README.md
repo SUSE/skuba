@@ -27,6 +27,8 @@
 - [Examples](#examples)
   - [Create K8s Cluster](#create-k8s-cluster)
   - [Collect logs](#collect-logs)
+  - [Install using registration code](#install-using-registration-code)
+  - [Install packages from mirror](#install-packages-from-mirror)
 
 ## Summary
 
@@ -523,3 +525,32 @@ Logs that are currently being collected are the cloud-init logs for each of the 
     /var/log/cloud-init.log
 
 These are stored each in their own folder named `path/to/workspace/testrunner_logs/{master|worker}_ip_address/`
+
+### Install using registration code
+
+1. Configure the registration code to be passed to nodes:
+
+`vars.yaml`
+```
+packages:
+  registry_code: "<registry code>"
+```
+2. Configure `testrunner` to use a `skuba` binary compatible with the version installed in the nodes:
+
+`vars.yaml`
+```
+skuba:
+  bin_path: "/path/to/skuba"
+```
+
+### Install packages from mirror
+
+Specify the mirror an enable the installation of certifates package:
+
+`vars.yaml`
+```
+packages:
+  mirror: "my.mirror.site"
+  certificates: "certificates-package"
+```
+
