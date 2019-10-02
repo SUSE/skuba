@@ -158,4 +158,13 @@ test_reboot(provision, platform):
     platform.ssh_run("master", "0", "sudo reboot &")
 
     wait(platform.ssh, "master", "0", "/bin/true", wait_delay=30, wait_timeout=10, wait_retries=3, wait_bakoff=30, wait_allow=(RuntimeError))
-``` 
+```
+
+**Note**: current implementation does not allow nesting calls to the `wait` function. Therefore the code shown below will not work:
+```
+def waiting_function():
+    wait( ....)
+
+test_waiting():
+    wait(waiting_function, ...)
+```
