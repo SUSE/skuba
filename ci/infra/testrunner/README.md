@@ -280,7 +280,7 @@ or as an environment variable: `export VMWARE_ENV_FILE=/path/to/vmware-env.sh`
 
 #### Libvirt
 
-`testruner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. Moreover, the version of this plugin must be compatible with the version of terraform used by skuba (and by extension, the testrunner) which as of today is `0.11`. [This version](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) has been tested to work. Notice it requires an updated version of libvirt (4.1.0 or above). 
+`testrunner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. Moreover, the version of this plugin must be compatible with the version of terraform used by skuba (and by extension, the testrunner) which as of today is `0.11`. [This version](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) has been tested to work. Notice it requires an updated version of libvirt (4.1.0 or above). 
 
 Once the plugin is installed locally, it must be made available to terraform by copying the plugin binary to `ci/infra/libvirt/terraform.d/plugins/linux_<arch>/`, where `<arch>` is the architecture of the computer where terraform is running (e.g. `amd64`).
 
