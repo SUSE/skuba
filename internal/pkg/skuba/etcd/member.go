@@ -34,7 +34,7 @@ import (
 )
 
 func RemoveMember(client clientset.Interface, node *v1.Node, clusterVersion *version.Version) error {
-	controlPlaneNodes, err := kubernetes.GetControlPlaneNodes()
+	controlPlaneNodes, err := kubernetes.GetControlPlaneNodes(client)
 	if err != nil {
 		return errors.Wrap(err, "could not get the list of control plane nodes, aborting")
 	}

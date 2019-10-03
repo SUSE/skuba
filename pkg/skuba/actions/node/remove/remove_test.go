@@ -97,21 +97,21 @@ apiServer:
 	test := []struct {
 		name          string
 		target        string
-		job           string
+		executer      []string
 		clientset     *fake.Clientset
 		errorExpected bool
 		errorMessage  string
 	}{
 		{
 			name:          "should remove master from cluster",
-			target:        "master-1",
+			target:        master2.Name,
+			executer:      []string{master1.Name, master2.Name},
 			clientset:     fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{master1, master2}}),
-			job:           fmt.Sprintf("caasp-kubelet-disarm-%x", sha1.Sum([]byte(master1.ObjectMeta.Name))),
 			errorExpected: false,
 		},
 		{
 			name:          "should fail when remove last master from cluster",
-			target:        "master-1",
+			target:        master1.Name,
 			clientset:     fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{master1}}),
 			errorExpected: true,
 			errorMessage:  "could not remove last master of the cluster",
@@ -119,15 +119,16 @@ apiServer:
 		{
 			name:          "should fail when remove node does not exist",
 			target:        "not-exist",
+			executer:      []string{master1.Name},
 			clientset:     fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{master1}}),
 			errorExpected: true,
 			errorMessage:  "[remove-node] could not get node not-exist: nodes \"not-exist\" not found",
 		},
 		{
 			name:          "should remove worker from cluster",
-			target:        "worker-2",
-			clientset:     fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{worker1, worker2}}),
-			job:           fmt.Sprintf("caasp-kubelet-disarm-%x", sha1.Sum([]byte(worker2.ObjectMeta.Name))),
+			target:        worker2.Name,
+			executer:      []string{master1.Name},
+			clientset:     fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{master1, worker1, worker2}}),
 			errorExpected: false,
 		},
 	}
@@ -136,9 +137,24 @@ apiServer:
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(cm)
+
+			shaTarget := fmt.Sprintf("%x", sha1.Sum([]byte(tt.target)))
+			shaExecuter := ""
+			for _, executer := range tt.executer {
+				shaExecuter = fmt.Sprintf("%x", sha1.Sum([]byte(executer)))
+				tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter),
+						Namespace: metav1.NamespaceSystem,
+					},
+					Spec:   jobSpec,
+					Status: batchv1.JobStatus{Active: 1},
+				})
+			}
+
 			tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      tt.job,
+					Name:      fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget),
 					Namespace: metav1.NamespaceSystem,
 				},
 				Spec: jobSpec,
