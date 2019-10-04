@@ -22,38 +22,40 @@ pipeline {
 
     stages {
         stage('Collaborator Check') { steps { script {
-            def membersResponse = httpRequest(
-                url: "https://api.github.com/repos/SUSE/skuba/collaborators/${CHANGE_AUTHOR}",
-                authentication: 'github-token',
-                validResponseCodes: "204:404")
+            if (env.BRANCH_NAME.startsWith('PR')) {
+                def membersResponse = httpRequest(
+                    url: "https://api.github.com/repos/SUSE/skuba/collaborators/${CHANGE_AUTHOR}",
+                    authentication: 'github-token',
+                    validResponseCodes: "204:404")
 
-            if (membersResponse.status == 204) {
-                echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
+                if (membersResponse.status == 204) {
+                    echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
 
-            } else {
-                def allowExecution = false
+                } else {
+                    def allowExecution = false
 
-                try {
-                    timeout(time: 5, unit: 'MINUTES') {
-                        allowExecution = input(id: 'userInput', message: "Change author is not a SUSE member: ${CHANGE_AUTHOR}", parameters: [
-                            booleanParam(name: 'allowExecution', defaultValue: false, description: 'Run tests anyway?')
-                        ])
+                    try {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            allowExecution = input(id: 'userInput', message: "Change author is not a SUSE member: ${CHANGE_AUTHOR}", parameters: [
+                                booleanParam(name: 'allowExecution', defaultValue: false, description: 'Run tests anyway?')
+                            ])
+                        }
+                    } catch(err) {
+                        def user = err.getCauses()[0].getUser()
+                        if('SYSTEM' == user.toString()) {
+                            echo "Timeout while waiting for input"
+                        } else {
+                            allowExecution = false
+                            echo "Unhandled error:\n${err}"
+                        }
                     }
-                } catch(err) {
-                    def user = err.getCauses()[0].getUser()
-                    if('SYSTEM' == user.toString()) {
-                        echo "Timeout while waiting for input"
-                    } else {
-                        allowExecution = false
-                        echo "Unhandled error:\n${err}"
-                    }
-                }
-                
+                    
 
-                if (!allowExecution) {
-                    echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
-                    error(message: "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed")
-                    return;
+                    if (!allowExecution) {
+                        echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
+                        error(message: "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed")
+                        return;
+                    }
                 }
             }
         } } }
