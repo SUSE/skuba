@@ -33,7 +33,7 @@ func init() {
 }
 
 func (renderContext renderContext) DexImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "dex",
+	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex",
 		kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
 }
 
@@ -106,7 +106,7 @@ data:
     frontend:
       issuer: "SUSE CaaS Platform"
       theme: "caasp"
-      dir: /usr/share/dex/web
+      dir: /usr/share/caasp-dex/web
 
     # This is a sample with LDAP as connector.
     # Requires a update to fulfill your environment.
@@ -182,7 +182,7 @@ spec:
         image: {{.DexImage}}
         imagePullPolicy: IfNotPresent
         command:
-          - /usr/bin/dex
+          - /usr/bin/caasp-dex
           - serve
           - /etc/dex/cfg/config.yaml
         ports:
