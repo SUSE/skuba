@@ -48,8 +48,9 @@ type InitConfiguration struct {
 
 func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
 	kubernetesVersion := kubernetes.LatestVersion()
+	var err error
 	if kubernetesDesiredVersion != "" {
-		kubernetesVersion, err := versionutil.ParseSemantic(kubernetesDesiredVersion)
+		kubernetesVersion, err = versionutil.ParseSemantic(kubernetesDesiredVersion)
 		if err != nil || !kubernetes.IsVersionAvailable(kubernetesVersion) {
 			return InitConfiguration{}, fmt.Errorf("Version %s does not exist or cannot be parsed.\n", kubernetesDesiredVersion)
 		}
