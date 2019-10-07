@@ -52,6 +52,8 @@
         - '{name}-test_cilium-nightly'
         - '{name}-test_deployments-nightly'
         - '{name}-test_dockercaps-nightly'
+        - '{name}-test_addon_upgrade_plan-nightly'
+        - '{name}-test_addon_upgrade_apply-nightly'
 
 - project:
     name: caasp-jobs/e2e/caasp-v4-vmware
@@ -69,6 +71,8 @@
         - '{name}-test_cilium-nightly'
         - '{name}-test_deployments-nightly'
         - '{name}-test_dockercaps-nightly'
+        - '{name}-test_addon_upgrade_plan-nightly'
+        - '{name}-test_addon_upgrade_apply-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb

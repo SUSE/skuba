@@ -166,7 +166,7 @@ class Utils:
                f'{local_dir_path}')
         self.runshellcommand(cmd)
 
-    def runshellcommand(self, cmd, cwd=None, env={}, ignore_errors=False):
+    def runshellcommand(self, cmd, cwd=None, env={}, ignore_errors=False, stdin=None):
         """Running shell command in {workspace} if cwd == None
            Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
                cwd is None, cmd will run in {workspace}
@@ -176,6 +176,7 @@ class Utils:
         cwd -- dir to run the cmd
         env -- environment variables
         ignore_errors -- don't raise exception if command fails
+        stdin -- standard input for the command in bytes
         """
         if not cwd:
             cwd = self.conf.workspace
@@ -195,7 +196,13 @@ class Utils:
             logger.info("Executing command {}".format(cmd))
 
         stdout, stderr = [], []
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=env, cwd=cwd)
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd,
+            stdin=subprocess.PIPE if stdin else None, shell=True, env=env
+        )
+        if stdin:
+            p.stdin.write(stdin)
+            p.stdin.close()
         stdoutStreamer = Thread(target = self.read_fd, args = (p, p.stdout, logger.debug, stdout))
         stderrStreamer = Thread(target = self.read_fd, args = (p, p.stderr, logger.error, stderr))
         stdoutStreamer.start()

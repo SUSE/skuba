@@ -73,6 +73,14 @@ test_upgrade_plan_all_fine:
 test_upgrade_plan_from_previous:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous
 
+.PHONY: test_addon_upgrade_plan
+test_addon_upgrade_plan:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_addon_upgrade.py --test test_addon_upgrade_plan
+
+.PHONY: test_addon_upgrade_plan
+test_addon_upgrade_apply:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_addon_upgrade.py --test test_addon_upgrade_apply
+
 .PHONY: test_upgrade_plan_from_previous_with_upgraded_control_plane
 test_upgrade_plan_from_previous_with_upgraded_control_plane:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous_with_upgraded_control_plane

@@ -165,6 +165,13 @@ class Skuba:
         return self._run_skuba("cluster status")
 
     @step
+    def addon_upgrade(self, action):
+        self._verify_bootstrap_dependency()
+        if action not in ['plan', 'apply']:
+            raise ValureEror("Invalid action '{}'".format(action))
+        return self._run_skuba("addon upgrade {0}".format(action))
+
+    @step
     def num_of_nodes(self, role):
 
         if role not in ("master", "worker"):
