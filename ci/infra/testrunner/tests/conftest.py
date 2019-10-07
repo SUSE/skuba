@@ -49,6 +49,7 @@ def deployment(request, bootstrap, skuba, kubectl):
     if request.config.getoption("skip_setup") != 'deployed':
         skuba.join_nodes()
 
+    kubectl.run_kubectl('wait --for=condition=Ready node --all --timeout=5m')
     kubectl.run_kubectl('wait --timeout=3m --for=condition=Ready pods --all --namespace=kube-system')
 
 
