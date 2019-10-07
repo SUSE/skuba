@@ -132,3 +132,39 @@ Testrunner provides a library of functions that wraps `skuba` and `terraform` fo
 - `node_join(role, nr)`: adds a new node to the cluster with the given role. The node is identified by its index in the provisioned nodes for that role.
 - `node_remove(role, nr)` removes a node currently part of the cluster. The node is identified by its role an its id in the list of provisioned nodes for that role.
 - `num_of_nodes(role)`: returns the number of nodes in cluster for the given role.
+
+## Handling timeouts and retries
+
+Sometimes tests involve operations that require waiting for some time until they are completed (e.g. deploying a component) and eventually retrying them. In order to facilitate implementing this kind of logic, the testrunner test library offers the function `wait` which can be used to wrap another function call and specify how to handle timeouts and retries:
+
+```
+wait(func, *args, **kwargs)
+```
+
+The `wait` function receives the name of a function to invoke, a list of arguments, and a list of key-value pairs, which are passed to the function. Additionally, some key-value parameters can be passed to the wait function itself:
+* wait_delay: time before first try in seconds (default 0)
+* wait_timeout: timeout in seconds for waiting each try to complete (default, 5)
+* wait_allow: a tuple of exceptions that are expected and must be retried (default, none)
+* wait_retries: number of retries in case of failed invication (default, 3)
+* wait_backoff: delay in seconds between retries (default, 1 second)
+
+For example, the following code reboots a node and waits until a command can be executed sucessfully, with an initial 30 seconds delay to give time for the node to reboot. The exception `RuntimeError` is allow and retried because `ssh_run` raises it in case it cannot stablish a connection.
+```
+from test.testconf import platform
+from test.utils import wait
+
+test_reboot(provision, platform):
+    
+    platform.ssh_run("master", "0", "sudo reboot &")
+
+    wait(platform.ssh, "master", "0", "/bin/true", wait_delay=30, wait_timeout=10, wait_retries=3, wait_bakoff=30, wait_allow=(RuntimeError))
+```
+
+**Note**: current implementation does not allow nesting calls to the `wait` function. Therefore the code shown below will not work:
+```
+def waiting_function():
+    wait( ....)
+
+test_waiting():
+    wait(waiting_function, ...)
+```
