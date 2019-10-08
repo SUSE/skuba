@@ -46,7 +46,8 @@ func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, err
 	for addonName, version := range latestAddonVersions {
 		skubaConfigVersion := skubaConfig.AddonsVersion[addonName]
 		aviu.Current[addonName] = skubaConfigVersion
-		if version.Version > skubaConfigVersion.Version || version.ManifestVersion > skubaConfigVersion.ManifestVersion {
+		if skubaConfigVersion == nil ||
+			skubaConfigVersion != nil && (version.Version > skubaConfigVersion.Version || version.ManifestVersion > skubaConfigVersion.ManifestVersion) {
 			aviu.Updated[addonName] = version
 		}
 	}
@@ -55,16 +56,17 @@ func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, err
 
 func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 	for addonName, versions := range updatedAddons.Updated {
-		currentVersion := updatedAddons.Current[addonName].Version
-		currentManifest := updatedAddons.Current[addonName].ManifestVersion
-		updatedVersion := versions.Version
-		updatedManifest := versions.ManifestVersion
+		if updatedAddons.Current[addonName] == nil && updatedAddons.Updated[addonName] != nil {
+			fmt.Printf("  - %s: %s (new addon)\n", addonName, versions.Version)
+			continue
+		}
+
 		hasVersionUpdate := hasAddonVersionUpdateWithAddon(updatedAddons, addonName)
 		hasManifestUpdate := hasAddonManifestUpdateWithAddon(updatedAddons, addonName)
 		if hasVersionUpdate && !hasManifestUpdate {
-			fmt.Printf("  - %s: %s -> %s\n", addonName, currentVersion, updatedVersion)
+			fmt.Printf("  - %s: %s -> %s\n", addonName, updatedAddons.Current[addonName].Version, versions.Version)
 		} else if hasVersionUpdate || hasManifestUpdate {
-			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, currentVersion, updatedVersion, currentManifest, updatedManifest)
+			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, updatedAddons.Current[addonName].Version, versions.Version, updatedAddons.Current[addonName].ManifestVersion, versions.ManifestVersion)
 		}
 	}
 }
@@ -79,9 +81,15 @@ func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
 }
 
 func hasAddonManifestUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
+	if aviu.Current[addon] == nil {
+		return true
+	}
 	return aviu.Updated[addon].ManifestVersion > aviu.Current[addon].ManifestVersion
 }
 
 func hasAddonVersionUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
+	if aviu.Current[addon] == nil {
+		return true
+	}
 	return aviu.Updated[addon].Version > aviu.Current[addon].Version
 }
