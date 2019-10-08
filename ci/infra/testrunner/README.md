@@ -117,15 +117,16 @@ There are some arguments that are currently at the top level of the configuratio
 #### Packages
 The `packages` section configures the source of the packages to be installed in the nodes:
 
-* certificates: package with the certificates to be installed in the nodes in order to install other packages and images. For example, for installing SUSE self-signed packages:
+* additional_pkgs: list with additional packages to be installed in the nodes. For example, for installing SUSE certificates for self-signed packages in development environments:
 ```
 packages:
-  certificates: "ca-certificates-suse"
+  additional_pkgs:
+  - "ca-certificates-suse"
 ```
-* maintenance: repositories to be added to the installation repositories for installing maintenance updates. It takes the form of a map:
+* additional_repos: repositories to be added to the nodes. For example, for installing maintenance updates. It takes the form of a map:
 ```
 packages:
-  maintenance:
+  additional_repos:
     repo1: url/to/repo1
     repo2: url/to/repo2
 ```

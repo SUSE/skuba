@@ -135,20 +135,20 @@ class Terraform(Platform):
             tfvars["caasp_registry_code"] = self.conf.packages.registry_code
             tfvars["repositories"] = {}
 
-        # Update mirror urls
         repos = tfvars.get("repositories", {})
-        if self.conf.packages.maintenance:
-           for name, url in self.conf.packages.maintenance.items():
+        if self.conf.packages.additional_repos:
+           for name, url in self.conf.packages.additional_repos.items():
                repos[name] = url
 
+        # Update mirror urls
         if self.conf.packages.mirror and repos:
             for name, url in repos.items():
                 url_parsed = urlparse(url)
                 url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
                 tfvars["repositories"][name] = url_updated.geturl()
 	
-        if self.conf.packages.certificates:
-            tfvars["packages"].append(self.conf.packages.certificates)
+        if self.conf.packages.additional_pkgs:
+            tfvars["packages"].extend(self.conf.packages.additional_pkgs)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""

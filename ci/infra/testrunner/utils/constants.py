@@ -108,9 +108,9 @@ class BaseConfig:
     class Packages:
         def __init__(self):
             self.mirror = None
-            self.maintenance = None
             self.registry_code = None
-            self.certificates = None
+            self.additional_repos = None
+            self.additional_pkgs = None
 
     @staticmethod
     def get_yaml_path(yaml_path):
