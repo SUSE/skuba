@@ -7,6 +7,7 @@ Infrastructure deployment scripts.
 This project currently supports three different platforms to deploy on top of:
 
 * [OpenStack](openstack/README.md)
+* [VMware](vmware/README.md)
 * [Amazon Web Services](aws/README.md)
 * [libvirt](libvirt/README.md)
 
