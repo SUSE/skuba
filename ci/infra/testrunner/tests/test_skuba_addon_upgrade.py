@@ -48,6 +48,7 @@ def addons_up_to_date(skuba):
     out = skuba.addon_upgrade('plan')
     return bool(all_fine.findall(out))
 
+@pytest.mark.disruptive
 def test_addon_upgrade_plan(deployment, kubectl, skuba):
     assert addons_up_to_date(skuba)
 
@@ -71,6 +72,7 @@ def test_addon_upgrade_plan(deployment, kubectl, skuba):
     assert out.find(u_manif_msg) != -1
     assert out.find(u_img_msg) != -1
 
+@pytest.mark.disruptive
 def test_addon_upgrade_apply(deployment, kubectl, skuba):
     skubaConf_dict = get_skubaConfiguration_dict(kubectl)
     addons_dict = skubaConf_dict['AddonsVersion']
