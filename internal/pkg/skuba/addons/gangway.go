@@ -112,7 +112,7 @@ data:
     apiServerURL: "https://{{.ControlPlane}}:6443"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     trustedCAPath: /etc/gangway/pki/ca.crt
-    customHTMLTemplatesDir: /usr/share/gangway/web/templates/caasp
+    customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 ---
 apiVersion: apps/v1
 kind: Deployment
