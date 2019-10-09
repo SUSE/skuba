@@ -191,7 +191,8 @@ spec:
           - "-t=vxlan"
           - "--kvstore=etcd"
           - "--kvstore-opt=etcd.config=/var/lib/etcd-config/etcd.config"
-          - "--disable-ipv4=$(DISABLE_IPV4)"
+          - "--enable-ipv4=$(ENABLE_IPV4)"
+          - "--enable-ipv6=$(ENABLE_IPV6)"
           - "--container-runtime=crio"
         ports:
           - name: prometheus
@@ -211,11 +212,16 @@ spec:
               configMapKeyRef:
                 name: cilium-config
                 key: debug
-          - name: "DISABLE_IPV4"
+          - name: "ENABLE_IPV4"
             valueFrom:
               configMapKeyRef:
                 name: cilium-config
-                key: disable-ipv4
+                key: enable-ipv4
+          - name: "ENABLE_IPV6"
+            valueFrom:
+              configMapKeyRef:
+                name: cilium-config
+                key: enable-ipv6
         livenessProbe:
           exec:
             command:

@@ -89,7 +89,7 @@ var (
 				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 0},
+				Cilium:  &AddonVersion{"1.5.3", 1},
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 1},
 				Gangway: &AddonVersion{"3.1.0-rev4", 2},
@@ -109,7 +109,7 @@ var (
 				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 0},
+				Cilium:  &AddonVersion{"1.5.3", 1},
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 1},
 				Gangway: &AddonVersion{"3.1.0-rev4", 2},
@@ -129,7 +129,7 @@ var (
 				ToolingVersion:          "0.1.0",
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 0},
+				Cilium:  &AddonVersion{"1.5.3", 1},
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 1},
 				Gangway: &AddonVersion{"3.1.0-rev4", 2},

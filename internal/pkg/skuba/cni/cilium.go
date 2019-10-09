@@ -125,9 +125,10 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 		return err
 	}
 	ciliumConfigMapData := map[string]string{
-		"debug":        "false",
-		"disable-ipv4": "false",
-		"etcd-config":  string(etcdConfigDataByte),
+		"debug":       "false",
+		"enable-ipv4": "true",
+		"enable-ipv6": "false",
+		"etcd-config": string(etcdConfigDataByte),
 	}
 	ciliumConfigMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
