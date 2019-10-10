@@ -83,10 +83,10 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"skuba-update.start",
 	}
 
+	// Try to find exist node have the same name.
 	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
-	if err != nil {
-		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
-		return err
+	if err == nil {
+		return errors.Errorf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
