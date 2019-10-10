@@ -148,7 +148,7 @@ resource "null_resource" "lb_push_haproxy_cfg" {
 }
 
 resource "null_resource" "lb_reboot" {
-  depends_on = ["null_resource.lb_wait_cloudinit"]
+  depends_on = ["null_resource.lb_push_haproxy_cfg"]
   count      = "${var.lbs}"
 
   provisioner "local-exec" {
