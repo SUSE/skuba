@@ -31,7 +31,7 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
 
 
 def node_is_upgraded(kubectl, platform, node_name):
-    for attempt in range(10):
+    for attempt in range(20):
         if platform.all_apiservers_responsive():
             # kubernetes might be a little bit slow with updating the NodeVersionInfo
             version = kubectl.run_kubectl("get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name))
