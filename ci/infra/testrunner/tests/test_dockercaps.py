@@ -63,7 +63,7 @@ def test_dockercaps(deployment, kubectl, setup_manifest):
     logger.info("Deploy testcases")
     kubectl.run_kubectl(
         "apply -f {}".format(setup_manifest))
-    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=3m")
+    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=5m")
 
     logger.info("Test: Run 'su root -c id' on the containers")
     pods = ["sle12sp4", "leap", "sle15", "sle15sp1"]

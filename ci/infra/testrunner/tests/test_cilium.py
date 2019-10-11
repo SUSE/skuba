@@ -13,7 +13,7 @@ def test_cillium(deployment, kubectl):
 
     logger.info("Deploy deathstar")
     kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.5/examples/minikube/http-sw-app.yaml")
-    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=3m")
+    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=5m")
 
     # FIXME: this hardcoded wait should be replaces with a (cilum?) condition
     time.sleep(100)
