@@ -24,7 +24,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"text/template"
 
@@ -266,9 +265,7 @@ func addonVersionLower(version1 *kubernetes.AddonVersion, version2 *kubernetes.A
 	if version2 == nil {
 		return false
 	}
-	return version.MustParseSemantic(version1.Version).LessThan(version.MustParseSemantic(version2.Version)) ||
-		(reflect.DeepEqual(version.MustParseSemantic(version1.Version), version.MustParseSemantic(version2.Version)) &&
-			version1.ManifestVersion < version2.ManifestVersion)
+	return version1.ManifestVersion < version2.ManifestVersion
 }
 
 func updateSkubaConfigMapWithAddonVersion(addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {
