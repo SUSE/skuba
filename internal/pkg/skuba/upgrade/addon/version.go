@@ -46,8 +46,7 @@ func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, err
 	for addonName, version := range latestAddonVersions {
 		skubaConfigVersion := skubaConfig.AddonsVersion[addonName]
 		aviu.Current[addonName] = skubaConfigVersion
-		if skubaConfigVersion == nil ||
-			skubaConfigVersion != nil && (version.Version > skubaConfigVersion.Version || version.ManifestVersion > skubaConfigVersion.ManifestVersion) {
+		if skubaConfigVersion == nil || (version.ManifestVersion > skubaConfigVersion.ManifestVersion) {
 			aviu.Updated[addonName] = version
 		}
 	}
@@ -61,35 +60,17 @@ func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 			continue
 		}
 
-		hasVersionUpdate := hasAddonVersionUpdateWithAddon(updatedAddons, addonName)
-		hasManifestUpdate := hasAddonManifestUpdateWithAddon(updatedAddons, addonName)
-		if hasVersionUpdate && !hasManifestUpdate {
+		// At this point we know that this addon has a greater manifest version, if the addon version
+		// is different than the one stored, we will show that to the user. If the versions are equals
+		// (string comparison), we will show the manifest version bump as additional information.
+		if updatedAddons.Current[addonName].Version != versions.Version {
 			fmt.Printf("  - %s: %s -> %s\n", addonName, updatedAddons.Current[addonName].Version, versions.Version)
-		} else if hasVersionUpdate || hasManifestUpdate {
+		} else {
 			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, updatedAddons.Current[addonName].Version, versions.Version, updatedAddons.Current[addonName].ManifestVersion, versions.ManifestVersion)
 		}
 	}
 }
 
 func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
-	for addon, _ := range aviu.Updated {
-		if hasAddonManifestUpdateWithAddon(aviu, addon) || hasAddonVersionUpdateWithAddon(aviu, addon) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasAddonManifestUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
-	if aviu.Current[addon] == nil {
-		return true
-	}
-	return aviu.Updated[addon].ManifestVersion > aviu.Current[addon].ManifestVersion
-}
-
-func hasAddonVersionUpdateWithAddon(aviu AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
-	if aviu.Current[addon] == nil {
-		return true
-	}
-	return aviu.Updated[addon].Version > aviu.Current[addon].Version
+	return len(aviu.Updated) > 0
 }

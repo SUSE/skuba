@@ -22,7 +22,7 @@ def decrease_one_addon_manifest(addons_dict, skip=None):
     for addon in addons_dict:
         if addon == skip:
             continue
-        ver = addons_dict[addon]['ManifestVersion'] 
+        ver = addons_dict[addon]['ManifestVersion']
         if ver > 0:
             addons_dict[addon]['ManifestVersion'] -= 1
             return (
@@ -55,9 +55,7 @@ def test_addon_upgrade_plan(deployment, kubectl, skuba):
     addons_dict = skubaConf_dict['AddonsVersion']
 
     u_manif = decrease_one_addon_manifest(addons_dict)
-    u_img = decrease_one_addon_image(addons_dict, skip=u_manif[0])
 
-    u_img_msg = '{0}: {1} -> {2}'.format(u_img[0], u_img[1][0], u_img[1][1])
     u_manif_msg = '{0}: {1} -> {1} (manifest version from {2} to {3})'.format(
         u_manif[0], u_manif[1], u_manif[2][0], u_manif[2][1]
     )
@@ -69,7 +67,6 @@ def test_addon_upgrade_plan(deployment, kubectl, skuba):
 
     out = skuba.addon_upgrade('plan')
     assert out.find(u_manif_msg) != -1
-    assert out.find(u_img_msg) != -1
 
 def test_addon_upgrade_apply(deployment, kubectl, skuba):
     skubaConf_dict = get_skubaConfiguration_dict(kubectl)
@@ -84,7 +81,7 @@ def test_addon_upgrade_apply(deployment, kubectl, skuba):
     assert out.find("configmap/skuba-config replaced") != -1
 
     assert not addons_up_to_date(skuba)
-    
+
     out = skuba.addon_upgrade('apply')
     assert out.find("Successfully upgraded addons") != -1
     assert addons_up_to_date(skuba)
