@@ -17,7 +17,7 @@ reconfiguration in an easy way.
   Print usage statement.
 
 **-v**
-  set verbosity level.
+  number for the log level verbosity [0-10].
 
 # COMMANDS
 
