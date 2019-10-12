@@ -31,8 +31,12 @@ func TestNodeName(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			nodename:  "my-worker-0",
+			nodename:  "my.worker.0",
 			expectErr: false,
+		},
+		{
+			nodename:  "my_master_0",
+			expectErr: true,
 		},
 		{
 			nodename:  "some-too-long-hostname-foo-bar-baz-fizz-buzz-xyz-zzy-kaboom-ayy-lmao",
