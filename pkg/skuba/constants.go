@@ -19,7 +19,6 @@ package skuba
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"path/filepath"
 
@@ -80,17 +79,6 @@ func CriDockerDefaultsConfFile() string {
 }
 
 func KubeConfigAdminFile() string {
-	// give high precedence to local `admin.conf`
-	if _, err := os.Stat("admin.conf"); os.IsNotExist(err) {
-		env := os.Getenv("KUBECONFIG")
-		if env != "" {
-			return env
-		}
-		// TODO handle error
-		home, _ := os.UserHomeDir()
-		return filepath.Join(home, ".kube", "config")
-	}
-
 	return "admin.conf"
 }
 
