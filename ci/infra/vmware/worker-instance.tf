@@ -1,60 +1,36 @@
-data "template_file" "worker_repositories" {
-  template = "${file("cloud-init/repository.tpl")}"
-  count    = "${length(var.repositories)}"
+locals {
+  worker_repositories = [for i in range(length(var.repositories)) : templatefile("cloud-init/repository.tpl",
+    {
+      repository_url  = "${element(values(var.repositories), i)}",
+      repository_name = "${element(keys(var.repositories), i)}"
+  })]
 
-  vars {
-    repository_url  = "${element(values(var.repositories), count.index)}"
-    repository_name = "${element(keys(var.repositories), count.index)}"
-  }
-}
-
-data "template_file" "worker_register_scc" {
-  template = "${file("cloud-init/register-scc.tpl")}"
-  count    = "${var.caasp_registry_code == "" ? 0 : 1}"
-
-  vars {
+  worker_register_scc = [for c in(var.caasp_registry_code == "" ? [] : [1]) : templatefile("cloud-init/register-scc.tpl", {
     caasp_registry_code = "${var.caasp_registry_code}"
-  }
-}
+  })]
 
-data "template_file" "worker_register_rmt" {
-  template = "${file("cloud-init/register-rmt.tpl")}"
-  count    = "${var.rmt_server_name == "" ? 0 : 1}"
-
-  vars {
+  worker_register_rmt = [for c in(var.rmt_server_name == "" ? [] : [1]) : templatefile("cloud-init/register-rmt.tpl", {
     rmt_server_name = "${var.rmt_server_name}"
-  }
-}
+  })]
 
-data "template_file" "worker_commands" {
-  template = "${file("cloud-init/commands.tpl")}"
-  count    = "${join("", var.packages) == "" ? 0 : 1}"
-
-  vars {
+  worker_commands = [for c in(var.packages == "" ? [] : [1]) : templatefile("cloud-init/commands.tpl", {
     packages = "${join(", ", var.packages)}"
-  }
-}
+  })]
 
-data "template_file" "worker_cloud_init_metadata" {
-  template = "${file("cloud-init/metadata.tpl")}"
-
-  vars {
+  worker_cloud_init_metadata = templatefile("cloud-init/metadata.tpl", {
     network_config = "${base64gzip(data.local_file.network_cloud_init.content)}"
     instance_id    = "${var.stack_name}-worker"
-  }
-}
+  })
 
-data "template_file" "worker_cloud_init_userdata" {
-  template = "${file("cloud-init/common.tpl")}"
-
-  vars {
+  worker_cloud_init_userdata = templatefile("cloud-init/common.tpl", {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
-    register_scc    = "${join("\n", data.template_file.worker_register_scc.*.rendered)}"
-    register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
-    commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
-  }
+    repositories    = "${join("\n", local.worker_repositories.*)}"
+    register_scc    = "${join("\n", local.worker_register_scc.*)}"
+    register_rmt    = "${join("\n", local.worker_register_rmt.*)}"
+    commands        = "${join("\n", local.worker_commands.*)}"
+    username        = "${var.username}"
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
+  })
 }
 
 resource "vsphere_virtual_machine" "worker" {
@@ -77,11 +53,11 @@ resource "vsphere_virtual_machine" "worker" {
     size  = "${var.worker_disk_size}"
   }
 
-  extra_config {
-    "guestinfo.metadata"          = "${base64gzip(data.template_file.worker_cloud_init_metadata.rendered)}"
+  extra_config = {
+    "guestinfo.metadata"          = "${base64gzip(local.worker_cloud_init_metadata)}"
     "guestinfo.metadata.encoding" = "gzip+base64"
 
-    "guestinfo.userdata"          = "${base64gzip(data.template_file.worker_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata"          = "${base64gzip(local.worker_cloud_init_userdata)}"
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 

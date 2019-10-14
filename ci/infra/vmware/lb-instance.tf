@@ -31,86 +31,64 @@ variable "lb_repositories" {
   }
 }
 
-data "template_file" "lb_repositories_template" {
-  count    = "${length(var.lb_repositories)}"
-  template = "${file("cloud-init/repository.tpl")}"
+locals {
+  lb_repositories_template = [for i in range(length(var.lb_repositories)) : templatefile("cloud-init/repository.tpl",
+    {
+      repository_url  = "${element(values(var.lb_repositories), i)}",
+      repository_name = "${element(keys(var.lb_repositories), i)}"
+  })]
 
-  vars {
-    repository_url  = "${element(values(var.lb_repositories), count.index)}"
-    repository_name = "${element(keys(var.lb_repositories), count.index)}"
-  }
-}
+  # TODO: 
+  # depends_on = [
+  #   "vsphere_virtual_machine.master",
+  # ]
+  haproxy_apiserver_backends_master = <<EOT
+    %{for i in range(var.masters)~}
+    %{for fqdn in vsphere_virtual_machine.master.*.name~}
+    %{for ip in vsphere_virtual_machine.master.*.default_ip_address~}
+    server ${fqdn} ${ip}:6443
+    %{endfor~}
+    %{endfor~}
+    %{endfor~}
+  EOT
 
-data "template_file" "haproxy_apiserver_backends_master" {
-  count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:6443\n"
+  haproxy_gangway_backends_master = <<EOT
+    %{for i in range(var.masters)~}
+    %{for fqdn in vsphere_virtual_machine.master.*.name~}
+    %{for ip in vsphere_virtual_machine.master.*.default_ip_address~}
+    server ${fqdn} ${ip}:32001
+    %{endfor~}
+    %{endfor~}
+    %{endfor~}
+  EOT
 
-  vars = {
-    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
-    ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
-  }
+  haproxy_dex_backends_master = <<EOT
+    %{for i in range(var.masters)~}
+    %{for fqdn in vsphere_virtual_machine.master.*.name~}
+    %{for ip in vsphere_virtual_machine.master.*.default_ip_address~}
+    server ${fqdn} ${ip}:32000
+    %{endfor~}
+    %{endfor~}
+    %{endfor~}
+  EOT
 
-  depends_on = [
-    "vsphere_virtual_machine.master",
-  ]
-}
-
-data "template_file" "haproxy_gangway_backends_master" {
-  count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:32001\n"
-
-  vars = {
-    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
-    ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
-  }
-
-  depends_on = [
-    "vsphere_virtual_machine.master",
-  ]
-}
-
-data "template_file" "haproxy_dex_backends_master" {
-  count    = "${var.masters}"
-  template = "server $${fqdn} $${ip}:32000\n"
-
-  vars = {
-    fqdn = "${element(vsphere_virtual_machine.master.*.name, count.index)}"
-    ip   = "${element(vsphere_virtual_machine.master.*.default_ip_address, count.index)}"
-  }
-
-  depends_on = [
-    "vsphere_virtual_machine.master",
-  ]
-}
-
-data "template_file" "lb_cloud_init_metadata" {
-  template = "${file("cloud-init/metadata.tpl")}"
-
-  vars {
+  lb_cloud_init_metadata = templatefile("cloud-init/metadata.tpl", {
     network_config = "${base64gzip(data.local_file.network_cloud_init.content)}"
     instance_id    = "${var.stack_name}-lb"
-  }
-}
+  })
 
-data "template_file" "lb_haproxy_cfg" {
-  template = "${file("cloud-init/haproxy.cfg.tpl")}"
+  lb_haproxy_cfg = templatefile("cloud-init/haproxy.cfg.tpl", {
+    apiserver_backends = "${join("  ", local.haproxy_apiserver_backends_master.*)}"
+    gangway_backends   = "${join("  ", local.haproxy_gangway_backends_master.*)}"
+    dex_backends       = "${join("  ", local.haproxy_dex_backends_master.*)}"
+  })
 
-  vars {
-    apiserver_backends = "${join("  ", data.template_file.haproxy_apiserver_backends_master.*.rendered)}"
-    gangway_backends   = "${join("  ", data.template_file.haproxy_gangway_backends_master.*.rendered)}"
-    dex_backends       = "${join("  ", data.template_file.haproxy_dex_backends_master.*.rendered)}"
-  }
-}
-
-data "template_file" "lb_cloud_init_userdata" {
-  template = "${file("cloud-init/lb.tpl")}"
-
-  vars {
+  lb_cloud_init_userdata = templatefile("cloud-init/lb.tpl", {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.lb_repositories_template.*.rendered)}"
+    repositories    = "${join("\n", local.lb_repositories_template.*)}"
     packages        = "${join("\n", formatlist("  - %s", var.packages))}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
-  }
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
+  })
 }
 
 resource "vsphere_virtual_machine" "lb" {
@@ -133,11 +111,11 @@ resource "vsphere_virtual_machine" "lb" {
     size  = "${var.lb_disk_size}"
   }
 
-  extra_config {
-    "guestinfo.metadata"          = "${base64gzip(data.template_file.lb_cloud_init_metadata.rendered)}"
+  extra_config = {
+    "guestinfo.metadata"          = "${base64gzip(local.lb_cloud_init_metadata)}"
     "guestinfo.metadata.encoding" = "gzip+base64"
 
-    "guestinfo.userdata"          = "${base64gzip(data.template_file.lb_cloud_init_userdata.rendered)}"
+    "guestinfo.userdata"          = "${base64gzip(local.lb_cloud_init_userdata)}"
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
@@ -184,7 +162,7 @@ resource "null_resource" "lb_push_haproxy_cfg" {
   }
 
   provisioner "file" {
-    content     = "${data.template_file.lb_haproxy_cfg.rendered}"
+    content     = "${local.lb_haproxy_cfg}"
     destination = "/tmp/haproxy.cfg"
   }
 
