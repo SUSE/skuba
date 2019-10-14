@@ -4,6 +4,8 @@ import time
 
 import pytest
 
+from tests.utils import wait
+
 logger = logging.getLogger("testrunner")
 
 
@@ -13,7 +15,14 @@ def test_cillium(deployment, kubectl):
 
     logger.info("Deploy deathstar")
     kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.5/examples/minikube/http-sw-app.yaml")
-    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=3m")
+
+    # FIXME: This check should be only get the star wars application's pods
+    wait(kubectl.run_kubectl,
+         "wait --for=condition=ready pods --all --timeout=0",
+         wait_delay=30,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180)
 
     # FIXME: this hardcoded wait should be replaces with a (cilum?) condition
     time.sleep(100)

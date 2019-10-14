@@ -1,3 +1,4 @@
+import json
 import pytest
 
 import platforms
@@ -38,6 +39,7 @@ def provision(request, platform):
 
 @pytest.fixture
 def bootstrap(request, provision, skuba):
+
     if request.config.getoption("skip_setup") in ['bootstrapped', 'deployed']:
         return
 
@@ -45,12 +47,25 @@ def bootstrap(request, provision, skuba):
     skuba.node_bootstrap()
 
 
+def check_system_pods_ready(kubectl):
+    pods = json.loads(kubectl.run_kubectl('get pods --namespace=kube-system -o json'))['items']
+    for pod in pods:
+        pod_status = pod['status']['phase']
+        pod_name   = pod['metadata']['name']
+        assert pod_status in ['Running', 'Completed'], f'Pod {pod_name} status {pod_status} != Running or Completed'
+
 @pytest.fixture
 def deployment(request, bootstrap, skuba, kubectl):
     if request.config.getoption("skip_setup") != 'deployed':
         skuba.join_nodes()
 
-    wait(kubectl.run_kubectl, 'wait --timeout=5m --for=condition=Ready pods --all --namespace=kube-system', wait_delay=60, wait_timeout=300, wait_backoff=30, wait_retries=5, wait_allow=(RuntimeError))
+    wait(check_system_pods_ready,
+         kubectl,
+         wait_delay=60,
+         wait_timeout=10,
+         wait_backoff=60,
+         wait_elapsed=60*30,
+         wait_allow=(AssertionError))
 
 
 @pytest.fixture
