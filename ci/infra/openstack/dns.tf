@@ -9,7 +9,7 @@ resource "openstack_dns_zone_v2" "ag" {
 
 resource "openstack_dns_recordset_v2" "master" {
   count       = "${var.dnsentry ? "${var.masters}" : 0}"
-  zone_id     = "${openstack_dns_zone_v2.ag.id}"
+  zone_id     = "${openstack_dns_zone_v2.ag[1].id}"
   name        = "${format("%v.%v.", "${element(openstack_compute_instance_v2.master.*.name, count.index)}", "${var.dnsdomain}")}"
   description = "master nodes A recordset"
   ttl         = 5

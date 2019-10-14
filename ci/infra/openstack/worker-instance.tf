@@ -1,62 +1,41 @@
-data "template_file" "worker_repositories" {
-  template = "${file("cloud-init/repository.tpl")}"
-  count    = "${length(var.repositories)}"
+locals {
+  worker_repositories = [for i in range(length(var.repositories)) : templatefile("cloud-init/repository.tpl",
+    {
+      repository_url  = "${element(values(var.repositories), i)}",
+      repository_name = "${element(keys(var.repositories), i)}"
+  })]
 
-  vars {
-    repository_url  = "${element(values(var.repositories), count.index)}"
-    repository_name = "${element(keys(var.repositories), count.index)}"
-  }
-}
-
-data "template_file" "worker_register_scc" {
-  template = "${file("cloud-init/register-scc.tpl")}"
-  count    = "${var.caasp_registry_code == "" ? 0 : 1}"
-
-  vars {
+  worker_register_scc = [for c in(var.caasp_registry_code == "" ? [] : [1]) : templatefile("cloud-init/register-scc.tpl", {
     caasp_registry_code = "${var.caasp_registry_code}"
-  }
-}
+  })]
 
-data "template_file" "worker_register_rmt" {
-  template = "${file("cloud-init/register-rmt.tpl")}"
-  count    = "${var.rmt_server_name == "" ? 0 : 1}"
-
-  vars {
+  worker_register_rmt = [for c in(var.rmt_server_name == "" ? [] : [1]) : templatefile("cloud-init/register-rmt.tpl", {
     rmt_server_name = "${var.rmt_server_name}"
-  }
-}
+  })]
 
-data "template_file" "worker_commands" {
-  template = "${file("cloud-init/commands.tpl")}"
-  count    = "${join("", var.packages) == "" ? 0 : 1}"
-
-  vars {
+  worker_commands = [for c in(var.packages == "" ? [] : [1]) : templatefile("cloud-init/commands.tpl", {
     packages = "${join(", ", var.packages)}"
-  }
-}
+  })]
 
-data "template_file" "worker-cloud-init" {
-  template = "${file("cloud-init/common.tpl")}"
-
-  vars {
+  worker_cloud_init = templatefile("cloud-init/common.tpl", {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
-    register_scc    = "${join("\n", data.template_file.worker_register_scc.*.rendered)}"
-    register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
-    commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
+    repositories    = "${join("\n", local.worker_repositories.*)}"
+    register_scc    = "${join("\n", local.worker_register_scc.*)}"
+    register_rmt    = "${join("\n", local.worker_register_rmt.*)}"
+    commands        = "${join("\n", local.worker_commands.*)}"
     username        = "${var.username}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
-  }
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
+  })
 }
 
 resource "openstack_blockstorage_volume_v2" "worker_vol" {
-  count = "${var.workers_vol_enabled ? "${var.workers}" : 0 }"
+  count = "${var.workers_vol_enabled ? "${var.workers}" : 0}"
   size  = "${var.workers_vol_size}"
   name  = "vol_${element(openstack_compute_instance_v2.worker.*.name, count.index)}"
 }
 
 resource "openstack_compute_volume_attach_v2" "worker_vol_attach" {
-  count       = "${var.workers_vol_enabled ? "${var.workers}" : 0 }"
+  count       = "${var.workers_vol_enabled ? "${var.workers}" : 0}"
   instance_id = "${element(openstack_compute_instance_v2.worker.*.id, count.index)}"
   volume_id   = "${element(openstack_blockstorage_volume_v2.worker_vol.*.id, count.index)}"
 }
@@ -82,7 +61,7 @@ resource "openstack_compute_instance_v2" "worker" {
     "${openstack_networking_secgroup_v2.common.name}",
   ]
 
-  user_data = "${data.template_file.worker-cloud-init.rendered}"
+  user_data = "${local.worker_cloud_init}"
 }
 
 resource "openstack_networking_floatingip_v2" "worker_ext" {

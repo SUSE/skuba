@@ -1,52 +1,31 @@
-data "template_file" "master_repositories" {
-  template = "${file("cloud-init/repository.tpl")}"
-  count    = "${length(var.repositories)}"
+locals {
+  master_repositories = [for i in range(length(var.repositories)) : templatefile("cloud-init/repository.tpl",
+    {
+      repository_url  = "${element(values(var.repositories), i)}",
+      repository_name = "${element(keys(var.repositories), i)}"
+  })]
 
-  vars {
-    repository_url  = "${element(values(var.repositories), count.index)}"
-    repository_name = "${element(keys(var.repositories), count.index)}"
-  }
-}
-
-data "template_file" "master_register_scc" {
-  template = "${file("cloud-init/register-scc.tpl")}"
-  count    = "${var.caasp_registry_code == "" ? 0 : 1}"
-
-  vars {
+  master_register_scc = [for c in(var.caasp_registry_code == "" ? [] : [1]) : templatefile("cloud-init/register-scc.tpl", {
     caasp_registry_code = "${var.caasp_registry_code}"
-  }
-}
+  })]
 
-data "template_file" "master_register_rmt" {
-  template = "${file("cloud-init/register-rmt.tpl")}"
-  count    = "${var.rmt_server_name == "" ? 0 : 1}"
-
-  vars {
+  master_register_rmt = [for c in(var.rmt_server_name == "" ? [] : [1]) : templatefile("cloud-init/register-rmt.tpl", {
     rmt_server_name = "${var.rmt_server_name}"
-  }
-}
+  })]
 
-data "template_file" "master_commands" {
-  template = "${file("cloud-init/commands.tpl")}"
-  count    = "${join("", var.packages) == "" ? 0 : 1}"
-
-  vars {
+  master_commands = [for _ in(join("", var.packages) == "" ? [] : [1]) : templatefile("cloud-init/commands.tpl", {
     packages = "${join(", ", var.packages)}"
-  }
-}
+  })]
 
-data "template_file" "master-cloud-init" {
-  template = "${file("cloud-init/common.tpl")}"
-
-  vars {
+  master_cloud_init = templatefile("cloud-init/common.tpl", {
     authorized_keys = "${join("\n", formatlist("  - %s", var.authorized_keys))}"
-    repositories    = "${join("\n", data.template_file.master_repositories.*.rendered)}"
-    register_scc    = "${join("\n", data.template_file.master_register_scc.*.rendered)}"
-    register_rmt    = "${join("\n", data.template_file.master_register_rmt.*.rendered)}"
-    commands        = "${join("\n", data.template_file.master_commands.*.rendered)}"
+    repositories    = "${join("\n", local.master_repositories.*)}"
+    register_scc    = "${join("\n", local.master_register_scc.*)}"
+    register_rmt    = "${join("\n", local.master_register_rmt.*)}"
+    commands        = "${join("\n", local.master_commands.*)}"
     username        = "${var.username}"
-    ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
-  }
+    ntp_servers     = "${join("\n", formatlist("    - %s", var.ntp_servers))}"
+  })
 }
 
 resource "openstack_compute_instance_v2" "master" {
@@ -71,7 +50,7 @@ resource "openstack_compute_instance_v2" "master" {
     "${openstack_networking_secgroup_v2.master_nodes.name}",
   ]
 
-  user_data = "${data.template_file.master-cloud-init.rendered}"
+  user_data = "${local.master_cloud_init}"
 }
 
 resource "openstack_networking_floatingip_v2" "master_ext" {

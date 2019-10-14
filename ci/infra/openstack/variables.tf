@@ -55,8 +55,9 @@ variable "workers" {
 }
 
 variable "workers_vol_enabled" {
-  default     = 0
+  default     = false
   description = "Attach persistent volumes to workers"
+  type        = bool
 }
 
 variable "workers_vol_size" {
@@ -70,8 +71,9 @@ variable "dnsdomain" {
 }
 
 variable "dnsentry" {
-  default     = 0
+  default     = false
   description = "DNS Entry"
+  type        = bool
 }
 
 variable "stack_name" {
@@ -110,6 +112,11 @@ variable "packages" {
 variable "username" {
   default     = "sles"
   description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
+}
+
+variable "password" {
+  default     = "sles"
+  description = "Default password for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
 variable "caasp_registry_code" {
