@@ -33,5 +33,19 @@ aws_secret_key = "ORd..."
 # SUSE Repository Mirroring Server Name (FQDN):
 #rmt_server_name = "rmt.example.com"
 
-iam_profile_master = "caasp-k8s-master-vm-profile"
-iam_profile_worker = "caasp-k8s-worker-vm-profile"
+# List of VPC IDs to join via VPC peer link
+#peer_vpc_ids = ["vpc-id1", "vpc-id2"]
+
+# Name of the IAM profile to associate to control plane nodes.
+# Leave empty to have terraform create one.
+# This is required to have AWS CPI support working properly.
+#
+# Note well: you must  have the right set of permissions.
+# iam_profile_master = "caasp-k8s-master-vm-profile"
+
+# Name of the IAM profile to associate to worker nodes
+# Leave empty to have terraform create one.
+# This is required to have AWS CPI support working properly.
+#
+# Note well: you must  have the right set of permissions.
+#iam_profile_worker = "caasp-k8s-worker-vm-profile"
