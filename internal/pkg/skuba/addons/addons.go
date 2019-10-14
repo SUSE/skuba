@@ -191,7 +191,7 @@ func (addon Addon) HasToBeApplied(addonConfiguration AddonConfiguration, skubaCo
 		return true, nil
 	}
 	addonVersion := kubernetes.AddonVersionForClusterVersion(addon.addon, addonConfiguration.ClusterVersion)
-	return !addonVersionLower(addonVersion, currentAddonVersion), nil
+	return addonVersionLower(currentAddonVersion, addonVersion), nil
 }
 
 func (addon Addon) needsRender(applyBehavior ApplyBehavior) bool {
@@ -260,12 +260,12 @@ func (addon Addon) Apply(addonConfiguration AddonConfiguration, skubaConfigurati
 	return updateSkubaConfigMapWithAddonVersion(addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
 
-func addonVersionLower(version1 *kubernetes.AddonVersion, version2 *kubernetes.AddonVersion) bool {
+func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.AddonVersion) bool {
 	// If we don't have a version to compare to, assume it's not lower
-	if version2 == nil {
+	if current == nil {
 		return false
 	}
-	return version1.ManifestVersion < version2.ManifestVersion
+	return current.ManifestVersion < updated.ManifestVersion
 }
 
 func updateSkubaConfigMapWithAddonVersion(addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {
