@@ -67,7 +67,9 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 		fmt.Printf("[remove-node] removing worker node %s (drain timeout: %s)\n", targetName, drainTimeout.String())
 	}
 
-	kubernetes.DrainNode(node, drainTimeout)
+	if err := kubernetes.DrainNode(client, node, drainTimeout); err != nil {
+		return errors.Wrap(err, "[remove-node] could not drain node")
+	}
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
