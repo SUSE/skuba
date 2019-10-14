@@ -25,6 +25,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	"github.com/pkg/errors"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 )
 
 // Apply implements the `skuba addon upgrade apply` command.
@@ -63,11 +64,17 @@ func Apply() error {
 	}
 
 	if addon.HasAddonUpdate(updatedAddons) {
+		var controlPlane string
+		if controlPlane, _, err = kubeadmutil.ParseHostPort(clusterConfiguration.ControlPlaneEndpoint); err != nil {
+			return errors.Wrap(err, "[apply] Failed to get control plane host")
+		}
+
 		addonConfiguration := addons.AddonConfiguration{
 			ClusterVersion: currentClusterVersion,
-			ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
+			ControlPlane:   controlPlane,
 			ClusterName:    clusterConfiguration.ClusterName,
 		}
+
 		if err := addons.DeployAddons(addonConfiguration, addons.AlwaysRender); err != nil {
 			return errors.Wrap(err, "[apply] Failed to deploy addons")
 		}

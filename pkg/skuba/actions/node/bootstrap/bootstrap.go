@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
@@ -73,9 +74,15 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	if err != nil {
 		return errors.Wrapf(err, "could not parse semantic version: %s", initConfiguration.KubernetesVersion)
 	}
+
+	var controlPlane string
+	if controlPlane, _, err = kubeadmutil.ParseHostPort(initConfiguration.ControlPlaneEndpoint); err != nil {
+		return errors.Wrap(err, "[bootstrap] Failed to get control plane host")
+	}
+
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: versionToDeploy,
-		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
+		ControlPlane:   controlPlane,
 		ClusterName:    initConfiguration.ClusterName,
 	}
 	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
