@@ -1,8 +1,8 @@
 import pytest
 from tests.utils import wait
 
+@pytest.mark.run(order=-1)
 def test_reboot(deployment, platform):
-
     try:
         platform.ssh_run("worker", 0, "sudo reboot &")
     except Exception:

@@ -10,7 +10,6 @@ logger = logging.getLogger('testrunner')
 
 
 class Skuba:
-
     def __init__(self, conf, platform):
         self.conf = conf
         self.binpath = self.conf.skuba.binpath
