@@ -28,8 +28,7 @@
     },
     "packages": [
         "kernel-default",
-        "-kernel-default-base",
-        "ca-certificates-suse"
+        "-kernel-default-base"
     ],
     "authorized_keys": [],
     "ntp_servers": [

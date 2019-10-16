@@ -6,6 +6,7 @@
 - [Design](#design)
 - [Configuration](#configuration-parameters)
   - [Work Environment](#work-environment)
+  - [Packages](#packages)
   - [Platform](#platform)
     - [Terraform](#terraform)
     - [Openstack](#openstack)
@@ -26,6 +27,8 @@
 - [Examples](#examples)
   - [Create K8s Cluster](#create-k8s-cluster)
   - [Collect logs](#collect-logs)
+  - [Install using registration code](#install-using-registration-code)
+  - [Install packages from mirror](#install-packages-from-mirror)
 
 ## Summary
 
@@ -111,12 +114,30 @@ There are some arguments that are currently at the top level of the configuratio
 - nodeuser: the user name used to login into the platform nodes. Optional. 
 - ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 
+#### Packages
+The `packages` section configures the source of the packages to be installed in the nodes:
+
+* additional_pkgs: list with additional packages to be installed in the nodes. For example, for installing SUSE certificates for self-signed packages in development environments:
+```
+packages:
+  additional_pkgs:
+  - "ca-certificates-suse"
+```
+* additional_repos: repositories to be added to the nodes. For example, for installing maintenance updates. It takes the form of a map:
+```
+packages:
+  additional_repos:
+    repo1: url/to/repo1
+    repo2: url/to/repo2
+```
+* mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
+* registry_code: code use for registering CaaSP product. If specified, the registries from the tfvars are ignored. Additional repositories can still be defined using the `maintenance` configuration parameter.
+
 #### Terraform
 
 General setting for terraform-based platforms such as [Openstack](#openstack) and [VMware](#vmware). 
 
 * internal_net: name of the network used when provisioning the platform. Defaults to `stack_name`
-* mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. If not specified, the `username` is used.
@@ -505,3 +526,32 @@ Logs that are currently being collected are the cloud-init logs for each of the 
     /var/log/cloud-init.log
 
 These are stored each in their own folder named `path/to/workspace/testrunner_logs/{master|worker}_ip_address/`
+
+### Install using registration code
+
+1. Configure the registration code to be passed to nodes:
+
+`vars.yaml`
+```
+packages:
+  registry_code: "<registry code>"
+```
+2. Configure `testrunner` to use a `skuba` binary compatible with the version installed in the nodes:
+
+`vars.yaml`
+```
+skuba:
+  bin_path: "/path/to/skuba"
+```
+
+### Install packages from mirror
+
+Specify the mirror an enable the installation of certifates package:
+
+`vars.yaml`
+```
+packages:
+  mirror: "my.mirror.site"
+  certificates: "certificates-package"
+```
+

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 import hcl
 
@@ -129,11 +130,25 @@ class Terraform(Platform):
                 else:
                     tfvars[k] = v
 
+        # if registry code specified, repositories are not needed
+        if self.conf.packages.registry_code:
+            tfvars["caasp_registry_code"] = self.conf.packages.registry_code
+            tfvars["repositories"] = {}
+
+        repos = tfvars.get("repositories", {})
+        if self.conf.packages.additional_repos:
+           for name, url in self.conf.packages.additional_repos.items():
+               repos[name] = url
+
         # Update mirror urls
-        repos = tfvars.get("repositories")
-        if self.conf.terraform.mirror and repos is not None:
+        if self.conf.packages.mirror and repos:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
+                url_parsed = urlparse(url)
+                url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
+                tfvars["repositories"][name] = url_updated.geturl()
+	
+        if self.conf.packages.additional_pkgs:
+            tfvars["packages"].extend(self.conf.packages.additional_pkgs)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
