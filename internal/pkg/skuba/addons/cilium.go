@@ -60,20 +60,15 @@ func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaC
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if cilium secret exists")
 	}
-	ciliumConfigMapExists, err := cni.CiliumConfigMapExists(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if cilium config map exists")
-	}
 	if !ciliumSecretExists {
 		if err := cni.CreateCiliumSecret(client); err != nil {
 			return err
 		}
 	}
-	if !ciliumConfigMapExists {
-		if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
-			return err
-		}
+	if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
+		return err
 	}
+
 	return nil
 }
 

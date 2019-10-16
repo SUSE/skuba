@@ -152,11 +152,6 @@ func CiliumUpdateConfigMap(client clientset.Interface) error {
 	return annotateCiliumDaemonsetWithCurrentTimestamp(client)
 }
 
-func CiliumConfigMapExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ciliumConfigMapName, metav1.GetOptions{})
-	return kubernetes.DoesResourceExistWithError(err)
-}
-
 func annotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) error {
 	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
 	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
