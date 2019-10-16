@@ -404,3 +404,78 @@
                 suppress-automatic-scm-triggering: true
                 basedir: skuba
         script-path: skuba/ci/jenkins/pipelines/skuba-e2e-nightly.Jenkinsfile
+
+- job-template:
+    name: '{name}-test_remove_master'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
+    triggers:
+        - timed: 'H H(3-5) * * *'
+    parameters:
+        - string:
+            name: BRANCH
+            default: '{branch}'
+            description: The branch to checkout
+        - string:
+              name: PLATFORM
+              default: '{platform}'
+              description: The platform to perform the tests on
+        - string:
+            name: E2E_MAKE_TARGET_NAME
+            default: 'test_remove_master'
+            description: The make target to run (only e2e tests)
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://github.com/{repo-owner}/{repo-name}.git'
+                credentials-id: '{repo-credentials}'
+                branches:
+                    - '{branch}'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+                basedir: skuba
+        script-path: skuba/ci/jenkins/pipelines/skuba-e2e-nightly.Jenkinsfile
+
+- job-template:
+    name: '{name}-test_remove_worker'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
+    triggers:
+        - timed: 'H H(3-5) * * *'
+    parameters:
+        - string:
+            name: BRANCH
+            default: '{branch}'
+            description: The branch to checkout
+        - string:
+              name: PLATFORM
+              default: '{platform}'
+              description: The platform to perform the tests on
+        - string:
+            name: E2E_MAKE_TARGET_NAME
+            default: 'test_remove_worker'
+            description: The make target to run (only e2e tests)
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://github.com/{repo-owner}/{repo-name}.git'
+                credentials-id: '{repo-credentials}'
+                branches:
+                    - '{branch}'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+                basedir: skuba
+        script-path: skuba/ci/jenkins/pipelines/skuba-e2e-nightly.Jenkinsfile
+
