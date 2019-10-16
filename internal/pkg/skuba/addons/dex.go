@@ -90,7 +90,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: https://{{.ControlPlane}}:32000
+    issuer: https://{{.ControlPlaneHost}}:32000
 
     storage:
       type: kubernetes
@@ -141,7 +141,7 @@ data:
     staticClients:
     - id: oidc
       redirectURIs:
-      - 'https://{{.ControlPlane}}:32001/callback'
+      - 'https://{{.ControlPlaneHost}}:32001/callback'
       name: 'OIDC'
       secret: {{.GangwayClientSecret}}
       trustedPeers:

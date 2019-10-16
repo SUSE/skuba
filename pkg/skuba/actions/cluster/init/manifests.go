@@ -33,9 +33,9 @@ apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 apiServer:
   certSANs:
-    - {{.ControlPlane}}
+    - {{.ControlPlaneHost}}
   extraArgs:
-    oidc-issuer-url: https://{{.ControlPlane}}:32000
+    oidc-issuer-url: https://{{.ControlPlaneHost}}:32000
     oidc-client-id: oidc
     oidc-ca-file: /etc/kubernetes/pki/ca.crt
     oidc-username-claim: email
@@ -48,7 +48,7 @@ controllerManager:
     allocate-node-cidrs: "false"
 {{- end }}
 clusterName: {{.ClusterName}}
-controlPlaneEndpoint: {{.ControlPlane}}:6443
+controlPlaneEndpoint: {{.ControlPlaneHostAndPort}}
 dns:
   imageRepository: {{.ImageRepository}}
   imageTag: {{.CoreDNSImageTag}}
@@ -77,7 +77,7 @@ CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --defaul
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: {{.ControlPlane}}:6443
+    apiServerEndpoint: {{.ControlPlaneHostAndPort}}
     unsafeSkipCAVerification: true
 {{- if eq .CloudProvider "aws" }}
 nodeRegistration:
@@ -93,7 +93,7 @@ controlPlane:
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
-    apiServerEndpoint: {{.ControlPlane}}:6443
+    apiServerEndpoint: {{.ControlPlaneHostAndPort}}
     unsafeSkipCAVerification: true
 {{- if eq .CloudProvider "aws" }}
 nodeRegistration:
