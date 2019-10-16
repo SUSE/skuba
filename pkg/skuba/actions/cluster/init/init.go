@@ -28,6 +28,7 @@ import (
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -44,6 +45,25 @@ type InitConfiguration struct {
 	CoreDNSImageTag   string
 	CloudProvider     string
 	StrictCapDefaults bool
+}
+
+func (initConfiguration InitConfiguration) ControlPlaneHost() string {
+	controlPlane, _, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
+	if err != nil {
+		return ""
+	}
+	return controlPlane
+}
+
+func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
+	controlPlaneHost, controlPlanePort, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
+	if err != nil {
+		return ""
+	}
+	if controlPlanePort == "" {
+		controlPlanePort = "6443"
+	}
+	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
 }
 
 func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {

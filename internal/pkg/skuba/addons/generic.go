@@ -18,7 +18,10 @@
 package addons
 
 import (
+	"fmt"
+
 	versionutil "k8s.io/apimachinery/pkg/util/version"
+	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 )
 
 // KubernetesVersionAtLeast will panic if the given version is not a semantic
@@ -34,4 +37,23 @@ func (renderContext renderContext) ClusterName() string {
 
 func (renderContext renderContext) ControlPlane() string {
 	return renderContext.config.ControlPlane
+}
+
+func (renderContext renderContext) ControlPlaneHost() string {
+	controlPlaneHost, _, err := kubeadmutil.ParseHostPort(renderContext.ControlPlane())
+	if err != nil {
+		return ""
+	}
+	return controlPlaneHost
+}
+
+func (renderContext renderContext) ControlPlaneHostAndPort() string {
+	controlPlaneHost, controlPlanePort, err := kubeadmutil.ParseHostPort(renderContext.ControlPlane())
+	if err != nil {
+		return ""
+	}
+	if controlPlanePort == "" {
+		controlPlanePort = "6443"
+	}
+	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
 }
