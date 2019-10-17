@@ -1,5 +1,5 @@
 - job-template:
-    name: 'validator-join-nightly'
+    name: '{name}-validator-join-nightly'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
