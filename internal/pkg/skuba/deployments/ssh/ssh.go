@@ -28,7 +28,10 @@ import (
 	"path"
 	"strings"
 	"text/template"
+	"time"
 
+	"github.com/briandowns/spinner"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -169,10 +172,18 @@ func (t *Target) internalSshWithStdin(silent bool, stdin string, command string,
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
 	}
+
+	spin := spinner.New(spinner.CharSets[36], 1000*time.Millisecond)
+	// Do not user spinner if user want to redirect to a file
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		spin.Start()
+		defer spin.Stop()
+	}
 	stdoutChan := make(chan string)
 	stderrChan := make(chan string)
-	go readerStreamer(stdoutReader, stdoutChan, "stdout", silent)
-	go readerStreamer(stderrReader, stderrChan, "stderr", silent)
+
+	go readerStreamer(stdoutReader, stdoutChan, "stdout", silent, spin)
+	go readerStreamer(stderrReader, stderrChan, "stderr", silent, spin)
 	if err := session.Wait(); err != nil {
 		return "", "", err
 	}
@@ -181,13 +192,20 @@ func (t *Target) internalSshWithStdin(silent bool, stdin string, command string,
 	return stdout, stderr, nil
 }
 
-func readerStreamer(reader io.Reader, outputChan chan<- string, description string, silent bool) {
+func readerStreamer(reader io.Reader, outputChan chan<- string, description string, silent bool, spin *spinner.Spinner) {
 	result := bytes.Buffer{}
 	scanner := bufio.NewScanner(reader)
+	isTerminal := isatty.IsTerminal(os.Stdout.Fd())
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
 		if !silent {
+			if isTerminal {
+				spin.Stop()
+			}
 			klog.V(1).Infof("%s | %s", description, scanner.Text())
+			if isTerminal {
+				spin.Start()
+			}
 		}
 	}
 	outputChan <- result.String()

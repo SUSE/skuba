@@ -1,7 +1,9 @@
 module github.com/SUSE/skuba
 
 require (
+	github.com/briandowns/spinner v1.7.0
 	github.com/coreos/go-oidc v0.0.0-20180117170138-065b426bd416
+	github.com/mattn/go-isatty v0.0.8
 	github.com/pkg/errors v0.8.0
 	github.com/spf13/cobra v0.0.0-20180319062004-c439c4fa0937
 	github.com/spf13/pflag v1.0.1
