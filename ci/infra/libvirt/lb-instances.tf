@@ -146,21 +146,3 @@ resource "null_resource" "lb_push_haproxy_cfg" {
     ]
   }
 }
-
-resource "null_resource" "lb_reboot" {
-  depends_on = ["null_resource.lb_wait_cloudinit"]
-  count      = "${var.lbs}"
-
-  provisioner "local-exec" {
-    environment = {
-      user = "${var.username}"
-      host = "${element(libvirt_domain.lb.*.network_interface.0.addresses.0, count.index)}"
-    }
-
-    command = <<EOT
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
-# wait for ssh ready after reboot
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
-EOT
-  }
-}
