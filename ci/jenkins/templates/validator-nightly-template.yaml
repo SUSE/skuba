@@ -1,0 +1,27 @@
+- job-template:
+    name: 'validator-join-nightly'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
+    triggers:
+        - timed: 'H H(3-5) * * *'
+    parameters:
+        - string:
+            name: VALIDATOR_ARGS
+            default: '-p {platform} -t join -n 3:2 -c'
+            description: The arguments for validator_caasp
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://gitlab.suse.de/mkravec/scripts.git'
+                branches:
+                    - 'master'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+                basedir: scripts
+        script-path: scripts/jenkins/validator_caasp-nightly.Jenkinsfile

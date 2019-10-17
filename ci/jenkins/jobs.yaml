@@ -74,6 +74,12 @@
         - '{name}-test_addon_upgrade_plan-nightly'
         - '{name}-test_addon_upgrade_apply-nightly'
 
+- project:
+    name: caasp-jobs/validator
+    platform: openstack
+    jobs:
+        - 'validator-join-nightly'
+
 - job:
     name: caasp-jobs/caasp-jjb
     project-type: pipeline
