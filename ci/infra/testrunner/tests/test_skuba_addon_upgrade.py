@@ -1,15 +1,18 @@
 import pytest
 import yaml
 import re
+import copy
 from io import StringIO
 
-
-def replace_skuba_config(kubectl, configmap_data):
-    new_configmap = kubectl.run_kubectl(
-        'create configmap skuba-config --from-literal {0} -o yaml --namespace kube-system --dry-run'.format(
-            configmap_data
+def create_skuba_config(kubectl, configmap_data, dry_run=False):
+    return kubectl.run_kubectl(
+        'create configmap skuba-config --from-literal {0} -o yaml --namespace kube-system {1}'.format(
+            configmap_data, '--dry-run' if dry_run else ''
         )
     )
+
+def replace_skuba_config(kubectl, configmap_data):
+    new_configmap = create_skuba_config(kubectl, configmap_data, dry_run=True)
     return kubectl.run_kubectl("replace -f -", stdin=new_configmap.encode())
 
 def get_skubaConfiguration_dict(kubectl):
@@ -20,7 +23,7 @@ def get_skubaConfiguration_dict(kubectl):
 
 def decrease_one_addon_manifest(addons_dict, skip=None):
     for addon in addons_dict:
-        if addon == skip:
+        if skip and addon in skip:
             continue
         ver = addons_dict[addon]['ManifestVersion']
         if ver > 0:
@@ -30,16 +33,20 @@ def decrease_one_addon_manifest(addons_dict, skip=None):
             )
     raise Exception("Could not decrease any addon manifest version!")
 
-def decrease_one_addon_image(addons_dict, skip=None):
-    for addon in addons_dict:
-        if addon == skip:
+def change_one_addon_image(addons_dict, new_tag, skip=None):
+    u_manif = decrease_one_addon_manifest(addons_dict, skip)
+    addons_dict[u_manif[0]]['Version'] = new_tag
+    return (u_manif[0], (new_tag, u_manif[1]), u_manif[2])
+
+def remove_one_addon(addons_dict, skip=None):
+    for addon in addons_dict.keys():
+        if skip and addon in skip:
             continue
-        cur_ver = addons_dict[addon]['Version']
-        addons_dict[addon]['Version'] = '0.0.1'
+        version = addons_dict.pop(addon)
         return (
-            addon, ('0.0.1', cur_ver), addons_dict[addon]['ManifestVersion']
+            addon, version['Version'], version['ManifestVersion']
         )
-    raise Exception("Could not decrease any addon image version!")
+    raise Exception('Could not remove any addon!')
 
 def addons_up_to_date(skuba):
     all_fine = re.compile(
@@ -52,34 +59,41 @@ def test_addon_upgrade_plan(deployment, kubectl, skuba):
     assert addons_up_to_date(skuba)
 
     skubaConf_dict = get_skubaConfiguration_dict(kubectl)
+    skubaConf_orig = copy.deepcopy(skubaConf_dict)
     addons_dict = skubaConf_dict['AddonsVersion']
 
+    rm_addon = remove_one_addon(addons_dict)
     u_manif = decrease_one_addon_manifest(addons_dict)
+    u_img = change_one_addon_image(addons_dict, 'new_tag', skip=[u_manif[0]])
 
+    u_img_msg = '{0}: {1} -> {2}'.format(u_img[0], u_img[1][0], u_img[1][1])
     u_manif_msg = '{0}: {1} -> {1} (manifest version from {2} to {3})'.format(
         u_manif[0], u_manif[1], u_manif[2][0], u_manif[2][1]
     )
+    n_addon_msg = '{0}: {1} (new addon)'.format(rm_addon[0], rm_addon[1])
 
-    out = replace_skuba_config(
+    replace_skuba_config(
         kubectl, "SkubaConfiguration='{0}'".format(yaml.dump(skubaConf_dict))
     )
-    assert out.find("configmap/skuba-config replaced") != -1
-
     out = skuba.addon_upgrade('plan')
+    replace_skuba_config(
+        kubectl, "SkubaConfiguration='{0}'".format(yaml.dump(skubaConf_orig))
+    )
+
     assert out.find(u_manif_msg) != -1
+    assert out.find(u_img_msg) != -1
+    assert out.find(n_addon_msg) != -1
+    assert addons_up_to_date(skuba)
 
 def test_addon_upgrade_apply(deployment, kubectl, skuba):
     skubaConf_dict = get_skubaConfiguration_dict(kubectl)
     addons_dict = skubaConf_dict['AddonsVersion']
 
-    decrease_one_addon_image(addons_dict)
     decrease_one_addon_manifest(addons_dict)
 
     out = replace_skuba_config(
         kubectl, "SkubaConfiguration='{0}'".format(yaml.dump(skubaConf_dict))
     )
-    assert out.find("configmap/skuba-config replaced") != -1
-
     assert not addons_up_to_date(skuba)
 
     out = skuba.addon_upgrade('apply')
