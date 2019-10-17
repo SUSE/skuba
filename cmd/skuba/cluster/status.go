@@ -18,6 +18,8 @@
 package cluster
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -32,6 +34,7 @@ func NewStatusCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cluster.Status(); err != nil {
 				klog.Errorf("unable to get cluster status: %s", err)
+				os.Exit(1)
 			}
 		},
 		Args: cobra.NoArgs,
