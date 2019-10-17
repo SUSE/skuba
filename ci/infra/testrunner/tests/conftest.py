@@ -50,7 +50,7 @@ def deployment(request, bootstrap, skuba, kubectl):
     if request.config.getoption("skip_setup") != 'deployed':
         skuba.join_nodes()
 
-    wait(kubectl.run_kubectl, 'wait --timeout=1m --for=condition=Ready pods --all --namespace=kube-system', wait_delay=60, wait_timeout=300, wait_backoff=30, wait_retries=5, wait_allow=(RuntimeError))
+    wait(kubectl.run_kubectl, 'wait --timeout=5m --for=condition=Ready pods --all --namespace=kube-system', wait_delay=60, wait_timeout=300, wait_backoff=30, wait_retries=5, wait_allow=(RuntimeError))
 
 
 @pytest.fixture
