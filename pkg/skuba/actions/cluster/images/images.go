@@ -22,8 +22,16 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
+
+// Images in this map will be skipped
+// PSP is treated as an addon so it can use the update logic, but is not actually a container
+// Uses a map for faster contains-lookup
+var skipImages map[string]bool = map[string]bool{
+	"psp": true,
+}
 
 // Print out list of images that will be pulled
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
@@ -39,11 +47,20 @@ func Images() error {
 	fmt.Printf("VERSION    IMAGE\n")
 	for _, cv := range kubernetes.AvailableVersions() {
 		for component, componentName := range components {
+			if skipImages[componentName] {
+				klog.V(1).Infof("Skipping component: %s", componentName)
+				continue
+			}
 			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, componentName,
 				kubernetes.ComponentVersionForClusterVersion(component, cv)))
 		}
 		for addonName, addonVersion := range kubernetes.Versions[cv.String()].AddonsVersion {
-			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, string(addonName),
+			sAddonName := string(addonName)
+			if skipImages[sAddonName] {
+				klog.V(1).Infof("Skipping addon: %s", sAddonName)
+				continue
+			}
+			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, string(sAddonName),
 				addonVersion.Version))
 		}
 	}
