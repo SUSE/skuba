@@ -22,6 +22,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"k8s.io/klog"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
@@ -43,6 +44,10 @@ func Images() error {
 				kubernetes.ComponentVersionForClusterVersion(component, cv)))
 		}
 		for addonName, addonVersion := range kubernetes.Versions[cv.String()].AddonsVersion {
+			if addonVersion.Version == "" {
+				klog.V(1).Infof("Skipping addon %s - empty version detected.", string(addonName))
+				continue
+			}
 			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, string(addonName),
 				addonVersion.Version))
 		}

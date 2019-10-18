@@ -93,7 +93,7 @@ var (
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 2},
 				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"1.0.0", 0},
+				PSP:     &AddonVersion{"", 0},
 			},
 		},
 		"1.15.0": KubernetesVersion{
@@ -113,7 +113,7 @@ var (
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 2},
 				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"1.0.0", 0},
+				PSP:     &AddonVersion{"", 0},
 			},
 		},
 		"1.14.1": KubernetesVersion{
@@ -133,7 +133,7 @@ var (
 				Kured:   &AddonVersion{"1.2.0", 0},
 				Dex:     &AddonVersion{"2.16.0", 2},
 				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"1.0.0", 0},
+				PSP:     &AddonVersion{"", 0},
 			},
 		},
 	}
