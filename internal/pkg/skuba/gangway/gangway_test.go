@@ -18,6 +18,7 @@
 package gangway
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -81,6 +82,8 @@ func Test_CreateOrUpdateSessionKeyToSecret(t *testing.T) {
 }
 
 func Test_CreateCert(t *testing.T) {
+	tlsTestDir := "../../../../testdata"
+
 	tests := []struct {
 		name                string
 		pkiPath             string
@@ -89,19 +92,19 @@ func Test_CreateCert(t *testing.T) {
 	}{
 		{
 			name:                "normal case",
-			pkiPath:             "testdata",
-			kubeadmInitConfPath: "testdata/kubeadm-init.conf",
+			pkiPath:             filepath.Join(tlsTestDir, "valid_cert_valid_key"),
+			kubeadmInitConfPath: filepath.Join(tlsTestDir, "kubeadm-init.conf"),
 		},
 		{
 			name:                "invalid pki path",
-			pkiPath:             "invalid-pki-path",
-			kubeadmInitConfPath: "testdata/kubeadm-init.conf",
+			pkiPath:             filepath.Join(tlsTestDir, "invalid-pki-path"),
+			kubeadmInitConfPath: filepath.Join(tlsTestDir, "kubeadm-init.conf"),
 			expectedError:       true,
 		},
 		{
 			name:                "invalid kubeadm init path",
-			pkiPath:             "testdata",
-			kubeadmInitConfPath: "testdata/invalid-kubeadm-init-conf-path.conf",
+			pkiPath:             filepath.Join(tlsTestDir, "valid_cert_valid_key"),
+			kubeadmInitConfPath: filepath.Join(tlsTestDir, "invalid-kubeadm-init-conf-path.conf"),
 			expectedError:       true,
 		},
 	}

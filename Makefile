@@ -35,7 +35,7 @@ SKUBA_LDFLAGS  = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
                            -X=$(PROJECT_PATH)/pkg/skuba.Tag=$(TAG) \
                            -X=$(PROJECT_PATH)/pkg/skuba.ClosestTag=$(CLOSEST_TAG)"
 
-SKUBA_DIRS     = cmd pkg internal test
+SKUBA_DIRS     = cmd pkg internal
 
 # go source files, ignore vendor directory
 SKUBA_SRCS     = $(shell find $(SKUBA_DIRS) -type f -name '*.go')

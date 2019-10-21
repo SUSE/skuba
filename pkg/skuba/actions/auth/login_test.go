@@ -34,6 +34,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
+var tlsTestDir = "../../../../testdata"
+
 func startServer() *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
@@ -44,7 +46,7 @@ func startServer() *httptest.Server {
 	mux.HandleFunc("/approval", approvalHandler())
 
 	srv := httptest.NewUnstartedServer(mux)
-	cert, _ := tls.LoadX509KeyPair("testdata/localhost.crt", "testdata/localhost.key")
+	cert, _ := tls.LoadX509KeyPair(filepath.Join(tlsTestDir, "valid_cert_valid_key/localhost.crt"), filepath.Join(tlsTestDir, "valid_cert_valid_key/localhost.key"))
 	srv.TLS = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
@@ -66,7 +68,7 @@ func Test_Login(t *testing.T) {
 			cfg: LoginConfig{
 				Username:    mockDefaultUsername,
 				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/localhost.crt",
+				RootCAPath:  filepath.Join(tlsTestDir, "valid_cert_valid_key/localhost.crt"),
 				ClusterName: "test-cluster-name",
 			},
 			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
@@ -204,7 +206,7 @@ func Test_Login(t *testing.T) {
 			cfg: LoginConfig{
 				Username:    mockDefaultUsername,
 				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/invalid.crt",
+				RootCAPath:  filepath.Join(tlsTestDir, "invalid_cert_valid_key/ca.crt"),
 				ClusterName: "test-cluster-name",
 			},
 			expectedError: true,
@@ -215,7 +217,7 @@ func Test_Login(t *testing.T) {
 			cfg: LoginConfig{
 				Username:    mockDefaultUsername,
 				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/nonexist.crt",
+				RootCAPath:  filepath.Join(tlsTestDir, "nonexist.crt"),
 				ClusterName: "test-cluster-name",
 			},
 			expectedError: true,
@@ -399,9 +401,9 @@ func Test_SaveKubeconfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var path string
 			if tt.filename != "" {
-				path = filepath.Join("testdata", tt.filename+".golden")
+				path = filepath.Join(filepath.Join(tlsTestDir, tt.filename+".golden"))
 			} else {
-				path = filepath.Join("testdata", tt.name+".golden")
+				path = filepath.Join(filepath.Join(tlsTestDir, tt.name+".golden"))
 			}
 			err := SaveKubeconfig(path, tt.kubeConfig)
 			defer os.Remove(path)

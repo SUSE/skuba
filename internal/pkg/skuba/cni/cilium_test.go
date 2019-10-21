@@ -18,50 +18,48 @@
 package cni
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/client-go/kubernetes/fake"
 )
 
 func Test_CreateCiliumSecret(t *testing.T) {
+	tlsTestDir := "../../../../testdata"
+
 	tests := []struct {
 		clientset   *fake.Clientset
 		etcdDir     string
 		errExpected bool
-		errMessage  string
 		name        string
 	}{
 		{
 			name:        "should create cilium secret",
 			clientset:   fake.NewSimpleClientset(),
-			etcdDir:     "testdata/valid_cert_valid_key",
+			etcdDir:     filepath.Join(tlsTestDir, "valid_cert_valid_key"),
 			errExpected: false,
 		},
 		{
 			name:        "should fail with invalid secret key",
 			clientset:   fake.NewSimpleClientset(),
-			etcdDir:     "testdata/valid_cert_invalid_key",
+			etcdDir:     filepath.Join(tlsTestDir, "valid_cert_invalid_key"),
 			errExpected: true,
-			errMessage:  "etcd generation retrieval failed failed to load key: couldn't load the private key file testdata/valid_cert_invalid_key/ca.key: error reading private key file testdata/valid_cert_invalid_key/ca.key: data does not contain a valid RSA or ECDSA private key",
 		},
 		{
 			name:        "should fail with invalid secret cert",
 			clientset:   fake.NewSimpleClientset(),
-			etcdDir:     "testdata/invalid_cert_valid_key",
+			etcdDir:     filepath.Join(tlsTestDir, "invalid_cert_valid_key"),
 			errExpected: true,
-			errMessage:  "etcd generation retrieval failed failed to load certificate: couldn't load the certificate file testdata/invalid_cert_valid_key/ca.crt: error reading testdata/invalid_cert_valid_key/ca.crt: data does not contain any valid RSA or ECDSA certificates",
 		},
 		{
 			name:        "should fail with invalid secret directory",
 			clientset:   fake.NewSimpleClientset(),
-			etcdDir:     "testdata/not_exist",
+			etcdDir:     filepath.Join(tlsTestDir, "not_exist"),
 			errExpected: true,
-			errMessage:  "etcd generation retrieval failed failed to load certificate: couldn't load the certificate file testdata/not_exist/ca.crt: open testdata/not_exist/ca.crt: no such file or directory",
 		},
 	}
 
@@ -76,10 +74,6 @@ func Test_CreateCiliumSecret(t *testing.T) {
 			if tt.errExpected {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
-					return
-				}
-				if err.Error() != tt.errMessage {
-					t.Errorf("returned error (%v) does not match the expected one (%v)", err.Error(), tt.errMessage)
 					return
 				}
 				if secretSize != 0 {

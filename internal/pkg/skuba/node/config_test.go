@@ -18,6 +18,7 @@
 package node
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -46,6 +47,8 @@ nodeRegistration:
   name: worker-0
 `
 
+var tlsTestDir = "../../../../testdata"
+
 func Test_LoadInitConfigurationFromFile(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -54,25 +57,25 @@ func Test_LoadInitConfigurationFromFile(t *testing.T) {
 	}{
 		{
 			name:    "normal",
-			cfgPath: "testdata/init.conf",
+			cfgPath: filepath.Join(tlsTestDir, "init.conf"),
 		},
 		{
 			name:    "cluster configuration only",
-			cfgPath: "testdata/cluster.conf",
+			cfgPath: filepath.Join(tlsTestDir, "cluster.conf"),
 		},
 		{
 			name:          "config path not exist",
-			cfgPath:       "testdata/not-exist.conf",
+			cfgPath:       filepath.Join(tlsTestDir, "not-exist.conf"),
 			expectedError: true,
 		},
 		{
 			name:          "invalid api version",
-			cfgPath:       "testdata/invalid.conf",
+			cfgPath:       filepath.Join(tlsTestDir, "invalid.conf"),
 			expectedError: true,
 		},
 		{
 			name:          "not init or cluster configuration",
-			cfgPath:       "testdata/join.conf",
+			cfgPath:       filepath.Join(tlsTestDir, "join.conf"),
 			expectedError: true,
 		},
 	}
@@ -100,16 +103,16 @@ func Test_LoadJoinConfigurationFromFile(t *testing.T) {
 	}{
 		{
 			name:    "normal",
-			cfgPath: "testdata/join.conf",
+			cfgPath: filepath.Join(tlsTestDir, "join.conf"),
 		},
 		{
 			name:          "invalid yaml file",
-			cfgPath:       "testdata/invalid.conf",
+			cfgPath:       filepath.Join(tlsTestDir, "invalid.conf"),
 			expectedError: true,
 		},
 		{
 			name:          "config path not exist",
-			cfgPath:       "testdata/not-exist.conf",
+			cfgPath:       filepath.Join(tlsTestDir, "not-exist.conf"),
 			expectedError: true,
 		},
 	}
