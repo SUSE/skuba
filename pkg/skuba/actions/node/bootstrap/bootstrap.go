@@ -68,6 +68,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
+	// Load admin.conf after download secrets from remote bootstrapped master node.
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("[bootstrap] deploying core add-ons on node %q\n", target.Target)
 	versionToDeploy, err := version.ParseSemantic(initConfiguration.KubernetesVersion)
 	if err != nil {
@@ -78,7 +84,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
 		ClusterName:    initConfiguration.ClusterName,
 	}
-	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
+	if err := addons.DeployAddons(clientSet, addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
 		return err
 	}
 

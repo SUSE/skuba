@@ -20,11 +20,12 @@ package addons
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
-	"github.com/pkg/errors"
 )
 
 // Apply implements the `skuba addon upgrade apply` command.
@@ -57,7 +58,7 @@ func Apply() error {
 		return errors.Wrap(err, "[apply] Could not fetch cluster configuration")
 	}
 
-	updatedAddons, err := addon.UpdatedAddons(currentClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
 	}
@@ -68,7 +69,7 @@ func Apply() error {
 			ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
 			ClusterName:    clusterConfiguration.ClusterName,
 		}
-		if err := addons.DeployAddons(addonConfiguration, addons.AlwaysRender); err != nil {
+		if err := addons.DeployAddons(client, addonConfiguration, addons.AlwaysRender); err != nil {
 			return errors.Wrap(err, "[apply] Failed to deploy addons")
 		}
 		fmt.Println("[apply] Successfully upgraded addons")

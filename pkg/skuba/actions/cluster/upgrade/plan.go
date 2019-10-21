@@ -78,7 +78,7 @@ func Plan() error {
 
 	// fetch addon upgrades for the next available cluster version
 	nextClusterVersion := upgradePath[0]
-	updatedAddons, err := addon.UpdatedAddons(nextClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(client, nextClusterVersion)
 	if err != nil {
 		return err
 	}

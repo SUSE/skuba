@@ -20,9 +20,11 @@ package addon
 import (
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	skubaconfig "github.com/SUSE/skuba/internal/pkg/skuba/skuba"
-	"k8s.io/apimachinery/pkg/util/version"
 )
 
 type AddonVersionInfoUpdate struct {
@@ -30,11 +32,11 @@ type AddonVersionInfoUpdate struct {
 	Updated kubernetes.AddonsVersion
 }
 
-func UpdatedAddons(clusterVersion *version.Version) (AddonVersionInfoUpdate, error) {
+func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) (AddonVersionInfoUpdate, error) {
 	clusterVersionString := clusterVersion.String()
 	latestAddonVersions := kubernetes.Versions[clusterVersionString].AddonsVersion
 
-	skubaConfig, err := skubaconfig.GetSkubaConfiguration()
+	skubaConfig, err := skubaconfig.GetSkubaConfiguration(client)
 	if err != nil {
 		return AddonVersionInfoUpdate{}, err
 	}

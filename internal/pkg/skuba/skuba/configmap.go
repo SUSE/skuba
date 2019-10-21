@@ -19,10 +19,10 @@ package skuba
 
 import (
 	"github.com/pkg/errors"
-
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -37,13 +37,9 @@ type SkubaConfiguration struct {
 	AddonsVersion kubernetes.AddonsVersion
 }
 
-func GetSkubaConfiguration() (*SkubaConfiguration, error) {
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting client set")
-	}
+func GetSkubaConfiguration(client clientset.Interface) (*SkubaConfiguration, error) {
 	skubaConfiguration := &SkubaConfiguration{}
-	configMap, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ConfigMapName, metav1.GetOptions{})
+	configMap, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return skubaConfiguration, nil
