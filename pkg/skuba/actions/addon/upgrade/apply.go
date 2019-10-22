@@ -66,7 +66,7 @@ func Apply(client clientset.Interface) error {
 			ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
 			ClusterName:    clusterConfiguration.ClusterName,
 		}
-		if err := addons.DeployAddons(client, addonConfiguration, addons.AlwaysRender); err != nil {
+		if err := addons.DeployAddons(client, addonConfiguration); err != nil {
 			return errors.Wrap(err, "[apply] Failed to deploy addons")
 		}
 		fmt.Println("[apply] Successfully upgraded addons")

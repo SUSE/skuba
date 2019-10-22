@@ -80,7 +80,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
 		ClusterName:    initConfiguration.ClusterName,
 	}
-	if err := addons.DeployAddons(clientSet, addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
+	if err := addons.DeployAddons(clientSet, addonConfiguration); err != nil {
 		return err
 	}
 
