@@ -18,6 +18,7 @@ GO_MD2MAN ?= go-md2man
 LN = ln
 RM = rm
 
+BINPATH       := $(abspath ./bin)
 GOBINPATH     := $(shell $(GO) env GOPATH)/bin
 COMMIT        := $(shell git rev-parse HEAD)
 BUILD_DATE    := $(shell date +%Y%m%d)
@@ -66,6 +67,7 @@ install: go-version-check
 clean:
 	$(GO) clean -i ./...
 	$(RM) -f ./skuba
+	$(RM) -rf $(BINPATH)
 
 .PHONY: distclean
 distclean: clean
@@ -85,13 +87,24 @@ go-version-check:
 		[ $(GO_VERSION_MAJ) -eq 1 -a $(GO_VERSION_MIN) -ge 12 ] || (echo "FATAL: Go version should be >= 1.12.x" ; exit 1 ; )
 
 .PHONY: lint
-lint:
+lint: deps
 	# explicitly enable GO111MODULE otherwise go mod will fail
 	GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor && GO111MODULE=on go mod verify
+	# run go vet
 	$(GO) vet ./...
+	# run go gmt
 	test -z `$(GOFMT) -l $(SKUBA_SRCS)` || { $(GOFMT) -d $(SKUBA_SRCS) && false; }
+	# check terraform fmt
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
-	find ci -type f -name "*.sh" | xargs bashate
+	# run golangci-lint
+	$(BINPATH)/golangci-lint run
+	# run bash linter
+	find ci -type f -name "*.sh" | xargs $(BINPATH)/shellcheck
+
+.PHONY: deps
+deps:
+	test -f $(BINPATH)/golangci-lint || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(BINPATH) v1.21.0
+	test -f $(BINPATH)/shellcheck || curl -sfL "https://storage.googleapis.com/shellcheck/shellcheck-v0.4.7.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
 
 .PHONY: suse-package
 suse-package:
