@@ -51,7 +51,7 @@ func Plan() error {
 		return errors.Errorf("Not all nodes match clusterVersion %s", currentVersion)
 	}
 
-	updatedAddons, err := addon.UpdatedAddons(currentClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
 	}

@@ -27,13 +27,14 @@ import (
 	"sort"
 	"text/template"
 
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
 )
 
 type addonPriority uint
@@ -120,8 +121,8 @@ func addonsByPriority() []Addon {
 	return sortedAddons
 }
 
-func DeployAddons(addonConfiguration AddonConfiguration, applyBehavior ApplyBehavior) error {
-	skubaConfiguration, err := skuba.GetSkubaConfiguration()
+func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration, applyBehavior ApplyBehavior) error {
+	skubaConfiguration, err := skuba.GetSkubaConfiguration(client)
 	if err != nil {
 		return err
 	}
