@@ -311,10 +311,9 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 					return err
 				}
 				return nil
-			} else {
-				// fingerprint mismatch: print a big warning and return an error
-				klog.Error(replaceMessage(fingerprintMismatchMessage))
 			}
+			// fingerprint mismatch: print a big warning and return an error
+			klog.Error(replaceMessage(fingerprintMismatchMessage))
 		}
 		return err
 	}), nil

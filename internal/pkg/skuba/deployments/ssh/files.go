@@ -25,6 +25,8 @@ import (
 	"k8s.io/klog"
 )
 
+// UploadFileContents creates a file with the content sent
+// into a target system's specific path.
 func (t *Target) UploadFileContents(targetPath, contents string) error {
 	klog.V(1).Infof("uploading to remote file %q with contents", targetPath)
 	dir, _ := path.Split(targetPath)
@@ -36,15 +38,16 @@ func (t *Target) UploadFileContents(targetPath, contents string) error {
 	return err
 }
 
+// DownloadFileContents gets the content of a file in a target system
 func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
 	klog.V(1).Infof("downloading remote file %q contents", sourcePath)
-	if stdout, _, err := t.silentSsh("base64", "-w0", sourcePath); err == nil {
-		decodedStdout, err := base64.StdEncoding.DecodeString(stdout)
-		if err != nil {
-			return "", err
-		}
-		return string(decodedStdout), nil
-	} else {
+	stdout, _, err := t.silentSsh("base64", "-w0", sourcePath)
+	if err != nil {
 		return "", err
 	}
+	decodedStdout, err := base64.StdEncoding.DecodeString(stdout)
+	if err != nil {
+		return "", err
+	}
+	return string(decodedStdout), nil
 }

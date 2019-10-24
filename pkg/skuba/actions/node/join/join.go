@@ -71,7 +71,19 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		criConfigure = "cri.configure"
 	}
 
-	statesToApply := []string{
+	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	if err == nil {
+		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
+		return err
+	}
+
+	statesToApply := []string{"kubeadm.reset"}
+
+	if joinConfiguration.Role == deployments.MasterRole {
+		statesToApply = append(statesToApply, "kubernetes.join.upload-secrets")
+	}
+
+	statesToApply = append(statesToApply,
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
@@ -80,20 +92,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",
-		"skuba-update.start",
-	}
-
-	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
-	if err == nil {
-		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
-		return err
-	}
-
-	if joinConfiguration.Role == deployments.MasterRole {
-		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
-	}
-
-	statesToApply = append([]string{"kubeadm.reset"}, statesToApply...)
+		"skuba-update.start")
 
 	fmt.Println("[join] applying states to new node")
 
