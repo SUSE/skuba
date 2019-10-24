@@ -43,7 +43,7 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - errcheck
+    # - errcheck
     - gofmt
     - goimports
     - gosimple
