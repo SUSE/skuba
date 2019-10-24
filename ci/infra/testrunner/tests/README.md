@@ -142,13 +142,14 @@ wait(func, *args, **kwargs)
 ```
 
 The `wait` function receives the name of a function to invoke, a list of arguments, and a list of key-value pairs, which are passed to the function. Additionally, some key-value parameters can be passed to the wait function itself:
-* wait_delay: time before first try in seconds (default 0)
-* wait_timeout: timeout in seconds for waiting each try to complete (default, 5)
 * wait_allow: a tuple of exceptions that are expected and must be retried (default, none)
-* wait_retries: number of retries in case of failed invication (default, 3)
-* wait_backoff: delay in seconds between retries (default, 1 second)
+* wait_backoff: delay in seconds between retries (default, 0 seconds)
+* wait_delay: time before first try in seconds (default 0)
+* wait_elapsed: maximum time to wait for the function to complete successfully, regardless of the number or attempts and considering the total time of initial delay, timeout for each attempt and backoff between attempts. If specified, a non-zero `wait_retries` cannot be specified.
+* wait_retries: number of retries in case of failed or timeout invocation. If specified, a non-zero `wait_elapsed` cannot be specified.
+* wait_timeout: timeout in seconds for waiting each try to complete 
 
-For example, the following code reboots a node and waits until a command can be executed sucessfully, with an initial 30 seconds delay to give time for the node to reboot. The exception `RuntimeError` is allow and retried because `ssh_run` raises it in case it cannot stablish a connection.
+For example, the following code reboots a node and waits until a command can be executed successfully, with an initial 30 seconds delay to give time for the node to reboot. The exception `RuntimeError` is allow and retried because `ssh_run` raises it in case it cannot stablish a connection.
 ```
 from test.testconf import platform
 from test.utils import wait
@@ -159,6 +160,17 @@ test_reboot(provision, platform):
 
     wait(platform.ssh, "master", "0", "/bin/true", wait_delay=30, wait_timeout=10, wait_retries=3, wait_bakoff=30, wait_allow=(RuntimeError))
 ```
+
+Alternatively, if we are not interested in the number of attempts, but is a fixed maximum elapsed time of for example 120 seconds for the test, we can use the following code:
+```
+test_reboot(provision, platform):
+    
+    platform.ssh_run("master", "0", "sudo reboot &")
+
+    wait(platform.ssh, "master", "0", "/bin/true", wait_delay=30, wait_timeout=10, wait_backoff=30, wait_elapsed=120, wait_allow=(RuntimeError))
+```
+Notice that in this case, if we change the `wait_timeout` or the `wait_elapsed` parameters, this will not affect the maximum time the test can take. This makes easier to reason about test duration.
+ 
 
 **Note**: current implementation does not allow nesting calls to the `wait` function. Therefore the code shown below will not work:
 ```

@@ -7,7 +7,7 @@ def test_nginx_deployment(deployment, kubectl):
     kubectl.run_kubectl("create deployment nginx --image=nginx:stable-alpine")
     kubectl.run_kubectl("scale deployment nginx --replicas={replicas}".format(replicas=workers))
     kubectl.run_kubectl("expose deployment nginx --port=80 --type=NodePort")
-    kubectl.run_kubectl("wait --for=condition=available deploy/nginx --timeout={timeout}m".format(timeout=3))
+    kubectl.run_kubectl("wait --for=condition=available deploy/nginx --timeout=3m")
     readyReplicas = kubectl.run_kubectl("get deployment/nginx -o jsonpath='{ .status.readyReplicas }'")
 
     assert int(readyReplicas) == workers

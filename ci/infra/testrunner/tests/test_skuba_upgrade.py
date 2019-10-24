@@ -2,6 +2,8 @@ import time
 
 import pytest
 
+from tests.utils import wait
+
 PREVIOUS_VERSION = "1.14.1"
 CURRENT_VERSION = "1.15.2"
 
@@ -27,7 +29,13 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
 
     skuba.join_nodes()
 
-    kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
+    wait(kubectl.run_kubectl,
+         "wait --for=condition=ready nodes --all --timeout=0",
+         wait_delay=60,
+         wait_timeout=30,
+         wait_backoff=30,
+         wait_retries=5,
+         wait_allow=(RuntimeError))
 
 
 def node_is_upgraded(kubectl, platform, node_name):

@@ -1,9 +1,11 @@
+import json
 import pytest
 import time
 import os
 import platforms
 from skuba import Skuba
 from utils import BaseConfig
+from tests.utils import wait
 
 @pytest.fixture(autouse=True, scope='module')
 def conf(request):
@@ -59,6 +61,13 @@ def test_bootstrap_cpi_openstack_cluster(skuba):
     except:
         pytest.fail("Failure on bootstrapping a cluster with cpi optionstack  ...")
 
+def check_system_pods_ready(kubectl):
+    pods = json.loads(kubectl.run_kubectl('get pods --namespace=kube-system -o json'))['items']
+    for pod in pods:
+        pod_status = pod['status']['phase']
+        pod_name   = pod['metadata']['name']
+        assert pod_status in ['Running', 'Completed'], f'Pod {pod_name} status {pod_status} != Running or Completed'
+
 @pytest.mark.disruptive
 @pytest.mark.openstack
 @pytest.mark.run(order=3)
@@ -71,7 +80,14 @@ def test_node_join_cpi_openstack_cluster(skuba, kubectl):
     except:
         pytest.fail("Failure on joinning nodes to the cluster with cpi optionstack  ...")
 
-    kubectl.run_kubectl("wait --for=condition=ready nodes --all --timeout=5m")
+    wait(check_system_pods_ready,
+         kubectl, 
+         wait_delay=60,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=300,
+         wait_allow=(AssertionError))
+
 
 @pytest.mark.disruptive
 @pytest.mark.openstack
