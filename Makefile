@@ -97,7 +97,7 @@ lint: deps
 	# check terraform fmt
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
 	# run golangci-lint
-	$(BINPATH)/golangci-lint run
+	$(BINPATH)/golangci-lint -v run --timeout 3m
 	# run bash linter
 	find ci -type f -name "*.sh" | xargs $(BINPATH)/shellcheck
 
