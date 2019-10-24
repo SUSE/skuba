@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#shellcheck disable=SC2145,SC2016
 log()   { (>&1 echo -e "$@") ; }
 cmd()   { log "[ CMD ] $@" ; }
 info()  { log "[ INFO ] $@" ; }
@@ -57,7 +57,7 @@ if [ -z "${TR_STACK}" ] || [ -z "${TR_LB_IP}" ] || \
     exit 1
 fi
 
-info "### Run following commands to bootstrap skuba cluster:\n"
+info "### Run following commands to bootstrap skuba cluster:\\n"
 cmd " skuba cluster init --control-plane ${TR_LB_IP} --cloud-provider openstack ${TR_STACK}-cluster"
 cmd " mv openstack.conf ${TR_STACK}-cluster/cloud/openstack/openstack.conf"
 cmd " cd ${TR_STACK}-cluster"
