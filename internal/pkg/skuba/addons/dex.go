@@ -229,21 +229,13 @@ metadata:
   name: oidc-dex
   namespace: kube-system
 rules:
+# Follow upstream example https://github.com/dexidp/dex/blob/4bede5eb80822fc3a7fc9edca0ed2605cd339d17/examples/k8s/dex.yaml#L116-L126
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
-  verbs: ["create", "get", "list", "update", "watch"]
+  verbs: ["create"]
 - apiGroups: ["dex.coreos.com"]
-  resources: ["oauth2clients", "connectors", "passwords", "refreshtokens"]
-  verbs: ["get", "list"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["signingkeies"]
-  verbs: ["create", "get", "list", "update"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["authcodes", "authrequests", "offlinesessionses"]
-  verbs: ["create", "delete", "get", "list", "update"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["refreshtokens"]
-  verbs: ["create", "delete"]
+  resources: ["*"]
+  verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
