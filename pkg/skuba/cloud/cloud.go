@@ -43,8 +43,7 @@ func ConfigHasRestrictedPermissions(file string) bool {
 	}
 	mode := info.Mode()
 	var mask os.FileMode = 077
-	if (mode & mask) > 0 {
-		return false
-	}
-	return true
+	// if (mode & mask) > 0 { return false }
+	// (mode & mask) is uint32
+	return (mode & mask) == 0
 }
