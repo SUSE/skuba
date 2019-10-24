@@ -53,7 +53,7 @@ apiServer:
 
 	fakeConfigMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "kubeadm-config",
+			Name:      kubeadmconstants.KubeadmConfigConfigMap,
 			Namespace: metav1.NamespaceSystem,
 		},
 		Data: map[string]string{

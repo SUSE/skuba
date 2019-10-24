@@ -52,17 +52,22 @@ func (nviu NodeVersionInfoUpdate) HasMajorOrMinorUpdate() bool {
 		}
 	}
 	return nviu.Update.KubeletVersion.Major() > nviu.Current.KubeletVersion.Major() ||
-		nviu.Update.KubeletVersion.Minor() > nviu.Current.KubeletVersion.Minor()
+		nviu.Update.KubeletVersion.Minor() > nviu.Current.KubeletVersion.Minor() ||
+		nviu.Update.ContainerRuntimeVersion.Major() > nviu.Current.ContainerRuntimeVersion.Major() ||
+		nviu.Update.ContainerRuntimeVersion.Minor() > nviu.Current.ContainerRuntimeVersion.Minor()
 }
 
 func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
-	return reflect.DeepEqual(nviu.Current.KubeletVersion, nviu.Update.KubeletVersion) &&
-		reflect.DeepEqual(nviu.Current.APIServerVersion, nviu.Update.APIServerVersion) &&
+	return reflect.DeepEqual(nviu.Current.APIServerVersion, nviu.Update.APIServerVersion) &&
 		reflect.DeepEqual(nviu.Current.ControllerManagerVersion, nviu.Update.ControllerManagerVersion) &&
 		reflect.DeepEqual(nviu.Current.SchedulerVersion, nviu.Update.SchedulerVersion) &&
 		reflect.DeepEqual(nviu.Current.EtcdVersion, nviu.Update.EtcdVersion) &&
+		nviu.Current.KubeletVersion.Major() == nviu.Update.KubeletVersion.Major() &&
+		nviu.Current.KubeletVersion.Minor() == nviu.Update.KubeletVersion.Minor() &&
+		nviu.Current.KubeletVersion.Patch() >= nviu.Update.KubeletVersion.Patch() &&
 		nviu.Current.ContainerRuntimeVersion.Major() == nviu.Update.ContainerRuntimeVersion.Major() &&
-		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor()
+		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor() &&
+		nviu.Current.ContainerRuntimeVersion.Patch() >= nviu.Update.ContainerRuntimeVersion.Patch()
 }
 
 func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() (bool, error) {
