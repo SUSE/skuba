@@ -137,36 +137,27 @@ apiServer:
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			clientset := fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{fakeMaster, fakeWorker}})
+			//nolint:errcheck
+			clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(fakeConfigMap)
+			//nolint:errcheck
+			clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(fakeDaemonSet)
 
-			_, err := clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(fakeConfigMap)
-			if err != nil && !tt.errExpected {
-				t.Errorf("error creating configmap %s", fakeConfigMap.Name)
-				return
-			}
-			_, err = clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(fakeDaemonSet)
-			if err != nil && !tt.errExpected {
-				t.Errorf("error creating daemonset %s", fakeDaemonSet.Name)
-				return
-			}
 			controlPlaneNodes, _ := kubernetes.GetControlPlaneNodes(clientset)
 			hashTarget := fmt.Sprintf("%x", sha1.Sum([]byte(fakeWorker.ObjectMeta.Name)))
 			hashExecutor := fmt.Sprintf("%x", sha1.Sum([]byte(controlPlaneNodes.Items[0].ObjectMeta.Name)))
 			job := fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", hashTarget, hashExecutor)
-			_, err = clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
+			//nolint:errcheck
+			clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      job,
 					Namespace: metav1.NamespaceSystem,
 				},
 				Spec: fakeJobSpec,
 			})
-			if err != nil && !tt.errExpected {
-				t.Errorf("error creating batch job %s", job)
-				return
-			}
 
 			controlPlaneComponentsVersion, _ := kubeadm.GetCurrentClusterVersion(clientset)
 
-			err = etcd.RemoveMember(clientset, &fakeWorker, controlPlaneComponentsVersion)
+			err := etcd.RemoveMember(clientset, &fakeWorker, controlPlaneComponentsVersion)
 			if tt.errExpected {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
