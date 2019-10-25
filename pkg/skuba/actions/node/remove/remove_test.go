@@ -136,13 +136,17 @@ apiServer:
 	for _, tt := range test {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(cm)
+			_, err := tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(cm)
+			if err != nil && !tt.errorExpected {
+				t.Errorf("error creating configmap %s", cm.Name)
+				return
+			}
 
 			shaTarget := fmt.Sprintf("%x", sha1.Sum([]byte(tt.target)))
 			shaExecuter := ""
 			for _, executer := range tt.executer {
 				shaExecuter = fmt.Sprintf("%x", sha1.Sum([]byte(executer)))
-				tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
+				_, err := tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter),
 						Namespace: metav1.NamespaceSystem,
@@ -150,17 +154,25 @@ apiServer:
 					Spec:   jobSpec,
 					Status: batchv1.JobStatus{Active: 1},
 				})
+				if err != nil && !tt.errorExpected {
+					t.Errorf("error creating batch job %s", fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter))
+					return
+				}
 			}
 
-			tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
+			_, err = tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget),
 					Namespace: metav1.NamespaceSystem,
 				},
 				Spec: jobSpec,
 			})
+			if err != nil && !tt.errorExpected {
+				t.Errorf("error creating batch job %s", fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget))
+				return
+			}
 
-			err := Remove(tt.clientset, tt.target, 0)
+			err = Remove(tt.clientset, tt.target, 0)
 			if tt.errorExpected && err == nil {
 				t.Errorf("error expected on %s, but no error reported", tt.name)
 				return

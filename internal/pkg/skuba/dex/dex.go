@@ -75,7 +75,11 @@ func CreateCert(client clientset.Interface, pkiPath, kubeadmInitConfPath string)
 // so, replace client secret in configmap by rendering
 func GenerateClientSecret() string {
 	b := make([]byte, 12)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		// TODO: handle the error correctly
+		fmt.Println("error generating random bytes:", err)
+	}
 	return fmt.Sprintf("%x", b)
 }
 

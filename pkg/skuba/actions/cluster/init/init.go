@@ -130,9 +130,16 @@ func Init(initConfiguration InitConfiguration) error {
 		if err != nil {
 			return errors.Wrap(err, "unable to render template")
 		}
-		f.WriteString(str)
-		f.Chmod(0600)
-		f.Close()
+		_, err = f.WriteString(str)
+		if err != nil {
+			return errors.Wrapf(err, "unable to write template to file %s", f.Name())
+		}
+		if err := f.Chmod(0600); err != nil {
+			return errors.Wrapf(err, "unable to chmod file %s", f.Name())
+		}
+		if err := f.Close(); err != nil {
+			return errors.Wrapf(err, "unable to close file %s", f.Name())
+		}
 	}
 
 	addonConfiguration := addons.AddonConfiguration{

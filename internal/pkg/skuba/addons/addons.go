@@ -216,7 +216,9 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to render %s addon template", addon.addon)
 	}
-	os.MkdirAll(addon.addonPath(), 0700)
+	if err := os.MkdirAll(addon.addonPath(), 0700); err != nil {
+		return errors.Wrapf(err, "unable to create folder for addon %s", addon.addon)
+	}
 	if err := ioutil.WriteFile(addon.manifestPath(), []byte(addonManifest), 0600); err != nil {
 		return errors.Wrapf(err, "unable to write %s addon rendered template", addon.addon)
 	}

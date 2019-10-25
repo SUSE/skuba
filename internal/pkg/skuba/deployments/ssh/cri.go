@@ -18,6 +18,7 @@
 package ssh
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -35,7 +36,14 @@ func criConfigure(t *Target, data interface{}) error {
 	if err != nil {
 		return errors.Wrap(err, "Could not read local cri directory: "+skuba.CriDir())
 	}
-	defer t.ssh("rm -rf /tmp/cri.d")
+	defer func() {
+		_, _, err := t.ssh("rm -rf /tmp/cri.d")
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the cri.d config path")
+		}
+	}()
 
 	for _, f := range criFiles {
 		if err := t.target.UploadFile(filepath.Join(skuba.CriDir(), f.Name()), filepath.Join("/tmp/cri.d", f.Name())); err != nil {

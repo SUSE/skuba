@@ -18,6 +18,7 @@
 package ssh
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -46,7 +47,14 @@ func kubeadmInit(t *Target, data interface{}) error {
 	if err := t.target.UploadFile(skuba.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmInitConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm init config file")
+		}
+	}()
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := bootstrapConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
@@ -71,7 +79,14 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	if err := t.target.UploadFile(configPath, remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmInitConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm init config file")
+		}
+	}()
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := joinConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
@@ -97,7 +112,14 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmUpgradeConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmUpgradeConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm upgrade config file")
+		}
+	}()
 
 	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "--config", remoteKubeadmUpgradeConfFile, "-y")
 	return err

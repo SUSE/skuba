@@ -172,9 +172,13 @@ func Test_AnnotateCiliumDaemonsetWithCurrentTimestamp(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
+			_, err := tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
+			if err != nil && !tt.errExpected {
+				t.Errorf("error creating daemonset %s", tt.daemonset)
+				return
+			}
 
-			err := annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
+			err = annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
 
 			if tt.errExpected {
 				if err == nil {
@@ -254,9 +258,13 @@ key-file: /tmp/cilium-etcd/tls.key
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.configmap)
+			_, err := tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.configmap)
+			if err != nil && !tt.errExpected {
+				t.Errorf("error creating configmap %s", tt.configmap)
+				return
+			}
 
-			err := CreateOrUpdateCiliumConfigMap(tt.clientset)
+			err = CreateOrUpdateCiliumConfigMap(tt.clientset)
 
 			if tt.errExpected {
 				if err == nil {
