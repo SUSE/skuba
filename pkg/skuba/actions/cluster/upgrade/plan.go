@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -28,12 +29,8 @@ import (
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 )
 
-func Plan() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+func Plan(clientSet clientset.Interface) error {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}
@@ -48,7 +45,7 @@ func Plan() error {
 		return nil
 	}
 
-	upgradePath, err := upgradecluster.UpgradePath()
+	upgradePath, err := upgradecluster.UpgradePath(clientSet)
 	if err != nil {
 		return err
 	}
@@ -64,7 +61,7 @@ func Plan() error {
 		tmpVersion = version.String()
 	}
 
-	driftedNodes, err := upgradecluster.DriftedNodes()
+	driftedNodes, err := upgradecluster.DriftedNodes(clientSet)
 	if err != nil {
 		return err
 	}
@@ -78,7 +75,7 @@ func Plan() error {
 
 	// fetch addon upgrades for the next available cluster version
 	nextClusterVersion := upgradePath[0]
-	updatedAddons, err := addon.UpdatedAddons(client, nextClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(clientSet, nextClusterVersion)
 	if err != nil {
 		return err
 	}

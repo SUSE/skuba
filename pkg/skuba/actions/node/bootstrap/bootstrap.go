@@ -46,7 +46,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 	coreBootstrapDone := false
 
 	if clientSet, err := kubernetes.GetAdminClientSet(); err == nil {
-		_, err := clientSet.ServerVersion()
+		_, err := clientSet.Discovery().ServerVersion()
 		if err == nil {
 			fmt.Printf("[bootstrap] node %q has already the core components bootstrapped\n", target.Target)
 			coreBootstrapDone = true
