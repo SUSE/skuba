@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	clientset "github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	cluster "github.com/SUSE/skuba/pkg/skuba/actions/cluster/status"
 )
 
@@ -32,7 +33,13 @@ func NewStatusCmd() *cobra.Command {
 		Use:   "status",
 		Short: "Show cluster status",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := cluster.Status(); err != nil {
+			clientSet, err := clientset.GetAdminClientSet()
+			if err != nil {
+				klog.Errorf("unable to get admin client set: %s", err)
+				os.Exit(1)
+			}
+
+			if err := cluster.Status(clientSet); err != nil {
 				klog.Errorf("unable to get cluster status: %s", err)
 				os.Exit(1)
 			}

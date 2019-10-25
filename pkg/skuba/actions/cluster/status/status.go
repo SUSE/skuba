@@ -22,9 +22,8 @@ import (
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
-
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
 // Status prints the status of the cluster on the standard output by reading the
@@ -32,14 +31,8 @@ import (
 //
 // FIXME: being this a part of the go API accept a io.Writer parameter instead of
 //        using os.Stdout
-func Status() error {
-	client, err := kubernetes.GetAdminClientSet()
-
-	if err != nil {
-		return errors.Wrap(err, "unable to get admin client set")
-	}
-
-	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+func Status(clientSet clientset.Interface) error {
+	nodeList, err := clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve node list")
 	}
