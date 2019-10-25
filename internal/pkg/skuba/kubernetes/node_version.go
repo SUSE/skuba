@@ -25,7 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
-	"k8s.io/client-go/kubernetes"
+	clientset "k8s.io/client-go/kubernetes"
 )
 
 var (
@@ -124,21 +124,15 @@ func (nvi NodeVersionInfo) ToleratesClusterVersion(clusterVersion *version.Versi
 }
 
 // AllNodesVersioningInfo returns the version info for all nodes in the cluster
-func AllNodesVersioningInfo() (NodeVersionInfoMap, error) {
-	client, err := GetAdminClientSet()
-	if err != nil {
-		return NodeVersionInfoMap{}, errors.Wrap(err, "unable to get admin client set")
-	}
-
+func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, error) {
 	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return NodeVersionInfoMap{}, errors.Wrap(err, "could not retrieve node list")
 	}
 
 	result := NodeVersionInfoMap{}
-
 	for _, node := range nodeList.Items {
-		nodeVersion, err := nodeVersioningInfoWithClientset(client, node.ObjectMeta.Name)
+		nodeVersion, err := nodeVersioningInfo(client, node.ObjectMeta.Name)
 		if err != nil {
 			return NodeVersionInfoMap{}, err
 		}
@@ -155,7 +149,7 @@ func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
 		return NodeVersionInfo{}, errors.Wrap(err, "unable to get admin client set")
 	}
 
-	nodeVersions, err := nodeVersioningInfoWithClientset(client, nodeName)
+	nodeVersions, err := nodeVersioningInfo(client, nodeName)
 	if err != nil {
 		return NodeVersionInfo{}, errors.Wrap(err, "unable to get node versioning info")
 	}
@@ -163,7 +157,7 @@ func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
 	return nodeVersions, nil
 }
 
-func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName string) (NodeVersionInfo, error) {
+func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersionInfo, error) {
 	nodeObject, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
 	if err != nil {
 		return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node object")
@@ -185,20 +179,19 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 
 	// find out the container image tags, depending on the role of the node
 	if IsControlPlane(nodeObject) {
-		var apiServerTag, controllerManagerTag, schedulerTag, etcdTag string
-		apiServerTag, err = getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
+		apiServerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
 		if err != nil {
 			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve apiserver pod")
 		}
-		controllerManagerTag, err = getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
+		controllerManagerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
 		if err != nil {
 			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve controller-manager pod")
 		}
-		schedulerTag, err = getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
+		schedulerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
 		if err != nil {
 			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve scheduler pod")
 		}
-		etcdTag, err = getPodContainerImageTagWithClientset(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "etcd", nodeName))
+		etcdTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "etcd", nodeName))
 		if err != nil {
 			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve etcd pod")
 		}
@@ -213,8 +206,8 @@ func nodeVersioningInfoWithClientset(client kubernetes.Interface, nodeName strin
 }
 
 // AllWorkerNodesTolerateVersion checks that all schedulable worker nodes tolerate the given cluster version
-func AllWorkerNodesTolerateVersion(clusterVersion *version.Version) (bool, error) {
-	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+func AllWorkerNodesTolerateVersion(client clientset.Interface, clusterVersion *version.Version) (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo(client)
 	if err != nil {
 		return false, err
 	}
@@ -235,8 +228,8 @@ func allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo Node
 }
 
 // AllControlPlanesMatchVersion checks that all control planes are on the same version, and that they match a cluster version
-func AllControlPlanesMatchVersion(clusterVersion *version.Version) (bool, error) {
-	allNodesVersioningInfo, err := AllNodesVersioningInfo()
+func AllControlPlanesMatchVersion(client clientset.Interface, clusterVersion *version.Version) (bool, error) {
+	allNodesVersioningInfo, err := AllNodesVersioningInfo(client)
 	if err != nil {
 		return false, err
 	}

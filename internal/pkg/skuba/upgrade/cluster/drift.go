@@ -51,7 +51,7 @@ func DriftedNodes() ([]kubernetes.NodeVersionInfo, error) {
 	if err != nil {
 		return []kubernetes.NodeVersionInfo{}, err
 	}
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo()
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
 	if err != nil {
 		return []kubernetes.NodeVersionInfo{}, err
 	}

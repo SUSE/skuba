@@ -38,7 +38,7 @@ func Plan() error {
 	}
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo()
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
 	if err != nil {
 		return err
 	}
