@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}-validator-join-nightly'
+    name: '{name}-devel-base-nightly'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
@@ -13,7 +13,7 @@
     parameters:
         - string:
             name: VALIDATOR_ARGS
-            default: '-p {platform} -t join -n 3:2 -c'
+            default: '-p {platform} -t base -n 3:2 -c'
             description: The arguments for validator_caasp
     pipeline-scm:
         scm:

@@ -75,10 +75,10 @@
         - '{name}-test_addon_upgrade_apply-nightly'
 
 - project:
-    name: caasp-jobs/validator/caasp-v4-openstack
+    name: caasp-jobs/validation/caasp-v4-openstack
     platform: openstack
     jobs:
-        - '{name}-validator-join-nightly'
+        - '{name}-devel-base-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb
