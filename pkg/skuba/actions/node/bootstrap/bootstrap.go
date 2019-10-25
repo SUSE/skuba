@@ -204,7 +204,6 @@ func setCloudConfigurationPath(initConfiguration *kubeadmapi.InitConfiguration) 
 }
 
 func setCloudConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
-
 	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
 		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
 	}

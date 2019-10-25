@@ -18,7 +18,6 @@
 package deployments
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -60,7 +59,7 @@ func (t *Target) UploadFile(sourcePath, targetPath string) error {
 	if contents, err := ioutil.ReadFile(sourcePath); err == nil {
 		return t.UploadFileContents(targetPath, string(contents))
 	}
-	return errors.New(fmt.Sprintf("could not find file %s", sourcePath))
+	return fmt.Errorf("could not find file %s", sourcePath)
 }
 
 func (t *Target) UploadFileContents(targetPath, contents string) error {

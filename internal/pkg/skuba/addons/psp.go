@@ -93,7 +93,7 @@ spec:
   - min: 0
     max: 65535
   seLinux:
-    # SELinux is unsed in CaaSP
+    # SELinux is unused in CaaSP
     rule: 'RunAsAny'
 ---
 kind: ClusterRole

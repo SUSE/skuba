@@ -57,7 +57,7 @@ func NewLoginCmd() *cobra.Command {
 
 			if cfg.Password == "" {
 				fmt.Print("Enter your password: ")
-				bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+				bytePassword, err := terminal.ReadPassword(syscall.Stdin)
 				if err != nil {
 					klog.Fatalf("error on read password: %v", err)
 				}

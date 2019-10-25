@@ -179,7 +179,7 @@ func workerUpdateStatusWithAvailableVersions(clusterVersion *version.Version, al
 	// Checking worker nodes for updates is a bit different than checking a control plane node.
 	// It can be that an upgrade has already been started on the control plane
 	// or that all nodes are still on the same version (no upgrade started yet).
-	// First we need to check if an upgrade has aready been started
+	// First we need to check if an upgrade has already been started
 	// This can be determined by kubernetes.AllNodesMatchClusterVersion(allNodesVersioningInfo, clusterVersion)
 	allNodesMatchCurrentClusterVersion := kubernetes.AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion)
 	// Check that all control plane nodes have at least the current cluster version we plan to

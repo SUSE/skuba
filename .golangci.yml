@@ -1,0 +1,82 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 15
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  goimports:
+    local-prefixes: github.com/golangci/golangci-lint
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - wrapperFunc
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+  funlen:
+    lines: 100
+    statements: 50
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    # - errcheck
+    - gofmt
+    - goimports
+    - gosimple
+    - ineffassign
+    - misspell
+    - nakedret
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unconvert
+    - varcheck
+    - whitespace
+
+    # TODO: enable these linters
+    # - dupl
+    # - scopelint
+    # - golint
+    # - funlen
+    # - lll
+    # - gosec
+    # - gocritic
+    # - govet
+    # - gochecknoinits
+    # - interfacer
+    # - unparam
+    # - unused
+    # - goconst
+    # - gocyclo
+    # - stylecheck
+
+run:
+  skip-dirs-use-default: true
+  skip-dirs:
+    - docs
+    - bin
+    - ci

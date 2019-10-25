@@ -178,7 +178,7 @@ func (t *Target) internalSshWithStdin(silent bool, stdin string, command string,
 	}
 	stdout = <-stdoutChan
 	stderr = <-stderrChan
-	return
+	return stdout, stderr, nil
 }
 
 func readerStreamer(reader io.Reader, outputChan chan<- string, description string, silent bool) {

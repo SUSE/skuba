@@ -26,7 +26,7 @@ import (
 
 var nodeNameRegex = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
 
-// NodeName checks whether the node name is valid and accpetable for kubelet.
+// NodeName checks whether the node name is valid and acceptable for kubelet.
 func NodeName(nodename string) error {
 	if len(nodename) > skuba.MaxNodeNameLength {
 		return fmt.Errorf(
