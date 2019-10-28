@@ -161,7 +161,9 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 }
 
 func downloadSecrets(target *deployments.Target) error {
-	os.MkdirAll(filepath.Join("pki", "etcd"), 0700)
+	if err := os.MkdirAll(filepath.Join("pki", "etcd"), 0700); err != nil {
+		return errors.Wrapf(err, "could not create %s folder", filepath.Join("pki", "etcd"))
+	}
 
 	fmt.Printf("[bootstrap] downloading secrets from bootstrapped node %q\n", target.Target)
 	for _, secretLocation := range deployments.Secrets {

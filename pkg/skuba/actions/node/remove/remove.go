@@ -73,7 +73,9 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 	if isControlPlane {
 		fmt.Printf("[remove-node] removing etcd from node %s\n", targetName)
-		etcd.RemoveMember(client, node, currentClusterVersion)
+		if err := etcd.RemoveMember(client, node, currentClusterVersion); err != nil {
+			fmt.Printf("[remove-node] failed removing etcd from node %s, continuing with node removal...\n", targetName)
+		}
 	}
 
 	if err := kubernetes.DisarmKubelet(client, node, currentClusterVersion); err != nil {
@@ -91,7 +93,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 	}
 
 	if err := client.CoreV1().Nodes().Delete(targetName, &metav1.DeleteOptions{}); err != nil {
-		errors.Wrapf(err, "[remove-node] could not remove node %s", targetName)
+		return errors.Wrapf(err, "[remove-node] could not remove node %s", targetName)
 	}
 
 	fmt.Printf("[remove-node] node %s successfully removed from the cluster\n", targetName)

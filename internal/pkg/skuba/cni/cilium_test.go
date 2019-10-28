@@ -71,6 +71,7 @@ func Test_CreateCiliumSecret(t *testing.T) {
 			etcdDir = tt.etcdDir
 
 			err := CreateCiliumSecret(tt.clientset)
+			//nolint:errcheck
 			secrets, _ := tt.clientset.CoreV1().Secrets(metav1.NamespaceSystem).List(metav1.ListOptions{})
 			secretSize := len(secrets.Items)
 			if tt.errExpected {
@@ -172,6 +173,7 @@ func Test_AnnotateCiliumDaemonsetWithCurrentTimestamp(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:errcheck
 			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
 
 			err := annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
@@ -254,6 +256,7 @@ key-file: /tmp/cilium-etcd/tls.key
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:errcheck
 			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.configmap)
 
 			err := CreateOrUpdateCiliumConfigMap(tt.clientset)

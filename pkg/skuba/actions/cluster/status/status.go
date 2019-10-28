@@ -53,6 +53,8 @@ func Status() error {
 	if err != nil {
 		return errors.Wrap(err, "could not create printer")
 	}
-	printer.PrintObj(nodeList, os.Stdout)
+	if err := printer.PrintObj(nodeList, os.Stdout); err != nil {
+		return errors.Wrap(err, "could not print to stdout")
+	}
 	return nil
 }

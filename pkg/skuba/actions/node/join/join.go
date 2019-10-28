@@ -135,8 +135,12 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
-	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
-	addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion)
+	if err := addFreshTokenToJoinConfiguration(target.Target, joinConfiguration); err != nil {
+		return "", errors.Wrap(err, "error adding Token to join configuration")
+	}
+	if err := addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion); err != nil {
+		return "", errors.Wrap(err, "error adding target information to join configuration")
+	}
 	if cloud.HasCloudIntegration() {
 		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
 			return "", errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
