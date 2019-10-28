@@ -19,6 +19,7 @@ package addon
 
 import (
 	"fmt"
+	"sort"
 
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
@@ -55,20 +56,35 @@ func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) 
 	return aviu, nil
 }
 
+func addonsByName(addons kubernetes.AddonsVersion) []kubernetes.Addon {
+	sortedAddons := make([]kubernetes.Addon, len(addons))
+	i := 0
+	for addon := range addons {
+		sortedAddons[i] = addon
+		i++
+	}
+	sort.Slice(sortedAddons, func(i, j int) bool {
+		return string(sortedAddons[i]) < string(sortedAddons[j])
+	})
+	return sortedAddons
+}
+
 func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
-	for addonName, versions := range updatedAddons.Updated {
-		if updatedAddons.Current[addonName] == nil && updatedAddons.Updated[addonName] != nil {
-			fmt.Printf("  - %s: %s (new addon)\n", addonName, versions.Version)
+	for _, addon := range addonsByName(updatedAddons.Updated) {
+		if updatedAddons.Current[addon] == nil && updatedAddons.Updated[addon] != nil {
+			fmt.Printf("  - %s: %s (new addon)\n", addon, updatedAddons.Updated[addon].Version)
 			continue
 		}
 
 		// At this point we know that this addon has a greater manifest version, if the addon version
 		// is different than the one stored, we will show that to the user. If the versions are equals
 		// (string comparison), we will show the manifest version bump as additional information.
-		if updatedAddons.Current[addonName].Version != versions.Version {
-			fmt.Printf("  - %s: %s -> %s\n", addonName, updatedAddons.Current[addonName].Version, versions.Version)
+		if updatedAddons.Current[addon].Version != updatedAddons.Updated[addon].Version {
+			fmt.Printf("  - %s: %s -> %s\n", addon, updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version)
 		} else {
-			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addonName, updatedAddons.Current[addonName].Version, versions.Version, updatedAddons.Current[addonName].ManifestVersion, versions.ManifestVersion)
+			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addon,
+				updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version,
+				updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
 		}
 	}
 }
