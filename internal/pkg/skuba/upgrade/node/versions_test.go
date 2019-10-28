@@ -166,7 +166,7 @@ const (
 	worker
 )
 
-func nodeVersion(node string, nodeVersion string, nodeRole nodeRole) kubernetes.NodeVersionInfo {
+func nodeVersion(node, nodeVersion string, nodeRole nodeRole) kubernetes.NodeVersionInfo {
 	res := kubernetes.NodeVersionInfo{
 		Nodename:                node,
 		ContainerRuntimeVersion: version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
@@ -181,7 +181,7 @@ func nodeVersion(node string, nodeVersion string, nodeRole nodeRole) kubernetes.
 	return res
 }
 
-func nodeVersionMap(controlPlaneNodes map[string]string, workerNodes map[string]string) kubernetes.NodeVersionInfoMap {
+func nodeVersionMap(controlPlaneNodes, workerNodes map[string]string) kubernetes.NodeVersionInfoMap {
 	res := kubernetes.NodeVersionInfoMap{}
 	for node, version := range controlPlaneNodes {
 		res[node] = nodeVersion(node, version, controlPlane)
@@ -245,6 +245,8 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		allNodesVersioningInfo        kubernetes.NodeVersionInfoMap
 		node                          v1.Node
 		expectedNodeVersionInfoUpdate NodeVersionInfoUpdate
+		expectedHasMajorOrMinorUpdate bool
+		expectedIsUpdated             bool
 		expectedError                 bool
 	}{
 		{
@@ -257,6 +259,8 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp1", "1.14.0", controlPlane),
 			},
+			expectedHasMajorOrMinorUpdate: false,
+			expectedIsUpdated:             true,
 		},
 		{
 			name:                   "first control plane to be upgraded; upgrades available",
@@ -268,6 +272,8 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp1", "1.15.0", controlPlane),
 			},
+			expectedHasMajorOrMinorUpdate: true,
+			expectedIsUpdated:             false,
 		},
 		{
 			name:                   "secondary control plane to be upgraded; upgrades available",
@@ -279,6 +285,8 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 				Current: nodeVersion("cp2", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp2", "1.15.0", controlPlane),
 			},
+			expectedHasMajorOrMinorUpdate: true,
+			expectedIsUpdated:             false,
 		},
 		{
 			name:                   "first control plane to be upgraded; outdated worker",
@@ -288,20 +296,56 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			node:                   controlPlaneNode("cp1"),
 			expectedError:          true,
 		},
+		{
+			name:                   "first control plane to be upgraded; patch version",
+			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
+			versionInquirer:        versionInquirer("1.15.0", "1.15.2"),
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.15.0"}),
+			node:                   controlPlaneNode("cp1"),
+			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
+				Current: nodeVersion("cp1", "1.15.0", controlPlane),
+				Update:  nodeVersion("cp1", "1.15.2", controlPlane),
+			},
+			expectedHasMajorOrMinorUpdate: false,
+			expectedIsUpdated:             false,
+		},
+		{
+			name:                   "node name not found",
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
+			node:                   controlPlaneNode("cp0"),
+			expectedError:          true,
+		},
 	}
+
 	for _, tt := range versions {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			nodeVersionInfoUpdate, err := controlPlaneUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
-			if err == nil && tt.expectedError {
-				t.Errorf("error expected on %s, but no error reported", tt.name)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
 				return
-			} else if err != nil && !tt.expectedError {
+			} else if err != nil {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
+
 			if !reflect.DeepEqual(nodeVersionInfoUpdate, tt.expectedNodeVersionInfoUpdate) {
 				t.Errorf("returned version info update (%v) does not match the expected one (%v)", nodeVersionInfoUpdate, tt.expectedNodeVersionInfoUpdate)
+				return
+			}
+
+			hasMajorOrMinorUpdate := nodeVersionInfoUpdate.HasMajorOrMinorUpdate()
+			if hasMajorOrMinorUpdate != tt.expectedHasMajorOrMinorUpdate {
+				t.Errorf("got %t, expect %t", hasMajorOrMinorUpdate, tt.expectedHasMajorOrMinorUpdate)
+				return
+			}
+
+			isUpdated := nodeVersionInfoUpdate.IsUpdated()
+			if isUpdated != tt.expectedIsUpdated {
+				t.Errorf("got %t, expect %t", isUpdated, tt.expectedIsUpdated)
+				return
 			}
 		})
 	}
@@ -309,13 +353,15 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 
 func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 	latestVersion := kubernetes.LatestVersion().String()
-	var versions = []struct {
+	versions := []struct {
 		name                          string
 		currentClusterVersion         *version.Version
 		versionInquirer               kubernetes.VersionInquirer
 		allNodesVersioningInfo        kubernetes.NodeVersionInfoMap
 		node                          v1.Node
 		expectedNodeVersionInfoUpdate NodeVersionInfoUpdate
+		expectedHasMajorOrMinorUpdate bool
+		expectedIsUpdated             bool
 		expectedError                 bool
 	}{
 		{
@@ -336,6 +382,8 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 				Current: nodeVersion("worker1", "1.14.1", worker),
 				Update:  nodeVersion("worker1", "1.15.0", worker),
 			},
+			expectedHasMajorOrMinorUpdate: true,
+			expectedIsUpdated:             false,
 		},
 		{
 			name:                   "worker; no upgrades available",
@@ -347,6 +395,8 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 				Current: nodeVersion("worker1", latestVersion, worker),
 				Update:  nodeVersion("worker1", latestVersion, worker),
 			},
+			expectedHasMajorOrMinorUpdate: false,
+			expectedIsUpdated:             true,
 		},
 		{
 			name:                   "worker with outdated control plane; upgrades available",
@@ -356,20 +406,49 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			node:                   workerNode("worker1"),
 			expectedError:          true,
 		},
+		{
+			name:                   "worker with updated control plane; patch version",
+			currentClusterVersion:  version.MustParseSemantic("v1.15.2"),
+			versionInquirer:        versionInquirer("1.15.0", "1.15.2"),
+			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.2"}, map[string]string{"worker1": "1.15.0"}),
+			node:                   workerNode("worker1"),
+			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
+				Current: nodeVersion("worker1", "1.15.0", worker),
+				Update:  nodeVersion("worker1", "1.15.2", worker),
+			},
+			expectedHasMajorOrMinorUpdate: false,
+			expectedIsUpdated:             false,
+		},
 	}
+
 	for _, tt := range versions {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			nodeVersionInfoUpdate, err := workerUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
-			if err == nil && tt.expectedError {
-				t.Errorf("error expected on %s, but no error reported", tt.name)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
 				return
-			} else if err != nil && !tt.expectedError {
+			} else if err != nil {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
+
 			if !reflect.DeepEqual(nodeVersionInfoUpdate, tt.expectedNodeVersionInfoUpdate) {
 				t.Errorf("returned version info update (%v) does not match the expected one (%v)", nodeVersionInfoUpdate, tt.expectedNodeVersionInfoUpdate)
+			}
+
+			hasMajorOrMinorUpdate := nodeVersionInfoUpdate.HasMajorOrMinorUpdate()
+			if hasMajorOrMinorUpdate != tt.expectedHasMajorOrMinorUpdate {
+				t.Errorf("got %t, expect %t", hasMajorOrMinorUpdate, tt.expectedHasMajorOrMinorUpdate)
+				return
+			}
+
+			isUpdated := nodeVersionInfoUpdate.IsUpdated()
+			if isUpdated != tt.expectedIsUpdated {
+				t.Errorf("got %t, expect %t", isUpdated, tt.expectedIsUpdated)
+				return
 			}
 		})
 	}
