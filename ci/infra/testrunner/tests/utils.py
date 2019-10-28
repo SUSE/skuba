@@ -1,5 +1,11 @@
 import signal
 import time
+from utils.timeit import timed
+import logging
+
+
+logger = logging.getLogger('testrunner')
+
 
 def wait(func, *args, **kwargs):
 
@@ -31,7 +37,9 @@ def wait(func, *args, **kwargs):
         signal.signal(signal.SIGALRM, _handle_timeout)
         signal.alarm(timeout)
         try:
-            return func(*args, **kwargs)
+            with timed(func.__name__):
+                result = func(*args, **kwargs)
+            return result
         except TimeoutError:
             if elapsed > 0 and int(time.time())-start >= elapsed:
                reason = "maximum wait time exceeded: {}s".format(elapsed)
