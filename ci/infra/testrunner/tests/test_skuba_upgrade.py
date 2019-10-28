@@ -30,9 +30,9 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
     skuba.join_nodes()
 
     wait(kubectl.run_kubectl,
-         "wait --for=condition=ready nodes --all --timeout=0",
+         "wait --for=condition=ready nodes --all --timeout=30m",
          wait_delay=60,
-         wait_timeout=30,
+         wait_timeout=30 * 60,
          wait_backoff=30,
          wait_retries=5,
          wait_allow=(RuntimeError))
