@@ -4,7 +4,7 @@ import textwrap
 
 import pytest
 
-from tests.utils import wait
+from tests.utils import (check_pods_ready, wait)
 
 logger = logging.getLogger("testrunner")
 
@@ -66,13 +66,13 @@ def test_dockercaps(deployment, kubectl, setup_manifest):
     kubectl.run_kubectl(
         "apply -f {}".format(setup_manifest))
 
-    wait(kubectl.run_kubectl,
-         "wait --for=condition=ready pods --all --timeout=0",
+    wait(check_pods_ready,
+         kubectl,
          wait_delay=30,
          wait_timeout=10,
          wait_backoff=30,
          wait_elapsed=180,
-         wait_allow=(RuntimeError))
+         wait_allow=(AssertionError))
 
     logger.info("Test: Run 'su root -c id' on the containers")
     pods = ["sle12sp4", "leap", "sle15", "sle15sp1"]
