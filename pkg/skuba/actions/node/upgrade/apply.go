@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
@@ -31,20 +33,14 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
-	"github.com/pkg/errors"
 )
 
-func Apply(target *deployments.Target) error {
+func Apply(clientSet clientset.Interface, target *deployments.Target) error {
 	if err := fillTargetWithNodeName(target); err != nil {
 		return err
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
-
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}
@@ -54,7 +50,7 @@ func Apply(target *deployments.Target) error {
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Println()
 
-	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(target.Nodename)
+	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(clientSet, target.Nodename)
 	if err != nil {
 		return err
 	}
@@ -71,7 +67,7 @@ func Apply(target *deployments.Target) error {
 	}
 
 	// Check if a lock on kured already exists
-	kuredWasLocked, err := kured.LockExists(client)
+	kuredWasLocked, err := kured.LockExists(clientSet)
 	if err != nil {
 		return err
 	}
@@ -80,20 +76,20 @@ func Apply(target *deployments.Target) error {
 	var initCfgContents []byte
 
 	// Check if the target node is the first control plane to be updated
-	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
+	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(clientSet)
 	if err != nil {
 		return err
 	}
 	if isFirstControlPlaneUpgrade {
 		var err error
-		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, nodeVersionInfoUpdate.Update.APIServerVersion)
+		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(clientSet, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
 		if upgradeable {
 			fmt.Println("Fetching the cluster configuration...")
 
-			initCfg, err := kubeadm.GetClusterConfiguration(client)
+			initCfg, err := kubeadm.GetClusterConfiguration(clientSet)
 			if err != nil {
 				return err
 			}
@@ -112,7 +108,7 @@ func Apply(target *deployments.Target) error {
 	} else {
 		// there is already at least one updated control plane node
 		if nodeVersionInfoUpdate.Current.IsControlPlane() {
-			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, currentClusterVersion)
+			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(clientSet, currentClusterVersion)
 			if err != nil {
 				return err
 			}
@@ -135,7 +131,7 @@ func Apply(target *deployments.Target) error {
 		}
 	}
 	if !kuredWasLocked {
-		if err := kured.Lock(client); err != nil {
+		if err := kured.Lock(clientSet); err != nil {
 			return err
 		}
 	}
@@ -178,7 +174,7 @@ func Apply(target *deployments.Target) error {
 		}
 	}
 	if !kuredWasLocked {
-		if err := kured.Unlock(client); err != nil {
+		if err := kured.Unlock(clientSet); err != nil {
 			return err
 		}
 	}
