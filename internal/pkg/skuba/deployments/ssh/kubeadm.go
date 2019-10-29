@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
@@ -66,12 +67,16 @@ func kubeadmInit(t *Target, data interface{}) error {
 }
 
 func kubeadmJoin(t *Target, data interface{}) error {
+	api, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve the clientset from kubernetes")
+	}
 	joinConfiguration, ok := data.(deployments.JoinConfiguration)
 	if !ok {
 		return errors.New("couldn't access join configuration")
 	}
 
-	configPath, err := join.ConfigPath(joinConfiguration.Role, t.target)
+	configPath, err := join.ConfigPath(api, joinConfiguration.Role, t.target)
 	if err != nil {
 		return errors.Wrap(err, "unable to configure path")
 	}

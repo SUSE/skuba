@@ -18,11 +18,14 @@
 package node
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
 	node "github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 	"github.com/SUSE/skuba/pkg/skuba/actions/validate"
@@ -37,7 +40,6 @@ type joinOptions struct {
 func NewJoinCmd() *cobra.Command {
 	joinOptions := joinOptions{}
 	target := ssh.Target{}
-
 	cmd := &cobra.Command{
 		Use:   "join <node-name>",
 		Short: "Joins a new node to the cluster",
@@ -51,8 +53,12 @@ func NewJoinCmd() *cobra.Command {
 			}
 
 			joinConfiguration.Role = deployments.MustGetRoleFromString(joinOptions.role)
-
-			if err := node.Join(joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
+			clientSet, err := kubernetes.GetAdminClientSet()
+			if err != nil {
+				klog.Errorf("unable to get admin client set: %s", err)
+				os.Exit(1)
+			}
+			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
 				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},

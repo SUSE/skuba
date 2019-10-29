@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
@@ -48,13 +49,8 @@ import (
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
-func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		fmt.Println("[join] failed to get admin client set")
-		return err
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return err
 	}
@@ -71,7 +67,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		criConfigure = "cri.configure"
 	}
 
-	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	_, err = clientSet.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 		return err
@@ -102,7 +98,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
-		if err := cni.CiliumUpdateConfigMap(client); err != nil {
+		if err := cni.CiliumUpdateConfigMap(clientSet); err != nil {
 			return err
 		}
 	}
@@ -116,17 +112,13 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 //
 // FIXME: being this a part of the go API accept the toplevel directory instead of
 //        using the PWD
-func ConfigPath(role deployments.Role, target *deployments.Target) (string, error) {
+func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *deployments.Target) (string, error) {
 	configPath := skuba.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = skuba.TemplatePathForRole(role)
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return "", errors.Wrap(err, "could not get admin client set")
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get current cluster version")
 	}
@@ -135,7 +127,7 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
-	if err := addFreshTokenToJoinConfiguration(target.Target, joinConfiguration); err != nil {
+	if err := addFreshTokenToJoinConfiguration(clientSet, target.Target, joinConfiguration); err != nil {
 		return "", errors.Wrap(err, "error adding Token to join configuration")
 	}
 	if err := addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion); err != nil {
@@ -162,12 +154,12 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	return skuba.MachineConfFile(target.Target), nil
 }
 
-func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
+func addFreshTokenToJoinConfiguration(clientSet clientset.Interface, target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
 	if joinConfiguration.Discovery.BootstrapToken == nil {
 		joinConfiguration.Discovery.BootstrapToken = &kubeadmapi.BootstrapTokenDiscovery{}
 	}
 	var err error
-	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(target)
+	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(clientSet, target)
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 	return err
 }
@@ -190,12 +182,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	return nil
 }
 
-func createBootstrapToken(target string) (string, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get admin client set")
-	}
-
+func createBootstrapToken(clientSet clientset.Interface, target string) (string, error) {
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
 		return "", errors.Wrap(err, "could not generate a new bootstrap token")
@@ -218,7 +205,7 @@ func createBootstrapToken(target string) (string, error) {
 		},
 	}
 
-	if err := kubeadmtokenphase.CreateNewTokens(client, bootstrapTokens); err != nil {
+	if err := kubeadmtokenphase.CreateNewTokens(clientSet, bootstrapTokens); err != nil {
 		return "", errors.Wrap(err, "could not create new bootstrap token")
 	}
 
