@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestGetPodContainerImageTagWithClientset(t *testing.T) {
+func TestGetPodContainerImageTag(t *testing.T) {
 	podName := "etcd-my-master-0"
 	namespace := metav1.NamespaceSystem
 	expectedEtcdContainerImageTag := "3.3.11"
@@ -46,7 +46,7 @@ func TestGetPodContainerImageTagWithClientset(t *testing.T) {
 			},
 		})
 
-		etcdContainerImageTag, _ := getPodContainerImageTagWithClientset(clientset, namespace, podName)
+		etcdContainerImageTag, _ := getPodContainerImageTag(clientset, namespace, podName)
 		if !reflect.DeepEqual(etcdContainerImageTag, expectedEtcdContainerImageTag) {
 			t.Errorf("got %v, want %v", etcdContainerImageTag, expectedEtcdContainerImageTag)
 		}

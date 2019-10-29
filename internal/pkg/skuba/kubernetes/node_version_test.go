@@ -28,7 +28,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 )
 
-func TestNodeVersioningInfoWithClientset(t *testing.T) {
+func TestNodeVersioningInfo(t *testing.T) {
 	testK8sVersion := version.MustParseSemantic("v1.14.1")
 	testEtcdVersion := version.MustParseSemantic("3.3.11")
 	namespace := metav1.NamespaceSystem
@@ -164,7 +164,7 @@ func TestNodeVersioningInfoWithClientset(t *testing.T) {
 				},
 			})
 
-			nodeVersionInfo, _ := nodeVersioningInfoWithClientset(clientset, tt.nodeName)
+			nodeVersionInfo, _ := nodeVersioningInfo(clientset, tt.nodeName)
 			if !reflect.DeepEqual(nodeVersionInfo, tt.expectedNodeVersionInfo) {
 				t.Errorf("got %v, want %v", nodeVersionInfo, tt.expectedNodeVersionInfo)
 			}

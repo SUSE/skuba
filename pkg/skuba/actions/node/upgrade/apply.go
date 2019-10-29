@@ -80,13 +80,13 @@ func Apply(target *deployments.Target) error {
 	var initCfgContents []byte
 
 	// Check if the target node is the first control plane to be updated
-	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded()
+	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
 	if err != nil {
 		return err
 	}
 	if isFirstControlPlaneUpgrade {
 		var err error
-		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
+		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func Apply(target *deployments.Target) error {
 	} else {
 		// there is already at least one updated control plane node
 		if nodeVersionInfoUpdate.Current.IsControlPlane() {
-			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(currentClusterVersion)
+			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, currentClusterVersion)
 			if err != nil {
 				return err
 			}

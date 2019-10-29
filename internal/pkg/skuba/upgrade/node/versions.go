@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -70,21 +71,19 @@ func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
 		nviu.Current.ContainerRuntimeVersion.Patch() >= nviu.Update.ContainerRuntimeVersion.Patch()
 }
 
-func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() (bool, error) {
+func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client clientset.Interface) (bool, error) {
 	isControlPlane := nviu.Current.IsControlPlane()
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return false, errors.Wrap(err, "unable to get admin client set")
-	}
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return false, errors.Wrap(err, "could not get current cluster version")
 	}
-	allControlPlanesMatchVersion, err := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
+	allControlPlanesMatchVersion, err := kubernetes.AllControlPlanesMatchVersion(client, currentClusterVersion)
 	if err != nil {
 		return false, errors.Wrap(err, "could not check if all control plane versions match")
 	}
-	matchesClusterVersion := (currentClusterVersion.String() == nviu.Current.KubeletVersion.String())
+	matchesClusterVersion := currentClusterVersion.Major() == nviu.Current.KubeletVersion.Major() &&
+		currentClusterVersion.Minor() == nviu.Current.KubeletVersion.Minor() &&
+		currentClusterVersion.Patch() <= nviu.Current.KubeletVersion.Patch()
 
 	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion, nil
 }
@@ -98,7 +97,7 @@ func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo()
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}

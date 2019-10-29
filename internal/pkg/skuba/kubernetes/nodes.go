@@ -106,7 +106,7 @@ func DrainNode(client kubernetes.Interface, node *v1.Node, drainTimeout time.Dur
 	return nil
 }
 
-func getPodContainerImageTagWithClientset(client kubernetes.Interface, namespace string, podName string) (string, error) {
+func getPodContainerImageTag(client kubernetes.Interface, namespace string, podName string) (string, error) {
 	podObject, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrap(err, "could not retrieve pod object")
