@@ -18,10 +18,11 @@
 package ssh
 
 import (
+	"os"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh/assets"
 
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		}
 	}
 
-	if cloud.HasCloudIntegration() {
+	if _, err := os.Stat(skuba.OpenstackCloudConfFile()); err == nil {
 		if err := t.target.UploadFile(skuba.OpenstackCloudConfFile(), skuba.OpenstackConfigRuntimeFile()); err != nil {
 			return err
 		}

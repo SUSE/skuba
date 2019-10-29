@@ -23,11 +23,13 @@ kind: InitConfiguration
 bootstrapTokens: []
 localAPIEndpoint:
   advertiseAddress: ""
-{{- if eq .CloudProvider "aws" }}
+{{ if .ComponentExtraArgs .Kubelet -}}
 nodeRegistration:
   kubeletExtraArgs:
-    cloud-provider: "aws"
-{{- end }}
+{{- range $key, $value := .ComponentExtraArgs .Kubelet }}
+    {{ $key }}: "{{ $value }}"
+{{- end -}}
+{{ end }}
 ---
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
@@ -40,13 +42,40 @@ apiServer:
     oidc-ca-file: /etc/kubernetes/pki/ca.crt
     oidc-username-claim: email
     oidc-groups-claim: groups
-{{- if eq .CloudProvider "aws" }}
-    cloud-provider: "aws"
+{{- if .ComponentExtraArgs .APIServer -}}
+{{- range $key, $value := .ComponentExtraArgs .APIServer }}
+    {{ $key }}: "{{ $value }}"
+{{- end -}}
+{{ end -}}
+{{ if .ComponentExtraVolumes .APIServer }}
+  extraVolumes:
+{{- range .ComponentExtraVolumes .APIServer }}
+    - name: {{.Name}}
+      hostPath: {{.HostPath}}
+      mountPath: {{.MountPath}}
+      readOnly: {{.ReadOnly}}
+      pathType: {{.PathType}}
+{{- end -}}
+{{ end }}
+{{ if or (.ComponentExtraArgs .ControllerManager) (.ComponentExtraVolumes .ControllerManager) -}}
 controllerManager:
+{{- if .ComponentExtraArgs .ControllerManager }}
   extraArgs:
-    cloud-provider: "aws"
-    allocate-node-cidrs: "false"
-{{- end }}
+{{- range $key, $value := .ComponentExtraArgs .ControllerManager }}
+    {{ $key }}: "{{ $value }}"
+{{- end -}}
+{{ end -}}
+{{ if .ComponentExtraVolumes .ControllerManager }}
+  extraVolumes:
+{{- range .ComponentExtraVolumes .ControllerManager }}
+    - name: {{.Name}}
+      hostPath: {{.HostPath}}
+      mountPath: {{.MountPath}}
+      readOnly: {{.ReadOnly}}
+      pathType: {{.PathType}}
+{{- end -}}
+{{ end -}}
+{{ end }}
 clusterName: {{.ClusterName}}
 controlPlaneEndpoint: {{.ControlPlaneHostAndPort}}
 dns:
@@ -79,11 +108,13 @@ discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlaneHostAndPort}}
     unsafeSkipCAVerification: true
-{{- if eq .CloudProvider "aws" }}
+{{ if .ComponentExtraArgs .Kubelet -}}
 nodeRegistration:
   kubeletExtraArgs:
-    cloud-provider: "aws"
-{{- end }}
+{{- range $key, $value := .ComponentExtraArgs .Kubelet }}
+    {{ $key }}: "{{ $value }}"
+{{- end -}}
+{{ end }}
 controlPlane:
   localAPIEndpoint:
     advertiseAddress: ""
@@ -95,10 +126,12 @@ discovery:
   bootstrapToken:
     apiServerEndpoint: {{.ControlPlaneHostAndPort}}
     unsafeSkipCAVerification: true
-{{- if eq .CloudProvider "aws" }}
+{{ if .ComponentExtraArgs .Kubelet -}}
 nodeRegistration:
   kubeletExtraArgs:
-    cloud-provider: "aws"
-{{- end }}
+{{- range $key, $value := .ComponentExtraArgs .Kubelet }}
+    {{ $key }}: "{{ $value }}"
+{{- end -}}
+{{ end }}
 `
 )

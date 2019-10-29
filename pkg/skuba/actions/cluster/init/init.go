@@ -25,13 +25,25 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
+	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+)
+
+type KubernetesComponent uint
+
+const (
+	APIServer         KubernetesComponent = iota
+	ControllerManager KubernetesComponent = iota
+	Kubelet           KubernetesComponent = iota
+	// Scheduler missing in purpose, we are not setting any specific
+	// extra args for the scheduler as of now.
 )
 
 type InitConfiguration struct {
@@ -63,6 +75,57 @@ func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
 		controlPlanePort = "6443"
 	}
 	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
+}
+
+func (initConfiguration InitConfiguration) APIServer() KubernetesComponent {
+	return APIServer
+}
+
+func (initConfiguration InitConfiguration) ControllerManager() KubernetesComponent {
+	return ControllerManager
+}
+
+func (initConfiguration InitConfiguration) Kubelet() KubernetesComponent {
+	return Kubelet
+}
+
+func (initConfiguration InitConfiguration) ComponentExtraArgs(kubernetesComponent KubernetesComponent) map[string]string {
+	extraArgs := map[string]string{}
+	switch initConfiguration.CloudProvider {
+	case "aws":
+		switch kubernetesComponent {
+		case APIServer, Kubelet:
+			extraArgs["cloud-provider"] = initConfiguration.CloudProvider
+		case ControllerManager:
+			extraArgs["cloud-provider"] = initConfiguration.CloudProvider
+			extraArgs["allocate-node-cidrs"] = "false"
+		}
+	case "openstack":
+		switch kubernetesComponent {
+		case APIServer, ControllerManager, Kubelet:
+			extraArgs["cloud-provider"] = initConfiguration.CloudProvider
+			extraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+		}
+	}
+	return extraArgs
+}
+
+func (initConfiguration InitConfiguration) ComponentExtraVolumes(kubernetesComponent KubernetesComponent) []kubeadmapi.HostPathMount {
+	extraVolumes := []kubeadmapi.HostPathMount{}
+	if initConfiguration.CloudProvider == "openstack" {
+		switch kubernetesComponent {
+		case APIServer, ControllerManager:
+			openstackCloudConfig := kubeadmapi.HostPathMount{
+				Name:      "cloud-config",
+				HostPath:  skuba.OpenstackConfigRuntimeFile(),
+				MountPath: skuba.OpenstackConfigRuntimeFile(),
+				ReadOnly:  true,
+				PathType:  v1.HostPathFileOrCreate,
+			}
+			extraVolumes = append(extraVolumes, openstackCloudConfig)
+		}
+	}
+	return extraVolumes
 }
 
 func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
