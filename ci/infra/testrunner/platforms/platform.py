@@ -73,6 +73,14 @@ class Platform:
         """
         pass
 
+    def get_nodes_names(self, role):
+        """
+        Get the names of the given type of node
+        :param role: the type of node
+        :return:
+        """
+        return [f'caasp-{role}+{n}' for n in range(self.get_num_nodes(role))]
+
     def get_nodes_ipaddrs(self, role):
         """
         Get the IP addresses of the given type of node

@@ -81,6 +81,10 @@ class Terraform(Platform):
     def get_num_nodes(self, role):
         return len(self.get_nodes_ipaddrs(role))
 
+    def get_nodes_names(self, role):
+        stack_name = self.conf.terraform.stack_name
+        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))] 
+
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
 
