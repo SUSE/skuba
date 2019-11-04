@@ -4,13 +4,57 @@ import time
 
 import pytest
 
-from tests.utils import wait
+from tests.utils import (wait, daemon_set_is_ready)
 
 logger = logging.getLogger("testrunner")
 
 
+@pytest.fixture()
+def deploy_deathstar(request, kubectl):
+    logger.info("Deploy deathstar")
+    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/http-sw-app.yaml")
+
+    def cleanup():
+        kubectl.run_kubectl("delete deploy/deathstar svc/deathstar pod/tiefighter pod/xwing")
+
+    request.addfinalizer(cleanup)
+
+    wait(kubectl.run_kubectl,
+         "wait --for=condition=available deployment/deathstar --timeout=0",
+         wait_delay=30,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180)
+
+    wait(kubectl.run_kubectl,
+         "wait --for=condition=ready pod/tiefighter pod/xwing --timeout=0",
+         wait_delay=30,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180)
+
+    wait(daemon_set_is_ready,
+         kubectl,
+         "cilium",
+         wait_delay=30,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180)
+
+
+@pytest.fixture()
+def deploy_l3_l4_l7_policy(request, kubectl, deploy_deathstar):
+    logger.info("Deploy l3, l4, and l7 policy")
+    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_l7_policy.yaml")
+
+    def cleanup():
+        kubectl.run_kubectl("delete cnp/rule1")
+
+    request.addfinalizer(cleanup)
+
+
 @pytest.mark.flaky
-def test_cillium(deployment, kubectl):
+def test_cilium(deployment, kubectl):
     landing_req = 'curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
 
     logger.info("Deploy deathstar")
@@ -52,3 +96,21 @@ def test_cillium(deployment, kubectl):
         time.sleep(30)
 
     assert all_reachable
+
+
+def test_cilium_l7(deployment, kubectl, deploy_l3_l4_l7_policy):
+    """
+    GIVEN cilium is properly configured
+    AND an L7 policy that restricts access to an endpoint is applied
+    WHEN a unautorized request is made to the endpoint
+    THEN Access is denied
+    """
+    landing_req = 'curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
+    exhaust_port = 'curl -s -XPUT deathstar.default.svc.cluster.local/v1/exhaust-port'
+
+    logger.info("Check with L3/L4/L7 policy")
+    landing_req_out = kubectl.run_kubectl(f"exec tiefighter -- {landing_req}")
+    assert 'Ship landed' in landing_req_out
+
+    exhaust_port_out = kubectl.run_kubectl(f"exec tiefighter -- {exhaust_port}")
+    assert 'Access denied' in exhaust_port_out

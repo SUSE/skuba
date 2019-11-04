@@ -80,3 +80,11 @@ def wait(func, *args, **kwargs):
 
     raise Exception("Failed waiting for function {} after {} attemps due to {}".format(func.__name__, attempts, reason))
 
+
+def daemon_set_is_ready(kubectl, dsname):
+    cmd = ("--namespace kube-system get ds -o json")
+    ret = json.loads(kubectl.run_kubectl(cmd))
+
+    for item in ret["items"]:
+        if item["metadata"]["name"] == dsname:
+            assert item["status"]["numberReady"] == item["status"]["desiredNumberScheduled"]
