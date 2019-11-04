@@ -186,8 +186,10 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		if !silent {
-			klog.V(1).Infof("%s | %s", description, scanner.Text())
+		if description == "stdout" && !silent {
+			klog.V(1).Infof("%s", scanner.Text())
+		} else if description == "stderr" {
+			klog.Errorf("%s", scanner.Text())
 		}
 	}
 	outputChan <- result.String()
