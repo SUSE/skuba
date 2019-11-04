@@ -54,6 +54,8 @@
         - '{name}-test_dockercaps-nightly'
         - '{name}-test_addon_upgrade_plan-nightly'
         - '{name}-test_addon_upgrade_apply-nightly'
+        - '{name}-test_remove_master'
+        - '{name}-test_remove_worker'
 
 - project:
     name: caasp-jobs/e2e/caasp-v4-vmware
@@ -73,6 +75,8 @@
         - '{name}-test_dockercaps-nightly'
         - '{name}-test_addon_upgrade_plan-nightly'
         - '{name}-test_addon_upgrade_apply-nightly'
+        - '{name}-test_remove_master'
+        - '{name}-test_remove_worker'
 
 - project:
     name: caasp-jobs/validation/caasp-v4-openstack
