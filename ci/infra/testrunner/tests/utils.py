@@ -1,6 +1,17 @@
 import signal
 import time
 
+
+def check_nodes_ready(kubectl):
+    # Retrieve the node name and the Ready condition (True, or False)
+    cmd = ("get nodes -o jsonpath='{ range .items[*]}{@.metadata.name}{\":\"}"
+           "{range @.status.conditions[?(.type==\"Ready\")]}{@.status}{\" \"}'")
+
+    nodes = kubectl.run_kubectl(cmd).strip().split(" ")
+    for node in nodes:
+        node_name, node_status = node.split(":")
+        assert node_status == "True", f'Node {node_name} is not Ready'
+
 def wait(func, *args, **kwargs):
 
     class TimeoutError(Exception):

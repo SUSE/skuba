@@ -1,7 +1,7 @@
 import time
 import pytest
 
-from tests.utils import wait
+from tests.utils import (check_nodes_ready, wait)
 
 PREVIOUS_VERSION = "1.14.1"
 CURRENT_VERSION = "1.15.2"
@@ -27,13 +27,12 @@ def setup_kubernetes_version(platform, skuba, kubectl, kubernetes_version=None):
 
     skuba.join_nodes()
 
-    wait(kubectl.run_kubectl,
-         "wait --for=condition=ready nodes --all --timeout=0",
+    wait(check_nodes_ready,
+         kubectl,
          wait_delay=60,
-         wait_timeout=30,
          wait_backoff=30,
-         wait_retries=5,
-         wait_allow=(RuntimeError))
+         wait_elapsed=60*10,
+         wait_allow=(AssertionError))
 
 
 def node_is_upgraded(kubectl, platform, role, nr):
@@ -215,4 +214,9 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
 
     kubeclt_cmd = (r"-n kube-system get ds/kured -o jsonpath="
                    r"'{.metadata.annotations.weave\.works/kured-node-lock}'")
-    assert kubectl.run_kubectl(kubectl_cmd).find("manual") != -1
+    result = wait(kubectl.run_kubectl,
+                  kubectl_cmd,
+                  wait_backoff=30,
+                  wait_retries=3,
+                  wait_allow=(RuntimeError))
+    assert result.find("manual") != -1
