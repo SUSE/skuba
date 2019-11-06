@@ -71,8 +71,9 @@ class Skuba:
             self.platform.setup_cloud_provider()
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
-        cmd = "node bootstrap --user {nodeuser} --sudo --target \
-                 {ip} caasp-master-0".format(ip=master0_ip, nodeuser=self.conf.nodeuser)
+        master0_name = self.platform.get_nodes_names("master")[0]
+        cmd = (f'node bootstrap --user {self.conf.nodeuser} --sudo --target '
+               f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
 
@@ -81,6 +82,7 @@ class Skuba:
         self._verify_bootstrap_dependency()
 
         ip_addrs = self.platform.get_nodes_ipaddrs(role)
+        node_names = self.platform.get_nodes_names(role)
 
         if nr < 0:
             raise ValueError("Node number cannot be negative")
@@ -89,9 +91,8 @@ class Skuba:
             raise Exception(Format.alert("Node {role}-{nr} is not deployed in "
                                          "infrastructure".format(role=role, nr=nr)))
 
-        cmd = "node join --role {role} --user {nodeuser} --sudo --target {ip} \
-               caasp-{role}-{nr}".format(role=role, ip=ip_addrs[nr], nr=nr,
-                                      nodeuser=self.conf.nodeuser)
+        cmd = (f'node join --role {role} --user {self.conf.nodeuser} '
+               f' --sudo --target {ip_addrs[nr]} {node_names[nr]}')
         try:
             self._run_skuba(cmd)
         except Exception as ex:
@@ -125,7 +126,8 @@ class Skuba:
             raise ValueError("Error: there is no {role}-{nr} \
                               node to remove from cluster".format(role=role, nr=nr))
 
-        cmd = "node remove caasp-{role}-{nr}".format(role=role, nr=nr)
+        node_names = self.platform.get_nodes_names(role)
+        cmd = f'node remove {node_names[nr]}'
 
         try:
             self._run_skuba(cmd)
@@ -144,11 +146,12 @@ class Skuba:
                               node in the cluster".format(role, nr))
 
         if action == "plan":
-            cmd = "node upgrade plan caasp-{}-{}".format(role, nr)
+            node_names = self.platform.get_nodes_names(role)
+            cmd = f'node upgrade plan {node_names[nr]}'
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
-            cmd = "node upgrade apply --user {username} --sudo --target {ip}".format(
-                ip=ip_addrs[nr], username=self.conf.nodeuser)
+            cmd = (f'node upgrade apply --user {self.conf.nodeuser} --sudo'
+                   f' --target {ip_addrs[nr]}')
         else:
             raise ValueError("Invalid action '{}'".format(action))
 
