@@ -43,6 +43,17 @@ def deploy_deathstar(request, kubectl):
 
 
 @pytest.fixture()
+def deploy_l3_l4_policy(request, kubectl, deploy_deathstar):
+    logger.info("Deploy l3 and l4 policy")
+    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_policy.yaml")
+
+    def cleanup():
+        kubectl.run_kubectl("delete cnp/rule1")
+
+    request.addfinalizer(cleanup)
+
+
+@pytest.fixture()
 def deploy_l3_l4_l7_policy(request, kubectl, deploy_deathstar):
     logger.info("Deploy l3, l4, and l7 policy")
     kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_l7_policy.yaml")
@@ -53,26 +64,10 @@ def deploy_l3_l4_l7_policy(request, kubectl, deploy_deathstar):
     request.addfinalizer(cleanup)
 
 
-@pytest.mark.flaky
-def test_cilium(deployment, kubectl):
+def test_cilium(deployment, kubectl, deploy_l3_l4_policy):
     landing_req = 'curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
 
-    logger.info("Deploy deathstar")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/http-sw-app.yaml")
-
-    # FIXME: This check should be only get the star wars application's pods
-    wait(kubectl.run_kubectl,
-         "wait --for=condition=ready pods --all --timeout=0",
-         wait_delay=30,
-         wait_timeout=10,
-         wait_backoff=30,
-         wait_elapsed=180)
-
-    # FIXME: this hardcoded wait should be replaces with a (cilum?) condition
-    time.sleep(100)
-
     logger.info("Check with L3/L4 policy")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_policy.yaml")
     tie_out = kubectl.run_kubectl("exec tiefighter -- {}".format(landing_req))
     assert 'Ship landed' in tie_out
 
