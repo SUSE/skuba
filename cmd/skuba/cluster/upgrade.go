@@ -22,7 +22,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 )
 
@@ -45,7 +47,12 @@ func newUpgradePlanCmd() *cobra.Command {
 		Use:   "plan",
 		Short: "Plan cluster upgrade",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := upgrade.Plan(); err != nil {
+			clientSet, err := kubernetes.GetAdminClientSet()
+			if err != nil {
+				klog.Errorf("unable to get admin client set: %s", err)
+				os.Exit(1)
+			}
+			if err := upgrade.Plan(clientSet); err != nil {
 				fmt.Printf("Unable to plan cluster upgrade: %s\n", err)
 				os.Exit(1)
 			}

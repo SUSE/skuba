@@ -21,17 +21,14 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 )
 
-func Plan() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
+func Plan(client clientset.Interface) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err

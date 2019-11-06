@@ -25,13 +25,13 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	kubectldrain "k8s.io/kubernetes/pkg/kubectl/drain"
 )
 
-func GetControlPlaneNodes(client kubernetes.Interface) (*v1.NodeList, error) {
+func GetControlPlaneNodes(client clientset.Interface) (*v1.NodeList, error) {
 	return client.CoreV1().Nodes().List(metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 	})
@@ -59,7 +59,7 @@ func IsControlPlane(node *v1.Node) bool {
 	return isControlPlane
 }
 
-func DrainNode(client kubernetes.Interface, node *v1.Node, drainTimeout time.Duration) error {
+func DrainNode(client clientset.Interface, node *v1.Node, drainTimeout time.Duration) error {
 	policyGroupVersion, err := kubectldrain.CheckEvictionSupport(client)
 	if err != nil {
 		return errors.Wrap(err, "could not get policy group version")
@@ -106,7 +106,7 @@ func DrainNode(client kubernetes.Interface, node *v1.Node, drainTimeout time.Dur
 	return nil
 }
 
-func getPodContainerImageTag(client kubernetes.Interface, namespace string, podName string) (string, error) {
+func getPodContainerImageTag(client clientset.Interface, namespace string, podName string) (string, error) {
 	podObject, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrap(err, "could not retrieve pod object")

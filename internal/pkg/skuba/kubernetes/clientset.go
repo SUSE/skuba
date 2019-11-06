@@ -24,7 +24,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func GetAdminClientSet() (*clientset.Clientset, error) {
+func GetAdminClientSet() (clientset.Interface, error) {
 	client, err := kubeconfigutil.ClientSetFromFile(skuba.KubeConfigAdminFile())
 	if err != nil {
 		return nil, err

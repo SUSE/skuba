@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -29,11 +30,7 @@ import (
 )
 
 // Apply implements the `skuba addon upgrade apply` command.
-func Apply() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
+func Apply(client clientset.Interface) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err

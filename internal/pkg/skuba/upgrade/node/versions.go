@@ -88,20 +88,16 @@ func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client cli
 	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion, nil
 }
 
-func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return NodeVersionInfoUpdate{}, errors.Wrap(err, "unable to get admin client set")
-	}
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+func UpdateStatus(clientSet clientset.Interface, nodeName string) (NodeVersionInfoUpdate, error) {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(clientSet)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	node, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	node, err := clientSet.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
 	if err != nil {
 		return NodeVersionInfoUpdate{}, errors.Wrapf(err, "could not find node %s", nodeName)
 	}
