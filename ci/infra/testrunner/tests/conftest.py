@@ -1,11 +1,10 @@
-import json
 import pytest
 
 import platforms
 from kubectl import Kubectl
 from skuba import Skuba
 from utils import BaseConfig
-from tests.utils import wait
+from tests.utils import (check_pods_ready, wait)
 
 
 def pytest_addoption(parser):
@@ -47,20 +46,14 @@ def bootstrap(request, provision, skuba):
     skuba.node_bootstrap()
 
 
-def check_system_pods_ready(kubectl):
-    pods = json.loads(kubectl.run_kubectl('get pods --namespace=kube-system -o json'))['items']
-    for pod in pods:
-        pod_status = pod['status']['phase']
-        pod_name   = pod['metadata']['name']
-        assert pod_status in ['Running', 'Completed'], f'Pod {pod_name} status {pod_status} != Running or Completed'
-
 @pytest.fixture
 def deployment(request, bootstrap, skuba, kubectl):
     if request.config.getoption("skip_setup") != 'deployed':
         skuba.join_nodes()
 
-    wait(check_system_pods_ready,
+    wait(check_pods_ready,
          kubectl,
+         namespace="kube-system",
          wait_delay=60,
          wait_timeout=10,
          wait_backoff=60,

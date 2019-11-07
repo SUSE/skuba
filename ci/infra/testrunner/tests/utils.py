@@ -1,3 +1,4 @@
+import json
 import signal
 import time
 
@@ -11,6 +12,16 @@ def check_nodes_ready(kubectl):
     for node in nodes:
         node_name, node_status = node.split(":")
         assert node_status == "True", f'Node {node_name} is not Ready'
+
+def check_pods_ready(kubectl, namespace=None, statuses=['Running', 'Completed']):
+    
+    kubectl_cmd = f'get pods {" --namespace="+namespace if namespace else ""} -o json'
+
+    pods = json.loads(kubectl.run_kubectl(kubectl_cmd))['items']
+    for pod in pods:
+        pod_status = pod['status']['phase']
+        pod_name   = pod['metadata']['name']
+        assert pod_status in statuses, f'Pod {pod_name} status {pod_status} != Running or Completed'
 
 def wait(func, *args, **kwargs):
 

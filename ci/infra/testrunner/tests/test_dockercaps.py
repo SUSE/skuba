@@ -4,11 +4,11 @@ import textwrap
 
 import pytest
 
-from tests.utils import wait
+from tests.utils import (check_pods_ready, wait)
 
 logger = logging.getLogger("testrunner")
 
-CONTENT = """---
+MANIFEST = """---
 apiVersion: v1
 kind: Pod
 metadata:
@@ -50,29 +50,19 @@ spec:
       command: ['/bin/sh', '-c', 'sleep 3600']"""
 
 
-@pytest.fixture
-def setup_manifest():
-    cwd = pathlib.Path.cwd()
-    p = cwd / "pods.yaml"
-    p.touch()
-    p.write_text(textwrap.dedent(CONTENT))
-    yield p
-    p.unlink()
-
-
 @pytest.mark.flaky
-def test_dockercaps(deployment, kubectl, setup_manifest):
+def test_dockercaps(deployment, kubectl):
     logger.info("Deploy testcases")
     kubectl.run_kubectl(
-        "apply -f {}".format(setup_manifest))
+        "apply -f -", stdin=MANIFEST.encode())
 
-    wait(kubectl.run_kubectl,
-         "wait --for=condition=ready pods --all --timeout=0",
+    wait(check_pods_ready,
+         kubectl,
          wait_delay=30,
          wait_timeout=10,
          wait_backoff=30,
          wait_elapsed=180,
-         wait_allow=(RuntimeError))
+         wait_allow=(AssertionError))
 
     logger.info("Test: Run 'su root -c id' on the containers")
     pods = ["sle12sp4", "leap", "sle15", "sle15sp1"]
@@ -89,4 +79,4 @@ def test_dockercaps(deployment, kubectl, setup_manifest):
 
     # Remove the testing pods
     kubectl.run_kubectl(
-        "delete -f {}".format(setup_manifest))
+        "delete -f -", stdin=MANIFEST.encode())
