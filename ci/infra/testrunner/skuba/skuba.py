@@ -1,6 +1,7 @@
 import logging
 import os
 import stat
+import time
 
 import platforms
 from utils.format import Format
@@ -104,12 +105,30 @@ class Skuba:
         if workers is None:
             workers = self.platform.get_num_nodes("worker")
 
-        for n in range(1, masters):
-            self.node_join("master", n)
+        nodes = [("master", n) for n in range(1, masters)] + \
+                [("worker", n) for n in range(0, workers)] 
+        for role, node in nodes:
+            self.node_join(role, node)
+            self._wait_node_joined(role, node, timeout=180, backoff=20)
 
-        for n in range(0, workers):
-            self.node_join("worker", n)
 
+    def _wait_node_joined(self, role, node, timeout=60, backoff=10):
+        
+        node_name = self.platform.get_nodes_names(role)[node]
+        deadline = int(time.time()) + timeout
+        while True:
+            try:
+                status = self.cluster_status()
+                if status.find(node_name) > -1:
+                    return
+            except Exception as ex:
+                raise Exception("Exception retrieving cluster status") from ex
+
+            if int(time.time()) >= deadline:
+                raise Exception(f'Node {node_name} not shown ready after {timeout} seconds')
+            time.sleep(backoff)
+        
+        
     @step
     def node_remove(self, role="worker", nr=0):
         self._verify_bootstrap_dependency()
