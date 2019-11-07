@@ -27,12 +27,15 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Gangway, renderGangwayTemplate, gangwayCallbacks{}, normalPriority)
+	registerAddon(kubernetes.Gangway, renderGangwayTemplate, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
+}
+
+func GetGangwayImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway", imageTag)
 }
 
 func (renderContext renderContext) GangwayImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
+	return GetGangwayImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
 }
 
 func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {

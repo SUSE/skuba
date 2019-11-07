@@ -27,22 +27,31 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Cilium, renderCiliumTemplate, ciliumCallbacks{}, normalPriority)
+	registerAddon(kubernetes.Cilium, renderCiliumTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumInitImage, GetCiliumOperatorImage, GetCiliumImage})
+}
+
+func GetCiliumInitImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-init", imageTag)
+}
+
+func GetCiliumOperatorImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-operator", imageTag)
+}
+
+func GetCiliumImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium", imageTag)
 }
 
 func (renderContext renderContext) CiliumInitImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-init",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumInitImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) CiliumOperatorImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-operator",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumOperatorImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) CiliumImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func renderCiliumTemplate(addonConfiguration AddonConfiguration) string {
