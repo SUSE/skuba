@@ -13,15 +13,22 @@ def check_nodes_ready(kubectl):
         node_name, node_status = node.split(":")
         assert node_status == "True", f'Node {node_name} is not Ready'
 
-def check_pods_ready(kubectl, namespace=None, statuses=['Running', 'Completed']):
+def check_pods_ready(kubectl, namespace=None, pods=[], statuses=['Running', 'Succeeded']):
     
-    kubectl_cmd = f'get pods {" --namespace="+namespace if namespace else ""} -o json'
+    ns = f'{"--namespace="+namespace if namespace else ""}' 
+    kubectl_cmd = f'get pods {" ".join(pods)} {ns} -o json'
 
-    pods = json.loads(kubectl.run_kubectl(kubectl_cmd))['items']
-    for pod in pods:
+    result = json.loads(kubectl.run_kubectl(kubectl_cmd))
+    # get pods can return a list of items or a single pod
+    pod_list =  []
+    if result.get('items'):
+        pod_list = result['items']
+    else:
+        pod_list.append(result)
+    for pod in pod_list:
         pod_status = pod['status']['phase']
         pod_name   = pod['metadata']['name']
-        assert pod_status in statuses, f'Pod {pod_name} status {pod_status} != Running or Completed'
+        assert pod_status in statuses, f'Pod {pod_name} status {pod_status} not in expected statuses: {", ".join(statuses)}'
 
 def wait(func, *args, **kwargs):
 
