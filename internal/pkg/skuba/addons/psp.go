@@ -20,7 +20,7 @@ package addons
 import "github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 
 func init() {
-	registerAddon(kubernetes.PSP, renderPSPTemplate, nil, highPriority)
+	registerAddon(kubernetes.PSP, renderPSPTemplate, nil, highPriority, []getImageCallback{})
 }
 
 func renderPSPTemplate(addonConfiguration AddonConfiguration) string {

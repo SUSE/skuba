@@ -26,9 +26,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
-
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func DisarmKubelet(client clientset.Interface, node *v1.Node, clusterVersion *version.Version) error {
@@ -52,7 +49,7 @@ func disarmKubeletJobSpec(node *v1.Node, clusterVersion *version.Version) batchv
 				Containers: []v1.Container{
 					{
 						Name:  disarmKubeletJobName(node),
-						Image: images.GetGenericImage(skuba.ImageRepository, "skuba-tooling", ComponentVersionForClusterVersion(Tooling, clusterVersion)),
+						Image: ComponentContainerImageForClusterVersion(Tooling, clusterVersion),
 						Command: []string{
 							"/bin/bash", "-c",
 							strings.Join(

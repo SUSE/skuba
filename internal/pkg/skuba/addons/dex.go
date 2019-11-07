@@ -29,12 +29,15 @@ import (
 var gangwayClientSecret string
 
 func init() {
-	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority)
+	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
+}
+
+func GetDexImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex", imageTag)
 }
 
 func (renderContext renderContext) DexImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
+	return GetDexImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) GangwayClientSecret() string {

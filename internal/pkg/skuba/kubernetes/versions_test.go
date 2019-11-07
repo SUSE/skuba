@@ -67,7 +67,7 @@ func TestAvailableVersionsForMap(t *testing.T) {
 }
 
 func TestLatestVersion(t *testing.T) {
-	if _, ok := Versions[LatestVersion().String()]; !ok {
+	if _, ok := supportedVersions[LatestVersion().String()]; !ok {
 		t.Errorf("Versions map --authoritative version mapping-- does not include version %q", LatestVersion().String())
 	}
 }
@@ -75,5 +75,34 @@ func TestLatestVersion(t *testing.T) {
 func TestIsVersionAvailable(t *testing.T) {
 	if !IsVersionAvailable(LatestVersion()) {
 		t.Errorf("Versions map does not include version %q", LatestVersion().String())
+	}
+}
+
+func TestMajorMinorVersion(t *testing.T) {
+	tests := []struct {
+		name                      string
+		version                   *version.Version
+		expectedMajorMinorVersion string
+	}{
+		{
+			name:                      "without prefix v",
+			version:                   version.MustParseSemantic("1.14.1"),
+			expectedMajorMinorVersion: "1.14",
+		},
+		{
+			name:                      "with prefix v",
+			version:                   version.MustParseSemantic("v1.14.1"),
+			expectedMajorMinorVersion: "1.14",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			gotVersion := MajorMinorVersion(tt.version)
+			if gotVersion != tt.expectedMajorMinorVersion {
+				t.Errorf("got version %s, expect version %s", gotVersion, tt.expectedMajorMinorVersion)
+			}
+		})
 	}
 }

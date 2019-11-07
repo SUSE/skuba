@@ -47,10 +47,11 @@ const (
 var Addons = map[kubernetes.Addon]Addon{}
 
 type Addon struct {
-	addon         kubernetes.Addon
-	templater     addonTemplater
-	callbacks     addonCallbacks
-	addonPriority addonPriority
+	addon             kubernetes.Addon
+	templater         addonTemplater
+	callbacks         addonCallbacks
+	addonPriority     addonPriority
+	getImageCallbacks []getImageCallback
 }
 
 type addonCallbacks interface {
@@ -65,6 +66,8 @@ type AddonConfiguration struct {
 }
 
 type addonTemplater func(AddonConfiguration) string
+
+type getImageCallback func(imageTag string) string
 
 type ApplyBehavior uint
 
@@ -99,12 +102,13 @@ func (renderContext renderContext) ManifestVersion() string {
 	return fmt.Sprintf("%s-%d", addonVersion.Version, addonVersion.ManifestVersion)
 }
 
-func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority) {
+func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority, getImageCallbacks []getImageCallback) {
 	Addons[addon] = Addon{
-		addon:         addon,
-		templater:     addonTemplater,
-		callbacks:     callbacks,
-		addonPriority: addonPriority,
+		addon:             addon,
+		templater:         addonTemplater,
+		callbacks:         callbacks,
+		addonPriority:     addonPriority,
+		getImageCallbacks: getImageCallbacks,
 	}
 }
 
@@ -261,6 +265,14 @@ func (addon Addon) Apply(addonConfiguration AddonConfiguration, skubaConfigurati
 		}
 	}
 	return updateSkubaConfigMapWithAddonVersion(addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
+}
+
+func (addon Addon) Images(imageTag string) []string {
+	images := []string{}
+	for _, cb := range addon.getImageCallbacks {
+		images = append(images, cb(imageTag))
+	}
+	return images
 }
 
 func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.AddonVersion) bool {

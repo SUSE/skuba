@@ -53,7 +53,7 @@ type VersionInquirer interface {
 type StaticVersionInquirer struct{}
 
 func (si StaticVersionInquirer) AvailablePlatformVersions() []*version.Version {
-	return AvailableVersionsForMap(Versions)
+	return AvailableVersionsForMap(supportedVersions)
 }
 
 func (si StaticVersionInquirer) NodeVersionInfoForClusterVersion(node *v1.Node, clusterVersion *version.Version) NodeVersionInfo {

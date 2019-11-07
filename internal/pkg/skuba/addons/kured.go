@@ -19,17 +19,20 @@ package addons
 
 import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
+	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 func init() {
-	registerAddon(kubernetes.Kured, renderKuredTemplate, nil, normalPriority)
+	registerAddon(kubernetes.Kured, renderKuredTemplate, nil, normalPriority, []getImageCallback{GetKuredImage})
+}
+
+func GetKuredImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "kured", imageTag)
 }
 
 func (renderContext renderContext) KuredImage() string {
-	return images.GetGenericImage(skuba.ImageRepository, "kured",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Kured, renderContext.config.ClusterVersion).Version)
+	return GetKuredImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Kured, renderContext.config.ClusterVersion).Version)
 }
 
 func renderKuredTemplate(addonConfiguration AddonConfiguration) string {

@@ -20,7 +20,6 @@ package node
 import (
 	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -34,7 +33,7 @@ func AddTargetInformationToInitConfigurationWithClusterVersion(target *deploymen
 	initConfiguration.NodeRegistration.Name = target.Nodename
 	initConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, clusterVersion))
+	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, clusterVersion)
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return err

@@ -20,36 +20,24 @@ package cluster
 import (
 	"fmt"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
-	"k8s.io/klog"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
-// Print out list of images that will be pulled
+// Print out a list of images that will use
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
 func Images() error {
-	components := map[kubernetes.Component]string{
-		kubernetes.Hyperkube: "hyperkube",
-		kubernetes.Etcd:      "etcd",
-		kubernetes.CoreDNS:   "coredns",
-		kubernetes.Pause:     "pause",
-		kubernetes.Tooling:   "tooling",
+	fmt.Printf("VERSION    IMAGE\n")
+	cv := kubernetes.LatestVersion()
+	for _, component := range kubernetes.AllComponentContainerImagesForClusterVersion(cv) {
+		fmt.Printf("%-10v %v\n", cv, kubernetes.ComponentContainerImageForClusterVersion(component, cv))
 	}
 
-	fmt.Printf("VERSION    IMAGE\n")
-	for _, cv := range kubernetes.AvailableVersions() {
-		for component, componentName := range components {
-			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, componentName,
-				kubernetes.ComponentVersionForClusterVersion(component, cv)))
-		}
-		for addonName, addonVersion := range kubernetes.Versions[cv.String()].AddonsVersion {
-			if addonVersion.Version == "" {
-				klog.V(1).Infof("Skipping addon %s - empty version detected.", string(addonName))
-				continue
-			}
-			fmt.Printf("%-10v %v\n", cv, images.GetGenericImage(skuba.ImageRepository, string(addonName),
-				addonVersion.Version))
+	for addonName, addon := range addons.Addons {
+		addonVersion := kubernetes.AddonVersionForClusterVersion(addonName, cv)
+		imageList := addon.Images(addonVersion.Version)
+		for _, image := range imageList {
+			fmt.Printf("%-10v %v\n", cv, image)
 		}
 	}
 	return nil
