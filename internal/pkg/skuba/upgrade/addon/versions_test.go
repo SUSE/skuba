@@ -41,7 +41,7 @@ func TestUpdatedAddons(t *testing.T) {
 	}{
 		{
 			name:           "no skuba-config ConfigMap",
-			clusterVersion: version.MustParseGeneric("1.15.1"),
+			clusterVersion: version.MustParseSemantic("1.15.1"),
 			clientSet:      fake.NewSimpleClientset(),
 			expected: AddonVersionInfoUpdate{
 				Current: kubernetes.AddonsVersion{},
@@ -50,7 +50,7 @@ func TestUpdatedAddons(t *testing.T) {
 		},
 		{
 			name:           "kubernetes version 1.15.2",
-			clusterVersion: version.MustParseGeneric("1.15.2"),
+			clusterVersion: version.MustParseSemantic("1.15.2"),
 			clientSet: fake.NewSimpleClientset(&corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      skubaconfig.ConfigMapName,
