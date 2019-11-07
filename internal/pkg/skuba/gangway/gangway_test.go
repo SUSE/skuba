@@ -21,6 +21,9 @@ import (
 	"strings"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -114,6 +117,151 @@ func Test_CreateCert(t *testing.T) {
 				t.Errorf("error expected on %s, but no error reported", tt.name)
 				return
 			} else if !tt.expectedError && err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+		})
+	}
+}
+
+func Test_GangwaySecretExists(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        clientset.Interface
+		expectedExist bool
+		expectedError bool
+	}{
+		{
+			name: "secret exists",
+			client: fake.NewSimpleClientset(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "oidc-gangway-secret",
+					Namespace: metav1.NamespaceSystem,
+				},
+			}),
+			expectedExist: true,
+			expectedError: false,
+		},
+		{
+			name:          "secret not exists",
+			client:        fake.NewSimpleClientset(),
+			expectedExist: false,
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GangwaySecretExists(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			} else if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+
+			if got != tt.expectedExist {
+				t.Errorf("expect %t, got %t\n", tt.expectedExist, got)
+			}
+		})
+	}
+}
+
+func Test_GangwayCertExists(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        clientset.Interface
+		expectedExist bool
+		expectedError bool
+	}{
+		{
+			name: "certificate exists",
+			client: fake.NewSimpleClientset(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "oidc-gangway-cert",
+					Namespace: metav1.NamespaceSystem,
+				},
+			}),
+			expectedExist: true,
+			expectedError: false,
+		},
+		{
+			name:          "certificate not exists",
+			client:        fake.NewSimpleClientset(),
+			expectedExist: false,
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GangwayCertExists(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			} else if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+
+			if got != tt.expectedExist {
+				t.Errorf("expect %t, got %t\n", tt.expectedExist, got)
+			}
+		})
+	}
+}
+
+func Test_RestartPods(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        clientset.Interface
+		expectedError bool
+	}{
+		{
+			name: "restart pod successfully",
+			client: fake.NewSimpleClientset(&corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-1",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-2",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-3",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+				},
+			}),
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := RestartPods(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			} else if err != nil {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
