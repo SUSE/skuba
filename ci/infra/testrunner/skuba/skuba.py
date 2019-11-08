@@ -117,15 +117,17 @@ class Skuba:
         node_name = self.platform.get_nodes_names(role)[node]
         deadline = int(time.time()) + timeout
         while True:
+            last_error = None
             try:
                 status = self.cluster_status()
                 if status.find(node_name) > -1:
                     return
             except Exception as ex:
-                raise Exception("Exception retrieving cluster status") from ex
+                last_error = ex
 
             if int(time.time()) >= deadline:
-                raise Exception(f'Node {node_name} not shown ready after {timeout} seconds')
+                raise Exception((f'Node {node_name} not shown ready after {timeout} seconds'
+                                 f'{". Last error:"+str(last_error) if last_error else ""}'))
             time.sleep(backoff)
         
         
