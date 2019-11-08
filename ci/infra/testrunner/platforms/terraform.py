@@ -82,8 +82,8 @@ class Terraform(Platform):
         return len(self.get_nodes_ipaddrs(role))
 
     def get_nodes_names(self, role):
-        stack_name = self.conf.terraform.stack_name
-        return [f'caasp-{role}-{stack_name.lower()}-{i}' for i in range(self.get_num_nodes(role))] 
+        stack_name = self.stack_name()
+        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))] 
 
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
@@ -115,10 +115,16 @@ class Terraform(Platform):
             with open(tfvars_final, "w") as f:
                 json.dump(tfvars, f)
 
+    #take up to 50 characters from stackname to give room to the fixed part
+    # in the node name: caasp-[master|worker]-xxx (total length must be <= 63)
+    def stack_name(self):
+         stack_name = self.conf.terraform.stack_name
+         return stack_name[:45].lower()
+
     def _update_tfvars(self, tfvars):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
-            "stack_name": self.conf.terraform.stack_name,
+            "stack_name": self.stack_name(),
             "username": self.conf.nodeuser,
             "masters": self.conf.master.count,
             "workers": self.conf.worker.count,
