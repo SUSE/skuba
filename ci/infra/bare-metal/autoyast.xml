@@ -154,6 +154,12 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
       <pattern>minimal_base</pattern>
       <pattern>basesystem</pattern>
     </patterns>
+    <packages config:type="list">
+      <package>sles-release</package>
+      <package>sle-module-containers-release</package>
+      <package>sle-module-basesystem-release</package>
+      <package>caasp-release</package>
+    </packages>
   </software>
 
   <services-manager>
