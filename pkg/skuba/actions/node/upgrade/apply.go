@@ -36,7 +36,7 @@ import (
 )
 
 func Apply(clientSet clientset.Interface, target *deployments.Target) error {
-	if err := fillTargetWithNodeName(target); err != nil {
+	if err := fillTargetWithNodeNameAndRole(target); err != nil {
 		return err
 	}
 
@@ -160,6 +160,10 @@ func Apply(clientSet clientset.Interface, target *deployments.Target) error {
 	if err != nil {
 		return err
 	}
+	// bsc#1155810: generate cluster-wide kubelet root certificate, and generate/rotate kuberlet server certificate
+	if err := target.Apply(nil, "kubelet.rootca.create", "kubelet.servercert.create"); err != nil {
+		return err
+	}
 	if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 		return err
 	}
@@ -184,7 +188,7 @@ func Apply(clientSet clientset.Interface, target *deployments.Target) error {
 	return nil
 }
 
-func fillTargetWithNodeName(target *deployments.Target) error {
+func fillTargetWithNodeNameAndRole(target *deployments.Target) error {
 	machineId, err := target.DownloadFileContents("/etc/machine-id")
 	if err != nil {
 		return err
@@ -194,5 +198,14 @@ func fillTargetWithNodeName(target *deployments.Target) error {
 		return err
 	}
 	target.Nodename = node.ObjectMeta.Name
+
+	var role deployments.Role
+	if kubernetes.IsControlPlane(node) {
+		role = deployments.MasterRole
+	} else {
+		role = deployments.WorkerRole
+	}
+	target.Role = &role
+
 	return nil
 }

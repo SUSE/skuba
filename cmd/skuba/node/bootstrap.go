@@ -49,7 +49,8 @@ func NewBootstrapCmd() *cobra.Command {
 				KubeadmExtraArgs: map[string]string{"ignore-preflight-errors": bootstrapOptions.ignorePreflightErrors},
 			}
 
-			d := target.GetDeployment(nodenames[0])
+			role := deployments.MasterRole
+			d := target.GetDeployment(nodenames[0], &role)
 			if err := node.Bootstrap(bootstrapConfiguration, d); err != nil {
 				klog.Fatalf("error bootstrapping node: %s", err)
 			}

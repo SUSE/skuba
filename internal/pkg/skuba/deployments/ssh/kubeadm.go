@@ -25,7 +25,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
+	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
 
@@ -37,7 +37,7 @@ func init() {
 	stateMap["kubeadm.upgrade.node"] = kubeadmUpgradeNode
 }
 
-var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skuba.KubeadmInitConfFile())
+var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skubaconstants.KubeadmInitConfFile())
 
 func kubeadmInit(t *Target, data interface{}) error {
 	bootstrapConfiguration, ok := data.(deployments.BootstrapConfiguration)
@@ -45,7 +45,7 @@ func kubeadmInit(t *Target, data interface{}) error {
 		return errors.New("couldn't access bootstrap configuration")
 	}
 
-	if err := t.target.UploadFile(skuba.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
+	if err := t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
 	defer func() {
@@ -113,7 +113,7 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 		return errors.New("couldn't access upgrade configuration")
 	}
 
-	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skuba.KubeadmUpgradeConfFile())
+	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skubaconstants.KubeadmUpgradeConfFile())
 	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents); err != nil {
 		return err
 	}

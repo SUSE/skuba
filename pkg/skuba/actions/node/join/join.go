@@ -84,6 +84,7 @@ func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfi
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
+		"kubelet.servercert.create",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",
