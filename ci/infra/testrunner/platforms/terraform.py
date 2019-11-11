@@ -115,11 +115,18 @@ class Terraform(Platform):
             with open(tfvars_final, "w") as f:
                 json.dump(tfvars, f)
 
-    #take up to 50 characters from stackname to give room to the fixed part
-    # in the node name: caasp-[master|worker]-xxx (total length must be <= 63)
+    # take up to 45 characters from stackname to give room to the fixed part
+    # in the node name: caasp-[master|worker]-<stack name>-xxx (total length
+    # must be <= 63).
+    # Also ensure that only valid character are present and that the string
+    # starts and ends with alphanumeric characters and all lowercase.
     def stack_name(self):
-         stack_name = self.conf.terraform.stack_name
-         return stack_name[:45].lower()
+         stack_name = self.conf.terraform.stack_name[:45]
+         stack_name = stack_name.replace("_","-").replace("/","-")
+         stack_name = stack_name.strip("-.")
+         stack_name = stack_name.lower()
+   
+         return stack_name
 
     def _update_tfvars(self, tfvars):
         new_vars = {
