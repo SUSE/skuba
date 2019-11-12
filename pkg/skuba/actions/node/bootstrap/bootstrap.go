@@ -183,12 +183,7 @@ func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguratio
 	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
 		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
 	}
-	// List of recommended plugins: https://git.io/JemEu
-	defaultAdmissionPlugins := "NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"
-	// Update the variable when updating kubeadm if needed: https://git.io/Jem4z
-	kubeadmAdmissionPlugins := "NodeRestriction"
-	skubaAdmissionPlugins := "PodSecurityPolicy"
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = fmt.Sprintf("%s,%s,%s", kubeadmAdmissionPlugins, skubaAdmissionPlugins, defaultAdmissionPlugins)
+	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = "NodeRestriction,PodSecurityPolicy"
 }
 
 func setCloudConfigurationPath(initConfiguration *kubeadmapi.InitConfiguration) {
