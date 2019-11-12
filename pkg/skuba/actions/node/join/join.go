@@ -31,7 +31,6 @@ import (
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
@@ -171,7 +170,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, clusterVersion))
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, clusterVersion)
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return errors.Wrap(err, "unable to get os info")

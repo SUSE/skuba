@@ -27,7 +27,6 @@ import (
 	"github.com/pkg/errors"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
@@ -80,7 +79,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		ClusterName:       clusterName,
 		CloudProvider:     cloudProvider,
 		ControlPlane:      controlPlane,
-		PauseImage:        images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, kubernetesVersion)),
+		PauseImage:        kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, kubernetesVersion),
 		KubernetesVersion: kubernetesVersion,
 		ImageRepository:   skuba.ImageRepository,
 		EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),

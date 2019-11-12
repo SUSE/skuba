@@ -34,9 +34,6 @@ type AddonVersionInfoUpdate struct {
 }
 
 func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) (AddonVersionInfoUpdate, error) {
-	clusterVersionString := clusterVersion.String()
-	latestAddonVersions := kubernetes.Versions[clusterVersionString].AddonsVersion
-
 	skubaConfig, err := skubaconfig.GetSkubaConfiguration(client)
 	if err != nil {
 		return AddonVersionInfoUpdate{}, err
@@ -46,6 +43,7 @@ func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) 
 		Updated: kubernetes.AddonsVersion{},
 	}
 
+	latestAddonVersions := kubernetes.AllAddonVersionsForClusterVersion(clusterVersion)
 	for addonName, version := range latestAddonVersions {
 		skubaConfigVersion := skubaConfig.AddonsVersion[addonName]
 		aviu.Current[addonName] = skubaConfigVersion

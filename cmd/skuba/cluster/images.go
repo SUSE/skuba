@@ -18,6 +18,8 @@
 package cluster
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -28,10 +30,11 @@ import (
 func NewImagesCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "images",
-		Short: "Show images to be pulled",
+		Short: "Show a list of images being used in the cluster",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cluster.Images(); err != nil {
 				klog.Errorf("unable to get cluster images: %s", err)
+				os.Exit(1)
 			}
 		},
 		Args: cobra.NoArgs,

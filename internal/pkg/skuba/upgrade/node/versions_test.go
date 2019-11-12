@@ -219,16 +219,16 @@ func versionInquirer(versions ...string) kubernetes.VersionInquirer {
 	}
 	for _, version := range versions {
 		res.AvailableVersions[version] = kubernetes.KubernetesVersion{
-			ControlPlaneComponentsVersion: kubernetes.ControlPlaneComponentsVersion{
-				HyperkubeVersion: fmt.Sprintf("v%s", version),
-				EtcdVersion:      "3.3.11",
-			},
-			ComponentsVersion: kubernetes.ComponentsVersion{
-				ContainerRuntimeVersion: version,
+			ComponentHostVersion: kubernetes.ComponentHostVersion{
 				KubeletVersion:          version,
-				ToolingVersion:          "0.1.0",
-				CoreDNSVersion:          "1.2.6",
-				PauseVersion:            "3.1",
+				ContainerRuntimeVersion: version,
+			},
+			ComponentContainerVersion: kubernetes.ComponentContainerVersion{
+				kubernetes.Hyperkube: &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
+				kubernetes.Etcd:      &kubernetes.ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
+				kubernetes.CoreDNS:   &kubernetes.ContainerImageTag{Name: "coredns", Tag: "1.2.6"},
+				kubernetes.Pause:     &kubernetes.ContainerImageTag{Name: "pause", Tag: "3.1"},
+				kubernetes.Tooling:   &kubernetes.ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: kubernetes.AddonsVersion{
 				kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},
