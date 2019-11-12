@@ -132,8 +132,8 @@ def main():
                         deployed nodes in your platform")
     cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
                                dest="kubernetes_version", default=None)
-    cmd_bootstrap.add_argument("-c", "--cloud-provider", dest="cloud_provider",
-                               help="The cloud provider you're targeting. Default is openstack")
+    cmd_bootstrap.add_argument("-c", "--cloud-provider", action="store_true",
+                               help="Use cloud provider integration")
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")

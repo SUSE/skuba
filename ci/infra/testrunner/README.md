@@ -426,7 +426,8 @@ optional arguments:
   -k KUBERNETES_VERSION, --kubernetes-version KUBERNETES_VERSION
                         kubernetes version
   -c, --cloud-provider
-                        The cloud provider will be offered
+                        Use cloud provider integration for the platform
+
 ```
 
 ### Node commands
