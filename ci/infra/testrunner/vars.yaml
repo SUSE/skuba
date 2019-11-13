@@ -19,8 +19,7 @@ terraform:
   tfvars: "" # terraform vars
 
 packages:
-# disable mirrors
-# mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
+  mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
   additional_pkgs:
   - "ca-certificates-suse"
 
