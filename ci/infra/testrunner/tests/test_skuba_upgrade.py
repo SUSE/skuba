@@ -212,7 +212,7 @@ def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
             ssh_cmd = "sudo systemctl is-enabled skuba-update.timer || :"
             assert platform.ssh_run(role, n, ssh_cmd).find("disabled") != -1
 
-    kubeclt_cmd = (r"-n kube-system get ds/kured -o jsonpath="
+    kubectl_cmd = (r"-n kube-system get ds/kured -o jsonpath="
                    r"'{.metadata.annotations.weave\.works/kured-node-lock}'")
     result = wait(kubectl.run_kubectl,
                   kubectl_cmd,
