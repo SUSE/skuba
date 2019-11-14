@@ -28,16 +28,17 @@ import (
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
 func Images() error {
 	fmt.Printf("VERSION    IMAGE\n")
-	cv := kubernetes.LatestVersion()
-	for _, component := range kubernetes.AllComponentContainerImagesForClusterVersion(cv) {
-		fmt.Printf("%-10v %v\n", cv, kubernetes.ComponentContainerImageForClusterVersion(component, cv))
-	}
+	for _, version := range kubernetes.AvailableVersions() {
+		for _, component := range kubernetes.AllComponentContainerImagesForClusterVersion(version) {
+			fmt.Printf("%-10v %v\n", version, kubernetes.ComponentContainerImageForClusterVersion(component, version))
+		}
 
-	for addonName, addon := range addons.Addons {
-		addonVersion := kubernetes.AddonVersionForClusterVersion(addonName, cv)
-		imageList := addon.Images(addonVersion.Version)
-		for _, image := range imageList {
-			fmt.Printf("%-10v %v\n", cv, image)
+		for addonName, addon := range addons.Addons {
+			addonVersion := kubernetes.AddonVersionForClusterVersion(addonName, version)
+			imageList := addon.Images(addonVersion.Version)
+			for _, image := range imageList {
+				fmt.Printf("%-10v %v\n", version, image)
+			}
 		}
 	}
 	return nil
