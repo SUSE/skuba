@@ -118,46 +118,6 @@ var (
 				PSP:     &AddonVersion{"", 0},
 			},
 		},
-		"1.15.0": KubernetesVersion{
-			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.15.0",
-				ContainerRuntimeVersion: "1.15.0",
-			},
-			ComponentContainerVersion: ComponentContainerVersion{
-				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.0"},
-				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
-				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.3.1"},
-				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
-			},
-			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
-				Dex:     &AddonVersion{"2.16.0", 3},
-				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"", 0},
-			},
-		},
-		"1.14.1": KubernetesVersion{
-			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.14.1",
-				ContainerRuntimeVersion: "1.14.1",
-			},
-			ComponentContainerVersion: ComponentContainerVersion{
-				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.14.1"},
-				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
-				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.2.6"},
-				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
-			},
-			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
-				Dex:     &AddonVersion{"2.16.0", 3},
-				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"", 0},
-			},
-		},
 	}
 )
 
