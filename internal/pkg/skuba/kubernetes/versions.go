@@ -78,6 +78,26 @@ type KubernetesVersions map[string]KubernetesVersion
 
 var (
 	supportedVersions = KubernetesVersions{
+		"1.16.2": KubernetesVersion{
+			ComponentHostVersion: ComponentHostVersion{
+				KubeletVersion:          "1.16.2",
+				ContainerRuntimeVersion: "1.16.0",
+			},
+			ComponentContainerVersion: ComponentContainerVersion{
+				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
+				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.3.15"},
+				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.6.2"},
+				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
+				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+			},
+			AddonsVersion: AddonsVersion{
+				Cilium:  &AddonVersion{"1.5.3", 1},
+				Kured:   &AddonVersion{"1.2.0-rev4", 1},
+				Dex:     &AddonVersion{"2.16.0", 3},
+				Gangway: &AddonVersion{"3.1.0-rev4", 3},
+				PSP:     &AddonVersion{"", 0},
+			},
+		},
 		"1.15.2": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.15.2",
@@ -92,7 +112,7 @@ var (
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
+				Kured:   &AddonVersion{"1.2.0-rev4", 1},
 				Dex:     &AddonVersion{"2.16.0", 3},
 				Gangway: &AddonVersion{"3.1.0-rev4", 3},
 				PSP:     &AddonVersion{"", 0},
