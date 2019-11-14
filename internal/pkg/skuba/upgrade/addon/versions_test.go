@@ -71,16 +71,20 @@ AddonsVersion:
   gangway:
     ManifestVersion: 32767
     Version: 3.1.0
+  helm-tiller:
+    ManifestVersion: 32767
+    Version: 2.14.2
 `,
 				},
 			}),
 			expected: AddonVersionInfoUpdate{
 				Current: kubernetes.AddonsVersion{
-					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 32767},
-					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 32767},
-					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 32767},
-					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 32767},
-					kubernetes.PSP:     nil,
+					kubernetes.Cilium:     &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 32767},
+					kubernetes.Kured:      &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 32767},
+					kubernetes.Dex:        &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 32767},
+					kubernetes.Gangway:    &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 32767},
+					kubernetes.HelmTiller: &kubernetes.AddonVersion{Version: "2.14.2", ManifestVersion: 32767},
+					kubernetes.PSP:        nil,
 				},
 				Updated: kubernetes.AddonsVersion{
 					kubernetes.PSP: &kubernetes.AddonVersion{Version: "", ManifestVersion: 0},

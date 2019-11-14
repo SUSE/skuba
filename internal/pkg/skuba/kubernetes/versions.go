@@ -32,11 +32,12 @@ type Addon string
 type Component string
 
 const (
-	Cilium  Addon = "cilium"
-	Kured   Addon = "kured"
-	Dex     Addon = "dex"
-	Gangway Addon = "gangway"
-	PSP     Addon = "psp"
+	Cilium     Addon = "cilium"
+	Kured      Addon = "kured"
+	Dex        Addon = "dex"
+	Gangway    Addon = "gangway"
+	HelmTiller Addon = "helm-tiller"
+	PSP        Addon = "psp"
 
 	Kubelet          Component = "kubelet"
 	ContainerRuntime Component = "cri-o"
@@ -91,11 +92,12 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
-				Dex:     &AddonVersion{"2.16.0", 3},
-				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"", 0},
+				Cilium:     &AddonVersion{"1.5.3", 1},
+				Kured:      &AddonVersion{"1.2.0", 0},
+				Dex:        &AddonVersion{"2.16.0", 3},
+				Gangway:    &AddonVersion{"3.1.0-rev4", 3},
+				HelmTiller: &AddonVersion{"2.14.2", 0},
+				PSP:        &AddonVersion{"", 0},
 			},
 		},
 		"1.15.0": KubernetesVersion{
@@ -111,11 +113,12 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
-				Dex:     &AddonVersion{"2.16.0", 3},
-				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"", 0},
+				Cilium:     &AddonVersion{"1.5.3", 1},
+				Kured:      &AddonVersion{"1.2.0", 0},
+				Dex:        &AddonVersion{"2.16.0", 3},
+				Gangway:    &AddonVersion{"3.1.0-rev4", 3},
+				HelmTiller: &AddonVersion{"2.14.2", 0},
+				PSP:        &AddonVersion{"", 0},
 			},
 		},
 		"1.14.1": KubernetesVersion{
@@ -131,11 +134,12 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0", 0},
-				Dex:     &AddonVersion{"2.16.0", 3},
-				Gangway: &AddonVersion{"3.1.0-rev4", 3},
-				PSP:     &AddonVersion{"", 0},
+				Cilium:     &AddonVersion{"1.5.3", 1},
+				Kured:      &AddonVersion{"1.2.0", 0},
+				Dex:        &AddonVersion{"2.16.0", 3},
+				Gangway:    &AddonVersion{"3.1.0-rev4", 3},
+				HelmTiller: &AddonVersion{"2.14.2", 0},
+				PSP:        &AddonVersion{"", 0},
 			},
 		},
 	}
