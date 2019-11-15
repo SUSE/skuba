@@ -83,6 +83,7 @@
     platform: openstack
     jobs:
         - '{name}-devel-base-nightly'
+        - '{name}-devel-monitoring-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb
