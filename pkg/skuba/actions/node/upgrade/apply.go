@@ -96,7 +96,7 @@ func Apply(clientSet clientset.Interface, target *deployments.Target) error {
 			if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
 				return errors.Wrap(err, "error adding target information to init configuration")
 			}
-			kubeadm.SetContainerImagesWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
+			kubeadm.UpdateConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 			initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
 				Group:   "kubeadm.k8s.io",
 				Version: "v1beta2",
