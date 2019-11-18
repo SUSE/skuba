@@ -18,6 +18,8 @@
 package kubeadm
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -112,5 +114,30 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *v1.Node) e
 	if err != nil {
 		return errors.Wrap(err, "could not update kubeadm-config configmap")
 	}
+	return nil
+}
+
+// UpdateConfigurationWithClusterVersion allows us to set certain configurations during init, but also during upgrades.
+// The configuration that we put here will be consistently set to newly created configurations, and when we upgrade a cluster.
+func UpdateConfigurationWithClusterVersion(initConfiguration *kubeadmapi.InitConfiguration, version *version.Version) error {
+	if err := setApiserverAdmissionPlugins(initConfiguration); err != nil {
+		return err
+	}
+	if err := setContainerImagesWithClusterVersion(initConfiguration, version); err != nil {
+		return err
+	}
+	return nil
+}
+
+func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguration) error {
+	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
+		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
+	}
+	// List of recommended plugins: https://git.io/JemEu
+	defaultAdmissionPlugins := "NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"
+	// Update the variable when updating kubeadm if needed: https://git.io/Jem4z
+	kubeadmAdmissionPlugins := "NodeRestriction"
+	skubaAdmissionPlugins := "PodSecurityPolicy"
+	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = fmt.Sprintf("%s,%s,%s", kubeadmAdmissionPlugins, skubaAdmissionPlugins, defaultAdmissionPlugins)
 	return nil
 }
