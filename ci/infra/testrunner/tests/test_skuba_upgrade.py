@@ -3,8 +3,8 @@ import pytest
 
 from tests.utils import (check_nodes_ready, wait)
 
-PREVIOUS_VERSION = "1.14.1"
-CURRENT_VERSION = "1.15.2"
+PREVIOUS_VERSION = "1.15.2"
+CURRENT_VERSION = "1.16.2"
 
 @pytest.fixture
 def setup(request, platform, skuba):
