@@ -37,7 +37,6 @@ pipeline {
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
-            junit('skuba/ci/infra/testrunner/*.xml')
         }
         cleanup {
             sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
