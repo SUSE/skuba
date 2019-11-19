@@ -13,7 +13,7 @@
     parameters:
         - string:
             name: VALIDATOR_ARGS
-            default: '-p {platform} -t base -n 3:2 -c'
+            default: '-p openstack -t base -n 3:2 -c'
             description: The arguments for validator_caasp
     pipeline-scm:
         scm:
@@ -41,7 +41,7 @@
     parameters:
         - string:
             name: VALIDATOR_ARGS
-            default: '-p {platform} -t monitoring -n 3:2 -c'
+            default: '-p openstack -t monitoring -n 3:2 -c'
             description: The arguments for validator_caasp
     pipeline-scm:
         scm:
@@ -53,3 +53,37 @@
                 suppress-automatic-scm-triggering: true
                 basedir: scripts
         script-path: scripts/jenkins/validator_caasp-nightly.Jenkinsfile
+
+- job-template:
+    name: '{name}-release-base-on-demand'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
+    parameters:
+        - string:
+            name: INCIDENT_RPM
+            default: ''
+            description: Maintenance incident repo e.g. http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Staging:/4.0.3/SUSE_SLE-15-SP1_Update_Products_CASP40_Update_standard/
+        - string:
+            name: INCIDENT_REG
+            default: ''
+            description: Incident registry e.g. registry.suse.de/devel/caasp/4.0/staging/4.0.3/suse_sle-15-sp1_update_products_casp40_update_containers/caasp/v4
+        - string:
+            name: VALIDATOR_ARGS
+            default: '-t base'
+            description: The arguments for validator_caasp
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://gitlab.suse.de/mkravec/scripts.git'
+                branches:
+                    - 'master'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+                basedir: scripts
+        script-path: scripts/jenkins/validator_caasp-release.Jenkinsfile
