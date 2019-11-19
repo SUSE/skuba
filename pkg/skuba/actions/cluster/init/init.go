@@ -97,9 +97,6 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 // Init creates a cluster definition scaffold in the local machine, in the current
 // folder, at a directory named after ClusterName provided in the InitConfiguration
 // parameter
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead of
-//        using the PWD
 func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)

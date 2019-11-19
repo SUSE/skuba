@@ -45,9 +45,6 @@ import (
 
 // Join joins a new machine to the cluster. The role of the machine will be
 // provided by the JoinConfiguration, and will target Target node
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead of
-//        using the PWD
 func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
 	if err != nil {
@@ -109,9 +106,6 @@ func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfi
 
 // ConfigPath returns the configuration path for a specific Target; if this file does
 // not exist, it will be created out of the template file
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead of
-//        using the PWD
 func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *deployments.Target) (string, error) {
 	configPath := skuba.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {

@@ -39,9 +39,6 @@ import (
 )
 
 // Bootstrap initializes the first master node of the cluster
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead
-//        of using the PWD
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	coreBootstrapDone := false
 
