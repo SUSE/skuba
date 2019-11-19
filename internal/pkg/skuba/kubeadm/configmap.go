@@ -18,8 +18,9 @@
 package kubeadm
 
 import (
-	"fmt"
+	"strings"
 
+	skubautil "github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,11 +134,29 @@ func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguratio
 	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
 		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
 	}
+	admissionPlugins := []string{}
+	if len(initConfiguration.APIServer.ExtraArgs["enable-admission-plugins"]) > 0 {
+		admissionPlugins = strings.Split(initConfiguration.APIServer.ExtraArgs["enable-admission-plugins"], ",")
+	}
 	// List of recommended plugins: https://git.io/JemEu
-	defaultAdmissionPlugins := "NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"
-	// Update the variable when updating kubeadm if needed: https://git.io/Jem4z
-	kubeadmAdmissionPlugins := "NodeRestriction"
-	skubaAdmissionPlugins := "PodSecurityPolicy"
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = fmt.Sprintf("%s,%s,%s", kubeadmAdmissionPlugins, skubaAdmissionPlugins, defaultAdmissionPlugins)
+	admissionPlugins = append(admissionPlugins,
+		"NamespaceLifecycle",
+		"LimitRanger",
+		"ServiceAccount",
+		"TaintNodesByCondition",
+		"Priority",
+		"DefaultTolerationSeconds",
+		"DefaultStorageClass",
+		"PersistentVolumeClaimResize",
+		"MutatingAdmissionWebhook",
+		"ValidatingAdmissionWebhook",
+		"ResourceQuota",
+	)
+	// List of kubeadm-enabled plugins
+	admissionPlugins = append(admissionPlugins, "NodeRestriction")
+	// List of skuba-enabled plugins
+	admissionPlugins = append(admissionPlugins, "PodSecurityPolicy")
+	admissionPlugins = skubautil.UniqueStringSlice(admissionPlugins)
+	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
 	return nil
 }
