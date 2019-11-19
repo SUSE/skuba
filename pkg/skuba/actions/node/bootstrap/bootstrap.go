@@ -35,7 +35,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 // Bootstrap initializes the first master node of the cluster
@@ -105,14 +104,6 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		return errors.Wrap(err, "unable to add target information to init configuration")
 	}
 
-	if cloud.HasCloudIntegration() {
-		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
-			return errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
-		}
-		setCloudConfiguration(initConfiguration)
-		setCloudConfigurationPath(initConfiguration)
-	}
-
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: kubeadm.GetKubeadmApisVersion(versionToDeploy),
@@ -174,38 +165,4 @@ func downloadSecrets(target *deployments.Target) error {
 	}
 
 	return nil
-}
-
-func setCloudConfigurationPath(initConfiguration *kubeadmapi.InitConfiguration) {
-	cloudVolume := []kubeadmapi.HostPathMount{}
-	cloudConfig := kubeadmapi.HostPathMount{
-		Name:      "cloud-config",
-		HostPath:  skuba.OpenstackConfigRuntimeFile(),
-		MountPath: skuba.OpenstackConfigRuntimeFile(),
-		ReadOnly:  true,
-		PathType:  "FileOrCreate",
-	}
-	cloudVolume = append(cloudVolume, cloudConfig)
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraVolumes = cloudVolume
-	initConfiguration.ControllerManager.ExtraVolumes = cloudVolume
-}
-
-func setCloudConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
-	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
-		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-	}
-	initConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
-
-	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
-		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
-	}
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
-
-	if initConfiguration.ControllerManager.ExtraArgs == nil {
-		initConfiguration.ControllerManager.ExtraArgs = map[string]string{}
-	}
-	initConfiguration.ControllerManager.ExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.ControllerManager.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 }

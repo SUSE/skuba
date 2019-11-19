@@ -26,6 +26,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
@@ -144,6 +145,7 @@ func Init(initConfiguration InitConfiguration) error {
 		}
 	}
 
+	// Write kubeadm-init.conf and kubeadm-join.conf.d templates
 	if err := writeKubeadmInitConf(initConfiguration); err != nil {
 		return err
 	}
@@ -157,6 +159,7 @@ func Init(initConfiguration InitConfiguration) error {
 		return err
 	}
 
+	// Write addon configuration files
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: initConfiguration.KubernetesVersion,
 		ControlPlane:   initConfiguration.ControlPlane,
@@ -234,6 +237,9 @@ func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
 			UseHyperKubeImage: true,
 		},
 	}
+	if len(initConfiguration.CloudProvider) > 0 {
+		updateInitConfigurationWithCloudIntegration(&initCfg, initConfiguration)
+	}
 	kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
 	initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(&initCfg, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
@@ -258,6 +264,9 @@ func writeKubeadmJoinMasterConf(initConfiguration InitConfiguration) error {
 		},
 		ControlPlane: &kubeadmapi.JoinControlPlane{},
 	}
+	if len(initConfiguration.CloudProvider) > 0 {
+		updateJoinConfigurationWithCloudIntegration(&joinCfg, initConfiguration)
+	}
 	joinCfgContents, err := kubeadmutil.MarshalToYamlForCodecs(&joinCfg, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
@@ -280,6 +289,9 @@ func writeKubeadmJoinWorkerConf(initConfiguration InitConfiguration) error {
 			},
 		},
 	}
+	if len(initConfiguration.CloudProvider) > 0 {
+		updateJoinConfigurationWithCloudIntegration(&joinCfg, initConfiguration)
+	}
 	joinCfgContents, err := kubeadmutil.MarshalToYamlForCodecs(&joinCfg, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
@@ -291,4 +303,53 @@ func writeKubeadmJoinWorkerConf(initConfiguration InitConfiguration) error {
 		return errors.Wrap(err, "error writing worker join configuration")
 	}
 	return nil
+}
+
+func updateInitConfigurationWithCloudIntegration(initCfg *kubeadmapi.InitConfiguration, initConfiguration InitConfiguration) {
+	if initCfg.APIServer.ExtraArgs == nil {
+		initCfg.APIServer.ExtraArgs = map[string]string{}
+	}
+	initCfg.APIServer.ExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
+	if initCfg.ControllerManager.ExtraArgs == nil {
+		initCfg.ControllerManager.ExtraArgs = map[string]string{}
+	}
+	initCfg.ControllerManager.ExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
+	if initCfg.NodeRegistration.KubeletExtraArgs == nil {
+		initCfg.NodeRegistration.KubeletExtraArgs = map[string]string{}
+	}
+	initCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
+
+	switch initConfiguration.CloudProvider {
+	case "aws":
+		initCfg.ControllerManager.ExtraArgs["allocate-node-cidrs"] = "false"
+	case "openstack":
+		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.OpenstackConfigRuntimeFile(),
+			MountPath: skuba.OpenstackConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.ControllerManager.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+		initCfg.ControllerManager.ExtraVolumes = append(initCfg.ControllerManager.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.OpenstackConfigRuntimeFile(),
+			MountPath: skuba.OpenstackConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+	}
+}
+
+func updateJoinConfigurationWithCloudIntegration(joinCfg *kubeadmapi.JoinConfiguration, initConfiguration InitConfiguration) {
+	if joinCfg.NodeRegistration.KubeletExtraArgs == nil {
+		joinCfg.NodeRegistration.KubeletExtraArgs = map[string]string{}
+	}
+	joinCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
+
+	if initConfiguration.CloudProvider == "openstack" {
+		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+	}
 }

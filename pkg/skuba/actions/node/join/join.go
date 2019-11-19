@@ -40,7 +40,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 // Join joins a new machine to the cluster. The role of the machine will be
@@ -127,12 +126,6 @@ func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *de
 	if err := addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion); err != nil {
 		return "", errors.Wrap(err, "error adding target information to join configuration")
 	}
-	if cloud.HasCloudIntegration() {
-		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
-			return "", errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
-		}
-		setCloudConfiguration(joinConfiguration)
-	}
 	finalJoinConfigurationContents, err := kubeadmutil.MarshalToYamlForCodecs(joinConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
 		Version: kubeadm.GetKubeadmApisVersion(currentClusterVersion),
@@ -204,9 +197,4 @@ func createBootstrapToken(clientSet clientset.Interface, target string) (string,
 	}
 
 	return bootstrapTokenRaw, nil
-}
-
-func setCloudConfiguration(joinConfiguration *kubeadmapi.JoinConfiguration) {
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "openstack"
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 }
