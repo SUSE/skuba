@@ -13,7 +13,7 @@
     parameters:
         - string:
             name: VALIDATOR_ARGS
-            default: '-p openstack -t base -n 3:2 -c'
+            default: '-p openstack -t base -n 3:2'
             description: The arguments for validator_caasp
     pipeline-scm:
         scm:
@@ -41,7 +41,7 @@
     parameters:
         - string:
             name: VALIDATOR_ARGS
-            default: '-p openstack -t monitoring -n 3:2 -c'
+            default: '-p openstack -t monitoring -n 3:2'
             description: The arguments for validator_caasp
     pipeline-scm:
         scm:
