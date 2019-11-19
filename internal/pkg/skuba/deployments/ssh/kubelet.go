@@ -31,8 +31,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh/assets"
-	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func init() {
@@ -62,8 +61,8 @@ const (
 )
 
 func kubeletCreateRootCert(t *Target, data interface{}) error {
-	caCertFilePath := filepath.Join(skubaconstants.PkiDir(), KubeletCACertName)
-	caKeyFilePath := filepath.Join(skubaconstants.PkiDir(), KubeletCAKeyName)
+	caCertFilePath := filepath.Join(skuba.PkiDir(), KubeletCACertName)
+	caKeyFilePath := filepath.Join(skuba.PkiDir(), KubeletCAKeyName)
 	if canReadCertAndKey, _ := certutil.CanReadCertAndKey(caCertFilePath, caKeyFilePath); canReadCertAndKey {
 		klog.V(1).Info("kubelet root ca cert and key already exists")
 		return nil
@@ -77,7 +76,7 @@ func kubeletCreateRootCert(t *Target, data interface{}) error {
 		return errors.Wrap(err, "couldn't generate kubelet CA certificate")
 	}
 
-	if err := pkiutil.WriteCertAndKey(skubaconstants.PkiDir(), KubeletCACertAndKeyBaseName, caCert, caKey); err != nil {
+	if err := pkiutil.WriteCertAndKey(skuba.PkiDir(), KubeletCACertAndKeyBaseName, caCert, caKey); err != nil {
 		return errors.Wrap(err, "failure while saving kubelet CA certificate and key")
 	}
 
@@ -86,7 +85,7 @@ func kubeletCreateRootCert(t *Target, data interface{}) error {
 
 func kubeletCreateServerCert(t *Target, data interface{}) error {
 	// Read kubelet root ca certificate and key
-	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(skubaconstants.PkiDir(), KubeletCACertAndKeyBaseName)
+	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(skuba.PkiDir(), KubeletCACertAndKeyBaseName)
 	if err != nil {
 		return errors.Wrap(err, "failure loading kubelet CA certificate authority")
 	}
@@ -127,17 +126,17 @@ func kubeletCreateServerCert(t *Target, data interface{}) error {
 	}
 
 	// Save kubelet server certificate and key to local temporarily
-	if err := pkiutil.WriteCertAndKey(skubaconstants.PkiDir(), host, cert, key); err != nil {
+	if err := pkiutil.WriteCertAndKey(skuba.PkiDir(), host, cert, key); err != nil {
 		return errors.Wrapf(err, "failure while saving kubelet server %s certificate and key", host)
 	}
 
 	// Upload root ca cert
-	if err := t.target.UploadFile(filepath.Join(skubaconstants.PkiDir(), KubeletCACertName), filepath.Join(KubeletCertAndKeyDir, KubeletCACertName)); err != nil {
+	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), KubeletCACertName), filepath.Join(KubeletCertAndKeyDir, KubeletCACertName)); err != nil {
 		return err
 	}
 	// Upload root ca key on control plane node only
 	if *t.target.Role == deployments.MasterRole {
-		if err := t.target.UploadFile(filepath.Join(skubaconstants.PkiDir(), KubeletCAKeyName), filepath.Join(KubeletCertAndKeyDir, KubeletCAKeyName)); err != nil {
+		if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), KubeletCAKeyName), filepath.Join(KubeletCertAndKeyDir, KubeletCAKeyName)); err != nil {
 			return err
 		}
 		if _, _, err = t.silentSsh("chmod", "0400", filepath.Join(KubeletCertAndKeyDir, KubeletCAKeyName)); err != nil {
@@ -146,7 +145,7 @@ func kubeletCreateServerCert(t *Target, data interface{}) error {
 	}
 
 	// Upload server certificate and key
-	certPath, keyPath := pkiutil.PathsForCertAndKey(skubaconstants.PkiDir(), host)
+	certPath, keyPath := pkiutil.PathsForCertAndKey(skuba.PkiDir(), host)
 	if err := t.target.UploadFile(certPath, filepath.Join(KubeletCertAndKeyDir, KubeletServerCertName)); err != nil {
 		return err
 	}
@@ -192,11 +191,11 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		}
 	}
 
-	if cloud.HasCloudIntegration() {
-		if err := t.target.UploadFile(skubaconstants.OpenstackCloudConfFile(), skubaconstants.OpenstackConfigRuntimeFile()); err != nil {
+	if _, err := os.Stat(skuba.OpenstackCloudConfFile()); err == nil {
+		if err := t.target.UploadFile(skuba.OpenstackCloudConfFile(), skuba.OpenstackConfigRuntimeFile()); err != nil {
 			return err
 		}
-		if _, _, err = t.ssh("chmod", "0400", skubaconstants.OpenstackConfigRuntimeFile()); err != nil {
+		if _, _, err = t.ssh("chmod", "0400", skuba.OpenstackConfigRuntimeFile()); err != nil {
 			return err
 		}
 	}
