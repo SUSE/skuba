@@ -20,16 +20,22 @@ package cluster
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	versionutil "k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
+	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
+	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
@@ -141,6 +147,19 @@ func Init(initConfiguration InitConfiguration) error {
 		}
 	}
 
+	if err := writeKubeadmInitConf(initConfiguration); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(skuba.JoinConfDir(), 0700); err != nil {
+		return errors.Wrapf(err, "could not create directory %q", skuba.JoinConfDir())
+	}
+	if err := writeKubeadmJoinMasterConf(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeKubeadmJoinWorkerConf(initConfiguration); err != nil {
+		return err
+	}
+
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: initConfiguration.KubernetesVersion,
 		ControlPlane:   initConfiguration.ControlPlane,
@@ -175,4 +194,104 @@ func renderTemplate(templateContents string, initConfiguration InitConfiguration
 		return "", errors.Wrap(err, "could not render configuration")
 	}
 	return rendered.String(), nil
+}
+
+func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
+	initCfg := kubeadmapi.InitConfiguration{
+		ClusterConfiguration: kubeadmapi.ClusterConfiguration{
+			APIServer: kubeadmapi.APIServer{
+				CertSANs: []string{initConfiguration.ControlPlaneHost()},
+				ControlPlaneComponent: kubeadmapi.ControlPlaneComponent{
+					ExtraArgs: map[string]string{
+						"oidc-issuer-url":     fmt.Sprintf("https://%s:32000", initConfiguration.ControlPlaneHost()),
+						"oidc-client-id":      "oidc",
+						"oidc-ca-file":        "/etc/kubernetes/pki/ca.crt",
+						"oidc-username-claim": "email",
+						"oidc-groups-claim":   "groups",
+					},
+				},
+			},
+			ClusterName:          initConfiguration.ClusterName,
+			ControlPlaneEndpoint: initConfiguration.ControlPlaneHostAndPort(),
+			DNS: kubeadmapi.DNS{
+				Type: kubeadmapi.CoreDNS,
+				ImageMeta: kubeadmapi.ImageMeta{
+					ImageRepository: initConfiguration.ImageRepository,
+					ImageTag:        initConfiguration.CoreDNSImageTag,
+				},
+			},
+			Etcd: kubeadmapi.Etcd{
+				Local: &kubeadmapi.LocalEtcd{
+					ImageMeta: kubeadmapi.ImageMeta{
+						ImageRepository: initConfiguration.ImageRepository,
+						ImageTag:        initConfiguration.EtcdImageTag,
+					},
+				},
+			},
+			ImageRepository:   initConfiguration.ImageRepository,
+			KubernetesVersion: initConfiguration.KubernetesVersion.String(),
+			Networking: kubeadmapi.Networking{
+				PodSubnet:     "10.244.0.0/16",
+				ServiceSubnet: "10.96.0.0/12",
+			},
+			UseHyperKubeImage: true,
+		},
+	}
+	kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
+	initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(&initCfg, schema.GroupVersion{
+		Group:   "kubeadm.k8s.io",
+		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
+	})
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(skuba.KubeadmInitConfFile(), initCfgContents, 0600); err != nil {
+		return errors.Wrap(err, "error writing init configuration")
+	}
+	return nil
+}
+
+func writeKubeadmJoinMasterConf(initConfiguration InitConfiguration) error {
+	joinCfg := kubeadmapi.JoinConfiguration{
+		Discovery: kubeadmapi.Discovery{
+			BootstrapToken: &kubeadmapi.BootstrapTokenDiscovery{
+				APIServerEndpoint:        initConfiguration.ControlPlaneHostAndPort(),
+				UnsafeSkipCAVerification: true,
+			},
+		},
+		ControlPlane: &kubeadmapi.JoinControlPlane{},
+	}
+	joinCfgContents, err := kubeadmutil.MarshalToYamlForCodecs(&joinCfg, schema.GroupVersion{
+		Group:   "kubeadm.k8s.io",
+		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
+	}, kubeadmscheme.Codecs)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(skuba.MasterConfTemplateFile(), joinCfgContents, 0600); err != nil {
+		return errors.Wrap(err, "error writing control plane join configuration")
+	}
+	return nil
+}
+
+func writeKubeadmJoinWorkerConf(initConfiguration InitConfiguration) error {
+	joinCfg := kubeadmapi.JoinConfiguration{
+		Discovery: kubeadmapi.Discovery{
+			BootstrapToken: &kubeadmapi.BootstrapTokenDiscovery{
+				APIServerEndpoint:        initConfiguration.ControlPlaneHostAndPort(),
+				UnsafeSkipCAVerification: true,
+			},
+		},
+	}
+	joinCfgContents, err := kubeadmutil.MarshalToYamlForCodecs(&joinCfg, schema.GroupVersion{
+		Group:   "kubeadm.k8s.io",
+		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
+	}, kubeadmscheme.Codecs)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(skuba.WorkerConfTemplateFile(), joinCfgContents, 0600); err != nil {
+		return errors.Wrap(err, "error writing worker join configuration")
+	}
+	return nil
 }

@@ -17,6 +17,9 @@
 
 package util
 
+// UniqueStringSlice accepts a slice and will return an array without
+// any repeated elements. The ordering will be preserved as seen on the
+// first slice.
 func UniqueStringSlice(slice []string) []string {
 	result := []string{}
 	seen := make(map[string]struct{}, len(slice))

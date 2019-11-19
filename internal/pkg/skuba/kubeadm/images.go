@@ -25,7 +25,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func setContainerImagesWithClusterVersion(initConfiguration *kubeadmapi.InitConfiguration, clusterVersion *version.Version) error {
+func setContainerImagesWithClusterVersion(initConfiguration *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
 	initConfiguration.UseHyperKubeImage = true
 	initConfiguration.ImageRepository = skuba.ImageRepository
 	initConfiguration.KubernetesVersion = kubernetes.ComponentVersionForClusterVersion(kubernetes.Hyperkube, clusterVersion)
@@ -39,5 +39,4 @@ func setContainerImagesWithClusterVersion(initConfiguration *kubeadmapi.InitConf
 		ImageRepository: skuba.ImageRepository,
 		ImageTag:        kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, clusterVersion),
 	}
-	return nil
 }

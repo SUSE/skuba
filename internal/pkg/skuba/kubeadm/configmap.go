@@ -118,25 +118,20 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *v1.Node) e
 	return nil
 }
 
-// UpdateConfigurationWithClusterVersion allows us to set certain configurations during init, but also during upgrades.
+// UpdateClusterConfigurationWithClusterVersion allows us to set certain configurations during init, but also during upgrades.
 // The configuration that we put here will be consistently set to newly created configurations, and when we upgrade a cluster.
-func UpdateConfigurationWithClusterVersion(initConfiguration *kubeadmapi.InitConfiguration, version *version.Version) error {
-	if err := setApiserverAdmissionPlugins(initConfiguration); err != nil {
-		return err
-	}
-	if err := setContainerImagesWithClusterVersion(initConfiguration, version); err != nil {
-		return err
-	}
-	return nil
+func UpdateClusterConfigurationWithClusterVersion(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
+	setApiserverAdmissionPlugins(initCfg, clusterVersion)
+	setContainerImagesWithClusterVersion(initCfg, clusterVersion)
 }
 
-func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguration) error {
-	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
-		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
+func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
+	if initCfg.APIServer.ControlPlaneComponent.ExtraArgs == nil {
+		initCfg.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
 	}
 	admissionPlugins := []string{}
-	if len(initConfiguration.APIServer.ExtraArgs["enable-admission-plugins"]) > 0 {
-		admissionPlugins = strings.Split(initConfiguration.APIServer.ExtraArgs["enable-admission-plugins"], ",")
+	if len(initCfg.APIServer.ExtraArgs["enable-admission-plugins"]) > 0 {
+		admissionPlugins = strings.Split(initCfg.APIServer.ExtraArgs["enable-admission-plugins"], ",")
 	}
 	// List of recommended plugins: https://git.io/JemEu
 	admissionPlugins = append(admissionPlugins,
@@ -151,14 +146,15 @@ func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguratio
 		"MutatingAdmissionWebhook",
 		"ValidatingAdmissionWebhook",
 		"ResourceQuota",
-		"RuntimeClass",
 		"StorageObjectInUseProtection",
 	)
+	if clusterVersion.AtLeast(version.MustParseSemantic("1.16.0")) {
+		admissionPlugins = append(admissionPlugins, "RuntimeClass")
+	}
 	// List of kubeadm-enabled plugins
 	admissionPlugins = append(admissionPlugins, "NodeRestriction")
 	// List of skuba-enabled plugins
 	admissionPlugins = append(admissionPlugins, "PodSecurityPolicy")
 	admissionPlugins = skubautil.UniqueStringSlice(admissionPlugins)
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
-	return nil
+	initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
 }
