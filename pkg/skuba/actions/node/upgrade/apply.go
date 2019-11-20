@@ -99,7 +99,7 @@ func Apply(clientSet clientset.Interface, target *deployments.Target) error {
 			kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 			initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
 				Group:   "kubeadm.k8s.io",
-				Version: "v1beta2",
+				Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
 			})
 			if err != nil {
 				return err
