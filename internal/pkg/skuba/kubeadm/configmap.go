@@ -151,6 +151,8 @@ func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguratio
 		"MutatingAdmissionWebhook",
 		"ValidatingAdmissionWebhook",
 		"ResourceQuota",
+		"RuntimeClass",
+		"StorageObjectInUseProtection",
 	)
 	// List of kubeadm-enabled plugins
 	admissionPlugins = append(admissionPlugins, "NodeRestriction")
