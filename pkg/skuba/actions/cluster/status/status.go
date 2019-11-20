@@ -28,8 +28,8 @@ import (
 
 // Status prints the status of the cluster on the standard output by reading the
 // admin configuration file from the current folder
-func Status(clientSet clientset.Interface) error {
-	nodeList, err := clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
+func Status(client clientset.Interface) error {
+	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve node list")
 	}

@@ -19,11 +19,10 @@ package kubernetes
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -31,35 +30,36 @@ import (
 	kubectldrain "k8s.io/kubernetes/pkg/kubectl/drain"
 )
 
-func GetControlPlaneNodes(client clientset.Interface) (*v1.NodeList, error) {
+// GetControlPlaneNodes returns the list of master nodes by matching
+// "node-role.kubernetes.io/master" label.
+func GetControlPlaneNodes(client clientset.Interface) (*corev1.NodeList, error) {
 	return client.CoreV1().Nodes().List(metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
 	})
 }
 
-func GetNodeWithMachineId(machineId string) (*v1.Node, error) {
-	clientSet, err := GetAdminClientSet()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get admin client set")
-	}
-	nodes, err := clientSet.CoreV1().Nodes().List(metav1.ListOptions{})
+// GetNodeWithMachineID returns the node matching machine ID.
+func GetNodeWithMachineID(client clientset.Interface, machineID string) (*corev1.Node, error) {
+	nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	for _, node := range nodes.Items {
-		if node.Status.NodeInfo.MachineID == machineId {
+		if node.Status.NodeInfo.MachineID == machineID {
 			return &node, nil
 		}
 	}
-	return nil, errors.Errorf("node with machine-id %s not found", machineId)
+	return nil, errors.Errorf("node with machine-id %s not found", machineID)
 }
 
-func IsControlPlane(node *v1.Node) bool {
+// IsControlPlane check if given node is master node.
+func IsControlPlane(node *corev1.Node) bool {
 	_, isControlPlane := node.ObjectMeta.Labels[kubeadmconstants.LabelNodeRoleMaster]
 	return isControlPlane
 }
 
-func DrainNode(client clientset.Interface, node *v1.Node, drainTimeout time.Duration) error {
+// DrainNode cordons, drains and evict given node.
+func DrainNode(client clientset.Interface, node *corev1.Node, drainTimeout time.Duration) error {
 	policyGroupVersion, err := kubectldrain.CheckEvictionSupport(client)
 	if err != nil {
 		return errors.Wrap(err, "could not get policy group version")
@@ -104,15 +104,4 @@ func DrainNode(client clientset.Interface, node *v1.Node, drainTimeout time.Dura
 	klog.V(1).Infof("node %s correctly drained", node.ObjectMeta.Name)
 
 	return nil
-}
-
-func getPodContainerImageTag(client clientset.Interface, namespace string, podName string) (string, error) {
-	podObject, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
-	if err != nil {
-		return "", errors.Wrap(err, "could not retrieve pod object")
-	}
-	containerImageWithName := podObject.Spec.Containers[0].Image
-	containerImageTag := strings.Split(containerImageWithName, ":")
-
-	return containerImageTag[len(containerImageTag)-1], nil
 }
