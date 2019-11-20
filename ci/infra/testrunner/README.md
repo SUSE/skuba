@@ -380,7 +380,7 @@ usage:
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,ssh,test}
+  {info,get_logs,cleanup,provision,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test}
                           command
     info                  ip info
     get_logs              gather logs from nodes
@@ -394,6 +394,7 @@ positional arguments:
     join-node             add node in k8s cluster with the given role.
     remove-node           remove node from k8s cluster.
     node-upgrade          plan or apply kubernetes version upgrade in node
+    join-nodes            add multiple provisioned nodes k8s.
     ssh                   Execute command in node via ssh.
     test                  execute tests
 
@@ -440,7 +441,18 @@ optional arguments:
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
 
 ```
+### Join nodes
 
+```
+  -h, --help            show this help message and exit
+  -m MASTERS, --masters MASTERS
+                        Specify how many masters to join. Default is all
+  -w WORKERS, --workers WORKERS
+                        Specify how many workers to join. Default is all
+  -d DELAY, --delay DELAY
+                        Delay between joining masters to allow etcd to
+                        stabilize
+```
 #### Node Upgrade command
 
 ```

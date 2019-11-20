@@ -63,7 +63,7 @@ def join_node(options):
 
 def join_nodes(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.join_nodes(masters=options.masters, workers=options.workers)
+    skuba.join_nodes(masters=options.masters, workers=options.workers, delay=options.delay)
 
 
 def remove_node(options):
@@ -166,13 +166,13 @@ def main():
 
     # Start Join Nodes
     cmd_join_nodes = commands.add_parser("join-nodes",
-                                         help="add node in k8s cluster with the given role.")
-    cmd_join_nodes.add_argument("-m", "--masters",
-                                type=int,
+                                         help="add multiple provisioned nodes k8s.")
+    cmd_join_nodes.add_argument("-m", "--masters", type=int,
                                 help="Specify how many masters to join. Default is all")
-    cmd_join_nodes.add_argument("-w", "--workers",
-                                type=int,
+    cmd_join_nodes.add_argument("-w", "--workers", type=int,
                                 help="Specify how many workers to join. Default is all")
+    cmd_join_nodes.add_argument("-d", "--delay", type=int, default=120,
+                                help="Delay between joining masters to allow etcd to stabilize")
     cmd_join_nodes.set_defaults(func=join_nodes)
     # End Join Nodes
 
