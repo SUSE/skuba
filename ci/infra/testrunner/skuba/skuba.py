@@ -99,17 +99,20 @@ class Skuba:
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
 
-    def join_nodes(self, masters=None, workers=None):
+    def join_nodes(self, masters=None, workers=None, delay=60):
         if masters is None:
             masters = self.platform.get_num_nodes("master")
         if workers is None:
             workers = self.platform.get_num_nodes("worker")
 
-        nodes = [("master", n) for n in range(1, masters)] + \
-                [("worker", n) for n in range(0, workers)] 
-        for role, node in nodes:
-            self.node_join(role, node)
-            self._wait_node_joined(role, node, timeout=180, backoff=20)
+        for node in range(1, masters):
+            self.node_join("master", node)
+            self._wait_node_joined("master", node, timeout=180, backoff=20)
+	    # wait for etcd to become ready
+            time.sleep(delay)
+
+        for node in range(0, workers):
+            self.node_join("worker", node)
 
 
     def _wait_node_joined(self, role, node, timeout=60, backoff=10):
