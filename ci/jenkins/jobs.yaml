@@ -83,7 +83,7 @@
     jobs:
         - '{name}-devel-base-nightly'
         - '{name}-devel-monitoring-nightly'
-        - '{name}-release-base-on-demand'
+        - '{name}-release-staging-on-demand'
 
 - job:
     name: caasp-jobs/caasp-jjb
