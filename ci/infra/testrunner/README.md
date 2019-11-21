@@ -488,7 +488,7 @@ optional arguments:
                         test file name
   -t TEST, --test TEST  test to execute
   -l, --list            only list tests to be executed
-  -v, --verbose         show all output
+  -v, --verbose         show all output from testrunner libraries
   --skip-setup {provisioned,bootstrapped,deployed}
                         Skip the given setup step. 'provisioned' For when you
                         have already provisioned the nodes. 'bootstrapped' For
