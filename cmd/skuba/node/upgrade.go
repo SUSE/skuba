@@ -74,7 +74,7 @@ func newUpgradeApplyCmd() *cobra.Command {
 				klog.Errorf("unable to get admin client set: %s", err)
 				os.Exit(1)
 			}
-			if err := upgrade.Apply(clientSet, target.GetDeployment("")); err != nil {
+			if err := upgrade.Apply(clientSet, target.GetDeployment("", nil)); err != nil {
 				fmt.Printf("Unable to apply node upgrade: %s\n", err)
 				os.Exit(1)
 			}

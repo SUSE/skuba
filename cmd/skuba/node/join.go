@@ -58,7 +58,7 @@ func NewJoinCmd() *cobra.Command {
 				klog.Errorf("unable to get admin client set: %s", err)
 				os.Exit(1)
 			}
-			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0])); err != nil {
+			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0], &joinConfiguration.Role)); err != nil {
 				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},

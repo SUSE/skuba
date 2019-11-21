@@ -108,10 +108,11 @@ func (t Target) String() string {
 	return fmt.Sprintf("%s@%s:%d", t.user, t.target.Target, t.port)
 }
 
-func (t *Target) GetDeployment(nodename string) *deployments.Target {
+func (t *Target) GetDeployment(nodename string, role *deployments.Role) *deployments.Target {
 	res := deployments.Target{
 		Target:   t.targetName,
 		Nodename: nodename,
+		Role:     role,
 	}
 	res.Actionable = &Target{
 		target: &res,

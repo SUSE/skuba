@@ -39,6 +39,7 @@ type Target struct {
 	Actionable
 	Target   string
 	Nodename string
+	Role     *Role
 	Cache    TargetCache
 }
 
