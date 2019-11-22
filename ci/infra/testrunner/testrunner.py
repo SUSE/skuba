@@ -171,7 +171,7 @@ def main():
                                 help="Specify how many masters to join. Default is all")
     cmd_join_nodes.add_argument("-w", "--workers", type=int,
                                 help="Specify how many workers to join. Default is all")
-    cmd_join_nodes.add_argument("-d", "--delay", type=int, default=120,
+    cmd_join_nodes.add_argument("-d", "--delay", type=int, default=180,
                                 help="Delay between joining masters to allow etcd to stabilize")
     cmd_join_nodes.set_defaults(func=join_nodes)
     # End Join Nodes
