@@ -190,7 +190,7 @@ def main():
     test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
                            help="only list tests to be executed")
     test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                           help="show all output")
+                           help="show all output from testrunner libraries")
     test_args.add_argument("--skip-setup",
                            choices=['provisioned', 'bootstrapped', 'deployed'],
                            help="Skip the given setup step.\n"
