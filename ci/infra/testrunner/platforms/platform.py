@@ -98,7 +98,7 @@ class Platform:
         pass
 
     @step
-    def provision(self, num_master=-1, num_worker=-1, retries=4):
+    def provision(self, num_master=-1, num_worker=-1):
         """Provision a cluster"""
         if num_master > -1 or num_worker > -1:
             logger.warning("Overriding number of nodes")
@@ -110,17 +110,8 @@ class Platform:
                 self.conf.worker.count = num_worker
                 logger.warning("   Workers:{} ".format(num_worker))
 
-        # TODO: define the number of retries as a configuration parameter
-        for i in range(0, retries):
-            retry = i + 1
 
-            try:
-                self._provision_platform()
-                break
-            except Exception as ex:
-                logger.warning(f"Provision attempt {retry}/{retries} failed")
-                if retry == retries:
-                    raise Exception(f"Failed {self.__class__.__name__} provisioning: {ex}") from ex
+        self._provision_platform()
 
     def ssh_run(self, role, nr, cmd):
         ip_addrs = self.get_nodes_ipaddrs(role)
