@@ -10,11 +10,6 @@
           fail: true
     triggers:
         - timed: 'H H(3-5) * * *'
-    parameters:
-        - string:
-            name: VALIDATOR_ARGS
-            default: '-p openstack -t base -n 3:2'
-            description: The arguments for validator_caasp
     pipeline-scm:
         scm:
             - git:
@@ -24,7 +19,7 @@
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: scripts
-        script-path: scripts/jenkins/validator_caasp-nightly.Jenkinsfile
+        script-path: scripts/jenkins/validator_caasp-devel-nightly.Jenkinsfile
 
 - job-template:
     name: '{name}-devel-monitoring-nightly'
@@ -38,11 +33,6 @@
           fail: true
     triggers:
         - timed: 'H H(3-5) * * *'
-    parameters:
-        - string:
-            name: VALIDATOR_ARGS
-            default: '-p openstack -t monitoring -n 3:2'
-            description: The arguments for validator_caasp
     pipeline-scm:
         scm:
             - git:
@@ -52,10 +42,10 @@
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: scripts
-        script-path: scripts/jenkins/validator_caasp-nightly.Jenkinsfile
+        script-path: scripts/jenkins/validator_caasp-devel-nightly.Jenkinsfile
 
 - job-template:
-    name: '{name}-release-base-on-demand'
+    name: '{name}-release-staging-on-demand'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
@@ -73,10 +63,6 @@
             name: INCIDENT_REG
             default: ''
             description: Incident registry e.g. registry.suse.de/devel/caasp/4.0/staging/4.0.3/suse_sle-15-sp1_update_products_casp40_update_containers/caasp/v4
-        - string:
-            name: VALIDATOR_ARGS
-            default: '-t base'
-            description: The arguments for validator_caasp
     pipeline-scm:
         scm:
             - git:
@@ -86,4 +72,4 @@
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: scripts
-        script-path: scripts/jenkins/validator_caasp-release.Jenkinsfile
+        script-path: scripts/jenkins/validator_caasp-release-staging.Jenkinsfile
