@@ -123,18 +123,23 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		criConfigure = "cri.configure"
 	}
 
+	// bsc#1155810: generate cluster-wide kubelet root certificate
+	if err := kubernetes.GenerateKubeletRootCert(); err != nil {
+		return err
+	}
+
 	fmt.Println("[bootstrap] applying init configuration to node")
 	err = target.Apply(
 		bootstrapConfiguration,
 		"kubeadm.reset",
-		"kubelet.rootca.create",
 		"kubernetes.bootstrap.upload-secrets",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
-		"kubelet.servercert.create",
+		"kubelet.rootcert.upload",
+		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
