@@ -26,12 +26,12 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-func Plan(clientSet clientset.Interface, nodeName string) error {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
+func Plan(client clientset.Interface, nodeName string) error {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
-	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(clientSet, nodeName)
+	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, nodeName)
 	if err != nil {
 		return err
 	}

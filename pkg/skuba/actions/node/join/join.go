@@ -44,8 +44,8 @@ import (
 
 // Join joins a new machine to the cluster. The role of the machine will be
 // provided by the JoinConfiguration, and will target Target node
-func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
+func Join(client clientset.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfi
 		criConfigure = "cri.configure"
 	}
 
-	_, err = clientSet.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 		return err
@@ -94,7 +94,7 @@ func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfi
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
-		if err := cni.CiliumUpdateConfigMap(clientSet); err != nil {
+		if err := cni.CiliumUpdateConfigMap(client); err != nil {
 			return err
 		}
 	}
@@ -105,13 +105,13 @@ func Join(clientSet clientset.Interface, joinConfiguration deployments.JoinConfi
 
 // ConfigPath returns the configuration path for a specific Target; if this file does
 // not exist, it will be created out of the template file
-func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *deployments.Target) (string, error) {
+func ConfigPath(client clientset.Interface, role deployments.Role, target *deployments.Target) (string, error) {
 	configPath := skuba.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = skuba.TemplatePathForRole(role)
 	}
 
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get current cluster version")
 	}
@@ -120,7 +120,7 @@ func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *de
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
-	if err := addFreshTokenToJoinConfiguration(clientSet, target.Target, joinConfiguration); err != nil {
+	if err := addFreshTokenToJoinConfiguration(client, target.Target, joinConfiguration); err != nil {
 		return "", errors.Wrap(err, "error adding Token to join configuration")
 	}
 	if err := addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion); err != nil {
@@ -141,12 +141,12 @@ func ConfigPath(clientSet clientset.Interface, role deployments.Role, target *de
 	return skuba.MachineConfFile(target.Target), nil
 }
 
-func addFreshTokenToJoinConfiguration(clientSet clientset.Interface, target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
+func addFreshTokenToJoinConfiguration(client clientset.Interface, target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
 	if joinConfiguration.Discovery.BootstrapToken == nil {
 		joinConfiguration.Discovery.BootstrapToken = &kubeadmapi.BootstrapTokenDiscovery{}
 	}
 	var err error
-	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(clientSet, target)
+	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(client, target)
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 	return err
 }
@@ -169,7 +169,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	return nil
 }
 
-func createBootstrapToken(clientSet clientset.Interface, target string) (string, error) {
+func createBootstrapToken(client clientset.Interface, target string) (string, error) {
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
 		return "", errors.Wrap(err, "could not generate a new bootstrap token")
@@ -192,7 +192,7 @@ func createBootstrapToken(clientSet clientset.Interface, target string) (string,
 		},
 	}
 
-	if err := kubeadmtokenphase.CreateNewTokens(clientSet, bootstrapTokens); err != nil {
+	if err := kubeadmtokenphase.CreateNewTokens(client, bootstrapTokens); err != nil {
 		return "", errors.Wrap(err, "could not create new bootstrap token")
 	}
 

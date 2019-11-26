@@ -29,8 +29,8 @@ import (
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 )
 
-func Plan(clientSet clientset.Interface) error {
-	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(clientSet)
+func Plan(client clientset.Interface) error {
+	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func Plan(clientSet clientset.Interface) error {
 		return nil
 	}
 
-	upgradePath, err := upgradecluster.UpgradePath(clientSet)
+	upgradePath, err := upgradecluster.UpgradePath(client)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func Plan(clientSet clientset.Interface) error {
 		tmpVersion = version.String()
 	}
 
-	driftedNodes, err := upgradecluster.DriftedNodes(clientSet)
+	driftedNodes, err := upgradecluster.DriftedNodes(client)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func Plan(clientSet clientset.Interface) error {
 
 	// fetch addon upgrades for the next available cluster version
 	nextClusterVersion := upgradePath[0]
-	updatedAddons, err := addon.UpdatedAddons(clientSet, nextClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(client, nextClusterVersion)
 	if err != nil {
 		return err
 	}
