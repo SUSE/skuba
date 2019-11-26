@@ -428,6 +428,8 @@ optional arguments:
                         kubernetes version
   -c, --cloud-provider
                         Use cloud provider integration for the platform
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for waiting the master nodes to become ready (seconds)
 
 ```
 
@@ -449,9 +451,8 @@ optional arguments:
                         Specify how many masters to join. Default is all
   -w WORKERS, --workers WORKERS
                         Specify how many workers to join. Default is all
-  -d DELAY, --delay DELAY
-                        Delay between joining masters to allow etcd to
-                        stabilize
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for waiting the master nodes to become ready (seconds)
 ```
 #### Node Upgrade command
 
