@@ -63,13 +63,13 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	if !cfg.InsecureSkipVerify && cfg.RootCAPath != "" {
 		rootCAData, err = ioutil.ReadFile(cfg.RootCAPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "read root CA failed: %s", err)
+			return nil, errors.Wrap(err, "read CA failed")
 		}
 	}
 
 	url, err := url.Parse(cfg.DexServer)
 	if err != nil {
-		return nil, errors.Wrapf(err, "parse url")
+		return nil, errors.Wrap(err, "parse url")
 	}
 
 	authResp, err := doAuth(request{
@@ -84,7 +84,7 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 		Debug:              cfg.Debug,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "auth failed")
+		return nil, errors.Wrap(err, "auth failed")
 	}
 
 	// fill out clusters
@@ -123,14 +123,14 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 func SaveKubeconfig(filename string, kubeConfig *clientcmdapi.Config) error {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return errors.Wrapf(err, "open file")
+		return errors.Wrap(err, "open file")
 	}
 	defer f.Close()
 	w := bufio.NewWriter(f)
 
 	err = clientcmdlatest.Codec.Encode(kubeConfig, w)
 	if err != nil {
-		return errors.Wrapf(err, "encode kubeconfig")
+		return errors.Wrap(err, "encode kubeconfig")
 	}
 
 	w.Flush()
