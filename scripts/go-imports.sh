@@ -2,5 +2,5 @@
 
 set -e
 for file in "$@"; do
-    goimports -l -w --local=github.com/SUSE $file
+    goimports -l -w --local=github.com/SUSE "$file"
 done

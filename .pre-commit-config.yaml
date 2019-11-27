@@ -1,6 +1,5 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
-default_stages: [commit]
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
@@ -44,11 +43,3 @@ repos:
     hooks:
     -   id: terraform_fmt
         files: '\.tf$'
--   repo: local
-    hooks:
-    -   id: commit-msg
-        name: commit message length
-        description: The seven rules of a great Git commit message.
-        entry: ./scripts/commit-msg.sh
-        language: script
-        stages: [commit-msg]

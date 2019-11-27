@@ -109,12 +109,12 @@ deps:
 .PHONY: pre-commit-install
 pre-commit-install:
 	test -f $(BINPATH)/bin/pre-commit || curl -sfL https://pre-commit.com/install-local.py | HOME=$(BINPATH) python -
-	$(BINPATH)/bin/pre-commit install -t pre-commit -t commit-msg
+	$(BINPATH)/bin/pre-commit install
 
 .PHONY: pre-commit-uninstall
 pre-commit-uninstall:
 	test -f $(BINPATH)/bin/pre-commit || curl -sfL https://pre-commit.com/install-local.py | HOME=$(BINPATH) python -
-	$(BINPATH)/bin/pre-commit uninstall -t pre-commit -t commit-msg
+	$(BINPATH)/bin/pre-commit uninstall
 
 .PHONY: suse-package
 suse-package:

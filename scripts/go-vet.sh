@@ -2,5 +2,5 @@
 
 set -e
 for file in "$@"; do
-    go vet $file
+    go vet "$file"
 done

@@ -2,5 +2,5 @@
 
 set -e
 for file in "$@"; do
-    go fmt $file
+    go fmt "$file"
 done
