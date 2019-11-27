@@ -36,8 +36,15 @@ def provision(options):
 
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.cluster_init(kubernetes_version=options.kubernetes_version, cloud_provider=options.cloud_provider)
-    skuba.node_bootstrap(cloud_provider=options.cloud_provider)
+    skuba.cluster_init(
+        kubernetes_version=options.kubernetes_version,
+        cloud_provider=options.cloud_provider
+    )
+    skuba.node_bootstrap(
+        cloud_provider=options.cloud_provider,
+        timeout=options.timeout
+    ) 
+
 
 
 def cluster_status(options):
@@ -63,7 +70,11 @@ def join_node(options):
 
 def join_nodes(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.join_nodes(masters=options.masters, workers=options.workers, delay=options.delay)
+    skuba.join_nodes(
+        masters=options.masters,
+        workers=options.workers,
+        timeout=options.timeout
+    )
 
 
 def remove_node(options):
@@ -134,6 +145,8 @@ def main():
                                dest="kubernetes_version", default=None)
     cmd_bootstrap.add_argument("-c", "--cloud-provider", action="store_true",
                                help="Use cloud provider integration")
+    cmd_bootstrap.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the master node to become ready (seconds)")
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
@@ -171,8 +184,8 @@ def main():
                                 help="Specify how many masters to join. Default is all")
     cmd_join_nodes.add_argument("-w", "--workers", type=int,
                                 help="Specify how many workers to join. Default is all")
-    cmd_join_nodes.add_argument("-d", "--delay", type=int, default=180,
-                                help="Delay between joining masters to allow etcd to stabilize")
+    cmd_join_nodes.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the master nodes to become ready (seconds)")
     cmd_join_nodes.set_defaults(func=join_nodes)
     # End Join Nodes
 
