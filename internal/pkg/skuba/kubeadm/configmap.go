@@ -20,9 +20,8 @@ package kubeadm
 import (
 	"strings"
 
-	skubautil "github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/version"
@@ -31,6 +30,8 @@ import (
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+
+	skubautil "github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
 
 // GetClusterConfiguration returns the cluster configuration from the `kubeadm-config` ConfigMap
@@ -88,7 +89,7 @@ func GetAPIEndpointsFromConfigMap(client clientset.Interface) ([]string, error) 
 }
 
 // RemoveAPIEndpointFromConfigMap removes api endpoints from the config map
-func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *v1.Node) error {
+func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *corev1.Node) error {
 	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve the kubeadm-config configmap to change the apiEndpoints")
@@ -102,7 +103,7 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *v1.Node) e
 	if err != nil {
 		return errors.Wrap(err, "could not marshal modified cluster status")
 	}
-	_, err = client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&v1.ConfigMap{
+	_, err = client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kubeadmconstants.KubeadmConfigConfigMap,
 			Namespace: metav1.NamespaceSystem,

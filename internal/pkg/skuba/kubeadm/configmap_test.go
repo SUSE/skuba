@@ -19,14 +19,313 @@ package kubeadm
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/client-go/kubernetes/fake"
+	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
+	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"k8s.io/apimachinery/pkg/util/version"
-	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 )
+
+var kubeadmConfigMap = &corev1.ConfigMap{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      kubeadmconstants.KubeadmConfigConfigMap,
+		Namespace: metav1.NamespaceSystem,
+	},
+	Data: map[string]string{
+		"ClusterConfiguration": `
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: v1.16.2
+`,
+		"ClusterStatus": `
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterStatus
+apiEndpoints:
+  master1:
+    advertiseAddress: 192.168.0.1
+  master2:
+    advertiseAddress: 192.168.0.2
+  master3:
+    advertiseAddress: 192.168.0.3
+`},
+}
+
+func TestGetCurrentClusterVersion(t *testing.T) {
+	tests := []struct {
+		name            string
+		client          *fake.Clientset
+		expectedError   bool
+		expectedVersion *version.Version
+	}{
+		{
+			name:          "kubeadm configmap not found",
+			client:        fake.NewSimpleClientset(),
+			expectedError: true,
+		},
+		{
+			name: "kubeadm configmap no ClusterConfiguration",
+			client: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      kubeadmconstants.KubeadmConfigConfigMap,
+						Namespace: metav1.NamespaceSystem,
+					},
+				},
+			),
+			expectedError: true,
+		},
+		{
+			name: "kubeadm configmap decode failed",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      kubeadmconstants.KubeadmConfigConfigMap,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{"ClusterConfiguration": `
+					apiVersion: kubeadm.k8s.io/v1beta2
+					kind: ClusterConfiguration
+				`},
+			}),
+			expectedError: true,
+		},
+		{
+			name:            "kubernetes cluster version v1.16.2",
+			client:          fake.NewSimpleClientset(kubeadmConfigMap),
+			expectedVersion: version.MustParseSemantic("v1.16.2"),
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			gotVersion, err := GetCurrentClusterVersion(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+			if !reflect.DeepEqual(gotVersion, tt.expectedVersion) {
+				t.Errorf("got version %v, expect version %v", gotVersion, tt.expectedVersion)
+			}
+		})
+	}
+}
+
+func TestGetKubeadmApisVersion(t *testing.T) {
+	versions := []struct {
+		version                  string
+		expectKubeadmApisVersion string
+	}{
+		{
+			version:                  "1.14.2",
+			expectKubeadmApisVersion: "v1beta1",
+		},
+		{
+			version:                  "1.15.0",
+			expectKubeadmApisVersion: "v1beta2",
+		},
+		{
+			version:                  "1.15.2",
+			expectKubeadmApisVersion: "v1beta2",
+		},
+		{
+			version:                  "1.16.2",
+			expectKubeadmApisVersion: "v1beta2",
+		},
+	}
+
+	for _, tt := range versions {
+		tt := tt
+		t.Run(tt.version, func(t *testing.T) {
+			gotKubeadmApisVersion := GetKubeadmApisVersion(version.MustParseSemantic(tt.version))
+			if gotKubeadmApisVersion != tt.expectKubeadmApisVersion {
+				t.Errorf("got kubeadm api version %s does not match expected kubeadm api version %s", gotKubeadmApisVersion, tt.expectKubeadmApisVersion)
+			}
+		})
+	}
+}
+
+func TestGetAPIEndpointsFromConfigMap(t *testing.T) {
+	tests := []struct {
+		name                 string
+		client               *fake.Clientset
+		expectedError        bool
+		expectedAPIEndpoints []string
+	}{
+		{
+			name:          "kubeadm configmap not found",
+			client:        fake.NewSimpleClientset(),
+			expectedError: true,
+		},
+		{
+			name: "kubeadm configmap no ClusterStatus",
+			client: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      kubeadmconstants.KubeadmConfigConfigMap,
+						Namespace: metav1.NamespaceSystem,
+					},
+				},
+			),
+			expectedError: true,
+		},
+		{
+			name: "kubeadm configmap decode failed",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      kubeadmconstants.KubeadmConfigConfigMap,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{"ClusterStatus": `
+					apiVersion: kubeadm.k8s.io/v1beta2
+					kind: ClusterStatus
+				`},
+			}),
+			expectedError: true,
+		},
+		{
+			name:                 "kubeadm get api endpoints from configmap",
+			client:               fake.NewSimpleClientset(kubeadmConfigMap),
+			expectedAPIEndpoints: []string{"192.168.0.1", "192.168.0.2", "192.168.0.3"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			gotAPIEndpoints, err := GetAPIEndpointsFromConfigMap(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+			if !reflect.DeepEqual(gotAPIEndpoints, tt.expectedAPIEndpoints) {
+				t.Errorf("got version %v, expect version %v", gotAPIEndpoints, tt.expectedAPIEndpoints)
+			}
+		})
+	}
+}
+
+func TestRemoveAPIEndpointFromConfigMap(t *testing.T) {
+	tests := []struct {
+		name                 string
+		client               *fake.Clientset
+		node                 *corev1.Node
+		expectedError        bool
+		expectedAPIEndpoints []string
+	}{
+		{
+			name:          "kubeadm configmap not found",
+			client:        fake.NewSimpleClientset(),
+			expectedError: true,
+		},
+		{
+			name: "kubeadm configmap no ClusterStatus",
+			client: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      kubeadmconstants.KubeadmConfigConfigMap,
+						Namespace: metav1.NamespaceSystem,
+					},
+				},
+			),
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   "master1",
+					Labels: map[string]string{"node-role.kubernetes.io/master": ""},
+				},
+			},
+			expectedAPIEndpoints: []string{},
+		},
+		{
+			name: "kubeadm configmap decode failed",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      kubeadmconstants.KubeadmConfigConfigMap,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{"ClusterStatus": `
+					apiVersion: kubeadm.k8s.io/v1beta2
+					kind: ClusterStatus
+				`},
+			}),
+			expectedError: true,
+		},
+		{
+			name:   "remove master node",
+			client: fake.NewSimpleClientset(kubeadmConfigMap),
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:   "master1",
+					Labels: map[string]string{"node-role.kubernetes.io/master": ""},
+				},
+			},
+			expectedAPIEndpoints: []string{"192.168.0.2", "192.168.0.3"},
+		},
+		{
+			name:   "remove worker node",
+			client: fake.NewSimpleClientset(kubeadmConfigMap),
+			node: &corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "worker1",
+				},
+			},
+			expectedAPIEndpoints: []string{"192.168.0.1", "192.168.0.2", "192.168.0.3"},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := RemoveAPIEndpointFromConfigMap(tt.client, tt.node)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+
+			gotAPIEndpoints, _ := GetAPIEndpointsFromConfigMap(tt.client)
+
+			sort.Slice(gotAPIEndpoints, func(i, j int) bool {
+				return gotAPIEndpoints[i] < gotAPIEndpoints[j]
+			})
+			sort.Slice(tt.expectedAPIEndpoints, func(i, j int) bool {
+				return tt.expectedAPIEndpoints[i] < tt.expectedAPIEndpoints[j]
+			})
+
+			if !reflect.DeepEqual(gotAPIEndpoints, tt.expectedAPIEndpoints) {
+				t.Errorf("got version %v, expect version %v", gotAPIEndpoints, tt.expectedAPIEndpoints)
+			}
+		})
+	}
+}
 
 func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 	var scenarios = []struct {
