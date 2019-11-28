@@ -57,6 +57,7 @@ func RemoveMemberFrom(client clientset.Interface, node, executorNode *v1.Node, c
 		client,
 		removeMemberFromJobName(node, executorNode),
 		removeMemberFromJobSpec(node, executorNode, clusterVersion),
+		kubernetes.TimeoutWaitForJob,
 	)
 }
 
