@@ -82,7 +82,6 @@
     name: caasp-jobs/validation/caasp-v4
     jobs:
         - '{name}-devel-base-nightly'
-        - '{name}-devel-monitoring-nightly'
         - '{name}-release-staging-on-demand'
 
 - job:
