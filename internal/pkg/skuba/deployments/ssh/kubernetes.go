@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/klog"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -50,7 +51,7 @@ func init() {
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
 	return func(t *Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
-			if err := t.target.UploadFile(file, filepath.Join("/etc/kubernetes", file)); err != nil {
+			if err := t.target.UploadFile(file, filepath.Join(constants.KubernetesDir, file)); err != nil {
 				if errorHandling == KubernetesUploadSecretsFailOnError {
 					return err
 				}
@@ -77,7 +78,7 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 		updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
 		patternName = fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion)
 	}
-	_, _, err = t.ssh("zypper", "--non-interactive", "install", "--recommends", patternName)
+	_, _, err = t.ssh("zypper", "--non-interactive", "install", patternName)
 	return err
 }
 

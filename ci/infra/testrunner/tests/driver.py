@@ -7,6 +7,9 @@ TESTRUNNER_DIR = os.path.dirname(os.path.dirname(FILEPATH))
 
 
 class PyTestOpts:
+
+    NO_CAPTURE_LOGS = "--show-capture=no"
+
     SHOW_OUTPUT = "-s"
 
     VERBOSE = "-v"
@@ -32,7 +35,12 @@ class TestDriver:
 
         if verbose:
             opts.append(PyTestOpts.SHOW_OUTPUT)
-            opts.append(PyTestOpts.VERBOSE)
+
+        # Dont capture logs
+        opts.append(PyTestOpts.NO_CAPTURE_LOGS)
+
+        # generete detailed test results
+        opts.append(PyTestOpts.VERBOSE)
 
         if collect:
             opts.append(PyTestOpts.COLLECT_TESTS)

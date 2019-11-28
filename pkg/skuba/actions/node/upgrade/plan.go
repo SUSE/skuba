@@ -23,18 +23,15 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
+	clientset "k8s.io/client-go/kubernetes"
 )
 
-func Plan(nodeName string) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
+func Plan(client clientset.Interface, nodeName string) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
-	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(nodeName)
+	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, nodeName)
 	if err != nil {
 		return err
 	}

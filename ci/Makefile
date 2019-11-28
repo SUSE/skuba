@@ -124,3 +124,11 @@ test_e2e:
 .PHONY: test_cpi_openstack
 test_cpi_openstack:
 	${TEST_RUNNER} -v vars.yaml -p openstack test --verbose --suite test_cpi_openstack.py
+
+.PHONY: test_remove_master
+test_remove_master:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_masters.py --test test_remove_master
+
+.PHONY: test_remove_worker
+test_remove_worker:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_workers.py --test test_remove_worker

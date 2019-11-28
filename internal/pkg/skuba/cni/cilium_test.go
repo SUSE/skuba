@@ -71,6 +71,7 @@ func Test_CreateCiliumSecret(t *testing.T) {
 			etcdDir = tt.etcdDir
 
 			err := CreateCiliumSecret(tt.clientset)
+			//nolint:errcheck
 			secrets, _ := tt.clientset.CoreV1().Secrets(metav1.NamespaceSystem).List(metav1.ListOptions{})
 			secretSize := len(secrets.Items)
 			if tt.errExpected {
@@ -172,6 +173,7 @@ func Test_AnnotateCiliumDaemonsetWithCurrentTimestamp(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:errcheck
 			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
 
 			err := annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
@@ -218,22 +220,24 @@ apiEndpoints:
 	}
 
 	tests := []struct {
-		clientset           *fake.Clientset
-		configmap           *corev1.ConfigMap
-		debugExpected       string
-		disableIpv4Expected string
-		etcdConfigExpected  string
-		errExpected         bool
-		errMessage          string
-		name                string
+		clientset          *fake.Clientset
+		configmap          *corev1.ConfigMap
+		debugExpected      string
+		enableIpv4Expected string
+		enableIpv6Expected string
+		etcdConfigExpected string
+		errExpected        bool
+		errMessage         string
+		name               string
 	}{
 		{
-			name:                "should create or update cilium configmap",
-			clientset:           fake.NewSimpleClientset(),
-			configmap:           cmBase,
-			debugExpected:       "false",
-			disableIpv4Expected: "false",
-			errExpected:         false,
+			name:               "should create or update cilium configmap",
+			clientset:          fake.NewSimpleClientset(),
+			configmap:          cmBase,
+			debugExpected:      "false",
+			enableIpv4Expected: "true",
+			enableIpv6Expected: "false",
+			errExpected:        false,
 			etcdConfigExpected: `ca-file: /tmp/cilium-etcd/ca.crt
 cert-file: /tmp/cilium-etcd/tls.crt
 endpoints:
@@ -252,6 +256,7 @@ key-file: /tmp/cilium-etcd/tls.key
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:errcheck
 			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.configmap)
 
 			err := CreateOrUpdateCiliumConfigMap(tt.clientset)
@@ -278,9 +283,10 @@ key-file: /tmp/cilium-etcd/tls.key
 				}
 
 				dataExpected := map[string]string{
-					"debug":        tt.debugExpected,
-					"disable-ipv4": tt.disableIpv4Expected,
-					"etcd-config":  tt.etcdConfigExpected,
+					"debug":       tt.debugExpected,
+					"enable-ipv4": tt.enableIpv4Expected,
+					"enable-ipv6": tt.enableIpv6Expected,
+					"etcd-config": tt.etcdConfigExpected,
 				}
 				if !reflect.DeepEqual(dataGet.Data, dataExpected) {
 					t.Errorf("returned data (%v) does not match the expected one (%v)", dataGet.Data, dataExpected)

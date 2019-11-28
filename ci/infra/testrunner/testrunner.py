@@ -36,8 +36,15 @@ def provision(options):
 
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.cluster_init(kubernetes_version=options.kubernetes_version, cloud_provider=options.cloud_provider)
-    skuba.node_bootstrap(cloud_provider=options.cloud_provider)
+    skuba.cluster_init(
+        kubernetes_version=options.kubernetes_version,
+        cloud_provider=options.cloud_provider
+    )
+    skuba.node_bootstrap(
+        cloud_provider=options.cloud_provider,
+        timeout=options.timeout
+    ) 
+
 
 
 def cluster_status(options):
@@ -63,7 +70,11 @@ def join_node(options):
 
 def join_nodes(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.join_nodes(masters=options.masters, workers=options.workers)
+    skuba.join_nodes(
+        masters=options.masters,
+        workers=options.workers,
+        timeout=options.timeout
+    )
 
 
 def remove_node(options):
@@ -132,8 +143,10 @@ def main():
                         deployed nodes in your platform")
     cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
                                dest="kubernetes_version", default=None)
-    cmd_bootstrap.add_argument("-c", "--cloud-provider", action='store_true',
-                               help="The cloud provider you're targeting. Default is openstack")
+    cmd_bootstrap.add_argument("-c", "--cloud-provider", action="store_true",
+                               help="Use cloud provider integration")
+    cmd_bootstrap.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the master node to become ready (seconds)")
     cmd_bootstrap.set_defaults(func=bootstrap)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
@@ -166,13 +179,13 @@ def main():
 
     # Start Join Nodes
     cmd_join_nodes = commands.add_parser("join-nodes",
-                                         help="add node in k8s cluster with the given role.")
-    cmd_join_nodes.add_argument("-m", "--masters",
-                                type=int,
+                                         help="add multiple provisioned nodes k8s.")
+    cmd_join_nodes.add_argument("-m", "--masters", type=int,
                                 help="Specify how many masters to join. Default is all")
-    cmd_join_nodes.add_argument("-w", "--workers",
-                                type=int,
+    cmd_join_nodes.add_argument("-w", "--workers", type=int,
                                 help="Specify how many workers to join. Default is all")
+    cmd_join_nodes.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the master nodes to become ready (seconds)")
     cmd_join_nodes.set_defaults(func=join_nodes)
     # End Join Nodes
 
@@ -190,7 +203,7 @@ def main():
     test_args.add_argument("-l", "--list", dest="collect", action="store_true", default=False,
                            help="only list tests to be executed")
     test_args.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                           help="show all output")
+                           help="show all output from testrunner libraries")
     test_args.add_argument("--skip-setup",
                            choices=['provisioned', 'bootstrapped', 'deployed'],
                            help="Skip the given setup step.\n"

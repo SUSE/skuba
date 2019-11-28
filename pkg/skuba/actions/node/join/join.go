@@ -27,10 +27,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	bootstraputil "k8s.io/cluster-bootstrap/token/util"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 	kubeadmtokenphase "k8s.io/kubernetes/cmd/kubeadm/app/phases/bootstraptoken/node"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 
@@ -40,20 +40,11 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 // Join joins a new machine to the cluster. The role of the machine will be
 // provided by the JoinConfiguration, and will target Target node
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead of
-//        using the PWD
-func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		fmt.Println("[join] failed to get admin client set")
-		return err
-	}
+func Join(client clientset.Interface, joinConfiguration deployments.JoinConfiguration, target *deployments.Target) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
@@ -71,29 +62,28 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 		criConfigure = "cri.configure"
 	}
 
-	statesToApply := []string{
-		"kernel.load-modules",
-		"kernel.configure-parameters",
-		"apparmor.start",
-		criConfigure,
-		"cri.start",
-		"kubelet.configure",
-		"kubelet.enable",
-		"kubeadm.join",
-		"skuba-update.start",
-	}
-
-	// Try to find exist node which have the same name.
 	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		return errors.Errorf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster", target.Nodename)
 	}
 
+	statesToApply := []string{"kubeadm.reset"}
+
 	if joinConfiguration.Role == deployments.MasterRole {
-		statesToApply = append([]string{"kubernetes.join.upload-secrets"}, statesToApply...)
+		statesToApply = append(statesToApply, "kubernetes.join.upload-secrets")
 	}
 
-	statesToApply = append([]string{"kubeadm.reset"}, statesToApply...)
+	statesToApply = append(statesToApply,
+		"kernel.load-modules",
+		"kernel.configure-parameters",
+		"apparmor.start",
+		criConfigure,
+		"cri.start",
+		"kubelet.servercert.create",
+		"kubelet.configure",
+		"kubelet.enable",
+		"kubeadm.join",
+		"skuba-update.start")
 
 	fmt.Println("[join] applying states to new node")
 
@@ -114,19 +104,12 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 
 // ConfigPath returns the configuration path for a specific Target; if this file does
 // not exist, it will be created out of the template file
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead of
-//        using the PWD
-func ConfigPath(role deployments.Role, target *deployments.Target) (string, error) {
+func ConfigPath(client clientset.Interface, role deployments.Role, target *deployments.Target) (string, error) {
 	configPath := skuba.MachineConfFile(target.Target)
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		configPath = skuba.TemplatePathForRole(role)
 	}
 
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return "", errors.Wrap(err, "could not get admin client set")
-	}
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get current cluster version")
@@ -136,13 +119,11 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	if err != nil {
 		return "", errors.Wrap(err, "error parsing configuration")
 	}
-	addFreshTokenToJoinConfiguration(target.Target, joinConfiguration)
-	addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion)
-	if cloud.HasCloudIntegration() {
-		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
-			return "", errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
-		}
-		setCloudConfiguration(joinConfiguration)
+	if err := addFreshTokenToJoinConfiguration(client, target.Target, joinConfiguration); err != nil {
+		return "", errors.Wrap(err, "error adding Token to join configuration")
+	}
+	if err := addTargetInformationToJoinConfiguration(target, role, joinConfiguration, currentClusterVersion); err != nil {
+		return "", errors.Wrap(err, "error adding target information to join configuration")
 	}
 	finalJoinConfigurationContents, err := kubeadmutil.MarshalToYamlForCodecs(joinConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
@@ -159,12 +140,12 @@ func ConfigPath(role deployments.Role, target *deployments.Target) (string, erro
 	return skuba.MachineConfFile(target.Target), nil
 }
 
-func addFreshTokenToJoinConfiguration(target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
+func addFreshTokenToJoinConfiguration(client clientset.Interface, target string, joinConfiguration *kubeadmapi.JoinConfiguration) error {
 	if joinConfiguration.Discovery.BootstrapToken == nil {
 		joinConfiguration.Discovery.BootstrapToken = &kubeadmapi.BootstrapTokenDiscovery{}
 	}
 	var err error
-	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(target)
+	joinConfiguration.Discovery.BootstrapToken.Token, err = createBootstrapToken(client, target)
 	joinConfiguration.Discovery.TLSBootstrapToken = ""
 	return err
 }
@@ -176,7 +157,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.Name = target.Nodename
 	joinConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = images.GetGenericImage(skuba.ImageRepository, "pause", kubernetes.ComponentVersionForClusterVersion(kubernetes.Pause, clusterVersion))
+	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, clusterVersion)
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return errors.Wrap(err, "unable to get os info")
@@ -187,12 +168,7 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	return nil
 }
 
-func createBootstrapToken(target string) (string, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return "", errors.Wrap(err, "unable to get admin client set")
-	}
-
+func createBootstrapToken(client clientset.Interface, target string) (string, error) {
 	bootstrapTokenRaw, err := bootstraputil.GenerateBootstrapToken()
 	if err != nil {
 		return "", errors.Wrap(err, "could not generate a new bootstrap token")
@@ -220,9 +196,4 @@ func createBootstrapToken(target string) (string, error) {
 	}
 
 	return bootstrapTokenRaw, nil
-}
-
-func setCloudConfiguration(joinConfiguration *kubeadmapi.JoinConfiguration) {
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "openstack"
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 }

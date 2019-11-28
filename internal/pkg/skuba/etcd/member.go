@@ -27,10 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func RemoveMember(client clientset.Interface, node *v1.Node, clusterVersion *version.Version) error {
@@ -77,7 +75,7 @@ func removeMemberFromJobSpec(node, executorNode *v1.Node, clusterVersion *versio
 					{
 						Name: removeMemberFromJobName(node, executorNode),
 						// FIXME: check that etcd member is part of the member list already
-						Image: images.GetGenericImage(skuba.ImageRepository, "etcd", kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, clusterVersion)),
+						Image: kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Etcd, clusterVersion),
 						Command: []string{
 							"/bin/sh", "-c",
 							fmt.Sprintf("etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member remove $(etcdctl --endpoints=https://[127.0.0.1]:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list | grep ', %s,' | cut -d',' -f1)", node.ObjectMeta.Name),

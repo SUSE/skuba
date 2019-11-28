@@ -84,6 +84,7 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 
 	for gvk, fileContent := range gvkmap {
 		// verify the validity of the YAML
+		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
 		strict.VerifyUnmarshalStrict(fileContent, gvk)
 
 		// Try to get the registration for the ComponentConfig based on the kind
@@ -133,7 +134,9 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 		kubeadmscheme.Scheme.Default(extinitcfg)
 		// Set initcfg to an empty struct value the deserializer will populate
 		initcfg = &kubeadmapi.InitConfiguration{}
-		kubeadmscheme.Scheme.Convert(extinitcfg, initcfg, nil)
+		if err := kubeadmscheme.Scheme.Convert(extinitcfg, initcfg, nil); err != nil {
+			return nil, errors.Wrap(err, "can not create kubeadm scheme")
+		}
 	}
 	// If ClusterConfiguration was given, populate it in the InitConfiguration struct
 	if clustercfg != nil {
@@ -166,8 +169,8 @@ func documentMapToJoinConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 		}
 
 		// verify the validity of the YAML
+		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
 		strict.VerifyUnmarshalStrict(bytes, gvk)
-
 		joinBytes = bytes
 	}
 

@@ -18,6 +18,7 @@
 package node
 
 import (
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -38,17 +39,16 @@ func NewRemoveCmd() *cobra.Command {
 		Use:   "remove <node-name>",
 		Short: "Removes a node from the cluster",
 		Run: func(cmd *cobra.Command, nodenames []string) {
-			client, err := kubernetes.GetAdminClientSet()
-			if err != nil {
-				klog.Fatalf("unable to get admin client set: %s", err)
-			}
-
 			if removeOptions.drainTimeout < 0 {
 				klog.Infof("the passed duration was negative and will be ignored")
 				removeOptions.drainTimeout = 0
 			}
-
-			if err := node.Remove(client, nodenames[0], removeOptions.drainTimeout); err != nil {
+			clientSet, err := kubernetes.GetAdminClientSet()
+			if err != nil {
+				klog.Errorf("unable to get admin client set: %s", err)
+				os.Exit(1)
+			}
+			if err := node.Remove(clientSet, nodenames[0], removeOptions.drainTimeout); err != nil {
 				klog.Fatalf("error removing node %s: %s", nodenames[0], err)
 			}
 		},

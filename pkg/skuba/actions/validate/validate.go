@@ -19,16 +19,25 @@ package validate
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-// NodeName checks whether the node name is valid and accpetable for kubelet.
+var nodeNameRegex = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`)
+
+// NodeName checks whether the node name is valid and acceptable for kubelet.
 func NodeName(nodename string) error {
 	if len(nodename) > skuba.MaxNodeNameLength {
 		return fmt.Errorf(
 			"invalid node name \"%s\": must be no more than %d characters",
 			nodename, skuba.MaxNodeNameLength)
+	}
+
+	if !nodeNameRegex.MatchString(nodename) {
+		return fmt.Errorf(
+			"invalid node name \"%s\": must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character",
+			nodename)
 	}
 	return nil
 }

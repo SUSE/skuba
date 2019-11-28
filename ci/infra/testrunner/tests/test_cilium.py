@@ -4,6 +4,8 @@ import time
 
 import pytest
 
+from tests.utils import wait
+
 logger = logging.getLogger("testrunner")
 
 
@@ -12,14 +14,21 @@ def test_cillium(deployment, kubectl):
     landing_req = 'curl -sm10 -XPOST deathstar.default.svc.cluster.local/v1/request-landing'
 
     logger.info("Deploy deathstar")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.5/examples/minikube/http-sw-app.yaml")
-    kubectl.run_kubectl("wait --for=condition=ready pods --all --timeout=3m")
+    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/http-sw-app.yaml")
+
+    # FIXME: This check should be only get the star wars application's pods
+    wait(kubectl.run_kubectl,
+         "wait --for=condition=ready pods --all --timeout=0",
+         wait_delay=30,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180)
 
     # FIXME: this hardcoded wait should be replaces with a (cilum?) condition
     time.sleep(100)
 
     logger.info("Check with L3/L4 policy")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.5/examples/minikube/sw_l3_l4_policy.yaml")
+    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_policy.yaml")
     tie_out = kubectl.run_kubectl("exec tiefighter -- {}".format(landing_req))
     assert 'Ship landed' in tie_out
 

@@ -36,9 +36,8 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
 				return errors.Wrapf(err, "failed to apply state %s", stateName)
-			} else {
-				klog.V(1).Infof("=== state %s applied successfully ===", stateName)
 			}
+			klog.V(1).Infof("=== state %s applied successfully ===", stateName)
 		} else {
 			return errors.New(fmt.Sprintf("state does not exist: %s", stateName))
 		}

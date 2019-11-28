@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from urllib.parse import urlparse
 
 import hcl
 
@@ -80,6 +81,10 @@ class Terraform(Platform):
     def get_num_nodes(self, role):
         return len(self.get_nodes_ipaddrs(role))
 
+    def get_nodes_names(self, role):
+        stack_name = self.stack_name()
+        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))] 
+
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
 
@@ -110,10 +115,23 @@ class Terraform(Platform):
             with open(tfvars_final, "w") as f:
                 json.dump(tfvars, f)
 
+    # take up to 45 characters from stackname to give room to the fixed part
+    # in the node name: caasp-[master|worker]-<stack name>-xxx (total length
+    # must be <= 63).
+    # Also ensure that only valid character are present and that the string
+    # starts and ends with alphanumeric characters and all lowercase.
+    def stack_name(self):
+         stack_name = self.conf.terraform.stack_name[:45]
+         stack_name = stack_name.replace("_","-").replace("/","-")
+         stack_name = stack_name.strip("-.")
+         stack_name = stack_name.lower()
+   
+         return stack_name
+
     def _update_tfvars(self, tfvars):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
-            "stack_name": self.conf.terraform.stack_name,
+            "stack_name": self.stack_name(),
             "username": self.conf.nodeuser,
             "masters": self.conf.master.count,
             "workers": self.conf.worker.count,
@@ -129,11 +147,25 @@ class Terraform(Platform):
                 else:
                     tfvars[k] = v
 
+        # if registry code specified, repositories are not needed
+        if self.conf.packages.registry_code:
+            tfvars["caasp_registry_code"] = self.conf.packages.registry_code
+            tfvars["repositories"] = {}
+
+        repos = tfvars.get("repositories", {})
+        if self.conf.packages.additional_repos:
+           for name, url in self.conf.packages.additional_repos.items():
+               repos[name] = url
+
         # Update mirror urls
-        repos = tfvars.get("repositories")
-        if self.conf.terraform.mirror and repos is not None:
+        if self.conf.packages.mirror and repos:
             for name, url in repos.items():
-                tfvars["repositories"][name] = url.replace("download.suse.de", self.conf.terraform.mirror)
+                url_parsed = urlparse(url)
+                url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
+                tfvars["repositories"][name] = url_updated.geturl()
+	
+        if self.conf.packages.additional_pkgs:
+            tfvars["packages"].extend(self.conf.packages.additional_pkgs)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""

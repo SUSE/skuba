@@ -21,7 +21,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
@@ -31,16 +33,10 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
-	"github.com/pkg/errors"
 )
 
-func Apply(target *deployments.Target) error {
-	if err := fillTargetWithNodeName(target); err != nil {
-		return err
-	}
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
+func Apply(client clientset.Interface, target *deployments.Target) error {
+	if err := fillTargetWithNodeNameAndRole(client, target); err != nil {
 		return err
 	}
 
@@ -54,7 +50,7 @@ func Apply(target *deployments.Target) error {
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Println()
 
-	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(target.Nodename)
+	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, target.Nodename)
 	if err != nil {
 		return err
 	}
@@ -80,13 +76,13 @@ func Apply(target *deployments.Target) error {
 	var initCfgContents []byte
 
 	// Check if the target node is the first control plane to be updated
-	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded()
+	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
 	if err != nil {
 		return err
 	}
 	if isFirstControlPlaneUpgrade {
 		var err error
-		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(nodeVersionInfoUpdate.Update.APIServerVersion)
+		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
@@ -97,11 +93,13 @@ func Apply(target *deployments.Target) error {
 			if err != nil {
 				return err
 			}
-			node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
-			kubeadm.SetContainerImagesWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
+			if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
+				return errors.Wrap(err, "error adding target information to init configuration")
+			}
+			kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 			initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
 				Group:   "kubeadm.k8s.io",
-				Version: "v1beta2",
+				Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
 			})
 			if err != nil {
 				return err
@@ -110,7 +108,7 @@ func Apply(target *deployments.Target) error {
 	} else {
 		// there is already at least one updated control plane node
 		if nodeVersionInfoUpdate.Current.IsControlPlane() {
-			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(currentClusterVersion)
+			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, currentClusterVersion)
 			if err != nil {
 				return err
 			}
@@ -162,6 +160,10 @@ func Apply(target *deployments.Target) error {
 	if err != nil {
 		return err
 	}
+	// bsc#1155810: generate cluster-wide kubelet root certificate, and generate/rotate kuberlet server certificate
+	if err := target.Apply(nil, "kubelet.rootca.create", "kubelet.servercert.create"); err != nil {
+		return err
+	}
 	if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
 		return err
 	}
@@ -186,15 +188,24 @@ func Apply(target *deployments.Target) error {
 	return nil
 }
 
-func fillTargetWithNodeName(target *deployments.Target) error {
-	machineId, err := target.DownloadFileContents("/etc/machine-id")
+func fillTargetWithNodeNameAndRole(client clientset.Interface, target *deployments.Target) error {
+	machineID, err := target.DownloadFileContents("/etc/machine-id")
 	if err != nil {
 		return err
 	}
-	node, err := kubernetes.GetNodeWithMachineId(strings.TrimSuffix(machineId, "\n"))
+	node, err := kubernetes.GetNodeWithMachineID(client, strings.TrimSuffix(machineID, "\n"))
 	if err != nil {
 		return err
 	}
 	target.Nodename = node.ObjectMeta.Name
+
+	var role deployments.Role
+	if kubernetes.IsControlPlane(node) {
+		role = deployments.MasterRole
+	} else {
+		role = deployments.WorkerRole
+	}
+	target.Role = &role
+
 	return nil
 }

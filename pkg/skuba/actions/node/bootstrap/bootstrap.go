@@ -35,18 +35,14 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/SUSE/skuba/pkg/skuba/cloud"
 )
 
 // Bootstrap initializes the first master node of the cluster
-//
-// FIXME: being this a part of the go API accept the toplevel directory instead
-//        of using the PWD
 func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	coreBootstrapDone := false
 
 	if clientSet, err := kubernetes.GetAdminClientSet(); err == nil {
-		_, err := clientSet.ServerVersion()
+		_, err := clientSet.Discovery().ServerVersion()
 		if err == nil {
 			fmt.Printf("[bootstrap] node %q has already the core components bootstrapped\n", target.Target)
 			coreBootstrapDone = true
@@ -68,6 +64,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		return err
 	}
 
+	// Load admin.conf after download secrets from remote bootstrapped master node.
+	clientSet, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return err
+	}
+
 	fmt.Printf("[bootstrap] deploying core add-ons on node %q\n", target.Target)
 	versionToDeploy, err := version.ParseSemantic(initConfiguration.KubernetesVersion)
 	if err != nil {
@@ -78,7 +80,7 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
 		ClusterName:    initConfiguration.ClusterName,
 	}
-	if err := addons.DeployAddons(addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
+	if err := addons.DeployAddons(clientSet, addonConfiguration, addons.SkipRenderIfConfigFilePresent); err != nil {
 		return err
 	}
 
@@ -101,16 +103,6 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 	if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initConfiguration, versionToDeploy); err != nil {
 		return errors.Wrap(err, "unable to add target information to init configuration")
 	}
-
-	if cloud.HasCloudIntegration() {
-		if !cloud.ConfigHasRestrictedPermissions(skuba.OpenstackCloudConfFile()) {
-			return errors.New(fmt.Sprintf("Cloud config file %s should be accessible only by the owner (eg 600)", skuba.OpenstackCloudConfFile()))
-		}
-		setCloudConfiguration(initConfiguration)
-		setCloudConfigurationPath(initConfiguration)
-	}
-
-	setApiserverAdmissionPlugins(initConfiguration)
 
 	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
 		Group:   "kubeadm.k8s.io",
@@ -135,12 +127,14 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 	err = target.Apply(
 		bootstrapConfiguration,
 		"kubeadm.reset",
+		"kubelet.rootca.create",
 		"kubernetes.bootstrap.upload-secrets",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
+		"kubelet.servercert.create",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
@@ -155,7 +149,9 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 }
 
 func downloadSecrets(target *deployments.Target) error {
-	os.MkdirAll(filepath.Join("pki", "etcd"), 0700)
+	if err := os.MkdirAll(filepath.Join("pki", "etcd"), 0700); err != nil {
+		return errors.Wrapf(err, "could not create %s folder", filepath.Join("pki", "etcd"))
+	}
 
 	fmt.Printf("[bootstrap] downloading secrets from bootstrapped node %q\n", target.Target)
 	for _, secretLocation := range deployments.Secrets {
@@ -169,51 +165,4 @@ func downloadSecrets(target *deployments.Target) error {
 	}
 
 	return nil
-}
-
-func setApiserverAdmissionPlugins(initConfiguration *kubeadmapi.InitConfiguration) {
-	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
-		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
-	}
-	// List of recommended plugins: https://git.io/JemEu
-	defaultAdmissionPlugins := "NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota"
-	// Update the variable when updating kubeadm if needed: https://git.io/Jem4z
-	kubeadmAdmissionPlugins := "NodeRestriction"
-	skubaAdmissionPlugins := "PodSecurityPolicy"
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = fmt.Sprintf("%s,%s,%s", kubeadmAdmissionPlugins, skubaAdmissionPlugins, defaultAdmissionPlugins)
-}
-
-func setCloudConfigurationPath(initConfiguration *kubeadmapi.InitConfiguration) {
-	cloudVolume := []kubeadmapi.HostPathMount{}
-	cloudConfig := kubeadmapi.HostPathMount{
-		Name:      "cloud-config",
-		HostPath:  skuba.OpenstackConfigRuntimeFile(),
-		MountPath: skuba.OpenstackConfigRuntimeFile(),
-		ReadOnly:  true,
-		PathType:  "FileOrCreate",
-	}
-	cloudVolume = append(cloudVolume, cloudConfig)
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraVolumes = cloudVolume
-	initConfiguration.ControllerManager.ExtraVolumes = cloudVolume
-}
-
-func setCloudConfiguration(initConfiguration *kubeadmapi.InitConfiguration) {
-
-	if initConfiguration.NodeRegistration.KubeletExtraArgs == nil {
-		initConfiguration.NodeRegistration.KubeletExtraArgs = map[string]string{}
-	}
-	initConfiguration.NodeRegistration.KubeletExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
-
-	if initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs == nil {
-		initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
-	}
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.APIServer.ControlPlaneComponent.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
-
-	if initConfiguration.ControllerManager.ExtraArgs == nil {
-		initConfiguration.ControllerManager.ExtraArgs = map[string]string{}
-	}
-	initConfiguration.ControllerManager.ExtraArgs["cloud-provider"] = "openstack"
-	initConfiguration.ControllerManager.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 }

@@ -18,12 +18,14 @@
 package ssh
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
-	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/join"
 )
 
@@ -35,7 +37,7 @@ func init() {
 	stateMap["kubeadm.upgrade.node"] = kubeadmUpgradeNode
 }
 
-var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skuba.KubeadmInitConfFile())
+var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skubaconstants.KubeadmInitConfFile())
 
 func kubeadmInit(t *Target, data interface{}) error {
 	bootstrapConfiguration, ok := data.(deployments.BootstrapConfiguration)
@@ -43,10 +45,17 @@ func kubeadmInit(t *Target, data interface{}) error {
 		return errors.New("couldn't access bootstrap configuration")
 	}
 
-	if err := t.target.UploadFile(skuba.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
+	if err := t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmInitConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm init config file")
+		}
+	}()
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := bootstrapConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
@@ -58,12 +67,16 @@ func kubeadmInit(t *Target, data interface{}) error {
 }
 
 func kubeadmJoin(t *Target, data interface{}) error {
+	api, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve the clientset from kubernetes")
+	}
 	joinConfiguration, ok := data.(deployments.JoinConfiguration)
 	if !ok {
 		return errors.New("couldn't access join configuration")
 	}
 
-	configPath, err := join.ConfigPath(joinConfiguration.Role, t.target)
+	configPath, err := join.ConfigPath(api, joinConfiguration.Role, t.target)
 	if err != nil {
 		return errors.Wrap(err, "unable to configure path")
 	}
@@ -71,7 +84,14 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	if err := t.target.UploadFile(configPath, remoteKubeadmInitConfFile); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmInitConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm init config file")
+		}
+	}()
 
 	ignorePreflightErrors := ""
 	ignorePreflightErrorsVal := joinConfiguration.KubeadmExtraArgs["ignore-preflight-errors"]
@@ -93,11 +113,18 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 		return errors.New("couldn't access upgrade configuration")
 	}
 
-	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skuba.KubeadmUpgradeConfFile())
+	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skubaconstants.KubeadmUpgradeConfFile())
 	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents); err != nil {
 		return err
 	}
-	defer t.ssh("rm", remoteKubeadmUpgradeConfFile)
+	defer func() {
+		_, _, err := t.ssh("rm", remoteKubeadmUpgradeConfFile)
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the kubeadm upgrade config file")
+		}
+	}()
 
 	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "--config", remoteKubeadmUpgradeConfFile, "-y")
 	return err

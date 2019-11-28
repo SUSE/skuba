@@ -144,7 +144,7 @@ func Test_documentMapToJoinConfiguration(t *testing.T) {
 			name: "Map a JoinConfiguration",
 			args: args{
 				gvkmap: map[schema.GroupVersionKind][]byte{
-					schema.GroupVersionKind{
+					{
 						Group:   "",
 						Version: "kubeadm.k8s.io/v1beta1",
 						Kind:    "JoinConfiguration",
@@ -186,7 +186,7 @@ func Test_documentMapToJoinConfiguration(t *testing.T) {
 			name: "Attempt to map another configuration",
 			args: args{
 				gvkmap: map[schema.GroupVersionKind][]byte{
-					schema.GroupVersionKind{
+					{
 						Group:   "",
 						Version: "kubeadm.k8s.io/v1beta1",
 						Kind:    "Something else",

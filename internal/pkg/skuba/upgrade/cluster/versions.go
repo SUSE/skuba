@@ -19,6 +19,7 @@ package cluster
 
 import (
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -54,11 +55,7 @@ func nextAvailableVersionsForVersion(currentClusterVersion *version.Version, ava
 // NextAvailableVersions return the next patch version available (if any) for
 // the current minor version, the next minor version (if any) for the current
 // major version, and the next major version (if any)
-func NextAvailableVersions() (nextPatch *version.Version, nextMinor *version.Version, nextMajor *version.Version, err error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, nil, nil, err
-	}
+func NextAvailableVersions(client clientset.Interface) (nextPatch *version.Version, nextMinor *version.Version, nextMajor *version.Version, err error) {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return nil, nil, nil, err
@@ -105,11 +102,7 @@ func UpgradePathWithAvailableVersions(currentClusterVersion *version.Version, av
 
 // UpgradePath returns the list of versions the cluster needs to go through
 // in order to upgrade to the latest available version
-func UpgradePath() ([]*version.Version, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return nil, err
-	}
+func UpgradePath(client clientset.Interface) ([]*version.Version, error) {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return []*version.Version{}, err

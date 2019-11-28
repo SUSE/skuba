@@ -17,12 +17,15 @@ reconfiguration in an easy way.
   Print usage statement.
 
 **-v**
-  set verbosity level.
+  number for the log level verbosity [0-10].
 
 # COMMANDS
 
 **cluster**
   Cluster initialization and handling commands.
+
+**completion**
+  Command line completion commands.
 
 **node**
   Node handling commands.
@@ -32,6 +35,7 @@ reconfiguration in an easy way.
 
 # SEE ALSO
 **skuba-auth-login**(1),
+**skuba-cluster-images**(1),
 **skuba-cluster-init**(1),
 **skuba-cluster-status**(1),
 **skuba-cluster-upgrade-plan**(1),

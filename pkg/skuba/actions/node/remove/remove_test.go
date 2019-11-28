@@ -136,12 +136,14 @@ apiServer:
 	for _, tt := range test {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			//nolint:errcheck
 			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(cm)
 
 			shaTarget := fmt.Sprintf("%x", sha1.Sum([]byte(tt.target)))
 			shaExecuter := ""
 			for _, executer := range tt.executer {
 				shaExecuter = fmt.Sprintf("%x", sha1.Sum([]byte(executer)))
+				//nolint:errcheck
 				tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter),
@@ -151,7 +153,7 @@ apiServer:
 					Status: batchv1.JobStatus{Active: 1},
 				})
 			}
-
+			//nolint:errcheck
 			tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget),

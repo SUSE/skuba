@@ -4,7 +4,7 @@ import platforms
 from kubectl import Kubectl
 from skuba import Skuba
 from utils import BaseConfig
-from tests.utils import wait
+from tests.utils import (check_pods_ready, wait)
 
 
 def pytest_addoption(parser):
@@ -38,6 +38,7 @@ def provision(request, platform):
 
 @pytest.fixture
 def bootstrap(request, provision, skuba):
+
     if request.config.getoption("skip_setup") in ['bootstrapped', 'deployed']:
         return
 
@@ -50,7 +51,14 @@ def deployment(request, bootstrap, skuba, kubectl):
     if request.config.getoption("skip_setup") != 'deployed':
         skuba.join_nodes()
 
-    wait(kubectl.run_kubectl, 'wait --timeout=1m --for=condition=Ready pods --all --namespace=kube-system', wait_delay=60, wait_timeout=300, wait_backoff=30, wait_retries=5)
+    wait(check_pods_ready,
+         kubectl,
+         namespace="kube-system",
+         wait_delay=60,
+         wait_timeout=10,
+         wait_backoff=60,
+         wait_elapsed=60*30,
+         wait_allow=(AssertionError))
 
 
 @pytest.fixture

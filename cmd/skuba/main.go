@@ -40,6 +40,7 @@ func newRootCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewVersionCmd(),
 		NewClusterCmd(),
+		NewCompletionCmd(),
 		NewNodeCmd(),
 		NewAuthCmd(),
 		NewAddonCmd(),
@@ -79,6 +80,7 @@ func register(local *pflag.FlagSet, globalName string) {
 	if f := flag.CommandLine.Lookup(globalName); f != nil {
 		pflagFlag := pflag.PFlagFromGoFlag(f)
 		pflagFlag.Name = "verbosity"
+		pflagFlag.Usage = "number for the log level verbosity [0-10]"
 		local.AddFlag(pflagFlag)
 	} else {
 		klog.Fatalf("failed to find flag in global flagset (flag): %s", globalName)

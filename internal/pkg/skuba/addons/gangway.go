@@ -27,12 +27,15 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Gangway, renderGangwayTemplate, gangwayCallbacks{}, normalPriority)
+	registerAddon(kubernetes.Gangway, renderGangwayTemplate, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
+}
+
+func GetGangwayImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway", imageTag)
 }
 
 func (renderContext renderContext) GangwayImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
+	return GetGangwayImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
 }
 
 func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {
@@ -97,22 +100,22 @@ data:
   gangway.yaml: |
     clusterName: {{.ClusterName}}
 
-    redirectURL: "https://{{.ControlPlane}}:32001/callback"
+    redirectURL: "https://{{.ControlPlaneHost}}:32001/callback"
     scopes: ["openid", "email", "groups", "profile", "offline_access"]
 
     serveTLS: true
-    authorizeURL: "https://{{.ControlPlane}}:32000/auth"
-    tokenURL: "https://{{.ControlPlane}}:32000/token"
+    authorizeURL: "https://{{.ControlPlaneHost}}:32000/auth"
+    tokenURL: "https://{{.ControlPlaneHost}}:32000/token"
     keyFile: /etc/gangway/pki/tls.key
     certFile: /etc/gangway/pki/tls.crt
 
     clientID: "oidc"
     clientSecret: "{{.GangwayClientSecret}}"
     usernameClaim: "email"
-    apiServerURL: "https://{{.ControlPlane}}:6443"
+    apiServerURL: "https://{{.ControlPlaneHostAndPort}}"
     cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     trustedCAPath: /etc/gangway/pki/ca.crt
-    customHTMLTemplatesDir: /usr/share/gangway/web/templates/caasp
+    customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -108,10 +108,11 @@ func (t Target) String() string {
 	return fmt.Sprintf("%s@%s:%d", t.user, t.target.Target, t.port)
 }
 
-func (t *Target) GetDeployment(nodename string) *deployments.Target {
+func (t *Target) GetDeployment(nodename string, role *deployments.Role) *deployments.Target {
 	res := deployments.Target{
 		Target:   t.targetName,
 		Nodename: nodename,
+		Role:     role,
 	}
 	res.Actionable = &Target{
 		target: &res,
@@ -178,7 +179,7 @@ func (t *Target) internalSshWithStdin(silent bool, stdin string, command string,
 	}
 	stdout = <-stdoutChan
 	stderr = <-stderrChan
-	return
+	return stdout, stderr, nil
 }
 
 func readerStreamer(reader io.Reader, outputChan chan<- string, description string, silent bool) {
@@ -186,8 +187,10 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
-		if !silent {
-			klog.V(1).Infof("%s | %s", description, scanner.Text())
+		if description == "stdout" && !silent {
+			klog.V(1).Infof("%s", scanner.Text())
+		} else if description == "stderr" {
+			klog.Errorf("%s", scanner.Text())
 		}
 	}
 	outputChan <- result.String()
@@ -311,10 +314,9 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 					return err
 				}
 				return nil
-			} else {
-				// fingerprint mismatch: print a big warning and return an error
-				klog.Error(replaceMessage(fingerprintMismatchMessage))
 			}
+			// fingerprint mismatch: print a big warning and return an error
+			klog.Error(replaceMessage(fingerprintMismatchMessage))
 		}
 		return err
 	}), nil

@@ -24,17 +24,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"text/template"
 
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
 )
 
 type addonPriority uint
@@ -47,10 +47,11 @@ const (
 var Addons = map[kubernetes.Addon]Addon{}
 
 type Addon struct {
-	addon         kubernetes.Addon
-	templater     addonTemplater
-	callbacks     addonCallbacks
-	addonPriority addonPriority
+	addon             kubernetes.Addon
+	templater         addonTemplater
+	callbacks         addonCallbacks
+	addonPriority     addonPriority
+	getImageCallbacks []getImageCallback
 }
 
 type addonCallbacks interface {
@@ -65,6 +66,8 @@ type AddonConfiguration struct {
 }
 
 type addonTemplater func(AddonConfiguration) string
+
+type getImageCallback func(imageTag string) string
 
 type ApplyBehavior uint
 
@@ -99,12 +102,13 @@ func (renderContext renderContext) ManifestVersion() string {
 	return fmt.Sprintf("%s-%d", addonVersion.Version, addonVersion.ManifestVersion)
 }
 
-func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority) {
+func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority, getImageCallbacks []getImageCallback) {
 	Addons[addon] = Addon{
-		addon:         addon,
-		templater:     addonTemplater,
-		callbacks:     callbacks,
-		addonPriority: addonPriority,
+		addon:             addon,
+		templater:         addonTemplater,
+		callbacks:         callbacks,
+		addonPriority:     addonPriority,
+		getImageCallbacks: getImageCallbacks,
 	}
 }
 
@@ -121,8 +125,8 @@ func addonsByPriority() []Addon {
 	return sortedAddons
 }
 
-func DeployAddons(addonConfiguration AddonConfiguration, applyBehavior ApplyBehavior) error {
-	skubaConfiguration, err := skuba.GetSkubaConfiguration()
+func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration, applyBehavior ApplyBehavior) error {
+	skubaConfiguration, err := skuba.GetSkubaConfiguration(client)
 	if err != nil {
 		return err
 	}
@@ -192,7 +196,7 @@ func (addon Addon) HasToBeApplied(addonConfiguration AddonConfiguration, skubaCo
 		return true, nil
 	}
 	addonVersion := kubernetes.AddonVersionForClusterVersion(addon.addon, addonConfiguration.ClusterVersion)
-	return !addonVersionLower(addonVersion, currentAddonVersion), nil
+	return addonVersionLower(currentAddonVersion, addonVersion), nil
 }
 
 func (addon Addon) needsRender(applyBehavior ApplyBehavior) bool {
@@ -216,7 +220,9 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to render %s addon template", addon.addon)
 	}
-	os.MkdirAll(addon.addonPath(), 0700)
+	if err := os.MkdirAll(addon.addonPath(), 0700); err != nil {
+		return errors.Wrapf(err, "unable to create folder for addon %s", addon.addon)
+	}
 	if err := ioutil.WriteFile(addon.manifestPath(), []byte(addonManifest), 0600); err != nil {
 		return errors.Wrapf(err, "unable to write %s addon rendered template", addon.addon)
 	}
@@ -261,14 +267,20 @@ func (addon Addon) Apply(addonConfiguration AddonConfiguration, skubaConfigurati
 	return updateSkubaConfigMapWithAddonVersion(addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
 
-func addonVersionLower(version1 *kubernetes.AddonVersion, version2 *kubernetes.AddonVersion) bool {
+func (addon Addon) Images(imageTag string) []string {
+	images := []string{}
+	for _, cb := range addon.getImageCallbacks {
+		images = append(images, cb(imageTag))
+	}
+	return images
+}
+
+func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.AddonVersion) bool {
 	// If we don't have a version to compare to, assume it's not lower
-	if version2 == nil {
+	if current == nil {
 		return false
 	}
-	return version.MustParseSemantic(version1.Version).LessThan(version.MustParseSemantic(version2.Version)) ||
-		(reflect.DeepEqual(version.MustParseSemantic(version1.Version), version.MustParseSemantic(version2.Version)) &&
-			version1.ManifestVersion < version2.ManifestVersion)
+	return current.ManifestVersion < updated.ManifestVersion
 }
 
 func updateSkubaConfigMapWithAddonVersion(addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {

@@ -20,7 +20,7 @@ package addons
 import "github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 
 func init() {
-	registerAddon(kubernetes.PSP, renderPSPTemplate, nil, highPriority)
+	registerAddon(kubernetes.PSP, renderPSPTemplate, nil, highPriority, []getImageCallback{})
 }
 
 func renderPSPTemplate(addonConfiguration AddonConfiguration) string {
@@ -93,7 +93,7 @@ spec:
   - min: 0
     max: 65535
   seLinux:
-    # SELinux is unsed in CaaSP
+    # SELinux is unused in CaaSP
     rule: 'RunAsAny'
 ---
 kind: ClusterRole

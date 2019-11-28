@@ -21,24 +21,21 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 )
 
-func Plan() error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return err
-	}
+func Plan(client clientset.Interface) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo()
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
 	if err != nil {
 		return err
 	}
@@ -51,7 +48,7 @@ func Plan() error {
 		return errors.Errorf("Not all nodes match clusterVersion %s", currentVersion)
 	}
 
-	updatedAddons, err := addon.UpdatedAddons(currentClusterVersion)
+	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
 	}

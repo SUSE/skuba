@@ -30,18 +30,6 @@ type ScaffoldFile struct {
 var (
 	scaffoldFiles = []ScaffoldFile{
 		{
-			Location: skuba.KubeadmInitConfFile(),
-			Content:  kubeadmInitConf,
-		},
-		{
-			Location: skuba.MasterConfTemplateFile(),
-			Content:  masterConfTemplate,
-		},
-		{
-			Location: skuba.WorkerConfTemplateFile(),
-			Content:  workerConfTemplate,
-		},
-		{
 			Location: skuba.CriDockerDefaultsConfFile(),
 			Content:  criDockerDefaultsConf,
 		},

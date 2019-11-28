@@ -45,10 +45,16 @@ func DeleteJob(client clientset.Interface, name string) error {
 
 func CreateAndWaitForJob(client clientset.Interface, name string, spec batchv1.JobSpec) error {
 	_, err := CreateJob(client, name, spec)
-	defer DeleteJob(client, name)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := DeleteJob(client, name); err != nil {
+			// TODO: check if we need to fail or is just enough reporting the error
+			fmt.Printf("error deleting job %s\n", name)
+		}
+	}()
+
 	for i := 0; i < 300; i++ {
 		job, err := client.BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 

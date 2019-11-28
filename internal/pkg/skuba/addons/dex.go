@@ -29,12 +29,15 @@ import (
 var gangwayClientSecret string
 
 func init() {
-	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority)
+	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
+}
+
+func GetDexImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex", imageTag)
 }
 
 func (renderContext renderContext) DexImage() string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex",
-		kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
+	return GetDexImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) GangwayClientSecret() string {
@@ -90,7 +93,7 @@ metadata:
   namespace: kube-system
 data:
   config.yaml: |
-    issuer: https://{{.ControlPlane}}:32000
+    issuer: https://{{.ControlPlaneHost}}:32000
 
     storage:
       type: kubernetes
@@ -141,7 +144,7 @@ data:
     staticClients:
     - id: oidc
       redirectURIs:
-      - 'https://{{.ControlPlane}}:32001/callback'
+      - 'https://{{.ControlPlaneHost}}:32001/callback'
       name: 'OIDC'
       secret: {{.GangwayClientSecret}}
       trustedPeers:
@@ -229,21 +232,13 @@ metadata:
   name: oidc-dex
   namespace: kube-system
 rules:
+# Follow upstream example https://github.com/dexidp/dex/blob/4bede5eb80822fc3a7fc9edca0ed2605cd339d17/examples/k8s/dex.yaml#L116-L126
 - apiGroups: ["apiextensions.k8s.io"]
   resources: ["customresourcedefinitions"]
-  verbs: ["create", "get", "list", "update", "watch"]
+  verbs: ["create"]
 - apiGroups: ["dex.coreos.com"]
-  resources: ["oauth2clients", "connectors", "passwords", "refreshtokens"]
-  verbs: ["get", "list"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["signingkeies"]
-  verbs: ["create", "get", "list", "update"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["authcodes", "authrequests", "offlinesessionses"]
-  verbs: ["create", "delete", "get", "list", "update"]
-- apiGroups: ["dex.coreos.com"]
-  resources: ["refreshtokens"]
-  verbs: ["create", "delete"]
+  resources: ["*"]
+  verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

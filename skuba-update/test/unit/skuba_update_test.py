@@ -24,10 +24,10 @@ from skuba_update.skuba_update import (
     update,
     run_command,
     run_zypper_command,
-    run_zypper_patch,
     node_name_from_machine_id,
     annotate,
     is_reboot_needed,
+    reboot_sentinel_file,
     annotate_updates_available,
     get_update_list,
     restart_services,
@@ -144,7 +144,6 @@ def test_main(mock_subprocess, mock_geteuid, mock_args, mock_annotate):
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=None, stderr=None, env=ANY),
-        call(['zypper', 'needs-rebooting'], stdout=None, stderr=None, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
@@ -157,6 +156,7 @@ def test_main(mock_subprocess, mock_geteuid, mock_args, mock_annotate):
             ['systemctl', 'restart', 'some_service2'],
             stdout=None, stderr=None, env=ANY
         ),
+        call(['zypper', 'needs-rebooting'], stdout=None, stderr=None, env=ANY),
     ]
 
 
@@ -239,25 +239,22 @@ def test_main_zypper_returns_100(
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=None, stderr=None, env=ANY),
         call([
-            'zypper', 'needs-rebooting'
-        ], stdout=None, stderr=None, env=ANY),
-        call([
             'zypper', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
-        ], stdout=None, stderr=None, env=ANY),
-        call([
-            'zypper', 'needs-rebooting'
         ], stdout=None, stderr=None, env=ANY),
         call(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
         ),
+        call([
+            'zypper', 'needs-rebooting'
+        ], stdout=None, stderr=None, env=ANY),
     ]
 
 
 @patch('pathlib.Path.is_file')
 @patch('subprocess.Popen')
-def test_update_zypper_is_fine_but_created_needreboot(
+def test_update_zypper_is_fine_but_created_reboot_required(
         mock_subprocess, mock_is_file
 ):
     mock_process = Mock()
@@ -269,7 +266,7 @@ def test_update_zypper_is_fine_but_created_needreboot(
 
     exception = False
     try:
-        update()
+        reboot_sentinel_file(update())
     except PermissionError as e:
         exception = True
         msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
@@ -302,22 +299,6 @@ def test_run_zypper_command_failure(mock_subprocess):
     except Exception as e:
         exception = True
         assert '"zypper patch" failed' in str(e)
-    assert exception
-
-
-@patch('subprocess.Popen')
-def test_run_zypper_command_creates_file_on_102(mock_subprocess):
-    mock_process = Mock()
-    mock_process.communicate.return_value = (b'', b'')
-    mock_process.returncode = ZYPPER_EXIT_INF_REBOOT_NEEDED
-    mock_subprocess.return_value = mock_process
-    exception = False
-    try:
-        run_zypper_patch() == 'stdout'
-    except PermissionError as e:
-        exception = True
-        msg = 'Permission denied: \'{0}\''.format(REBOOT_REQUIRED_PATH)
-        assert msg in str(e)
     assert exception
 
 

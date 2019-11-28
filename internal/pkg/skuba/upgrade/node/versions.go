@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -52,48 +53,47 @@ func (nviu NodeVersionInfoUpdate) HasMajorOrMinorUpdate() bool {
 		}
 	}
 	return nviu.Update.KubeletVersion.Major() > nviu.Current.KubeletVersion.Major() ||
-		nviu.Update.KubeletVersion.Minor() > nviu.Current.KubeletVersion.Minor()
+		nviu.Update.KubeletVersion.Minor() > nviu.Current.KubeletVersion.Minor() ||
+		nviu.Update.ContainerRuntimeVersion.Major() > nviu.Current.ContainerRuntimeVersion.Major() ||
+		nviu.Update.ContainerRuntimeVersion.Minor() > nviu.Current.ContainerRuntimeVersion.Minor()
 }
 
 func (nviu NodeVersionInfoUpdate) IsUpdated() bool {
-	return reflect.DeepEqual(nviu.Current.KubeletVersion, nviu.Update.KubeletVersion) &&
-		reflect.DeepEqual(nviu.Current.APIServerVersion, nviu.Update.APIServerVersion) &&
+	return reflect.DeepEqual(nviu.Current.APIServerVersion, nviu.Update.APIServerVersion) &&
 		reflect.DeepEqual(nviu.Current.ControllerManagerVersion, nviu.Update.ControllerManagerVersion) &&
 		reflect.DeepEqual(nviu.Current.SchedulerVersion, nviu.Update.SchedulerVersion) &&
 		reflect.DeepEqual(nviu.Current.EtcdVersion, nviu.Update.EtcdVersion) &&
+		nviu.Current.KubeletVersion.Major() == nviu.Update.KubeletVersion.Major() &&
+		nviu.Current.KubeletVersion.Minor() == nviu.Update.KubeletVersion.Minor() &&
+		nviu.Current.KubeletVersion.Patch() >= nviu.Update.KubeletVersion.Patch() &&
 		nviu.Current.ContainerRuntimeVersion.Major() == nviu.Update.ContainerRuntimeVersion.Major() &&
-		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor()
+		nviu.Current.ContainerRuntimeVersion.Minor() == nviu.Update.ContainerRuntimeVersion.Minor() &&
+		nviu.Current.ContainerRuntimeVersion.Patch() >= nviu.Update.ContainerRuntimeVersion.Patch()
 }
 
-func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded() (bool, error) {
+func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client clientset.Interface) (bool, error) {
 	isControlPlane := nviu.Current.IsControlPlane()
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return false, errors.Wrap(err, "unable to get admin client set")
-	}
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return false, errors.Wrap(err, "could not get current cluster version")
 	}
-	allControlPlanesMatchVersion, err := kubernetes.AllControlPlanesMatchVersion(currentClusterVersion)
+	allControlPlanesMatchVersion, err := kubernetes.AllControlPlanesMatchVersion(client, currentClusterVersion)
 	if err != nil {
 		return false, errors.Wrap(err, "could not check if all control plane versions match")
 	}
-	matchesClusterVersion := (currentClusterVersion.String() == nviu.Current.KubeletVersion.String())
+	matchesClusterVersion := currentClusterVersion.Major() == nviu.Current.KubeletVersion.Major() &&
+		currentClusterVersion.Minor() == nviu.Current.KubeletVersion.Minor() &&
+		currentClusterVersion.Patch() <= nviu.Current.KubeletVersion.Patch()
 
 	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion, nil
 }
 
-func UpdateStatus(nodeName string) (NodeVersionInfoUpdate, error) {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return NodeVersionInfoUpdate{}, errors.Wrap(err, "unable to get admin client set")
-	}
+func UpdateStatus(client clientset.Interface, nodeName string) (NodeVersionInfoUpdate, error) {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo()
+	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
@@ -179,7 +179,7 @@ func workerUpdateStatusWithAvailableVersions(clusterVersion *version.Version, al
 	// Checking worker nodes for updates is a bit different than checking a control plane node.
 	// It can be that an upgrade has already been started on the control plane
 	// or that all nodes are still on the same version (no upgrade started yet).
-	// First we need to check if an upgrade has aready been started
+	// First we need to check if an upgrade has already been started
 	// This can be determined by kubernetes.AllNodesMatchClusterVersion(allNodesVersioningInfo, clusterVersion)
 	allNodesMatchCurrentClusterVersion := kubernetes.AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo, clusterVersion)
 	// Check that all control plane nodes have at least the current cluster version we plan to

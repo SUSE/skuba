@@ -18,6 +18,9 @@
 package kubeadm
 
 import (
+	"strings"
+
+	skubautil "github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -113,4 +116,45 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *v1.Node) e
 		return errors.Wrap(err, "could not update kubeadm-config configmap")
 	}
 	return nil
+}
+
+// UpdateClusterConfigurationWithClusterVersion allows us to set certain configurations during init, but also during upgrades.
+// The configuration that we put here will be consistently set to newly created configurations, and when we upgrade a cluster.
+func UpdateClusterConfigurationWithClusterVersion(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
+	setApiserverAdmissionPlugins(initCfg, clusterVersion)
+	setContainerImagesWithClusterVersion(initCfg, clusterVersion)
+}
+
+func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
+	if initCfg.APIServer.ControlPlaneComponent.ExtraArgs == nil {
+		initCfg.APIServer.ControlPlaneComponent.ExtraArgs = map[string]string{}
+	}
+	admissionPlugins := []string{}
+	if len(initCfg.APIServer.ExtraArgs["enable-admission-plugins"]) > 0 {
+		admissionPlugins = strings.Split(initCfg.APIServer.ExtraArgs["enable-admission-plugins"], ",")
+	}
+	// List of recommended plugins: https://git.io/JemEu
+	admissionPlugins = append(admissionPlugins,
+		"NamespaceLifecycle",
+		"LimitRanger",
+		"ServiceAccount",
+		"TaintNodesByCondition",
+		"Priority",
+		"DefaultTolerationSeconds",
+		"DefaultStorageClass",
+		"PersistentVolumeClaimResize",
+		"MutatingAdmissionWebhook",
+		"ValidatingAdmissionWebhook",
+		"ResourceQuota",
+		"StorageObjectInUseProtection",
+	)
+	if clusterVersion.AtLeast(version.MustParseSemantic("1.16.0")) {
+		admissionPlugins = append(admissionPlugins, "RuntimeClass")
+	}
+	// List of kubeadm-enabled plugins
+	admissionPlugins = append(admissionPlugins, "NodeRestriction")
+	// List of skuba-enabled plugins
+	admissionPlugins = append(admissionPlugins, "PodSecurityPolicy")
+	admissionPlugins = skubautil.UniqueStringSlice(admissionPlugins)
+	initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
 }

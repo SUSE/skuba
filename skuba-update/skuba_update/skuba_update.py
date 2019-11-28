@@ -76,9 +76,12 @@ def main():
 
     run_zypper_command(['zypper', 'ref', '-s'])
     if not args.annotate_only:
-        update()
+        code = update()
         restart_services()
-    annotate_updates_available()
+        annotate_updates_available()
+        reboot_sentinel_file(code)
+    else:
+        annotate_updates_available()
 
 
 def parse_args():
@@ -116,7 +119,8 @@ def update():
 
     code = run_zypper_patch()
     if is_restart_needed(code):
-        run_zypper_patch()
+        code = run_zypper_patch()
+    return code
 
 
 def annotate_updates_available():
@@ -249,6 +253,17 @@ def is_reboot_needed():
     ) == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
+def reboot_sentinel_file(code):
+    # There are two instances in which we should create the
+    # REBOOT_REQUIRED_PATH file:
+    #
+    # 1. Zypper returned an exit code telling us to restart the system.
+    # 2. `zypper needs-rebooting` returns ZYPPER_EXIT_INF_REBOOT_NEEDED.
+    if code == ZYPPER_EXIT_INF_REBOOT_NEEDED or is_reboot_needed():
+        Path(REBOOT_REQUIRED_PATH).touch()
+    return code
+
+
 def is_not_false_str(string):
     """
     Returns true if the given string contains a non-falsey value.
@@ -284,19 +299,10 @@ def run_zypper_command(command, needsOutput=False):
 
 
 def run_zypper_patch():
-    code = run_zypper_command([
+    return run_zypper_command([
         'zypper', '--non-interactive',
         '--non-interactive-include-reboot-patches', 'patch'
     ])
-
-    # There are two instances in which we should create the
-    # REBOOT_REQUIRED_PATH file:
-    #
-    # 1. Zypper returned an exit code telling us to restart the system.
-    # 2. `zypper needs-rebooting` returns ZYPPER_EXIT_INF_REBOOT_NEEDED.
-    if code == ZYPPER_EXIT_INF_REBOOT_NEEDED or is_reboot_needed():
-        Path(REBOOT_REQUIRED_PATH).touch()
-    return code
 
 
 def run_command(command, needsOutput=True, added_env={}):
