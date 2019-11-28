@@ -97,7 +97,7 @@ lint: deps
 	# check terraform fmt
 	$(TERRAFORM) fmt -check=true -write=false -diff=true ci/infra
 	# run golangci-lint
-	$(BINPATH)/golangci-lint -v run --timeout 3m
+	$(BINPATH)/golangci-lint run --verbose --timeout=3m
 	# run bash linter
 	find ci -type f -name "*.sh" | xargs $(BINPATH)/shellcheck
 
@@ -105,6 +105,16 @@ lint: deps
 deps:
 	test -f $(BINPATH)/golangci-lint || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(BINPATH) v1.21.0
 	test -f $(BINPATH)/shellcheck || curl -sfL "https://storage.googleapis.com/shellcheck/shellcheck-v0.4.7.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
+
+.PHONY: pre-commit-install
+pre-commit-install:
+	test -f $(BINPATH)/bin/pre-commit || curl -sfL https://pre-commit.com/install-local.py | HOME=$(BINPATH) python -
+	$(BINPATH)/bin/pre-commit install
+
+.PHONY: pre-commit-uninstall
+pre-commit-uninstall:
+	test -f $(BINPATH)/bin/pre-commit || curl -sfL https://pre-commit.com/install-local.py | HOME=$(BINPATH) python -
+	$(BINPATH)/bin/pre-commit uninstall
 
 .PHONY: suse-package
 suse-package:
