@@ -39,6 +39,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/html"
 	"golang.org/x/oauth2"
+	"k8s.io/klog"
 )
 
 const (
@@ -186,14 +187,15 @@ func doAuth(authReq request) (*response, error) {
 	ctx := oidc.ClientContext(context.Background(), client)
 	provider, err := oidc.NewProvider(ctx, authReq.IssuerURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to query provider %q", authReq.IssuerURL)
+		klog.Errorf("failed to query provider %s: %v", authReq.IssuerURL, err)
+		return nil, fmt.Errorf("failed to query provider %s (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)", authReq.IssuerURL)
 	}
 
 	var s struct {
 		ScopesSupported []string `json:"scopes_supported"`
 	}
 	if err := provider.Claims(&s); err != nil {
-		return nil, errors.Wrapf(err, "failed to parse provider scopes_supported")
+		return nil, errors.Wrap(err, "failed to parse provider scopes_supported")
 	}
 
 	authReq.provider = provider
@@ -206,13 +208,13 @@ func doAuth(authReq request) (*response, error) {
 	authCodeURL := oauth2Config(authReq).AuthCodeURL("", oauth2.AccessTypeOffline)
 	resp, err := client.Get(authCodeURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on get auth code url")
+		return nil, errors.Wrap(err, "failed on get auth code url")
 	}
 	defer resp.Body.Close()
 
 	respDump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		return nil, errors.Wrapf(err, "http dump response")
+		return nil, errors.Wrap(err, "http dump response")
 	}
 
 	loginURL := authReq.IssuerURL
@@ -232,7 +234,7 @@ func doAuth(authReq request) (*response, error) {
 			reader := bufio.NewReader(os.Stdin)
 			authConnector, err := reader.ReadString('\n')
 			if err != nil {
-				return nil, errors.Wrapf(err, "read user input")
+				return nil, errors.Wrap(err, "read user input")
 			}
 			authReq.AuthConnector = strings.TrimSpace(authConnector)
 		}
@@ -270,7 +272,7 @@ func doAuth(authReq request) (*response, error) {
 
 	loginResp, err := client.PostForm(loginURL, formValues)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on post login url")
+		return nil, errors.Wrap(err, "failed on post login url")
 	}
 	defer loginResp.Body.Close()
 
@@ -281,18 +283,18 @@ func doAuth(authReq request) (*response, error) {
 
 	resp, err = client.Get(approvalLocation.String())
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on get approval location")
+		return nil, errors.Wrap(err, "failed on get approval location")
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on read approval body")
+		return nil, errors.Wrap(err, "failed on read approval body")
 	}
 
 	r, err := regexp.Compile("(?:(?:.|\n)*)value=\"(.*?)\"(?:(?:.|\n)*)")
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on regexp")
+		return nil, errors.Wrap(err, "failed on regexp")
 	}
 	match := r.FindStringSubmatch(string(body))
 	// We expect two matches - the entire body, and then just the code group
@@ -305,7 +307,7 @@ func doAuth(authReq request) (*response, error) {
 
 	token, err := oauth2Config(authReq).Exchange(ctx, code)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed on exchange token")
+		return nil, errors.Wrap(err, "failed on exchange token")
 	}
 
 	result := &response{
