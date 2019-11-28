@@ -86,7 +86,7 @@ func Join(joinConfiguration deployments.JoinConfiguration, target *deployments.T
 	// Try to find exist node which have the same name.
 	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
 	if err == nil {
-		return errors.Errorf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
+		return errors.Errorf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster", target.Nodename)
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
