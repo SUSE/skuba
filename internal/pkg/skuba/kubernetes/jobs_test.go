@@ -23,23 +23,12 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
+	ktest "k8s.io/client-go/testing"
 )
 
 func Test_CreateJob(t *testing.T) {
-	fakeWorker := corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "worker",
-		},
-	}
-
-	fakeMaster := corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "master",
-			Labels: map[string]string{"node-role.kubernetes.io/master": ""},
-		},
-	}
-
 	tests := []struct {
 		name          string
 		errExpected   bool
@@ -49,16 +38,9 @@ func Test_CreateJob(t *testing.T) {
 		jobSpec       batchv1.JobSpec
 	}{
 		{
-			name: "should create job",
-			fakeClientset: fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						fakeMaster,
-						fakeWorker,
-					},
-				},
-			),
-			jobName: "create-job",
+			name:          "create job",
+			fakeClientset: fake.NewSimpleClientset(),
+			jobName:       "create-job",
 			jobSpec: batchv1.JobSpec{
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
@@ -76,12 +58,6 @@ func Test_CreateJob(t *testing.T) {
 		{
 			name: "should fail when job exist",
 			fakeClientset: fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						fakeMaster,
-						fakeWorker,
-					},
-				},
 				&batchv1.Job{
 					TypeMeta: metav1.TypeMeta{Kind: "Job"},
 					ObjectMeta: metav1.ObjectMeta{
@@ -150,6 +126,138 @@ func Test_CreateJob(t *testing.T) {
 					t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
 					return
 				}
+			}
+		})
+	}
+}
+
+func Test_Delete(t *testing.T) {
+	tests := []struct {
+		name         string
+		jobName      string
+		jobNamespace string
+		expectErrMsg string
+	}{
+		{
+			name:         "delete job",
+			jobName:      "valid",
+			jobNamespace: metav1.NamespaceSystem,
+		},
+		{
+			name:         "delete job when job exist in other namespace",
+			jobName:      "valid",
+			jobNamespace: metav1.NamespaceDefault,
+			expectErrMsg: "jobs.batch \"valid\" not found",
+		},
+		{
+			name:         "delete job when job not exist",
+			jobName:      "invalid",
+			jobNamespace: metav1.NamespaceSystem,
+			expectErrMsg: "jobs.batch \"invalid\" not found",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			fakeClientset := fake.NewSimpleClientset(
+				&batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "valid",
+						Namespace: tt.jobNamespace,
+					},
+				},
+			)
+
+			err := DeleteJob(fakeClientset, tt.jobName)
+			if tt.expectErrMsg != "" {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+					return
+				}
+				if err.Error() != tt.expectErrMsg {
+					t.Errorf("returned error (%v) does not match the expected one (%v)", err.Error(), tt.expectErrMsg)
+					return
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
+				return
+			}
+		})
+	}
+}
+
+func Test_CreateAndWaitForJob(t *testing.T) {
+	tests := []struct {
+		name           string
+		timeout        int
+		reactor        bool
+		reactActive    int32
+		reactSucceeded int32
+		reactFailed    int32
+		expectErrMsg   string
+	}{
+		{
+			name:           "create and wait for job",
+			timeout:        5,
+			reactor:        true,
+			reactSucceeded: 1,
+		},
+		{
+			name:         "create and wait for job when job pend active",
+			timeout:      2,
+			reactor:      true,
+			reactActive:  1,
+			expectErrMsg: "failed waiting for job test",
+		},
+		{
+			name:         "create and wait for job when job failed",
+			timeout:      2,
+			reactor:      true,
+			reactFailed:  1,
+			expectErrMsg: "failed waiting for job test",
+		},
+		{
+			name:         "create and wait for job when failed to get job",
+			timeout:      2,
+			expectErrMsg: "failed waiting for job test",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			fakeClientset := fake.NewSimpleClientset()
+			if tt.reactor {
+				fakeClientset.PrependReactor("get", "jobs", func(action ktest.Action) (bool, runtime.Object, error) {
+					obj := &batchv1.Job{
+						Status: batchv1.JobStatus{
+							Active:    tt.reactActive,
+							Succeeded: tt.reactSucceeded,
+							Failed:    tt.reactFailed,
+						},
+					}
+					return true, obj, nil
+				})
+			}
+
+			err := CreateAndWaitForJob(fakeClientset, "test", batchv1.JobSpec{}, tt.timeout)
+			if tt.expectErrMsg != "" {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+					return
+				}
+				if err.Error() != tt.expectErrMsg {
+					t.Errorf("returned error (%v) does not match the expected one (%v)", err.Error(), tt.expectErrMsg)
+					return
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
+				return
 			}
 		})
 	}

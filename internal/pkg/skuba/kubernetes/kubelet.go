@@ -33,6 +33,7 @@ func DisarmKubelet(client clientset.Interface, node *v1.Node, clusterVersion *ve
 		client,
 		disarmKubeletJobName(node),
 		disarmKubeletJobSpec(node, clusterVersion),
+		TimeoutWaitForJob,
 	)
 }
 
