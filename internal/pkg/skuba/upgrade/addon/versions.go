@@ -85,6 +85,8 @@ func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 				updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
 		}
 	}
+	fmt.Println()
+	fmt.Println("Please, run `skuba addon upgrade apply` in order to upgrade addons.")
 }
 
 func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {

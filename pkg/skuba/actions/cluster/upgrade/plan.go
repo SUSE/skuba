@@ -81,10 +81,14 @@ func Plan(client clientset.Interface) error {
 	}
 	fmt.Println()
 	if addon.HasAddonUpdate(updatedAddons) {
-		fmt.Printf("Addon upgrades for %s:\n", nextClusterVersion.String())
+		fmt.Println("After you have completed the platform upgrade, there are new addon versions available:")
+		fmt.Println()
+		fmt.Printf("Addon upgrades from %s to %s:\n", currentVersion, nextClusterVersion.String())
 		addon.PrintAddonUpdates(updatedAddons)
 	} else {
-		fmt.Printf("Congratulations! Addons for %s are already at the latest version available\n", nextClusterVersion.String())
+		fmt.Printf("Addons for next cluster version %s are already up to date.\n", nextClusterVersion.String())
+		fmt.Println()
+		fmt.Println("There is no need to run `skuba addon upgrade apply` after you have completed the platform upgrade.")
 	}
 
 	return nil
