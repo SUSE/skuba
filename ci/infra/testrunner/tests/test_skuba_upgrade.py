@@ -9,6 +9,7 @@ CURRENT_VERSION = "1.16.2"
 @pytest.fixture
 def setup(request, platform, skuba):
     def cleanup():
+        platform.gather_logs()
         platform.cleanup()
 
     request.addfinalizer(cleanup)
