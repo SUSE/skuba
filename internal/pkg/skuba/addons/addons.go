@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"text/template"
@@ -32,6 +31,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubectl"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/replica"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
@@ -252,10 +252,7 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		}
 		renderedManifest = string(renderedManifestBytes)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", "-")
-	cmd.Stdin = bytes.NewBuffer([]byte(renderedManifest))
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+	if err := kubectl.Apply(renderedManifest); err != nil {
 		return err
 	}
 
