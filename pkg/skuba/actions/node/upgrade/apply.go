@@ -160,13 +160,20 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	if err != nil {
 		return err
 	}
+
 	// bsc#1155810: generate cluster-wide kubelet root certificate, and generate/rotate kuberlet server certificate
-	if err := target.Apply(nil, "kubelet.rootca.create", "kubelet.servercert.create"); err != nil {
+	if err := kubernetes.GenerateKubeletRootCert(); err != nil {
 		return err
 	}
-	if err := target.Apply(nil, "kubernetes.restart-services"); err != nil {
+	err = target.Apply(nil,
+		"kubelet.rootcert.upload",
+		"kubelet.servercert.create-and-upload",
+		"kubernetes.restart-services",
+	)
+	if err != nil {
 		return err
 	}
+
 	if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
 		klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
 		return err

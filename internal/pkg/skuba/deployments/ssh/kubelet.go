@@ -26,66 +26,42 @@ import (
 
 	"github.com/pkg/errors"
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/klog"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh/assets"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func init() {
-	stateMap["kubelet.rootca.create"] = kubeletCreateRootCert
-	stateMap["kubelet.servercert.create"] = kubeletCreateServerCert
+	stateMap["kubelet.rootcert.upload"] = kubeletUploadRootCert
+	stateMap["kubelet.servercert.create-and-upload"] = kubeletCreateAndUploadServerCert
 	stateMap["kubelet.configure"] = kubeletConfigure
 	stateMap["kubelet.enable"] = kubeletEnable
 }
 
-const (
-	// KubeletCertAndKeyDir defines
-	KubeletCertAndKeyDir = "/var/lib/kubelet/pki"
-
-	// KubeletCACertAndKeyBaseName defines kubelet's CA certificate and key base name
-	KubeletCACertAndKeyBaseName = "kubelet-ca"
-	// KubeletCACertName defines kubelet's CA certificate name
-	KubeletCACertName = "kubelet-ca.crt"
-	// KubeletCAKeyName defines kubelet's CA key name
-	KubeletCAKeyName = "kubelet-ca.key"
-
-	// KubeletServerCertAndKeyBaseName defines kubelet server certificate and key base name
-	KubeletServerCertAndKeyBaseName = "kubelet"
-	// KubeletServerCertName defines kubelet server certificate name
-	KubeletServerCertName = "kubelet.crt"
-	// KubeletServerKeyName defines kubelet server key name
-	KubeletServerKeyName = "kubelet.key"
-)
-
-func kubeletCreateRootCert(t *Target, data interface{}) error {
-	caCertFilePath := filepath.Join(skuba.PkiDir(), KubeletCACertName)
-	caKeyFilePath := filepath.Join(skuba.PkiDir(), KubeletCAKeyName)
-	if canReadCertAndKey, _ := certutil.CanReadCertAndKey(caCertFilePath, caKeyFilePath); canReadCertAndKey {
-		klog.V(1).Info("kubelet root ca cert and key already exists")
-		return nil
+func kubeletUploadRootCert(t *Target, data interface{}) error {
+	// Upload root ca cert
+	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), kubernetes.KubeletCACertName), filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCACertName)); err != nil {
+		return err
 	}
-
-	cfg := &certutil.Config{
-		CommonName: "kubelet-ca",
-	}
-	caCert, caKey, err := pkiutil.NewCertificateAuthority(cfg)
-	if err != nil {
-		return errors.Wrap(err, "couldn't generate kubelet CA certificate")
-	}
-
-	if err := pkiutil.WriteCertAndKey(skuba.PkiDir(), KubeletCACertAndKeyBaseName, caCert, caKey); err != nil {
-		return errors.Wrap(err, "failure while saving kubelet CA certificate and key")
+	// Upload root ca key on control plane node only
+	if *t.target.Role == deployments.MasterRole {
+		if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), kubernetes.KubeletCAKeyName), filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCAKeyName)); err != nil {
+			return err
+		}
+		if _, _, err := t.silentSsh("chmod", "0400", filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCAKeyName)); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func kubeletCreateServerCert(t *Target, data interface{}) error {
+func kubeletCreateAndUploadServerCert(t *Target, data interface{}) error {
 	// Read kubelet root ca certificate and key
-	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(skuba.PkiDir(), KubeletCACertAndKeyBaseName)
+	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(skuba.PkiDir(), kubernetes.KubeletCACertAndKeyBaseName)
 	if err != nil {
 		return errors.Wrap(err, "failure loading kubelet CA certificate authority")
 	}
@@ -130,29 +106,15 @@ func kubeletCreateServerCert(t *Target, data interface{}) error {
 		return errors.Wrapf(err, "failure while saving kubelet server %s certificate and key", host)
 	}
 
-	// Upload root ca cert
-	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), KubeletCACertName), filepath.Join(KubeletCertAndKeyDir, KubeletCACertName)); err != nil {
-		return err
-	}
-	// Upload root ca key on control plane node only
-	if *t.target.Role == deployments.MasterRole {
-		if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), KubeletCAKeyName), filepath.Join(KubeletCertAndKeyDir, KubeletCAKeyName)); err != nil {
-			return err
-		}
-		if _, _, err = t.silentSsh("chmod", "0400", filepath.Join(KubeletCertAndKeyDir, KubeletCAKeyName)); err != nil {
-			return err
-		}
-	}
-
 	// Upload server certificate and key
 	certPath, keyPath := pkiutil.PathsForCertAndKey(skuba.PkiDir(), host)
-	if err := t.target.UploadFile(certPath, filepath.Join(KubeletCertAndKeyDir, KubeletServerCertName)); err != nil {
+	if err := t.target.UploadFile(certPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerCertName)); err != nil {
 		return err
 	}
-	if err := t.target.UploadFile(keyPath, filepath.Join(KubeletCertAndKeyDir, KubeletServerKeyName)); err != nil {
+	if err := t.target.UploadFile(keyPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerKeyName)); err != nil {
 		return err
 	}
-	if _, _, err = t.silentSsh("chmod", "0400", filepath.Join(KubeletCertAndKeyDir, KubeletServerKeyName)); err != nil {
+	if _, _, err := t.silentSsh("chmod", "0400", filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerKeyName)); err != nil {
 		return err
 	}
 
