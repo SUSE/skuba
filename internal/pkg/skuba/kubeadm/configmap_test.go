@@ -221,6 +221,7 @@ func TestGetAPIEndpointsFromConfigMap(t *testing.T) {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
+			sort.Strings(gotAPIEndpoints)
 			if !reflect.DeepEqual(gotAPIEndpoints, tt.expectedAPIEndpoints) {
 				t.Errorf("got version %v, expect version %v", gotAPIEndpoints, tt.expectedAPIEndpoints)
 			}
