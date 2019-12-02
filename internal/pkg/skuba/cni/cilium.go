@@ -34,9 +34,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
-	"sigs.k8s.io/yaml"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 )
 
@@ -105,31 +103,34 @@ func CiliumSecretExists(client clientset.Interface) (bool, error) {
 }
 
 func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
-	etcdEndpoints := []string{}
-	apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to get api endpoints")
-	}
-	for _, endpoints := range apiEndpoints {
-		etcdEndpoints = append(etcdEndpoints, fmt.Sprintf(etcdEndpointFmt, endpoints))
-	}
-	etcdConfigData := EtcdConfig{
-		Endpoints: etcdEndpoints,
-		CAFile:    etcdCAFileName,
-		CertFile:  etcdCertFileName,
-		KeyFile:   etcdKeyFileName,
+	ciliumConfigMapData := map[string]string{
+		"identity-allocation-mode": "crd",
+		"debug":                    "true",
+		"enable-ipv4":              "true",
+		"enable-ipv6":              "false",
+		"monitor-aggregation":      "medium",
+		"bpf-ct-global-tcp-max":    "524288",
+		"bpf-ct-global-any-max":    "262144",
+		"preallocate-bpf-maps":     "false",
+		"tunnel":                   "vxlan",
+		// That value is relevant only when creating a mesh of clusters.
+		// TODO(mrostecki): Support clustermesh in skuba.
+		"cluster-name":          "default",
+		"tofqdns-enable-poller": "false",
+		"wait-bpf-mount":        "false",
+		// This setting refers to the "workloads" functionality in Cilium
+		// which is going to be removed from next releases. It can read
+		// CRI-spefic data from the direct access to the CRI socket. We
+		// don't need that.
+		"container-runtime": "none",
+		"masquerade":        "true",
+		// "host-reachable-services-protos": "tcp",
+		// We can probably disable that.
+		"install-iptables-rules":  "true",
+		"auto-direct-node-routes": "false",
+		"enable-node-port":        "false",
 	}
 
-	etcdConfigDataByte, err := yaml.Marshal(&etcdConfigData)
-	if err != nil {
-		return err
-	}
-	ciliumConfigMapData := map[string]string{
-		"debug":       "false",
-		"enable-ipv4": "true",
-		"enable-ipv6": "false",
-		"etcd-config": string(etcdConfigDataByte),
-	}
 	ciliumConfigMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ciliumConfigMapName,

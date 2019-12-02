@@ -211,21 +211,12 @@ apiEndpoints:
 `},
 	}
 
-	cmDefaultNamespace := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "fake",
-			Namespace: metav1.NamespaceDefault,
-		},
-		Data: map[string]string{"hello": "world"},
-	}
-
 	tests := []struct {
 		clientset          *fake.Clientset
 		configmap          *corev1.ConfigMap
 		debugExpected      string
 		enableIpv4Expected string
 		enableIpv6Expected string
-		etcdConfigExpected string
 		errExpected        bool
 		errMessage         string
 		name               string
@@ -234,22 +225,10 @@ apiEndpoints:
 			name:               "should create or update cilium configmap",
 			clientset:          fake.NewSimpleClientset(),
 			configmap:          cmBase,
-			debugExpected:      "false",
+			debugExpected:      "true",
 			enableIpv4Expected: "true",
 			enableIpv6Expected: "false",
 			errExpected:        false,
-			etcdConfigExpected: `ca-file: /tmp/cilium-etcd/ca.crt
-cert-file: /tmp/cilium-etcd/tls.crt
-endpoints:
-- https://1.2.3.4:2379
-key-file: /tmp/cilium-etcd/tls.key
-`},
-		{
-			name:        "should fail when kubeadm-config configmap not exist",
-			clientset:   fake.NewSimpleClientset(),
-			configmap:   cmDefaultNamespace,
-			errExpected: true,
-			errMessage:  "unable to get api endpoints: could not retrieve the kubeadm-config configmap to get apiEndpoints: configmaps \"kubeadm-config\" not found",
 		},
 	}
 
@@ -283,10 +262,24 @@ key-file: /tmp/cilium-etcd/tls.key
 				}
 
 				dataExpected := map[string]string{
-					"debug":       tt.debugExpected,
-					"enable-ipv4": tt.enableIpv4Expected,
-					"enable-ipv6": tt.enableIpv6Expected,
-					"etcd-config": tt.etcdConfigExpected,
+					"identity-allocation-mode": "crd",
+					"debug":                    tt.debugExpected,
+					"enable-ipv4":              tt.enableIpv4Expected,
+					"enable-ipv6":              tt.enableIpv6Expected,
+					"monitor-aggregation":      "medium",
+					"bpf-ct-global-tcp-max":    "524288",
+					"bpf-ct-global-any-max":    "262144",
+					"preallocate-bpf-maps":     "false",
+					"tunnel":                   "vxlan",
+					"cluster-name":             "default",
+					"tofqdns-enable-poller":    "false",
+					"wait-bpf-mount":           "false",
+					"container-runtime":        "none",
+					"masquerade":               "true",
+					// "host-reachable-services-protos": "tcp",
+					"install-iptables-rules":  "true",
+					"auto-direct-node-routes": "false",
+					"enable-node-port":        "false",
 				}
 				if !reflect.DeepEqual(dataGet.Data, dataExpected) {
 					t.Errorf("returned data (%v) does not match the expected one (%v)", dataGet.Data, dataExpected)
