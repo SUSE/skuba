@@ -18,24 +18,36 @@
 package cni
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/x509"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/client-go/util/keyutil"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/klog"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+	"sigs.k8s.io/yaml"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubectl"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
 
 const (
@@ -102,7 +114,121 @@ func CiliumSecretExists(client clientset.Interface) (bool, error) {
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
-func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
+// IsMigrationToCrdNeeded checks whether Cilium kvstore needs to be migrated from
+// etcd to CRD. The migration needs to be done if the Cilium config map before
+// upgrade contains etcd configuration.
+func IsMigrationToCrdNeeded(client clientset.Interface) (bool, error) {
+	configMap, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ciliumConfigMapName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, errors.Errorf("could not get the cilium configmap: %v", err)
+	}
+	_, ok := configMap.Data["etcd-config"]
+	return ok, nil
+}
+
+// MigrateEtcdToCrd performs the migration of data from etcd to CRD when
+// upgrading Cilium from 1.5 to 1.6.
+func MigrateEtcdToCrd(client clientset.Interface, config *rest.Config, manifest string) error {
+	// Create ConfigMap for Cilium preflight deployment.
+	if err := CreateOrUpdateCiliumConfigMap(client, true); err != nil {
+		return err
+	}
+	// Apply Cilium preflight deployment.
+	if err := kubectl.Apply(manifest); err != nil {
+		return err
+	}
+
+	// Delete preflight deployment after migration is done (regardless whether
+	// successful or not).
+	defer func() {
+		deletePolicy := metav1.DeletePropagationForeground
+		if err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Delete(
+			"cilium-pre-flight-check",
+			&metav1.DeleteOptions{
+				PropagationPolicy: &deletePolicy,
+			},
+		); err != nil {
+			klog.Errorf("unable to delete cilium preflight deployment: %s", err)
+		}
+	}()
+
+	// Find the Cilium preflight pod.
+	var ciliumPreflightPod string
+	if err := util.RetryOnError(retry.DefaultRetry, IsErrPreflightNotFound, func() error {
+		pods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		for _, pod := range pods.Items {
+			podName := pod.GetName()
+			if strings.HasPrefix(podName, "cilium-pre-flight") {
+				ciliumPreflightPod = podName
+				break
+			}
+		}
+		if ciliumPreflightPod == "" {
+			return ErrPreflightNotFound
+		}
+		// Wait until the Cilium preflight pod is not in the pending status and
+		// check whether status is successful.
+		var pod *v1.Pod
+		for {
+			var err error
+			pod, err = client.CoreV1().Pods(metav1.NamespaceSystem).Get(ciliumPreflightPod, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			if pod.Status.Phase != v1.PodPending {
+				break
+			}
+		}
+		if pod.Status.Phase != v1.PodSucceeded {
+			return ErrPreflightUnsuccessful
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// Perform the migration.
+	req := client.CoreV1().RESTClient().Post().Resource("pods").Name(ciliumPreflightPod).
+		Namespace(metav1.NamespaceSystem).SubResource("exec")
+	option := &v1.PodExecOptions{
+		Command: []string{"cilium", "preflight", "migrate-identity"},
+		Stdin:   false,
+		Stdout:  true,
+		Stderr:  true,
+		TTY:     true,
+	}
+	req.VersionedParams(
+		option,
+		scheme.ParameterCodec,
+	)
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return err
+	}
+	var stdout, stderr bytes.Buffer
+	bStdout := bufio.NewWriter(&stdout)
+	bStderr := bufio.NewWriter(&stderr)
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdout: bStdout,
+		Stderr: bStderr,
+	})
+	bStdout.Flush()
+	bStderr.Flush()
+	if err != nil {
+		return errors.Errorf("could not migrate data from etcd to CRD: %v; stdout: %v; stderr: %v",
+			err, stdout.String(), stderr.String())
+	}
+
+	return nil
+}
+
+func CreateOrUpdateCiliumConfigMap(client clientset.Interface, preflight bool) error {
 	ciliumConfigMapData := map[string]string{
 		"identity-allocation-mode": "crd",
 		"debug":                    "true",
@@ -131,6 +257,28 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 		"enable-node-port":        "false",
 	}
 
+	if preflight {
+		etcdEndpoints := []string{}
+		apiEndpoints, err := kubeadm.GetAPIEndpointsFromConfigMap(client)
+		if err != nil {
+			return errors.Wrap(err, "unable to get api endpoints")
+		}
+		for _, endpoints := range apiEndpoints {
+			etcdEndpoints = append(etcdEndpoints, fmt.Sprintf(etcdEndpointFmt, endpoints))
+		}
+		etcdConfigData := EtcdConfig{
+			Endpoints: etcdEndpoints,
+			CAFile:    etcdCAFileName,
+			CertFile:  etcdCertFileName,
+			KeyFile:   etcdKeyFileName,
+		}
+		etcdConfigDataByte, err := yaml.Marshal(&etcdConfigData)
+		if err != nil {
+			return err
+		}
+		ciliumConfigMapData["etcd-config"] = string(etcdConfigDataByte)
+	}
+
 	ciliumConfigMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ciliumConfigMapName,
@@ -147,7 +295,7 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface) error {
 }
 
 func CiliumUpdateConfigMap(client clientset.Interface) error {
-	if err := CreateOrUpdateCiliumConfigMap(client); err != nil {
+	if err := CreateOrUpdateCiliumConfigMap(client, false); err != nil {
 		return err
 	}
 	return annotateCiliumDaemonsetWithCurrentTimestamp(client)

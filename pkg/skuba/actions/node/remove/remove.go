@@ -89,7 +89,7 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 			return errors.Wrapf(err, "[remove-node] could not remove the APIEndpoint for %s from the kubeadm-config configmap", targetName)
 		}
 
-		if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
+		if err := cni.CreateOrUpdateCiliumConfigMap(client, false); err != nil {
 			return errors.Wrap(err, "[remove-node] could not update cilium-config configmap")
 		}
 	}

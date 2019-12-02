@@ -18,6 +18,9 @@
 package addons
 
 import (
+	"bytes"
+	"text/template"
+
 	"github.com/pkg/errors"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
@@ -59,10 +62,27 @@ func renderCiliumTemplate(addonConfiguration AddonConfiguration) string {
 	return ciliumManifest
 }
 
+type preflightContext struct {
+	CiliumImage string
+}
+
+func renderCiliumPreflightTemplate(addonConfiguration AddonConfiguration) (string, error) {
+	template, err := template.New("").Parse(ciliumPreflightManifest)
+	if err != nil {
+		return "", err
+	}
+	var rendered bytes.Buffer
+	ciliumImage := GetCiliumImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, addonConfiguration.ClusterVersion).Version)
+	if err := template.Execute(&rendered, preflightContext{CiliumImage: ciliumImage}); err != nil {
+		return "", err
+	}
+	return rendered.String(), nil
+}
+
 type ciliumCallbacks struct{}
 
 func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	client, err := kubernetes.GetAdminClientSet()
+	client, config, err := kubernetes.GetAdminClientSetWithConfig()
 	if err != nil {
 		return errors.Wrap(err, "unable to get admin client set")
 	}
@@ -75,7 +95,24 @@ func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaC
 			return err
 		}
 	}
-	if err := cni.CreateOrUpdateCiliumConfigMap(client); err != nil {
+
+	// Check whether data migration from etcd to CRD is needed and if yes,
+	// perform it.
+	migrationNeeded, err := cni.IsMigrationToCrdNeeded(client)
+	if err != nil {
+		return err
+	}
+	if migrationNeeded {
+		manifest, err := renderCiliumPreflightTemplate(addonConfiguration)
+		if err != nil {
+			return err
+		}
+		if err := cni.MigrateEtcdToCrd(client, config, manifest); err != nil {
+			return err
+		}
+	}
+
+	if err := cni.CreateOrUpdateCiliumConfigMap(client, false); err != nil {
 		return err
 	}
 
@@ -596,5 +633,116 @@ spec:
       restartPolicy: Always
       serviceAccount: cilium-operator
       serviceAccountName: cilium-operator
+`
+	ciliumPreflightManifest = `---
+# Source: cilium/charts/preflight/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cilium-pre-flight-check
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cilium-pre-flight-check
+      kubernetes.io/cluster-service: "true"
+  template:
+    metadata:
+      labels:
+        k8s-app: cilium-pre-flight-check
+        kubernetes.io/cluster-service: "true"
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: "k8s-app"
+                operator: In
+                values:
+                - cilium
+            topologyKey: "kubernetes.io/hostname"
+      initContainers:
+        - name: clean-cilium-state
+          image: "{{.CiliumImage}}"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/echo"]
+          args:
+          - "hello"
+      containers:
+        - image: "{{.CiliumImage}}"
+          imagePullPolicy: IfNotPresent
+          name: cilium-pre-flight-check
+          command: ["/bin/sh"]
+          args:
+          - -c
+          - "touch /tmp/ready; sleep 1h"
+          livenessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/ready
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/ready
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+          - mountPath: /var/run/cilium
+            name: cilium-run
+          - mountPath: /var/lib/etcd-config
+            name: etcd-config-path
+            readOnly: true
+          - mountPath: /var/lib/etcd-secrets
+            name: etcd-secrets
+            readOnly: true
+      hostNetwork: true
+      # This is here to seamlessly allow migrate-identity to work with
+      # etcd-operator setups. The assumption is that other cases would also
+      # work since the cluster DNS would forward the request on.
+      # This differs from the cilium-agent daemonset, where this is only
+      # enabled when global.etcd.managed=true
+      dnsPolicy: ClusterFirstWithHostNet
+      restartPolicy: Always
+      serviceAccount: cilium
+      serviceAccountName: cilium
+      tolerations:
+        - effect: NoSchedule
+          key: node.kubernetes.io/not-ready
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node.cloudprovider.kubernetes.io/uninitialized
+          value: "true"
+        - key: CriticalAddonsOnly
+          operator: "Exists"
+      volumes:
+        # To keep state between restarts / upgrades
+      - hostPath:
+          path: /var/run/cilium
+          type: DirectoryOrCreate
+        name: cilium-run
+      - hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
+        name: bpf-maps
+        # To read the etcd config stored in config maps
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: etcd-config
+            path: etcd.config
+          name: cilium-config
+        name: etcd-config-path
+        # To read the k8s etcd secrets in case the user might want to use TLS
+      - name: etcd-secrets
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: cilium-etcd-secrets
 `
 )

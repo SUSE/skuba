@@ -211,24 +211,60 @@ apiEndpoints:
 `},
 	}
 
+	cmDefaultNamespace := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "fake",
+			Namespace: metav1.NamespaceDefault,
+		},
+		Data: map[string]string{"hello": "world"},
+	}
+
 	tests := []struct {
 		clientset          *fake.Clientset
+		preflight          bool
 		configmap          *corev1.ConfigMap
 		debugExpected      string
 		enableIpv4Expected string
 		enableIpv6Expected string
+		etcdConfigExpected string
 		errExpected        bool
 		errMessage         string
 		name               string
 	}{
 		{
-			name:               "should create or update cilium configmap",
+			name:               "should create or update cilium preflight configmap",
 			clientset:          fake.NewSimpleClientset(),
+			preflight:          true,
 			configmap:          cmBase,
 			debugExpected:      "true",
 			enableIpv4Expected: "true",
 			enableIpv6Expected: "false",
 			errExpected:        false,
+			etcdConfigExpected: `ca-file: /tmp/cilium-etcd/ca.crt
+cert-file: /tmp/cilium-etcd/tls.crt
+endpoints:
+- https://1.2.3.4:2379
+key-file: /tmp/cilium-etcd/tls.key
+`,
+		},
+		{
+			name:               "should create or update cilium configmap",
+			clientset:          fake.NewSimpleClientset(),
+			preflight:          false,
+			configmap:          cmBase,
+			debugExpected:      "true",
+			enableIpv4Expected: "true",
+			enableIpv6Expected: "false",
+			errExpected:        false,
+			etcdConfigExpected: "",
+		},
+		{
+			name:        "preflight should fail when kubeadm-config configmap not exist",
+			clientset:   fake.NewSimpleClientset(),
+			preflight:   true,
+			configmap:   cmDefaultNamespace,
+			errExpected: true,
+			errMessage:  "unable to get api endpoints: could not retrieve the kubeadm-config configmap to get apiEndpoints: configmaps \"kubeadm-config\" not found",
 		},
 	}
 
@@ -238,7 +274,7 @@ apiEndpoints:
 			//nolint:errcheck
 			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.configmap)
 
-			err := CreateOrUpdateCiliumConfigMap(tt.clientset)
+			err := CreateOrUpdateCiliumConfigMap(tt.clientset, tt.preflight)
 
 			if tt.errExpected {
 				if err == nil {
@@ -280,6 +316,9 @@ apiEndpoints:
 					"install-iptables-rules":  "true",
 					"auto-direct-node-routes": "false",
 					"enable-node-port":        "false",
+				}
+				if tt.etcdConfigExpected != "" {
+					dataExpected["etcd-config"] = tt.etcdConfigExpected
 				}
 				if !reflect.DeepEqual(dataGet.Data, dataExpected) {
 					t.Errorf("returned data (%v) does not match the expected one (%v)", dataGet.Data, dataExpected)
