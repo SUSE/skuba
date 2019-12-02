@@ -8,7 +8,7 @@ nodeuser: "sles"  # Default node username
 skuba:
   binpath: "" # path to skuba binary
   srcpath: "" # path to skuba source
-  verbosity: 5 # default value passed to skuba with -v
+  verbosity: 10  # default value passed to skuba with -v
 
 # platform settings
 terraform:
