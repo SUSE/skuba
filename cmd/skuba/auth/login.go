@@ -96,7 +96,7 @@ func NewLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url https://<IP/FQDN>:<Port> (default port 32000)")
+	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url https://<IP/FQDN>:<Port> (specify port 32000 for standard CaaSP deployments) (required)")
 	cmd.Flags().StringVarP(&cfg.Username, "username", "u", "", "Username")
 	cmd.Flags().StringVarP(&cfg.Password, "password", "p", "", "Password")
 	cmd.Flags().StringVarP(&cfg.AuthConnector, "auth-connector", "a", "", "Authentication connector ID")
