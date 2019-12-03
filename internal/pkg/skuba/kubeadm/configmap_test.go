@@ -209,6 +209,7 @@ func TestGetAPIEndpointsFromConfigMap(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			gotAPIEndpoints, err := GetAPIEndpointsFromConfigMap(tt.client)
+			sort.Strings(gotAPIEndpoints)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
