@@ -9,8 +9,12 @@ class Logger:
 
     @staticmethod
     def config_logger(conf, level=None):
+        logging.basicConfig(
+            format='%(asctime)s %(levelname)s] %(message)s',
+            level=logging.DEBUG,
+            datefmt='%Y-%m-%d %H:%M:%S')
+
         logger = logging.getLogger("testrunner")
-        logger.setLevel(logging.getLevelName("DEBUG"))
 
         if conf.log.file:
             mode = 'a'
