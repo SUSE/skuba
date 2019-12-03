@@ -8,7 +8,7 @@ login - Authenticate to a cluster and authorized with kubeconfig
 [**--help**|**-h**] [**--server|-s**] [**--username|-u**]
 [**--password|-p**] [**--auth-connector|-a**] [**--root-ca**|**-r**]
 [**--insecure**|**-k**] [**--cluster-name**|**-n**] [**--kubeconfig**|**-c**]
-*login* [--server https://<ip/fqdn>:<port>] [--username username] [--password password]
+*login* [--server https://<IP/FQDN>:<Port>] [--username username] [--password password]
 
 # DESCRIPTION
 **login** lets you login to a cluster and authorized with kubeconfig
@@ -19,7 +19,7 @@ login - Authenticate to a cluster and authorized with kubeconfig
   Print usage statement.
 
 **--server, -s**
-  (Required) The OIDC dex server url (https://<controller plane IP/FQDN>:<port>)
+  (Required) The OIDC dex server url https://<IP/FQDN>:<Port> (specify port 32000 for standard CaaSP deployments)
 
 **--username, -u**
   The authentication username
