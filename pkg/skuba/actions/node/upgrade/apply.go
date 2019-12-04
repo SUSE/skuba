@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -33,6 +32,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
+	"github.com/pkg/errors"
 )
 
 func Apply(client clientset.Interface, target *deployments.Target) error {
@@ -46,18 +46,25 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
-	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
-	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
-	fmt.Println()
-
 	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, target.Nodename)
 	if err != nil {
 		return err
 	}
 
+	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
+	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
+	fmt.Printf("Current Node version: %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String())
+	fmt.Println()
+
 	if nodeVersionInfoUpdate.IsUpdated() {
 		fmt.Printf("Node %s is up to date\n", target.Nodename)
 		return nil
+	}
+
+	// Check if the node is upgradeable (matches preconditions)
+	if err := nodeVersionInfoUpdate.NodeUpgradeableCheck(client, currentClusterVersion); err != nil {
+		fmt.Println()
+		return err
 	}
 
 	// Check if skuba-update.timer is already disabled
@@ -72,54 +79,31 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 
-	var upgradeable bool
 	var initCfgContents []byte
 
-	// Check if the target node is the first control plane to be updated
-	isFirstControlPlaneUpgrade, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
+	// Check if it's the first control plane node to be upgraded
+	isFirstControlPlaneNodeToBeUpgraded, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
 	if err != nil {
 		return err
 	}
-	if isFirstControlPlaneUpgrade {
-		var err error
-		upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, nodeVersionInfoUpdate.Update.APIServerVersion)
+	if isFirstControlPlaneNodeToBeUpgraded {
+		fmt.Println("Fetching the cluster configuration...")
+
+		initCfg, err := kubeadm.GetClusterConfiguration(client)
 		if err != nil {
 			return err
 		}
-		if upgradeable {
-			fmt.Println("Fetching the cluster configuration...")
-
-			initCfg, err := kubeadm.GetClusterConfiguration(client)
-			if err != nil {
-				return err
-			}
-			if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
-				return errors.Wrap(err, "error adding target information to init configuration")
-			}
-			kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
-			initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
-				Group:   "kubeadm.k8s.io",
-				Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
-			})
-			if err != nil {
-				return err
-			}
+		if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
+			return errors.Wrap(err, "error adding target information to init configuration")
 		}
-	} else {
-		// there is already at least one updated control plane node
-		if nodeVersionInfoUpdate.Current.IsControlPlane() {
-			upgradeable, err = kubernetes.AllWorkerNodesTolerateVersion(client, currentClusterVersion)
-			if err != nil {
-				return err
-			}
-		} else {
-			// worker nodes have no preconditions, are always upgradeable
-			upgradeable = true
+		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
+		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
+			Group:   "kubeadm.k8s.io",
+			Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
+		})
+		if err != nil {
+			return err
 		}
-	}
-
-	if !upgradeable {
-		return errors.Errorf("node %s cannot be upgraded yet", target.Nodename)
 	}
 
 	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
@@ -144,7 +128,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			return err
 		}
 	}
-	if isFirstControlPlaneUpgrade {
+	if isFirstControlPlaneNodeToBeUpgraded {
 		err = target.Apply(deployments.UpgradeConfiguration{
 			KubeadmConfigContents: string(initCfgContents),
 		}, "kubeadm.upgrade.apply")
