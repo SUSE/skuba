@@ -10,9 +10,14 @@
 resource "aws_security_group" "worker" {
   description = "security group rules for worker node"
   name        = "${var.stack_name}-worker"
-  vpc_id      = "${aws_vpc.platform.id}"
+  vpc_id      = aws_vpc.platform.id
 
-  tags = "${merge(local.tags, map(
-    "Name", "${var.stack_name}-worker",
-    "Class", "SecurityGroup"))}"
+  tags = merge(
+    local.tags,
+    {
+      "Name"  = "${var.stack_name}-worker"
+      "Class" = "SecurityGroup"
+    },
+  )
 }
+

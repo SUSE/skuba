@@ -9,7 +9,7 @@ variable "aws_region" {
 }
 
 variable "aws_az" {
-  type        = "string"
+  type        = string
   description = "AWS Availability Zone"
   default     = "eu-north-1"
 }
@@ -20,25 +20,25 @@ variable "ami_name_pattern" {
 }
 
 variable "authorized_keys" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "ssh keys to inject into all the nodes. First key will be used for creating a keypair."
 }
 
 variable "public_subnet" {
-  type        = "string"
+  type        = string
   description = "CIDR blocks for each public subnet of vpc"
   default     = "10.1.1.0/24"
 }
 
 variable "private_subnet" {
-  type        = "string"
+  type        = string
   description = "Private subnet of vpc"
   default     = "10.1.4.0/24"
 }
 
 variable "vpc_cidr_block" {
-  type        = "string"
+  type        = string
   description = "CIRD blocks for vpc"
   default     = "10.1.0.0/16"
 }
@@ -74,19 +74,19 @@ variable "workers" {
 }
 
 variable "tags" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "Extra tags used for the AWS resources created"
 }
 
 variable "repositories" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of extra repositories (as maps with '<name>'='<url>') to add via cloud-init"
 }
 
 variable "packages" {
-  type = "list"
+  type = list(string)
 
   default = [
     "kmod",
@@ -125,7 +125,8 @@ variable "iam_profile_worker" {
 }
 
 variable "peer_vpc_ids" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "IDs of a VPCs to connect to via a peering connection"
 }
+
