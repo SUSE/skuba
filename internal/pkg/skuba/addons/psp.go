@@ -101,7 +101,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: suse:caasp:psp:privileged
 rules:
-  - apiGroups: ['extensions']
+  - apiGroups: ['policy']
     resources: ['podsecuritypolicies']
     resourceNames: ['suse.caasp.psp.privileged']
     verbs: ['use']
@@ -203,7 +203,7 @@ kind: ClusterRole
 metadata:
   name: suse:caasp:psp:unprivileged
 rules:
-  - apiGroups: ['extensions']
+  - apiGroups: ['policy']
     resources: ['podsecuritypolicies']
     verbs: ['use']
     resourceNames: ['suse.caasp.psp.unprivileged']
