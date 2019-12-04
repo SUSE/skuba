@@ -8,12 +8,6 @@ variable "aws_region" {
   description = "Name of the AWS region to be used"
 }
 
-variable "aws_az" {
-  type        = string
-  description = "AWS Availability Zone"
-  default     = "eu-north-1"
-}
-
 variable "ami_name_pattern" {
   default     = "suse-sles-15-*"
   description = "Pattern for choosing the AMI image"
