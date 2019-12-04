@@ -2,11 +2,15 @@
 resource "aws_security_group" "elb" {
   name        = "${var.stack_name}-elb"
   description = "give access to kube api server"
-  vpc_id      = "${aws_vpc.platform.id}"
+  vpc_id      = aws_vpc.platform.id
 
-  tags = "${merge(local.basic_tags, map(
-    "Name", "${var.stack_name}-elb",
-    "Class", "SecurityGroup"))}"
+  tags = merge(
+    local.basic_tags,
+    {
+      "Name"  = "${var.stack_name}-elb"
+      "Class" = "SecurityGroup"
+    },
+  )
 
   # HTTP access from anywhere
   ingress {
@@ -41,3 +45,4 @@ resource "aws_security_group" "elb" {
     description = "dex and gangway"
   }
 }
+
