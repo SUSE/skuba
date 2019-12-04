@@ -38,7 +38,6 @@ func Plan(clientSet clientset.Interface, nodeName string) error {
 
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentClusterVersion.String())
 	fmt.Printf("Latest Kubernetes version: %s\n", kubernetes.LatestVersion().String())
-	fmt.Println()
 	fmt.Printf("Current Node version: %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String())
 	fmt.Println()
 
@@ -54,6 +53,12 @@ func Plan(clientSet clientset.Interface, nodeName string) error {
 		}
 		fmt.Printf("  - kubelet: %s -> %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String(), nodeVersionInfoUpdate.Update.KubeletVersion.String())
 		fmt.Printf("  - cri-o: %s -> %s\n", nodeVersionInfoUpdate.Current.ContainerRuntimeVersion.String(), nodeVersionInfoUpdate.Update.ContainerRuntimeVersion.String())
+
+		// Check if the node is upgradeable (matches preconditions)
+		if err := nodeVersionInfoUpdate.NodeUpgradeableCheck(clientSet, currentClusterVersion); err != nil {
+			fmt.Println()
+			return err
+		}
 	}
 
 	return nil
