@@ -5,6 +5,7 @@ resource "aws_vpc" "platform" {
   tags = merge(
     local.tags,
     {
+      "Name"  = "${var.stack_name}-vpc"
       "Class" = "VPC"
     },
   )
@@ -128,11 +129,27 @@ resource "aws_route_table_association" "public" {
 resource "aws_eip" "nat_eip" {
   vpc        = true
   depends_on = [aws_internet_gateway.platform]
+
+  tags = merge(
+    local.tags,
+    {
+      "Name"  = "${var.stack_name}-eip-nat_eip"
+      "Class" = "ElasticIP"
+    },
+  )
 }
 
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public.id
   depends_on    = [aws_eip.nat_eip]
+
+  tags = merge(
+    local.tags,
+    {
+      "Name"  = "${var.stack_name}-nat_gateway"
+      "Class" = "NatGateway"
+    },
+  )
 }
 
