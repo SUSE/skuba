@@ -83,7 +83,7 @@ AddonsVersion:
 					kubernetes.PSP:     nil,
 				},
 				Updated: kubernetes.AddonsVersion{
-					kubernetes.PSP: &kubernetes.AddonVersion{Version: "", ManifestVersion: 0},
+					kubernetes.PSP: &kubernetes.AddonVersion{Version: "", ManifestVersion: 1},
 				},
 			},
 			expectedErr: false,
@@ -124,7 +124,7 @@ func TestHasAddonUpdate(t *testing.T) {
 					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 0},
 					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 0},
-					kubernetes.PSP:     &kubernetes.AddonVersion{Version: "1.0.0", ManifestVersion: 0},
+					kubernetes.PSP:     &kubernetes.AddonVersion{Version: "1.0.0", ManifestVersion: 1},
 				},
 				Updated: kubernetes.AddonsVersion{
 					kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 1},
@@ -140,7 +140,7 @@ func TestHasAddonUpdate(t *testing.T) {
 					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 0},
 					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 0},
-					kubernetes.PSP:     &kubernetes.AddonVersion{Version: "1.0.0", ManifestVersion: 0},
+					kubernetes.PSP:     &kubernetes.AddonVersion{Version: "1.0.0", ManifestVersion: 1},
 				},
 			},
 			expected: false,
