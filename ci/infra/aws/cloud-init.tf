@@ -27,7 +27,7 @@ data "template_file" "register_suma" {
 }
 
 data "template_file" "repositories" {
-  count    = length(var.repositories) == 0 ? 0 : length(var.repositories)
+  count    = length(var.repositories)
   template = file("cloud-init/repository.tpl")
 
   vars = {
@@ -38,7 +38,7 @@ data "template_file" "repositories" {
 
 data "template_file" "commands" {
   template = file("cloud-init/commands.tpl")
-  count    = join("", var.packages) == "" ? 0 : 1
+  count    = length(var.packages) == 0 ? 0 : 1
 
   vars = {
     packages = join(", ", var.packages)
