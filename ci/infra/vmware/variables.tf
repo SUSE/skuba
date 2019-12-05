@@ -64,6 +64,12 @@ variable "workers" {
   description = "Number of worker nodes"
 }
 
+variable "worker_bootcmds" {
+  type        = "list"
+  default     = []
+  description = "Worker bootcmds"
+}
+
 variable "worker_cpus" {
   default     = 4
   description = "Number of CPUs used on worker node"
@@ -77,6 +83,12 @@ variable "worker_memory" {
 variable "worker_disk_size" {
   default     = 40
   description = "Size of the root disk in GB on worker node"
+}
+
+variable "master_bootcmds" {
+  type        = "list"
+  default     = []
+  description = "Master bootcmds"
 }
 
 variable "master_cpus" {

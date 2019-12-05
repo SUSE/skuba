@@ -26,6 +26,15 @@ data "template_file" "master_register_rmt" {
   }
 }
 
+data "template_file" "master_bootcmds" {
+  template = "${file("cloud-init/bootcmds.tpl")}"
+  count    = "${length(var.master_bootcmds)}"
+
+  vars {
+    cmd  = "${var.master_bootcmds[count.index]}"
+  }
+}
+
 data "template_file" "master_commands" {
   template = "${file("cloud-init/commands.tpl")}"
   count    = "${join("", var.packages) == "" ? 0 : 1}"
@@ -53,6 +62,7 @@ data "template_file" "master_cloud_init_userdata" {
     register_scc    = "${join("\n", data.template_file.master_register_scc.*.rendered)}"
     register_rmt    = "${join("\n", data.template_file.master_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.master_commands.*.rendered)}"
+    bootcmds        = "${join("\n", data.template_file.master_bootcmds.*.rendered)}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }
 }
