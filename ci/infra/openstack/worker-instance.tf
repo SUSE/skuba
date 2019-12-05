@@ -26,6 +26,15 @@ data "template_file" "worker_register_rmt" {
   }
 }
 
+data "template_file" "worker_bootcmds" {
+  template = "${file("cloud-init/bootcmds.tpl")}"
+  count    = "${length(var.worker_bootcmds)}"
+
+  vars {
+    cmd  = "${var.worker_bootcmds[count.index]}"
+  }
+}
+
 data "template_file" "worker_commands" {
   template = "${file("cloud-init/commands.tpl")}"
   count    = "${join("", var.packages) == "" ? 0 : 1}"
@@ -44,6 +53,7 @@ data "template_file" "worker-cloud-init" {
     register_scc    = "${join("\n", data.template_file.worker_register_scc.*.rendered)}"
     register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
     commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
+    bootcmds        = "${join("\n", data.template_file.master_bootcmds.*.rendered)}"
     username        = "${var.username}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }

@@ -44,6 +44,12 @@ variable "masters" {
   description = "Number of master nodes"
 }
 
+variable "master_bootcmds" {
+  type        = "list"
+  default     = []
+  description = "Master bootcmds"
+}
+
 variable "worker_size" {
   default     = "m1.medium"
   description = "Size of the worker nodes"
@@ -52,6 +58,12 @@ variable "worker_size" {
 variable "workers" {
   default     = 2
   description = "Number of worker nodes"
+}
+
+variable "worker_bootcmds" {
+  type        = "list"
+  default     = []
+  description = "Worker bootcmds"
 }
 
 variable "workers_vol_enabled" {

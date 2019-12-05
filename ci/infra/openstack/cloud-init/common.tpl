@@ -37,6 +37,7 @@ ${repositories}
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
+${bootcmds}
 
 runcmd:
   # workaround for bsc#1119397 . If this is not called, /etc/resolv.conf is empty
