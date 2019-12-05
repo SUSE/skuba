@@ -19,6 +19,8 @@ package kubernetes
 
 import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 )
 
 // DoesResourceExistWithError check the given error from a client-go API call
@@ -32,4 +34,10 @@ func DoesResourceExistWithError(err error) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+// IsSecretExist returns if the the given secret name exists or not
+func IsSecretExist(client clientset.Interface, secretName string) (bool, error) {
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretName, metav1.GetOptions{})
+	return DoesResourceExistWithError(err)
 }

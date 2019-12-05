@@ -23,6 +23,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -92,6 +93,60 @@ func Test_getPodContainerImageTag(t *testing.T) {
 			}
 			if !reflect.DeepEqual(actual, tt.expect) {
 				t.Errorf("returned image tag (%v) does not match the expected one (%v)", actual, tt.expect)
+				return
+			}
+		})
+	}
+}
+
+func TestDeletePodWithLabelSelector(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        clientset.Interface
+		labelSelector string
+		expectedError bool
+	}{
+		{
+			name: "delete pods successfully",
+			client: fake.NewSimpleClientset(&corev1.PodList{
+				Items: []corev1.Pod{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-1",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-2",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:   "gangway-pod-3",
+							Labels: map[string]string{"app": "oidc-gangway"},
+						},
+					},
+				},
+			}),
+			labelSelector: "app=oidc-gangway",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			err := DeletePodWithLabelSelector(tt.client, tt.labelSelector)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
 		})

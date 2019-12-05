@@ -18,12 +18,17 @@
 package addons
 
 import (
+	"github.com/pkg/errors"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util/certutil"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 var gangwayClientSecret string
@@ -58,19 +63,35 @@ func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConf
 	if err != nil {
 		return errors.Wrap(err, "could not get admin client set")
 	}
-	dexCertExists, err := dex.DexCertExists(client)
+
+	// Load CA file
+	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(skubaconstants.PkiDir(), constants.CACertAndKeyBaseName)
 	if err != nil {
-		return errors.Wrap(err, "unable to determine if dex certificate exists")
+		return errors.Wrap(err, "unable to load CA certificate and key")
 	}
-	err = dex.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile())
+	// Load kubeadm-init.conf to get certificate SANs
+	cfg, err := node.LoadInitConfigurationFromFile(skubaconstants.KubeadmInitConfFile())
 	if err != nil {
-		return errors.Wrap(err, "unable to create dex certificate")
+		return errors.Wrapf(err, "could not load file %s", skubaconstants.KubeadmInitConfFile())
 	}
-	if dexCertExists {
-		if err := dex.RestartPods(client); err != nil {
+
+	// Create/Update dex server certificate and key to secret resource
+	update, err := certutil.CreateOrUpdateServerCertAndKeyToSecret(
+		client, caCert, caKey,
+		dex.CertCommonName, cfg.ClusterConfiguration.APIServer.CertSANs,
+		dex.CertSecretName,
+	)
+	if err != nil {
+		return errors.Wrap(err, "unable to create/update dex certificate and key to secret")
+	}
+
+	// Server certificate and key got updated, restart pod
+	if update {
+		if err := kubernetes.DeletePodWithLabelSelector(client, dex.PodLabelName); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

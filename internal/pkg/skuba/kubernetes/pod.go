@@ -35,3 +35,9 @@ func getPodContainerImageTag(client clientset.Interface, namespace string, podNa
 
 	return containerImageTag[len(containerImageTag)-1], nil
 }
+
+// DeletePodWithLabelSelector function deletes pod(s) with the label selector
+func DeletePodWithLabelSelector(client clientset.Interface, labelSelector string) error {
+	listOptions := metav1.ListOptions{LabelSelector: labelSelector}
+	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
+}

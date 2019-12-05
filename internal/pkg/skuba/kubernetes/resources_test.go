@@ -22,6 +22,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -103,6 +104,54 @@ func Test_DoesResourceExistWithError(t *testing.T) {
 			if actualErrMessage != tt.expectErrMessage {
 				t.Errorf("returned error (%v) does not match the expected one (%v)", actualErrMessage, tt.expectErrMessage)
 				return
+			}
+		})
+	}
+}
+
+func TestIsSecretExist(t *testing.T) {
+	tests := []struct {
+		name          string
+		client        clientset.Interface
+		secretName    string
+		expectedExist bool
+		expectedError bool
+	}{
+		{
+			name: "certificate exists",
+			client: fake.NewSimpleClientset(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cert",
+					Namespace: metav1.NamespaceSystem,
+				},
+			}),
+			secretName:    "test-cert",
+			expectedExist: true,
+		},
+		{
+			name:       "certificate not exists",
+			client:     fake.NewSimpleClientset(),
+			secretName: "",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			gotExist, err := IsSecretExist(tt.client, tt.secretName)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+			if tt.expectedExist != gotExist {
+				t.Errorf("expect %t, got %t\n", tt.expectedExist, gotExist)
 			}
 		})
 	}

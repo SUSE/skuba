@@ -20,27 +20,25 @@ package gangway
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
-	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
-
-	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/internal/pkg/skuba/node"
-	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
 
 const (
-	certCommonName = "oidc-gangway"
-	secretCertName = "oidc-gangway-cert"
+	// CertCommonName is the gangway server certificate CN
+	CertCommonName = "oidc-gangway"
+	// PodLabelName is the gangway pod label name
+	PodLabelName = "app=oidc-gangway"
+	// CertSecretName is the gangway certificate secret name
+	CertSecretName = "oidc-gangway-cert"
 
-	sessionKey    = "session-key"
-	secretKeyName = "oidc-gangway-secret"
+	sessionKey = "session-key"
+	// SessionKeySecretName is the gangway session key secret name
+	SessionKeySecretName = "oidc-gangway-secret"
 )
 
 // GenerateSessionKey generates session key
@@ -56,9 +54,9 @@ func GenerateSessionKey() ([]byte, error) {
 
 // CreateOrUpdateSessionKeyToSecret create/update session key to secret
 func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) error {
-	secret := &v1.Secret{
+	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretKeyName,
+			Name:      SessionKeySecretName,
 			Namespace: metav1.NamespaceSystem,
 		},
 		Data: map[string][]byte{
@@ -71,49 +69,4 @@ func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) er
 	}
 
 	return nil
-}
-
-// CreateCert creates a signed certificate for gangway
-// with kubernetes CA certificate and key
-func CreateCert(client clientset.Interface, pkiPath, kubeadmInitConfPath string) error {
-	// Load kubernetes CA
-	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(pkiPath, constants.CACertAndKeyBaseName)
-	if err != nil {
-		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
-	}
-
-	// Load kubeadm-init.conf to get certificate SANs
-	cfg, err := node.LoadInitConfigurationFromFile(kubeadmInitConfPath)
-	if err != nil {
-		return errors.Wrapf(err, "could not parse %s file", kubeadmInitConfPath)
-	}
-
-	// Generate gangway certificate
-	cert, key, err := util.NewServerCertAndKey(caCert, caKey,
-		certCommonName, cfg.ClusterConfiguration.APIServer.CertSANs)
-	if err != nil {
-		return errors.Wrap(err, "could not genenerate gangway server cert")
-	}
-
-	// Create or update certificate to secret
-	if err := util.CreateOrUpdateCertToSecret(client, caCert, cert, key, secretCertName); err != nil {
-		return errors.Wrap(err, "unable to create/update cert to secret")
-	}
-
-	return nil
-}
-
-func GangwaySecretExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretKeyName, metav1.GetOptions{})
-	return kubernetes.DoesResourceExistWithError(err)
-}
-
-func GangwayCertExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
-	return kubernetes.DoesResourceExistWithError(err)
-}
-
-func RestartPods(client clientset.Interface) error {
-	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
-	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
 }

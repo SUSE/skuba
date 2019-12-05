@@ -15,7 +15,7 @@
  *
  */
 
-package util
+package certutil
 
 // strSliceContains is the testing helper
 func strSliceContains(ss []string, s string) bool {
