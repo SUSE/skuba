@@ -51,6 +51,15 @@ def node_is_upgraded(kubectl, platform, role, nr):
         else:
             time.sleep(2)
 
+    # allow system pods to come up again after the upgrade
+    wait(check_pods_ready,
+         kubectl,
+         namespace="kube-system",
+         wait_delay=60,
+         wait_backoff=30,
+         wait_elapsed=60*10,
+         wait_allow=(AssertionError))
+
     cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
     return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
 
