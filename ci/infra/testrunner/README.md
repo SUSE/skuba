@@ -110,7 +110,7 @@ username: "username"
 
 There are some arguments that are currently at the top level of the configuration, but are actually related to the platform:
 
-- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/testrunner_logs` 
+- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/platform_logs`
 - nodeuser: the user name used to login into the platform nodes. Optional. 
 - ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 
@@ -530,7 +530,7 @@ kube-system   kube-scheduler-my-master-0            1/1       Running   0       
 
 ```./testrunner get_logs```
 
-All collected logs are stored at `path/to/workspace/testrunner_logs/`
+All collected logs are stored at `path/to/workspace/platform_logs/`
 
 Logs that are currently being collected are the cloud-init logs for each of the nodes:
 
@@ -538,7 +538,7 @@ Logs that are currently being collected are the cloud-init logs for each of the 
     /var/log/cloud-init-output.log
     /var/log/cloud-init.log
 
-These are stored each in their own folder named `path/to/workspace/testrunner_logs/{master|worker}_ip_address/`
+These are stored each in their own folder named `path/to/workspace/platform_logs/{master|worker}_ip_address/`
 
 ### Install using registration code
 
