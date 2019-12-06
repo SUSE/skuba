@@ -134,7 +134,8 @@ resource "vsphere_virtual_machine" "lb" {
   firmware         = var.firmware
   scsi_type        = data.vsphere_virtual_machine.template.scsi_type
   resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = data.vsphere_datastore.datastore.id
+  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id

@@ -5,6 +5,11 @@ variable "stack_name" {
 }
 
 variable "vsphere_datastore" {
+  default = null
+}
+
+variable "vsphere_datastore_cluster" {
+  default = null
 }
 
 variable "vsphere_datacenter" {
@@ -116,7 +121,14 @@ data "vsphere_resource_pool" "pool" {
 }
 
 data "vsphere_datastore" "datastore" {
+  count         = var.vsphere_datastore == null ? 0 : 1
   name          = var.vsphere_datastore
+  datacenter_id = data.vsphere_datacenter.dc.id
+}
+
+data "vsphere_datastore_cluster" "datastore" {
+  count         = var.vsphere_datastore_cluster == null ? 0 : 1
+  name          = var.vsphere_datastore_cluster
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
