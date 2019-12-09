@@ -109,8 +109,13 @@ func kubeletCreateServerCert(t *Target, data interface{}) error {
 		}
 	}
 
-	alternateIPs := []net.IP{net.ParseIP(t.target.Target), net.IPv4(127, 0, 0, 1), net.IPv6loopback}
+	alternateIPs := []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback}
 	alternateDNS := []string{"localhost"}
+	if ip := net.ParseIP(t.target.Target); ip != nil {
+		alternateIPs = append(alternateIPs, ip)
+	} else {
+		alternateDNS = append(alternateDNS, t.target.Target)
+	}
 
 	altNames.IPs = append(altNames.IPs, alternateIPs...)
 	altNames.DNSNames = append(altNames.DNSNames, alternateDNS...)
