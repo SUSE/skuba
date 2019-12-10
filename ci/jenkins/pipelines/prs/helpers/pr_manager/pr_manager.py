@@ -1,4 +1,4 @@
-#!/usr/bin/env Python3
+#!/usr/bin/env python3
 
 import argparse
 import configparser
@@ -59,12 +59,7 @@ def filter_pr(args):
         repo = g.get_repo(GITHUB_REPO)
 
         pull = repo.get_pull(CHANGE_ID)
-        changed_files = pull.get_files()
-        files_list = []
-
-        # change paginated list to normal list
-        for f in changed_files:
-            files_list.append(f.filename)
+        files_list = [f.filename for f in pull.get_files()]
 
         if any([s for s in files_list if args.filename in s]):
             msg = "contains"
