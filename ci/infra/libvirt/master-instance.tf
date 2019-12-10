@@ -104,6 +104,7 @@ resource "null_resource" "master_wait_cloudinit" {
     user     = "${var.username}"
     password = "${var.password}"
     type     = "ssh"
+    agent    = false
   }
 
   provisioner "remote-exec" {
