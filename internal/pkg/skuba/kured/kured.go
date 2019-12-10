@@ -27,7 +27,7 @@ import (
 
 const (
 	kuredDSName             = "kured"
-	kuredLockAnnotationJson = `{"metadata":{"annotations":{"weave.works/kured-node-lock":"'{\"nodeID\":\"manual\"}'"}}}`
+	kuredLockAnnotationJson = `{"metadata":{"annotations":{"weave.works/kured-node-lock":"{\"nodeID\":\"manual\"}"}}}`
 )
 
 func LockExists(client clientset.Interface) (bool, error) {
