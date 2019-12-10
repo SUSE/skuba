@@ -151,7 +151,7 @@ class BaseConfig:
         conf.workspace = os.path.expanduser(conf.workspace)
 
         if not conf.log_dir:
-            conf.log_dir = os.path.join(conf.workspace, 'testrunner_logs')
+            conf.log_dir = os.path.join(conf.workspace, 'platform_logs')
         elif not os.path.isabs(conf.log_dir):
             conf.log_dir = os.path.join(conf.workspace, conf.log_dir)
 

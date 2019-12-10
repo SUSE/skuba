@@ -118,7 +118,7 @@ pipeline {
             script {
                 if (shouldRun) {
                     sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
-                    zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
+                    zip(archive: true, dir: 'platform_logs', zipFile: 'platform_logs.zip')
                 }
             }
         }

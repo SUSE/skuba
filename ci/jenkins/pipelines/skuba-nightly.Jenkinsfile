@@ -61,7 +61,7 @@ pipeline {
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
             sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
-            archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             junit('skuba/ci/infra/testrunner/*.xml')
         }
         cleanup {
