@@ -81,8 +81,6 @@ func Plan(client clientset.Interface) error {
 	}
 	fmt.Println()
 	if addon.HasAddonUpdate(updatedAddons) {
-		fmt.Println("After you have completed the platform upgrade, there are new addon versions available:")
-		fmt.Println()
 		fmt.Printf("Addon upgrades from %s to %s:\n", currentVersion, nextClusterVersion.String())
 		addon.PrintAddonUpdates(updatedAddons)
 	} else {
