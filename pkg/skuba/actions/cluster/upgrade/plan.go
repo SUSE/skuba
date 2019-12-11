@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -40,27 +41,28 @@ func Plan(client clientset.Interface) error {
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Println()
 
-	if currentVersion == latestVersion {
-		fmt.Println("Congratulations! You are already at the latest version available")
-		return nil
+	if err := planPrePlatformUpgrade(client, currentClusterVersion); err != nil {
+		return err
 	}
-
-	upgradePath, err := upgradecluster.UpgradePath(client)
+	upgradePath, err := planPlatformUpgrade(client, currentClusterVersion)
 	if err != nil {
 		return err
 	}
-
-	if len(upgradePath) == 0 {
-		return errors.Errorf("cannot infer how to upgrade from %s to %s", currentVersion, latestVersion)
+	if err := planPostPlatformUpgrade(currentClusterVersion, upgradePath); err != nil {
+		return err
 	}
 
-	fmt.Printf("Upgrade path to update from %s to %s:\n", currentVersion, latestVersion)
-	tmpVersion := currentVersion
-	for _, version := range upgradePath {
-		fmt.Printf(" - %s -> %s\n", tmpVersion, version.String())
-		tmpVersion = version.String()
-	}
+	return nil
+}
 
+func planPrePlatformUpgrade(client clientset.Interface, currentClusterVersion *version.Version) error {
+	if err := checkDriftedNodes(client); err != nil {
+		return err
+	}
+	return checkUpdatedAddons(client, currentClusterVersion)
+}
+
+func checkDriftedNodes(client clientset.Interface) error {
 	driftedNodes, err := upgradecluster.DriftedNodes(client)
 	if err != nil {
 		return err
@@ -72,22 +74,68 @@ func Plan(client clientset.Interface) error {
 			fmt.Printf("  - %s is running kubelet %s and is not cordoned\n", node.Nodename, node.KubeletVersion.String())
 		}
 	}
+	return nil
+}
 
-	// fetch addon upgrades for the next available cluster version
-	nextClusterVersion := upgradePath[0]
-	updatedAddons, err := addon.UpdatedAddons(client, nextClusterVersion)
+// checkUpdatedAddons compares the list of the current addons in the cluster with the latest
+// available versions of addons for the current cluster version.
+func checkUpdatedAddons(client clientset.Interface, currentClusterVersion *version.Version) error {
+	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
 	}
 	fmt.Println()
 	if addon.HasAddonUpdate(updatedAddons) {
-		fmt.Printf("Addon upgrades from %s to %s:\n", currentVersion, nextClusterVersion.String())
+		fmt.Printf("Addon upgrades for %s:\n", currentClusterVersion)
+		addon.PrintAddonUpdates(updatedAddons)
+	} else {
+		fmt.Printf("Addons at the current cluster version %s are already up to date.\n", currentClusterVersion.String())
+		fmt.Println()
+		fmt.Println("There is no need to run `skuba addon upgrade apply` before starting the platform upgrade.")
+	}
+	return nil
+}
+
+// checkUpdatedAddonsFromClusterVersion compares the latest available versions of addons for
+// currentClusterVersion with the list to the latest available versions of addons for
+// nextClusterVersion. It does not check the current addons versions in the cluster.
+func checkUpdatedAddonsFromClusterVersion(currentClusterVersion *version.Version, nextClusterVersion *version.Version) error {
+	// Assuming we are at the latest addon versions of the current cluster version
+	latestAddonsForCurrentClusterVersion := kubernetes.AllAddonVersionsForClusterVersion(currentClusterVersion)
+	updatedAddons := addon.UpdatedAddonsForAddonsVersion(nextClusterVersion, latestAddonsForCurrentClusterVersion)
+	fmt.Println()
+	if addon.HasAddonUpdate(updatedAddons) {
+		fmt.Printf("Addon upgrades from %s to %s:\n", currentClusterVersion, nextClusterVersion.String())
 		addon.PrintAddonUpdates(updatedAddons)
 	} else {
 		fmt.Printf("Addons for next cluster version %s are already up to date.\n", nextClusterVersion.String())
 		fmt.Println()
 		fmt.Println("There is no need to run `skuba addon upgrade apply` after you have completed the platform upgrade.")
 	}
+	return nil
+}
 
+func planPlatformUpgrade(client clientset.Interface, currentClusterVersion *version.Version) ([]*version.Version, error) {
+	upgradePath, err := upgradecluster.UpgradePath(client)
+	if err != nil {
+		return upgradePath, err
+	}
+	if len(upgradePath) == 0 {
+		return upgradePath, errors.Errorf("cannot infer how to upgrade from %s to %s", currentClusterVersion, kubernetes.LatestVersion())
+	}
+	fmt.Printf("Upgrade path to update from %s to %s:\n", currentClusterVersion, kubernetes.LatestVersion())
+	tmpVersion := currentClusterVersion.String()
+	for _, version := range upgradePath {
+		fmt.Printf(" - %s -> %s\n", tmpVersion, version.String())
+		tmpVersion = version.String()
+	}
+	return upgradePath, nil
+}
+
+func planPostPlatformUpgrade(currentClusterVersion *version.Version, upgradePath []*version.Version) error {
+	nextClusterVersion := upgradePath[0]
+	if err := checkUpdatedAddonsFromClusterVersion(currentClusterVersion, nextClusterVersion); err != nil {
+		return err
+	}
 	return nil
 }
