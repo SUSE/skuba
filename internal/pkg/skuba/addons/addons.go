@@ -142,7 +142,7 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 			continue
 		}
 		if hasToBeApplied {
-			if err := addon.Apply(addonConfiguration, skubaConfiguration, applyBehavior); err == nil {
+			if err := addon.Apply(client, addonConfiguration, skubaConfiguration, applyBehavior); err == nil {
 				klog.V(1).Infof("%q addon correctly applied", addonName)
 			} else {
 				klog.Errorf("failed to apply %q addon (%v)", addonName, err)
@@ -229,7 +229,7 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	return nil
 }
 
-func (addon Addon) Apply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration, applyBehavior ApplyBehavior) error {
+func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration, applyBehavior ApplyBehavior) error {
 	klog.V(1).Infof("applying %q addon", addon.addon)
 	if addon.callbacks != nil {
 		if err := addon.callbacks.beforeApply(addonConfiguration, skubaConfiguration); err != nil {
@@ -264,7 +264,7 @@ func (addon Addon) Apply(addonConfiguration AddonConfiguration, skubaConfigurati
 			return err
 		}
 	}
-	return updateSkubaConfigMapWithAddonVersion(addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
+	return updateSkubaConfigMapWithAddonVersion(client, addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
 
 func (addon Addon) Images(imageTag string) []string {
@@ -283,11 +283,11 @@ func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.Add
 	return current.ManifestVersion < updated.ManifestVersion
 }
 
-func updateSkubaConfigMapWithAddonVersion(addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {
+func updateSkubaConfigMapWithAddonVersion(client clientset.Interface, addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {
 	addonVersion := kubernetes.AddonVersionForClusterVersion(addon, clusterVersion)
 	if skubaConfiguration.AddonsVersion == nil {
 		skubaConfiguration.AddonsVersion = map[kubernetes.Addon]*kubernetes.AddonVersion{}
 	}
 	skubaConfiguration.AddonsVersion[addon] = addonVersion
-	return skuba.UpdateSkubaConfiguration(skubaConfiguration)
+	return skuba.UpdateSkubaConfiguration(client, skubaConfiguration)
 }

@@ -18,6 +18,7 @@
 package addon
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -28,83 +29,126 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	skubaconfig "github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 )
 
 func TestUpdatedAddons(t *testing.T) {
-	tests := []struct {
+	type test struct {
 		name           string
+		client         clientset.Interface
 		clusterVersion *version.Version
-		clientSet      clientset.Interface
-		expected       AddonVersionInfoUpdate
+		expectedAviu   AddonVersionInfoUpdate
 		expectedErr    bool
-	}{
-		{
+	}
+
+	tests := []test{}
+	tests = append(
+		tests,
+		test{
 			name:           "no skuba-config ConfigMap",
-			clusterVersion: version.MustParseSemantic("1.15.1"),
-			clientSet:      fake.NewSimpleClientset(),
-			expected: AddonVersionInfoUpdate{
+			client:         fake.NewSimpleClientset(),
+			clusterVersion: version.MustParseSemantic("1.2.3"),
+			expectedAviu: AddonVersionInfoUpdate{
 				Current: kubernetes.AddonsVersion{},
 				Updated: kubernetes.AddonsVersion{},
 			},
 		},
-		{
-			name:           "kubernetes version 1.15.2",
-			clusterVersion: version.MustParseSemantic("1.15.2"),
-			clientSet: fake.NewSimpleClientset(&corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      skubaconfig.ConfigMapName,
-					Namespace: metav1.NamespaceSystem,
+		test{
+			name: "skuba-config format error",
+			client: fake.NewSimpleClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      skuba.ConfigMapName,
+						Namespace: metav1.NamespaceSystem,
+					},
+					Data: map[string]string{
+						skuba.SkubaConfigurationKeyName: `
+							AddonsVersion:
+						`,
+					},
 				},
-				Data: map[string]string{
-					skubaconfig.SkubaConfigurationKeyName: `
-AddonsVersion:
-  cilium:
-    ManifestVersion: 32767
-    Version: 1.5.3
-  kured:
-    ManifestVersion: 32767
-    Version: 1.2.0
-  dex:
-    ManifestVersion: 32767
-    Version: 2.16.0
-  gangway:
-    ManifestVersion: 32767
-    Version: 3.1.0
-`,
-				},
-			}),
-			expected: AddonVersionInfoUpdate{
-				Current: kubernetes.AddonsVersion{
-					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 32767},
-					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 32767},
-					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 32767},
-					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 32767},
-					kubernetes.PSP:     nil,
-				},
-				Updated: kubernetes.AddonsVersion{
-					kubernetes.PSP: &kubernetes.AddonVersion{Version: "", ManifestVersion: 1},
-				},
+			),
+			clusterVersion: version.MustParseSemantic("1.2.3"),
+			expectedAviu: AddonVersionInfoUpdate{
+				Current: kubernetes.AddonsVersion{},
+				Updated: kubernetes.AddonsVersion{},
 			},
-			expectedErr: false,
+			expectedErr: true,
 		},
+	)
+
+	// Test without updated
+	for _, cv := range kubernetes.AvailableVersions() {
+		client := fake.NewSimpleClientset()
+		aviu := AddonVersionInfoUpdate{
+			Current: kubernetes.AddonsVersion{},
+			Updated: kubernetes.AddonsVersion{},
+		}
+		avs := kubernetes.AllAddonVersionsForClusterVersion(cv)
+
+		// Update skuba-config configmap
+		err := skuba.UpdateSkubaConfiguration(client, &skuba.SkubaConfiguration{AddonsVersion: avs})
+		if err != nil {
+			t.Errorf("error not expected but an error was reported %v", err)
+			return
+		}
+		for addon, v := range avs {
+			aviu.Current[addon] = v
+		}
+
+		tests = append(
+			tests,
+			test{
+				name:           fmt.Sprintf("kubernetes version %s without updated", cv.String()),
+				client:         client,
+				clusterVersion: cv,
+				expectedAviu:   aviu,
+			},
+		)
+	}
+
+	// Test with updated
+	for _, cv := range kubernetes.AvailableVersions() {
+		client := fake.NewSimpleClientset()
+		aviu := AddonVersionInfoUpdate{
+			Current: kubernetes.AddonsVersion{},
+			Updated: kubernetes.AddonsVersion{},
+		}
+		avs := kubernetes.AllAddonVersionsForClusterVersion(cv)
+		for addon, v := range avs {
+			aviu.Current[addon] = nil
+			aviu.Updated[addon] = v
+		}
+
+		tests = append(
+			tests,
+			test{
+				name:           fmt.Sprintf("kubernetes version %s with updated", cv.String()),
+				client:         client,
+				clusterVersion: cv,
+				expectedAviu:   aviu,
+			},
+		)
 	}
 
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := UpdatedAddons(tt.clientSet, tt.clusterVersion)
-
-			if tt.expectedErr && gotErr == nil {
-				t.Errorf("error expected on %s, but no error reported", tt.name)
-				return
-			} else if !tt.expectedErr && gotErr != nil {
-				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, gotErr)
+			gotAviu, err := UpdatedAddons(tt.client, tt.clusterVersion)
+			if tt.expectedErr {
+				if err == nil {
+					t.Error("error expected but no error reported")
+				}
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("got: %v, expect: %v", got, tt.expected)
+			if err != nil {
+				t.Errorf("error not expected but an error was reported %v", err)
+				return
+			}
+			if !reflect.DeepEqual(gotAviu, tt.expectedAviu) {
+				t.Errorf("got: %v, expect: %v", gotAviu, tt.expectedAviu)
+				return
 			}
 		})
 	}
@@ -153,6 +197,7 @@ func TestHasAddonUpdate(t *testing.T) {
 			got := HasAddonUpdate(tt.aviu)
 			if got != tt.expected {
 				t.Errorf("got: %v, expect: %v", got, tt.expected)
+				return
 			}
 		})
 	}
