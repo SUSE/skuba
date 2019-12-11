@@ -97,3 +97,70 @@ func Test_getPodContainerImageTag(t *testing.T) {
 		})
 	}
 }
+
+func Test_getPodFromPodList(t *testing.T) {
+	podList := corev1.PodList{
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
+		Items:    make([]corev1.Pod, 2),
+	}
+	validPod := corev1.Pod{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "valid"},
+		Spec:       corev1.PodSpec{},
+		Status:     corev1.PodStatus{},
+	}
+	anotherPod := corev1.Pod{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "Another"},
+		Spec:       corev1.PodSpec{},
+		Status:     corev1.PodStatus{},
+	}
+
+	podList.Items[0] = validPod
+	podList.Items[1] = anotherPod
+
+	tests := []struct {
+		list         corev1.PodList
+		name         string
+		expect       *corev1.Pod
+		expectErrMsg string
+	}{
+		{
+			list:   podList,
+			name:   "valid",
+			expect: &validPod,
+		},
+		{
+			list:         podList,
+			name:         "invalid",
+			expectErrMsg: "could not find pod invalid in pod list",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := getPodFromPodList(&tt.list, tt.name)
+			if tt.expectErrMsg != "" {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+					return
+				}
+				if err.Error() != tt.expectErrMsg {
+					t.Errorf("returned error (%v) does not match the expected one (%v)", err.Error(), tt.expectErrMsg)
+					return
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
+				return
+			}
+			if !reflect.DeepEqual(actual, tt.expect) {
+				t.Errorf("returned pod (%v) does not match the expected one (%v)", actual, tt.expect)
+				return
+			}
+		})
+	}
+}
