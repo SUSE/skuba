@@ -26,15 +26,6 @@ data "template_file" "worker_register_rmt" {
   }
 }
 
-data "template_file" "worker_commands" {
-  template = "${file("cloud-init/commands.tpl")}"
-  count    = "${join("", var.packages) == "" ? 0 : 1}"
-
-  vars {
-    packages = "${join(", ", var.packages)}"
-  }
-}
-
 data "template_file" "worker-cloud-init" {
   template = "${file("cloud-init/common.tpl")}"
 
@@ -43,7 +34,6 @@ data "template_file" "worker-cloud-init" {
     repositories    = "${join("\n", data.template_file.worker_repositories.*.rendered)}"
     register_scc    = "${join("\n", data.template_file.worker_register_scc.*.rendered)}"
     register_rmt    = "${join("\n", data.template_file.worker_register_rmt.*.rendered)}"
-    commands        = "${join("\n", data.template_file.worker_commands.*.rendered)}"
     username        = "${var.username}"
     ntp_servers     = "${join("\n", formatlist ("    - %s", var.ntp_servers))}"
   }

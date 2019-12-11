@@ -49,6 +49,5 @@ runcmd:
   - systemctl restart sshd
 ${register_scc}
 ${register_rmt}
-${commands}
 
 final_message: "The system is finally up, after $UPTIME seconds"
