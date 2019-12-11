@@ -38,20 +38,23 @@ func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) 
 	if err != nil {
 		return AddonVersionInfoUpdate{}, err
 	}
+	return UpdatedAddonsForAddonsVersion(clusterVersion, skubaConfig.AddonsVersion), nil
+}
+
+func UpdatedAddonsForAddonsVersion(clusterVersion *version.Version, addonsVersion kubernetes.AddonsVersion) AddonVersionInfoUpdate {
 	aviu := AddonVersionInfoUpdate{
 		Current: kubernetes.AddonsVersion{},
 		Updated: kubernetes.AddonsVersion{},
 	}
-
 	latestAddonVersions := kubernetes.AllAddonVersionsForClusterVersion(clusterVersion)
-	for addonName, version := range latestAddonVersions {
-		skubaConfigVersion := skubaConfig.AddonsVersion[addonName]
-		aviu.Current[addonName] = skubaConfigVersion
-		if skubaConfigVersion == nil || (version.ManifestVersion > skubaConfigVersion.ManifestVersion) {
-			aviu.Updated[addonName] = version
+	for addonName, addonLatestVersion := range latestAddonVersions {
+		addonCurrentVersion := addonsVersion[addonName]
+		aviu.Current[addonName] = addonCurrentVersion
+		if addonCurrentVersion == nil || (addonLatestVersion.ManifestVersion > addonCurrentVersion.ManifestVersion) {
+			aviu.Updated[addonName] = addonLatestVersion
 		}
 	}
-	return aviu, nil
+	return aviu
 }
 
 func addonsByName(addons kubernetes.AddonsVersion) []kubernetes.Addon {
@@ -70,7 +73,11 @@ func addonsByName(addons kubernetes.AddonsVersion) []kubernetes.Addon {
 func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 	for _, addon := range addonsByName(updatedAddons.Updated) {
 		if updatedAddons.Current[addon] == nil && updatedAddons.Updated[addon] != nil {
-			fmt.Printf("  - %s: %s (new addon)\n", addon, updatedAddons.Updated[addon].Version)
+			if len(updatedAddons.Updated[addon].Version) > 0 {
+				fmt.Printf("  - %s: %s (new addon)\n", addon, updatedAddons.Updated[addon].Version)
+			} else {
+				fmt.Printf("  - %s (new addon)\n", addon)
+			}
 			continue
 		}
 
@@ -80,13 +87,16 @@ func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 		if updatedAddons.Current[addon].Version != updatedAddons.Updated[addon].Version {
 			fmt.Printf("  - %s: %s -> %s\n", addon, updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version)
 		} else {
-			fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addon,
-				updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version,
-				updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
+			if len(updatedAddons.Current[addon].Version) > 0 && len(updatedAddons.Updated[addon].Version) > 0 {
+				fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addon,
+					updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version,
+					updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
+			} else {
+				fmt.Printf("  - %s (manifest version from %d to %d)\n", addon,
+					updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
+			}
 		}
 	}
-	fmt.Println()
-	fmt.Println("Please, run `skuba addon upgrade apply` in order to upgrade addons.")
 }
 
 func HasAddonUpdate(aviu AddonVersionInfoUpdate) bool {
