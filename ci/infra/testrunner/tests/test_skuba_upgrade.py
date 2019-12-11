@@ -1,7 +1,7 @@
 import time
 import pytest
 
-from tests.utils import (check_nodes_ready, wait)
+from tests.utils import (check_pods_ready, check_nodes_ready, wait)
 
 PREVIOUS_VERSION = "1.15.2"
 CURRENT_VERSION = "1.16.2"
