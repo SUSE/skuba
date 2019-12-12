@@ -8,11 +8,13 @@ from tests.utils import (wait, daemon_set_is_ready)
 
 logger = logging.getLogger("testrunner")
 
+CILIUM_VERSION = '1.6'
+
 
 @pytest.fixture()
 def deploy_deathstar(request, kubectl):
     logger.info("Deploy deathstar")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/http-sw-app.yaml")
+    kubectl.run_kubectl(f"create -f https://raw.githubusercontent.com/cilium/cilium/v{CILIUM_VERSION}/examples/minikube/http-sw-app.yaml")
 
     def cleanup():
         kubectl.run_kubectl("delete deploy/deathstar svc/deathstar pod/tiefighter pod/xwing")
@@ -45,7 +47,7 @@ def deploy_deathstar(request, kubectl):
 @pytest.fixture()
 def deploy_l3_l4_policy(request, kubectl, deploy_deathstar):
     logger.info("Deploy l3 and l4 policy")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_policy.yaml")
+    kubectl.run_kubectl(f"create -f https://raw.githubusercontent.com/cilium/cilium/v{CILIUM_VERSION}/examples/minikube/sw_l3_l4_policy.yaml")
 
     def cleanup():
         kubectl.run_kubectl("delete cnp/rule1")
@@ -56,12 +58,26 @@ def deploy_l3_l4_policy(request, kubectl, deploy_deathstar):
 @pytest.fixture()
 def deploy_l3_l4_l7_policy(request, kubectl, deploy_deathstar):
     logger.info("Deploy l3, l4, and l7 policy")
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/cilium/cilium/v1.6/examples/minikube/sw_l3_l4_l7_policy.yaml")
+    kubectl.run_kubectl(f"create -f https://raw.githubusercontent.com/cilium/cilium/v{CILIUM_VERSION}/examples/minikube/sw_l3_l4_l7_policy.yaml")
 
     def cleanup():
         kubectl.run_kubectl("delete cnp/rule1")
 
     request.addfinalizer(cleanup)
+
+
+def get_cilium_pod(kubectl):
+    cilium_podlist = kubectl.run_kubectl("get pods -n kube-system -l k8s-app=cilium -o jsonpath='{ .items[0].metadata.name }'").split(" ")
+    return cilium_podlist[0]
+
+
+def test_cilium_version(deployment, kubectl):
+    cilium_pod_id = get_cilium_pod(kubectl)
+    cilium_version = kubectl.run_kubectl(f"-n kube-system exec {cilium_pod_id} -- cilium version")
+    cilium_client_version = re.search(r'(?<=Client:\s)[\d\.]+', cilium_version).group(0)
+
+    logger.info(f'Cilium client version is {cilium_client_version}')
+    assert cilium_client_version.startswith(CILIUM_VERSION)
 
 
 def test_cilium(deployment, kubectl, deploy_l3_l4_policy):
@@ -77,9 +93,8 @@ def test_cilium(deployment, kubectl, deploy_l3_l4_policy):
     logger.info("Check status (N/N)")
     node_list = kubectl.run_kubectl("get nodes -o jsonpath='{ .items[*].metadata.name }'")
     node_count = len(node_list.split(" "))
-    cilium_podlist = kubectl.run_kubectl("get pods -n kube-system -l k8s-app=cilium -o jsonpath='{ .items[0].metadata.name }'").split(" ")
-    cilium_podid = cilium_podlist[0]
-    cilium_status_cmd = "-n kube-system exec {} -- cilium status".format(cilium_podid)
+    cilium_pod_id = get_cilium_pod(kubectl)
+    cilium_status_cmd = "-n kube-system exec {} -- cilium status".format(cilium_pod_id)
     cilium_status = kubectl.run_kubectl(cilium_status_cmd)
     assert re.search(r'Controller Status:\s+([0-9]+)/\1 healthy', cilium_status) is not None
 
