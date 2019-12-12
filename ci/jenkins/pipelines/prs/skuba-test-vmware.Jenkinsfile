@@ -4,7 +4,6 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
-def shouldRun = false
 
 pipeline {
     agent { node { label 'caasp-team-private' } }
@@ -49,7 +48,6 @@ pipeline {
                             echo "Unhandled error:\n${err}"
                         }
                     }
-                    
 
                     if (!allowExecution) {
                         echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
@@ -63,6 +61,12 @@ pipeline {
         stage('Setting GitHub in-progress status') { steps {
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
+
+        stage('Check for changes') { steps {
+            script {
+                env.shouldRun = !sh(script: "${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") ==~ /does not contain changes/
+            }
+        }}
 
         stage('Git Clone') { steps {
             deleteDir()
@@ -82,16 +86,16 @@ pipeline {
             }
         }}
 
-        stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
-            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
-        } }
-
-        stage('Check for changes') { steps {
-            script {
-                shouldRun = sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") ==~ "contains changes"
+        stage('Getting Ready For Cluster Deployment') {
+            when {
+                expression { return shouldRun }
             }
-        } }
+
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
+                sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+            }
+        }
 
         stage('Cluster Deployment') {
             when {

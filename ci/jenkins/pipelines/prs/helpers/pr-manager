@@ -18,9 +18,10 @@ setup_python_env() {
     source ${VENVDIR}/bin/activate
     # Not calling to `pip3` directly because its shebang can exceed 128 characters
     # and this operation will fail. Check: https://github.com/pypa/pip/issues/1773
-    python -m pip install -r "${SDIR}/pr_manager/requirements.txt"
+    python -m pip -q --disable-pip-version-check install -U -r "${SDIR}/pr_manager/requirements.txt"
 }
 
 setup_python_env
-python -u ${SDIR}/pr_manager/pr_manager.py "$@"
+cd ${SDIR}
+python -u pr_manager/pr_manager.py "$@"
 deactivate
