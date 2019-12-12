@@ -1,7 +1,7 @@
 {
     "libvirt_uri": "qemu:///system",
     "pool": "default",
-    "image_uri": "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU1.qcow2"
+    "image_uri": "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU1.qcow2",
     "stack_name": "testing",
     "network_cidr": "10.17.0.0/22",
     "dns_domain": "caasp.local",
