@@ -49,7 +49,6 @@ data "template_file" "worker-cloud-init" {
     register_rmt       = join("\n", data.template_file.worker_register_rmt.*.rendered)
     commands           = join("\n", data.template_file.worker_commands.*.rendered)
     username           = var.username
-    password           = var.password
     ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
     hostname           = "${var.stack_name}-worker-${count.index}"
     hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
@@ -111,7 +110,6 @@ resource "null_resource" "worker_wait_cloudinit" {
       count.index
     )
     user     = var.username
-    password = var.password
     type     = "ssh"
   }
 
