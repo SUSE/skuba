@@ -48,7 +48,6 @@ data "template_file" "master-cloud-init" {
     register_rmt    = join("\n", data.template_file.master_register_rmt.*.rendered)
     commands        = join("\n", data.template_file.master_commands.*.rendered)
     username        = var.username
-    password        = var.password
     ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
   }
 }
@@ -108,7 +107,6 @@ resource "null_resource" "master_wait_cloudinit" {
       count.index
     )
     user     = var.username
-    password = var.password
     type     = "ssh"
   }
 
