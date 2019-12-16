@@ -1,8 +1,6 @@
 # Infra deployment engine
 workspace: "" # Working directory for testrunner
-ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" # path to ssh keys
 username: ""  # Fill your username
-nodeuser: "sles"  # Default node username
 
 # Skuba setup
 skuba:
@@ -17,6 +15,20 @@ terraform:
   stack_name: "" # name of the stack
   tfdir: ""  # path to terraform templates
   tfvars: "" # terraform vars
+  ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" # path to ssh keys
+  nodeuser: "sles"  # Default node username
+  lb:
+    count: 1
+    memory: 8192
+    cpu: 4
+  master:
+    count: 3
+    memory: 4096
+    cpu: 4
+  worker:
+    count: 3
+    memory: 4096
+    cpu: 2
 
 packages:
   mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
@@ -32,19 +44,3 @@ vmware:
 
 log:
   level: DEBUG
-
-# node settings
-lb:
-  count: 1
-  memory: 8192
-  cpu: 4
-
-master:
-  count: 3
-  memory: 4096
-  cpu: 4
-
-worker:
-  count: 3
-  memory: 4096
-  cpu: 2

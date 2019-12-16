@@ -19,18 +19,13 @@ class BaseConfig:
         obj.yaml_path = yaml_path
         obj.workspace = None
         obj.terraform_json_path = None
-        obj.ssh_key = None
         obj.username = None
-        obj.nodeuser = None
         obj.log_dir = None
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
         obj.skuba = BaseConfig.Skuba()
-        obj.lb = BaseConfig.NodeConfig()
-        obj.master = BaseConfig.NodeConfig()
-        obj.worker = BaseConfig.NodeConfig()
         obj.test = BaseConfig.Test()
         obj.log = BaseConfig.Log()
         obj.packages = BaseConfig.Packages()
@@ -78,6 +73,11 @@ class BaseConfig:
             self.tfdir = None
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
+            self.ssh_key = None
+            self.nodeuser = None
+            self.lb = BaseConfig.NodeConfig()
+            self.master = BaseConfig.NodeConfig()
+            self.worker = BaseConfig.NodeConfig()
 
     class Skuba:
         def __init__(self):
@@ -131,7 +131,7 @@ class BaseConfig:
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
                 config_class = obj.__dict__[key]
-                BaseConfig._set_config_class_attrs(config_class, key, vars)
+                BaseConfig._set_config_class_attrs(config_class, key, vars, config_classes)
                 continue
 
             env_key = key.upper()
@@ -174,10 +174,10 @@ class BaseConfig:
         if not conf.terraform.internal_net:
             conf.terraform.internal_net = conf.terraform.stack_name
 
-        if not conf.ssh_key:
-            conf.ssh_key = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
+        if not conf.terraform.ssh_key:
+            conf.terraform.ssh_key = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
         else:
-            conf.ssh_key = os.path.expandvars(conf.ssh_key)
+            conf.terraform.ssh_key = os.path.expandvars(conf.terraform.ssh_key)
 
         return conf
 
@@ -195,7 +195,7 @@ class BaseConfig:
         return conf
 
     @staticmethod
-    def _set_config_class_attrs(config_class, class_name, variables):
+    def _set_config_class_attrs(config_class, class_name, variables, config_classes):
         config_obj = variables.get(class_name)
 
         if config_obj is not None:
@@ -204,4 +204,7 @@ class BaseConfig:
                 if env_var is not None:
                     config_class.__dict__[k] = env_var
                 elif v:
-                    config_class.__dict__[k] = v
+                    if isinstance(config_class.__dict__[k], config_classes):
+                        BaseConfig._set_config_class_attrs(config_class.__dict__[k], k, config_obj, config_classes)
+                    else:
+                        config_class.__dict__[k] = v
