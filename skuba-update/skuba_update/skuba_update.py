@@ -162,7 +162,7 @@ def annotate_updates_available(node_name):
 
 def annotate_caasp_release_version(node_name):
     """
-    Get rpm package caasp-release version.
+    Performs fetch caasp-release version and annotates to the node.
     """
 
     cmd = run_command(['rpm', '-q', 'caasp-release',
