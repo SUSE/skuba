@@ -34,7 +34,7 @@ func Status(client clientset.Interface) error {
 		return errors.Wrap(err, "could not retrieve node list")
 	}
 
-	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,KUBELET-VERSION:.status.nodeInfo.kubeletVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates"
+	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,KUBELET-VERSION:.status.nodeInfo.kubeletVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates,CAASP-RELEASE-VERSION:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
 
 	printFlags := kubectlget.NewGetPrintFlags()
 	printFlags.OutputFormat = &outputFormat
