@@ -18,7 +18,6 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.yaml_path = yaml_path
         obj.workspace = None
-        obj.terraform_json_path = None
         obj.username = None
         obj.log_dir = None
 
@@ -163,8 +162,6 @@ class BaseConfig:
 
         if not conf.terraform.tfdir:
             conf.terraform.tfdir = os.path.join(conf.skuba.srcpath, "ci/infra/")
-
-        conf.terraform_json_path = os.path.join(conf.workspace, Constant.TERRAFORM_JSON_OUT)
 
         if not conf.terraform.stack_name:
             conf.terraform.stack_name = conf.username
