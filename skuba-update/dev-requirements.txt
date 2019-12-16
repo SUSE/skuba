@@ -5,4 +5,3 @@ pytest
 pytest-cov
 tox
 mock
-tox
