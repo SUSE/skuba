@@ -3,9 +3,9 @@ Description=Daily update of the system
 After=network-online.target local-fs.target
 
 [Timer]
+OnActiveSec=0
 OnCalendar=daily
 AccuracySec=1m
-RandomizedDelaySec=2h
 Persistent=true
 
 [Install]

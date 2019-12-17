@@ -579,7 +579,7 @@ def test_annotate_updates_available_is_reboot(
     assert mock_annotate.call_args_list == [
         call('node', 'mynode', KUBE_UPDATES_KEY, 'yes'),
         call('node', 'mynode', KUBE_SECURITY_UPDATES_KEY, 'no'),
-        call('node', 'mynode', KUBE_DISRUPTIVE_UPDATES_KEY, 'yes'),
+        call('node', 'mynode', KUBE_DISRUPTIVE_UPDATES_KEY, 'yes')
     ]
 
 
