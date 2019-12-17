@@ -121,7 +121,8 @@ def test_main_no_root(mock_subprocess, mock_args):
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main(
-    mock_subprocess, mock_geteuid, mock_args, mock_annotate, mock_annotate_version, mock_name
+    mock_subprocess, mock_geteuid, mock_args,
+    mock_annotate, mock_annotate_version, mock_name
 ):
     return_values = [
         (b'some_service1\nsome_service2', b''),
