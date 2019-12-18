@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -903,6 +904,63 @@ func TestAllWorkerNodesTolerateVersion(t *testing.T) {
 			}
 		})
 	}
+
+	clientWithNoPods := fake.NewSimpleClientset(&corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+			Labels: map[string]string{
+				kubeadmconstants.LabelNodeRoleMaster: "",
+			},
+		},
+		Status: corev1.NodeStatus{
+			NodeInfo: corev1.NodeSystemInfo{
+				KubeletVersion:          "v1.14.1",
+				ContainerRuntimeVersion: "cri-o://1.14.1",
+			},
+		},
+		Spec: corev1.NodeSpec{
+			Unschedulable: false,
+		},
+	})
+	_, err := nodeVersioningInfo(clientWithNoPods, "test")
+	// should get empty pod list error
+	reflect.DeepEqual(err, errors.New("list of pods is empty"))
+
+	clientMissingPods := fake.NewSimpleClientset(&corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test",
+			Labels: map[string]string{
+				kubeadmconstants.LabelNodeRoleMaster: "",
+			},
+		},
+		Status: corev1.NodeStatus{
+			NodeInfo: corev1.NodeSystemInfo{
+				KubeletVersion:          "v1.14.1",
+				ContainerRuntimeVersion: "cri-o://1.14.1",
+			},
+		},
+		Spec: corev1.NodeSpec{
+			Unschedulable: false,
+		},
+	}, &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kube-apiserver-test",
+			Namespace: metav1.NamespaceSystem,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  "kube-apiserver",
+					Image: "registry.suse.com/caasp/v4/hyperkube:1.14.1",
+				},
+			},
+			NodeName: "test",
+		},
+	})
+	_, err = nodeVersioningInfo(clientMissingPods, "test")
+	// should get error getting the controller manager pod
+	reflect.DeepEqual(err, errors.New(
+		"could not retrieve controller manager pod: could not find pod controller-manager-test in pod list"))
 }
 
 func TestAllControlPlanesMatchVersionWithVersioningInfo(t *testing.T) {
