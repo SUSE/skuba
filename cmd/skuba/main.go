@@ -80,7 +80,7 @@ func register(local *pflag.FlagSet, globalName string) {
 	if f := flag.CommandLine.Lookup(globalName); f != nil {
 		pflagFlag := pflag.PFlagFromGoFlag(f)
 		pflagFlag.Name = "verbosity"
-		pflagFlag.Usage = "number for the log level verbosity [0-10]"
+		pflagFlag.Usage = "log level [0-5]. 0 (Only Error and Warning) to 5 (Maximum detail)."
 		local.AddFlag(pflagFlag)
 	} else {
 		klog.Fatalf("failed to find flag in global flagset (flag): %s", globalName)
