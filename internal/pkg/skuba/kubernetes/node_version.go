@@ -25,7 +25,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -177,38 +179,54 @@ func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersio
 
 	// find out the container image tags, depending on the role of the node
 	if IsControlPlane(nodeObject) {
-		// list all the pods
-		allPods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
-		// check for error
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve pods")
-		}
-		// check for empty pod list
-		if len(allPods.Items) == 0 {
-			return NodeVersionInfo{}, errors.New("list of pods is empty")
-		}
-		// check that the needed pods exist
-		apiserverPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-apiserver-%s", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve api server pod")
-		}
-		controllerManagerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-controller-manager-%s", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve controller manager pod")
-		}
-		schedulerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-scheduler-%s", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve scheduler pod")
-		}
-		etcdPod, err := getPodFromPodList(allPods, fmt.Sprintf("etcd-%s", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve etcd pod")
-		}
+		// track last error so we can properly raise it at the end of the retry
+		var lastError error
 
-		nodeVersions.APIServerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(apiserverPod))
-		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(controllerManagerPod))
-		nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
-		nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
+		err := wait.ExponentialBackoff(retry.DefaultBackoff, func() (done bool, err error) {
+			// list all the pods
+			allPods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+			// check for error
+			if err != nil {
+				lastError = errors.New("could not retrieve pods")
+				return false, nil
+			}
+			// check for empty pod list
+			if len(allPods.Items) == 0 {
+				lastError = errors.New("list of pods is empty")
+				return false, nil
+			}
+			// check that the needed pods exist
+			apiserverPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-apiserver-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve api server pod")
+				return false, nil
+			}
+			controllerManagerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-controller-manager-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve controller manager pod")
+				return false, nil
+			}
+			schedulerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-scheduler-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve scheduler pod")
+				return false, nil
+			}
+			etcdPod, err := getPodFromPodList(allPods, fmt.Sprintf("etcd-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve etcd pod")
+				return false, nil
+			}
+
+			nodeVersions.APIServerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(apiserverPod))
+			nodeVersions.ControllerManagerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(controllerManagerPod))
+			nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
+			nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
+
+			return true, nil
+		})
+		if err != nil {
+			return NodeVersionInfo{}, lastError
+		}
 	}
 	return nodeVersions, nil
 }
