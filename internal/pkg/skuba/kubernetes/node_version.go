@@ -168,11 +168,14 @@ func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersio
 	unschedulable := nodeObject.Spec.Unschedulable
 
 	// Extract the container runtime version from the raw version
-	containerRuntimeVersion := runtimeVersionRegexp.FindStringSubmatch(containerRuntimeVersionRaw)[1]
+	containerRuntimeVersion, err := version.ParseSemantic(runtimeVersionRegexp.FindStringSubmatch(containerRuntimeVersionRaw)[1])
+	if err != nil {
+		return NodeVersionInfo{}, errors.Wrapf(err, "could not retrieve node %q container runtime version", nodeName)
+	}
 
 	nodeVersions := NodeVersionInfo{
 		Nodename:                nodeName,
-		ContainerRuntimeVersion: version.MustParseSemantic(containerRuntimeVersion),
+		ContainerRuntimeVersion: containerRuntimeVersion,
 		KubeletVersion:          kubeletVersion,
 		Unschedulable:           unschedulable,
 	}

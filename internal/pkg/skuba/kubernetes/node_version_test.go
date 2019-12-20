@@ -42,6 +42,7 @@ func TestNodeVersioningInfo(t *testing.T) {
 		schedulerVersion         *version.Version
 		etcdVersion              *version.Version
 		containerRuntimeVersion  string
+		expectedError            bool
 		expectedNodeVersionInfo  NodeVersionInfo
 	}{
 		{
@@ -86,7 +87,20 @@ func TestNodeVersioningInfo(t *testing.T) {
 				Unschedulable:            true,
 			},
 		},
+		{
+			name:                     "container runtime version unknown",
+			nodeName:                 "my-master-0",
+			unschedulable:            false,
+			containerRuntimeVersion:  "cri-o://Unknown",
+			kubeletVersion:           testK8sVersion,
+			apiServerVersion:         testK8sVersion,
+			controllerManagerVersion: testK8sVersion,
+			schedulerVersion:         testK8sVersion,
+			etcdVersion:              testEtcdVersion,
+			expectedError:            true,
+		},
 	}
+
 	for _, tt := range nodes {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
@@ -164,7 +178,14 @@ func TestNodeVersioningInfo(t *testing.T) {
 				},
 			})
 
-			nodeVersionInfo, _ := nodeVersioningInfo(clientset, tt.nodeName)
+			nodeVersionInfo, err := nodeVersioningInfo(clientset, tt.nodeName)
+			if tt.expectedError {
+				if err == nil {
+					t.Error("error expected, but no error reported")
+				}
+				return
+			}
+
 			if !reflect.DeepEqual(nodeVersionInfo, tt.expectedNodeVersionInfo) {
 				t.Errorf("got %v, want %v", nodeVersionInfo, tt.expectedNodeVersionInfo)
 			}
