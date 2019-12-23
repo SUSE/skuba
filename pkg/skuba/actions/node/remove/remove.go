@@ -24,12 +24,12 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/etcd"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/replica"
 )
 
 // Remove removes a node from the cluster
@@ -37,20 +37,6 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 	node, err := client.CoreV1().Nodes().Get(target, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "[remove-node] could not get node %s", target)
-	}
-
-	if kubernetes.IsControlPlane(node) {
-		nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
-		})
-
-		if err != nil {
-			return errors.Wrapf(err, "could not retrieve master node list")
-		}
-
-		if len(nodes.Items) == 1 {
-			return errors.New("could not remove last master of the cluster")
-		}
 	}
 
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
@@ -62,9 +48,25 @@ func Remove(client clientset.Interface, target string, drainTimeout time.Duratio
 
 	var isControlPlane bool
 	if isControlPlane = kubernetes.IsControlPlane(node); isControlPlane {
+		cp, err := kubernetes.GetControlPlaneNodes(client)
+		if err != nil {
+			return errors.Wrapf(err, "could not retrieve master node list")
+		}
+		if len(cp.Items) == 1 {
+			return errors.New("could not remove last master of the cluster")
+		}
+
 		fmt.Printf("[remove-node] removing control plane node %s (drain timeout: %s)\n", targetName, drainTimeout.String())
 	} else {
 		fmt.Printf("[remove-node] removing worker node %s (drain timeout: %s)\n", targetName, drainTimeout.String())
+	}
+
+	replicaHelper, err := replica.NewHelper(client)
+	if err != nil {
+		return err
+	}
+	if err := replicaHelper.UpdateDrainNodes(); err != nil {
+		return errors.Wrap(err, "[remove-node] failed to update deployment replicas")
 	}
 
 	if err := kubernetes.DrainNode(client, node, drainTimeout); err != nil {
