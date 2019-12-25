@@ -18,40 +18,92 @@
 package kubernetes
 
 import (
+	"crypto/sha1"
+	"fmt"
+	"os"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/fake"
+	ktest "k8s.io/client-go/testing"
+
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func TestDisarmKubeletJobName(t *testing.T) {
-	testCases := []struct {
-		node         *v1.Node
-		expectedName string
-	}{
-		{
-			node:         &v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "my-master-0"}},
-			expectedName: "caasp-kubelet-disarm-5a5d6b47201c0dab0034cb6959d24ddb35e56546",
-		},
-		{
-			node:         &v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "my-worker-0"}},
-			expectedName: "caasp-kubelet-disarm-6db327a52a7ce5599572759bc60bdcbe63664630",
-		},
-		{
-			node:         &v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "foo-bar"}},
-			expectedName: "caasp-kubelet-disarm-db7329d5a3f381875ea6ce7e28fe1ea536d0acaf",
-		},
-		{
-			node:         &v1.Node{ObjectMeta: metav1.ObjectMeta{Name: "ayy-lmao"}},
-			expectedName: "caasp-kubelet-disarm-dd07f282f4cf6821a365a3d01b43038d20d5c7fe",
+func TestGenerateKubeletRootCert(t *testing.T) {
+	t.Run("generate kubelet root cert", func(t *testing.T) {
+		if err := GenerateKubeletRootCert(); err != nil {
+			t.Errorf("error not expected, but error reported generating pki: %v", err)
+		}
+
+		// test generate kubelet root cert when already exist
+		if err := GenerateKubeletRootCert(); err != nil {
+			t.Errorf("error not expected, but error reported when pki exist: %v", err)
+		}
+
+		pkiDir := skuba.PkiDir()
+		if err := os.RemoveAll(pkiDir); err != nil {
+			t.Errorf("error not expected, but error reported when removing %v: %v", pkiDir, err)
+		}
+	})
+}
+
+func TestDisarmKubelet(t *testing.T) {
+	fakeClientset := fake.NewSimpleClientset()
+	fakeClientset.PrependReactor("get", "jobs", func(action ktest.Action) (bool, runtime.Object, error) {
+		obj := &batchv1.Job{
+			Status: batchv1.JobStatus{
+				Active:    0,
+				Succeeded: 1,
+				Failed:    0,
+			},
+		}
+		return true, obj, nil
+	})
+
+	fakeNode := corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "fake",
 		},
 	}
 
-	for _, tc := range testCases {
-		name := disarmKubeletJobName(tc.node)
-		if name != tc.expectedName {
-			t.Errorf("expected name \"%s\", but instead got \"%s\"",
-				tc.expectedName, name)
+	t.Run("disarm kubelet", func(t *testing.T) {
+		if err := DisarmKubelet(fakeClientset, &fakeNode, LatestVersion()); err != nil {
+			t.Errorf("error not expected, but error reported generating pki: %v", err)
 		}
+	})
+}
+
+func TestDisarmKubeletJobName(t *testing.T) {
+	tests := []struct {
+		nodeName string
+	}{
+		{
+			nodeName: "my-master-0",
+		},
+		{
+			nodeName: "my-workder-0",
+		},
+		{
+			nodeName: "foo-bar",
+		},
+		{
+			nodeName: "ayy-lmao",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("disarm job name when node is: %v", tt.nodeName), func(t *testing.T) {
+			fakeNode := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "my-master-0"}}
+			expect := fmt.Sprintf("caasp-kubelet-disarm-%x", sha1.Sum([]byte(fakeNode.ObjectMeta.Name)))
+			actual := disarmKubeletJobName(fakeNode)
+			if actual != expect {
+				t.Errorf("expected name \"%s\", but instead got \"%s\"", expect, actual)
+			}
+		})
 	}
 }

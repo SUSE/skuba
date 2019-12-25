@@ -126,7 +126,7 @@ func getVersionTestData() versionTestData {
 
 var vtd = getVersionTestData()
 
-func Test_ComponentVersionForClusterVersion(t *testing.T) {
+func TestComponentVersionForClusterVersion(t *testing.T) {
 	var tests = vtd.hostComponent
 	tests = append(
 		tests,
@@ -150,7 +150,7 @@ func Test_ComponentVersionForClusterVersion(t *testing.T) {
 	}
 }
 
-func Test_AllComponentContainerImagesForClusterVersion(t *testing.T) {
+func TestAllComponentContainerImagesForClusterVersion(t *testing.T) {
 	var clusterVersion *version.Version
 	for ver := range supportedVersions {
 		clusterVersion = version.MustParseSemantic(ver)
@@ -172,7 +172,7 @@ func Test_AllComponentContainerImagesForClusterVersion(t *testing.T) {
 	}
 }
 
-func Test_ComponentContainerImageForClusterVersion(t *testing.T) {
+func TestComponentContainerImageForClusterVersion(t *testing.T) {
 	var tests = vtd.containerComponent
 	tests = append(
 		tests,
@@ -204,7 +204,7 @@ func Test_ComponentContainerImageForClusterVersion(t *testing.T) {
 	}
 }
 
-func Test_AddonVersionForClusterVersion(t *testing.T) {
+func TestAddonVersionForClusterVersion(t *testing.T) {
 	var tests = vtd.addon
 	tests = append(
 		tests,
@@ -239,7 +239,7 @@ func Test_AddonVersionForClusterVersion(t *testing.T) {
 	}
 }
 
-func Test_AllAddonVersionsForClusterVersion(t *testing.T) {
+func TestAllAddonVersionsForClusterVersion(t *testing.T) {
 	type test struct {
 		name           string
 		clusterVersion *version.Version
@@ -286,7 +286,7 @@ func Test_AllAddonVersionsForClusterVersion(t *testing.T) {
 	}
 }
 
-func Test_AvailableVersionsForMap(t *testing.T) {
+func TestAvailableVersionsForMap(t *testing.T) {
 	var versions = []struct {
 		name                      string
 		kubernetesVersions        KubernetesVersions
@@ -328,19 +328,19 @@ func Test_AvailableVersionsForMap(t *testing.T) {
 	}
 }
 
-func Test_LatestVersion(t *testing.T) {
+func TestLatestVersion(t *testing.T) {
 	if _, ok := supportedVersions[LatestVersion().String()]; !ok {
 		t.Errorf("Versions map --authoritative version mapping-- does not include version %q", LatestVersion().String())
 	}
 }
 
-func Test_IsVersionAvailable(t *testing.T) {
+func TestIsVersionAvailable(t *testing.T) {
 	if !IsVersionAvailable(LatestVersion()) {
 		t.Errorf("Versions map does not include version %q", LatestVersion().String())
 	}
 }
 
-func Test_MajorMinorVersion(t *testing.T) {
+func TestMajorMinorVersion(t *testing.T) {
 	tests := []struct {
 		name                      string
 		version                   *version.Version

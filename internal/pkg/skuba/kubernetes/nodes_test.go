@@ -82,7 +82,7 @@ func createNode(name string, isControlPlane bool, machineID string) corev1.Node 
 	}
 }
 
-func Test_GetAllNodes(t *testing.T) {
+func TestGetAllNodes(t *testing.T) {
 	tests := []struct {
 		name          string
 		fakeClientset *fake.Clientset
@@ -138,7 +138,7 @@ func Test_GetAllNodes(t *testing.T) {
 	}
 }
 
-func Test_GetControlPlaneNodes(t *testing.T) {
+func TestGetControlPlaneNodes(t *testing.T) {
 	tests := []struct {
 		name          string
 		fakeClientset *fake.Clientset
@@ -204,7 +204,7 @@ func Test_GetControlPlaneNodes(t *testing.T) {
 	}
 }
 
-func Test_GetNodeWithMachineID(t *testing.T) {
+func TestGetNodeWithMachineID(t *testing.T) {
 	fakeClientset := fake.NewSimpleClientset(
 		&corev1.NodeList{
 			Items: []corev1.Node{
@@ -257,7 +257,7 @@ func Test_GetNodeWithMachineID(t *testing.T) {
 	}
 }
 
-func Test_DrainNode(t *testing.T) {
+func TestDrainNode(t *testing.T) {
 	tests := []struct {
 		name         string
 		node         string

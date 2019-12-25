@@ -25,7 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func Test_VolumeMount(t *testing.T) {
+func TestVolumeMount(t *testing.T) {
 	tests := []struct {
 		name                string
 		volumeName          string
@@ -82,7 +82,7 @@ func Test_VolumeMount(t *testing.T) {
 	}
 }
 
-func Test_HostMount(t *testing.T) {
+func TestHostMount(t *testing.T) {
 	tests := []struct {
 		name          string
 		volumeName    string
