@@ -143,12 +143,7 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 }
 
 // NodeVersioningInfo returns related versioning information about a node
-func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
-	client, err := GetAdminClientSet()
-	if err != nil {
-		return NodeVersionInfo{}, errors.Wrap(err, "unable to get admin client set")
-	}
-
+func NodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersionInfo, error) {
 	nodeVersions, err := nodeVersioningInfo(client, nodeName)
 	if err != nil {
 		return NodeVersionInfo{}, errors.Wrap(err, "unable to get node versioning info")
