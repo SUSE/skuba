@@ -18,16 +18,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/cmd/skuba/flags"
 	skubapkg "github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -46,7 +45,7 @@ func newRootCmd() *cobra.Command {
 		NewAddonCmd(),
 	)
 
-	register(cmd.PersistentFlags(), "v")
+	flags.RegisterVerboseFlag(cmd.PersistentFlags())
 
 	return cmd
 }
@@ -72,17 +71,5 @@ func printVersionStatement() {
 		fmt.Println("** This is a RC release and NOT intended for production usage. **")
 	case skubapkg.BuildType != "release":
 		fmt.Printf("** This is a tagged version (%s), but is not built in release mode (mode: %q.) **\n", skubapkg.Tag, skubapkg.BuildType)
-	}
-}
-
-// register adds a flag to local that targets the Value associated with the Flag named globalName in flag.CommandLine.
-func register(local *pflag.FlagSet, globalName string) {
-	if f := flag.CommandLine.Lookup(globalName); f != nil {
-		pflagFlag := pflag.PFlagFromGoFlag(f)
-		pflagFlag.Name = "verbosity"
-		pflagFlag.Usage = "log level [0-5]. 0 (Only Error and Warning) to 5 (Maximum detail)."
-		local.AddFlag(pflagFlag)
-	} else {
-		klog.Fatalf("failed to find flag in global flagset (flag): %s", globalName)
 	}
 }

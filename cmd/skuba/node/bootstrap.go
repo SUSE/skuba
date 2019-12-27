@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/cmd/skuba/flags"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/pkg/skuba/actions"
@@ -50,7 +51,7 @@ func NewBootstrapCmd() *cobra.Command {
 			}
 
 			role := deployments.MasterRole
-			d := target.GetDeployment(nodenames[0], &role)
+			d := target.GetDeployment(nodenames[0], &role, flags.GetVerboseFlagLevel())
 			if err := node.Bootstrap(bootstrapConfiguration, d); err != nil {
 				klog.Fatalf("error bootstrapping node: %s", err)
 			}

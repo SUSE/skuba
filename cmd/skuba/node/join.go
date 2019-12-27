@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/cmd/skuba/flags"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -58,7 +59,7 @@ func NewJoinCmd() *cobra.Command {
 				klog.Errorf("unable to get admin client set: %s", err)
 				os.Exit(1)
 			}
-			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0], &joinConfiguration.Role)); err != nil {
+			if err := node.Join(clientSet, joinConfiguration, target.GetDeployment(nodenames[0], &joinConfiguration.Role, flags.GetVerboseFlagLevel())); err != nil {
 				klog.Fatalf("error joining node %s: %s", nodenames[0], err)
 			}
 		},
