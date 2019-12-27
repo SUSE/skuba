@@ -28,7 +28,7 @@ import (
 	ktest "k8s.io/client-go/testing"
 )
 
-func Test_CreateJob(t *testing.T) {
+func TestCreateJob(t *testing.T) {
 	tests := []struct {
 		name          string
 		errExpected   bool
@@ -131,7 +131,7 @@ func Test_CreateJob(t *testing.T) {
 	}
 }
 
-func Test_Delete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	tests := []struct {
 		name         string
 		jobName      string
@@ -189,7 +189,7 @@ func Test_Delete(t *testing.T) {
 	}
 }
 
-func Test_CreateAndWaitForJob(t *testing.T) {
+func TestCreateAndWaitForJob(t *testing.T) {
 	tests := []struct {
 		name           string
 		timeout        int
