@@ -68,7 +68,7 @@ resource "libvirt_volume" "lb" {
 }
 
 resource "libvirt_cloudinit_disk" "lb" {
-  name = "${var.stack_name}-lib-cloudinit-disk"
+  name = "${var.stack_name}-lb-cloudinit-disk"
   pool = "${var.pool}"
 
   user_data = "${data.template_file.lb_cloud_init_userdata.rendered}"
