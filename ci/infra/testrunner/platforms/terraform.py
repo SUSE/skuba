@@ -132,9 +132,9 @@ class Terraform(Platform):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
             "stack_name": self.stack_name(),
-            "username": self.conf.nodeuser,
-            "masters": self.conf.master.count,
-            "workers": self.conf.worker.count,
+            "username": self.conf.terraform.nodeuser,
+            "masters": self.conf.terraform.master.count,
+            "workers": self.conf.terraform.worker.count,
             "authorized_keys": [self.utils.authorized_keys()]
         }
 

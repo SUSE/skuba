@@ -100,19 +100,12 @@ This section configures the working environment and is generally specific of eac
 
 - workspace: path to the testrunner's working directory 
 - username: user name for the user. It's optional. If `platform.stack_name` is not set, `username` is used.
+- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/platform_logs`
 
 ```
 workspace: "/path/to/your/workspace" 
 username: "username"
 ```
-
-### Platform
-
-There are some arguments that are currently at the top level of the configuration, but are actually related to the platform:
-
-- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/platform_logs`
-- nodeuser: the user name used to login into the platform nodes. Optional. 
-- ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 
 #### Packages
 The `packages` section configures the source of the packages to be installed in the nodes:
@@ -143,6 +136,11 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. If not specified, the `username` is used.
 * tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `skuba.srcpath/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
+- nodeuser: the user name used to login into the platform nodes. Optional.
+- ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
+- lb: specifications for the load balancer(s)
+- master: specifications for the master(s)
+- worker: specifications for the worker(s)
 
 Example
 ```
