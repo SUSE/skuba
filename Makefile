@@ -126,7 +126,7 @@ suse-changelog:
 
 # tests
 .PHONY: test
-test: test-unit
+test: test-unit test-bench
 
 .PHONY: test-unit
 test-unit:
@@ -135,3 +135,7 @@ test-unit:
 .PHONY: test-unit-coverage
 test-unit-coverage: test-unit
 	$(GO) tool cover -html=coverage.out
+
+.PHONY: test-bench
+test-bench:
+	$(GO) test $(GOMODFLAG) -bench=. $(PROJECT_PATH)/{cmd,pkg,internal}/...
