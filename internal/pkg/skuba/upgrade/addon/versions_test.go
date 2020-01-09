@@ -219,7 +219,7 @@ func ExamplePrintAddonUpdates() {
 	})
 
 	// Output:
-	//   - cilium: 1.5.3 -> 1.5.3 (manifest version from 0 to 1)
+	//   - cilium: 1.5.3 (manifest version from 0 to 1)
 	//   - dex: 2.16.0 -> 2.17.0
 	//   - gangway: 3.1.0 (new addon)
 }
