@@ -18,16 +18,15 @@
 package kubernetes
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/testutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/client-go/kubernetes/fake"
-	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 )
 
 const (
@@ -54,24 +53,13 @@ func TestAvailablePlatformVersions(t *testing.T) {
 
 func TestNodeVersionInfoForClusterVersion(t *testing.T) {
 	tests := []struct {
-		node corev1.Node
+		node *corev1.Node
 	}{
 		{
-			node: corev1.Node{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: master0,
-					Labels: map[string]string{
-						kubeadmconstants.LabelNodeRoleMaster: "",
-					},
-				},
-			},
+			node: testutil.ControlPlaneNode(master0),
 		},
 		{
-			node: corev1.Node{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: worker0,
-				},
-			},
+			node: testutil.WorkerNode(worker0),
 		},
 	}
 
@@ -79,15 +67,12 @@ func TestNodeVersionInfoForClusterVersion(t *testing.T) {
 		tt := tt
 
 		var ver string
-		isMaster := IsControlPlane(&tt.node)
+		isMaster := IsControlPlane(tt.node)
 		clusterVersions := StaticVersionInquirer{}.AvailablePlatformVersions()
 		for _, cv := range clusterVersions {
 			tName := fmt.Sprintf("%v node version info when cluster version is %v", tt.node.Name, cv)
 			t.Run(tName, func(t *testing.T) {
-				vInfo := StaticVersionInquirer{}.NodeVersionInfoForClusterVersion(&tt.node, cv)
-				if vInfo.Nodename == "" {
-					t.Error("node name expected, but none returned")
-				}
+				vInfo := StaticVersionInquirer{}.NodeVersionInfoForClusterVersion(tt.node, cv)
 				ver = vInfo.ContainerRuntimeVersion.String()
 				if _, err := version.ParseSemantic(ver); err != nil {
 					t.Errorf("container runtime version(%v) should parse semantic", ver)
@@ -130,12 +115,14 @@ func TestString(t *testing.T) {
 		{
 			name: "master version",
 			nodeVersionInfo: &NodeVersionInfo{
+				Node:             testutil.ControlPlaneNode(""),
 				APIServerVersion: clusterVersion,
 			},
 		},
 		{
 			name: "woker version",
 			nodeVersionInfo: &NodeVersionInfo{
+				Node:           testutil.WorkerNode(""),
 				KubeletVersion: clusterVersion,
 			},
 		},
@@ -211,11 +198,13 @@ func TestEqualsClusterVersion(t *testing.T) {
 			switch tt.isMaster {
 			case true:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:             testutil.ControlPlaneNode(""),
 					APIServerVersion: tt.apiServerVersion,
 					KubeletVersion:   tt.kubeletVersion,
 				}
 			default:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:           testutil.WorkerNode(""),
 					KubeletVersion: tt.kubeletVersion,
 				}
 			}
@@ -284,11 +273,13 @@ func TestLessThanClusterVersion(t *testing.T) {
 			switch tt.isMaster {
 			case true:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:             testutil.ControlPlaneNode(""),
 					APIServerVersion: tt.apiServerVersion,
 					KubeletVersion:   tt.kubeletVersion,
 				}
 			default:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:           testutil.WorkerNode(""),
 					KubeletVersion: tt.kubeletVersion,
 				}
 			}
@@ -392,11 +383,13 @@ func TestDriftsFromClusterVersion(t *testing.T) {
 			switch tt.isMaster {
 			case true:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:             testutil.ControlPlaneNode(""),
 					APIServerVersion: tt.apiServerVersion,
 					KubeletVersion:   tt.kubeletVersion,
 				}
 			default:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:           testutil.WorkerNode(""),
 					KubeletVersion: tt.kubeletVersion,
 				}
 			}
@@ -516,11 +509,13 @@ func TestToleratesFromClusterVersion(t *testing.T) {
 			switch tt.isMaster {
 			case true:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:             testutil.ControlPlaneNode(""),
 					APIServerVersion: tt.apiServerVersion,
 					KubeletVersion:   tt.kubeletVersion,
 				}
 			default:
 				nodeVersionInfo = NodeVersionInfo{
+					Node:           testutil.WorkerNode(""),
 					KubeletVersion: tt.kubeletVersion,
 				}
 			}
@@ -533,40 +528,31 @@ func TestToleratesFromClusterVersion(t *testing.T) {
 }
 
 func createFakeMasterNode(nodeName string, kubeletVersion string, crioVersion string, unschedulable bool) corev1.Node {
-	return corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: nodeName,
-			Labels: map[string]string{
-				kubeadmconstants.LabelNodeRoleMaster: "",
-			},
-		},
-		Status: corev1.NodeStatus{
-			NodeInfo: corev1.NodeSystemInfo{
-				KubeletVersion:          kubeletVersion,
-				ContainerRuntimeVersion: "cri-o://" + crioVersion,
-			},
-		},
-		Spec: corev1.NodeSpec{
-			Unschedulable: unschedulable,
+	ret := testutil.ControlPlaneNode(nodeName)
+	ret.Status = corev1.NodeStatus{
+		NodeInfo: corev1.NodeSystemInfo{
+			KubeletVersion:          kubeletVersion,
+			ContainerRuntimeVersion: "cri-o://" + crioVersion,
 		},
 	}
+	ret.Spec = corev1.NodeSpec{
+		Unschedulable: unschedulable,
+	}
+	return *ret
 }
 
 func createFakeWorkerNode(nodeName string, kubeletVersion string, unschedulable bool) corev1.Node {
-	return corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: nodeName,
-		},
-		Status: corev1.NodeStatus{
-			NodeInfo: corev1.NodeSystemInfo{
-				KubeletVersion:          kubeletVersion,
-				ContainerRuntimeVersion: "cri-o://1.1.1",
-			},
-		},
-		Spec: corev1.NodeSpec{
-			Unschedulable: unschedulable,
+	ret := testutil.WorkerNode(nodeName)
+	ret.Status = corev1.NodeStatus{
+		NodeInfo: corev1.NodeSystemInfo{
+			KubeletVersion:          kubeletVersion,
+			ContainerRuntimeVersion: "cri-o://1.1.1",
 		},
 	}
+	ret.Spec = corev1.NodeSpec{
+		Unschedulable: unschedulable,
+	}
+	return *ret
 }
 
 func createFakePod(podName string, nodeName string, version string) corev1.Pod {
@@ -766,23 +752,17 @@ func TestNodeVersioningInfo(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			clientset := fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						createFakeMasterNode(node, tt.kubeletVersion.String(), tt.containerRuntimeVersion, tt.unschedulable),
-					},
+			fakeNode := createFakeMasterNode(node, tt.kubeletVersion.String(), tt.containerRuntimeVersion, tt.unschedulable)
+			fakePods := &corev1.PodList{
+				Items: []corev1.Pod{
+					createFakePod(apiserver, tt.apiServerNode, tt.apiServerVersion.String()),
+					createFakePod(controllerManager, tt.controllerManagerNode, tt.controllerManagerVersion.String()),
+					createFakePod(scheduler, tt.schedulerNode, tt.schedulerVersion.String()),
+					createFakePod(etcd, tt.etcdNode, tt.etcdVersion.String()),
 				},
-				&corev1.PodList{
-					Items: []corev1.Pod{
-						createFakePod(apiserver, tt.apiServerNode, tt.apiServerVersion.String()),
-						createFakePod(controllerManager, tt.controllerManagerNode, tt.controllerManagerVersion.String()),
-						createFakePod(scheduler, tt.schedulerNode, tt.schedulerVersion.String()),
-						createFakePod(etcd, tt.etcdNode, tt.etcdVersion.String()),
-					},
-				},
-			)
+			}
 
-			actualReturn, err := NodeVersioningInfo(clientset, node)
+			actualReturn, err := nodeVersioningInfo(&fakeNode, fakePods)
 
 			switch tt.expectError {
 			case true:
@@ -795,14 +775,13 @@ func TestNodeVersioningInfo(t *testing.T) {
 					t.Errorf("error not expected: (%v)", err)
 				}
 				expectReturn := NodeVersionInfo{
-					Nodename:                 master0,
+					Node:                     &fakeNode,
 					ContainerRuntimeVersion:  crv,
 					KubeletVersion:           tt.kubeletVersion,
 					APIServerVersion:         tt.apiServerVersion,
 					ControllerManagerVersion: tt.controllerManagerVersion,
 					SchedulerVersion:         tt.schedulerVersion,
 					EtcdVersion:              tt.etcdVersion,
-					Unschedulable:            tt.unschedulable,
 				}
 				if !reflect.DeepEqual(actualReturn, expectReturn) {
 					t.Errorf("got: (%v), want: (%v)", actualReturn, expectReturn)
@@ -904,63 +883,6 @@ func TestAllWorkerNodesTolerateVersion(t *testing.T) {
 			}
 		})
 	}
-
-	clientWithNoPods := fake.NewSimpleClientset(&corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-			Labels: map[string]string{
-				kubeadmconstants.LabelNodeRoleMaster: "",
-			},
-		},
-		Status: corev1.NodeStatus{
-			NodeInfo: corev1.NodeSystemInfo{
-				KubeletVersion:          "v1.14.1",
-				ContainerRuntimeVersion: "cri-o://1.14.1",
-			},
-		},
-		Spec: corev1.NodeSpec{
-			Unschedulable: false,
-		},
-	})
-	_, err := nodeVersioningInfo(clientWithNoPods, "test")
-	// should get empty pod list error
-	reflect.DeepEqual(err, errors.New("list of pods is empty"))
-
-	clientMissingPods := fake.NewSimpleClientset(&corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-			Labels: map[string]string{
-				kubeadmconstants.LabelNodeRoleMaster: "",
-			},
-		},
-		Status: corev1.NodeStatus{
-			NodeInfo: corev1.NodeSystemInfo{
-				KubeletVersion:          "v1.14.1",
-				ContainerRuntimeVersion: "cri-o://1.14.1",
-			},
-		},
-		Spec: corev1.NodeSpec{
-			Unschedulable: false,
-		},
-	}, &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "kube-apiserver-test",
-			Namespace: metav1.NamespaceSystem,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  "kube-apiserver",
-					Image: "registry.suse.com/caasp/v4/hyperkube:1.14.1",
-				},
-			},
-			NodeName: "test",
-		},
-	})
-	_, err = nodeVersioningInfo(clientMissingPods, "test")
-	// should get error getting the controller manager pod
-	reflect.DeepEqual(err, errors.New(
-		"could not retrieve controller manager pod: could not find pod controller-manager-test in pod list"))
 }
 
 func TestAllControlPlanesMatchVersionWithVersioningInfo(t *testing.T) {
@@ -1063,17 +985,17 @@ func TestAllNodesMatchClusterVersionWithVersioningInfo(t *testing.T) {
 			name: "all nodes match cluster version",
 			nodeVersionInfoMap: NodeVersionInfoMap{
 				master0: {
-					Nodename:         master0,
+					Node:             testutil.ControlPlaneNode(master0),
 					KubeletVersion:   clusterVersion,
 					APIServerVersion: clusterVersion,
 				},
 				master1: {
-					Nodename:         master1,
+					Node:             testutil.ControlPlaneNode(master1),
 					KubeletVersion:   clusterVersion,
 					APIServerVersion: clusterVersion,
 				},
 				worker0: {
-					Nodename:       worker0,
+					Node:           testutil.WorkerNode(worker0),
 					KubeletVersion: clusterVersion,
 				},
 			},
@@ -1083,17 +1005,17 @@ func TestAllNodesMatchClusterVersionWithVersioningInfo(t *testing.T) {
 			name: "a master not match cluster version",
 			nodeVersionInfoMap: NodeVersionInfoMap{
 				master0: {
-					Nodename:         master0,
+					Node:             testutil.ControlPlaneNode(master0),
 					APIServerVersion: clusterVersion,
 					KubeletVersion:   wrongVersion,
 				},
 				master1: {
-					Nodename:         master1,
+					Node:             testutil.ControlPlaneNode(master1),
 					APIServerVersion: clusterVersion,
 					KubeletVersion:   clusterVersion,
 				},
 				worker0: {
-					Nodename:       worker0,
+					Node:           testutil.WorkerNode(worker0),
 					KubeletVersion: clusterVersion,
 				},
 			},
@@ -1103,17 +1025,17 @@ func TestAllNodesMatchClusterVersionWithVersioningInfo(t *testing.T) {
 			name: "a worker node not match cluster version",
 			nodeVersionInfoMap: NodeVersionInfoMap{
 				master0: {
-					Nodename:         master0,
+					Node:             testutil.ControlPlaneNode(master0),
 					KubeletVersion:   clusterVersion,
 					APIServerVersion: clusterVersion,
 				},
 				master1: {
-					Nodename:         master1,
+					Node:             testutil.ControlPlaneNode(master1),
 					KubeletVersion:   clusterVersion,
 					APIServerVersion: clusterVersion,
 				},
 				worker0: {
-					Nodename:       worker0,
+					Node:           testutil.WorkerNode(worker0),
 					KubeletVersion: wrongVersion,
 				},
 			},

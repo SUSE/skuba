@@ -31,12 +31,16 @@ import (
 )
 
 func Plan(client clientset.Interface) error {
+	return plan(client, kubernetes.AvailableVersions())
+}
+
+func plan(client clientset.Interface, availableVersions []*version.Version) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
 		return err
 	}
 	currentVersion := currentClusterVersion.String()
-	latestVersion := kubernetes.LatestVersion().String()
+	latestVersion := availableVersions[len(availableVersions)-1].String()
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Println()
@@ -44,12 +48,14 @@ func Plan(client clientset.Interface) error {
 	if err := planPrePlatformUpgrade(client, currentClusterVersion); err != nil {
 		return err
 	}
-	upgradePath, err := planPlatformUpgrade(client, currentClusterVersion)
+	upgradePath, err := planPlatformUpgrade(client, currentClusterVersion, availableVersions)
 	if err != nil {
 		return err
 	}
-	if err := planPostPlatformUpgrade(currentClusterVersion, upgradePath); err != nil {
-		return err
+	if len(upgradePath) > 0 {
+		if err := planPostPlatformUpgrade(currentClusterVersion, upgradePath); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -71,7 +77,7 @@ func checkDriftedNodes(client clientset.Interface) error {
 		fmt.Println()
 		fmt.Println("WARNING: Incomplete upgrade detected:")
 		for _, node := range driftedNodes {
-			fmt.Printf("  - %s is running kubelet %s and is not cordoned\n", node.Nodename, node.KubeletVersion.String())
+			fmt.Printf("  - %s is running kubelet %s and is not cordoned\n", node.Node.ObjectMeta.Name, node.KubeletVersion.String())
 		}
 	}
 	return nil
@@ -96,8 +102,61 @@ func checkUpdatedAddons(client clientset.Interface, currentClusterVersion *versi
 	return nil
 }
 
+func planPlatformUpgrade(client clientset.Interface, currentClusterVersion *version.Version, availableVersions []*version.Version) ([]*version.Version, error) {
+	upgradePath := []*version.Version{}
+	versionCompare, err := currentClusterVersion.Compare(kubernetes.LatestVersion().String())
+	if err != nil {
+		return upgradePath, err
+	}
+	if versionCompare != 0 {
+		// Platform is not up to date, print upgrade path
+		upgradePath, err := upgradecluster.UpgradePathWithAvailableVersions(currentClusterVersion, availableVersions)
+		if err != nil {
+			return upgradePath, err
+		}
+		if len(upgradePath) == 0 {
+			return upgradePath, errors.Errorf("cannot infer how to upgrade from %s to %s", currentClusterVersion, kubernetes.LatestVersion())
+		}
+		fmt.Printf("Upgrade path to update from %s to %s:\n", currentClusterVersion, kubernetes.LatestVersion())
+		tmpVersion := currentClusterVersion.String()
+		for _, version := range upgradePath {
+			fmt.Printf(" - %s -> %s\n", tmpVersion, version.String())
+			tmpVersion = version.String()
+		}
+	} else {
+		// Platform is up to date, print node versioning information
+		nodeVersionInfoMap, err := kubernetes.AllNodesVersioningInfo(client)
+		if err != nil {
+			return upgradePath, err
+		}
+		fmt.Println()
+		fmt.Printf("Upgrade node status to cluster version %s:\n", currentClusterVersion.String())
+		for nodeName, nodeVersionInfo := range nodeVersionInfoMap {
+			if nodeVersionInfo.EqualsClusterVersion(currentClusterVersion) {
+				fmt.Printf("- %s: up to date", nodeName)
+			} else {
+				fmt.Printf("- %s: current version: %s (needs upgrade)", nodeName, nodeVersionInfo.String())
+			}
+			if nodeVersionInfo.Unschedulable() {
+				fmt.Println("; unschedulable, ignored")
+			} else {
+				fmt.Println()
+			}
+		}
+	}
+	return upgradePath, nil
+}
+
+func planPostPlatformUpgrade(currentClusterVersion *version.Version, upgradePath []*version.Version) error {
+	nextClusterVersion := upgradePath[0]
+	if err := checkUpdatedAddonsFromClusterVersion(currentClusterVersion, nextClusterVersion); err != nil {
+		return err
+	}
+	return nil
+}
+
 // checkUpdatedAddonsFromClusterVersion compares the latest available versions of addons for
-// currentClusterVersion with the list to the latest available versions of addons for
+// currentClusterVersion with the list of the latest available versions of addons for
 // nextClusterVersion. It does not check the current addons versions in the cluster.
 func checkUpdatedAddonsFromClusterVersion(currentClusterVersion *version.Version, nextClusterVersion *version.Version) error {
 	// Assuming we are at the latest addon versions of the current cluster version
@@ -111,31 +170,6 @@ func checkUpdatedAddonsFromClusterVersion(currentClusterVersion *version.Version
 		fmt.Printf("Addons for next cluster version %s are already up to date.\n", nextClusterVersion.String())
 		fmt.Println()
 		fmt.Println("There is no need to run `skuba addon upgrade apply` after you have completed the platform upgrade.")
-	}
-	return nil
-}
-
-func planPlatformUpgrade(client clientset.Interface, currentClusterVersion *version.Version) ([]*version.Version, error) {
-	upgradePath, err := upgradecluster.UpgradePath(client)
-	if err != nil {
-		return upgradePath, err
-	}
-	if len(upgradePath) == 0 {
-		return upgradePath, errors.Errorf("cannot infer how to upgrade from %s to %s", currentClusterVersion, kubernetes.LatestVersion())
-	}
-	fmt.Printf("Upgrade path to update from %s to %s:\n", currentClusterVersion, kubernetes.LatestVersion())
-	tmpVersion := currentClusterVersion.String()
-	for _, version := range upgradePath {
-		fmt.Printf(" - %s -> %s\n", tmpVersion, version.String())
-		tmpVersion = version.String()
-	}
-	return upgradePath, nil
-}
-
-func planPostPlatformUpgrade(currentClusterVersion *version.Version, upgradePath []*version.Version) error {
-	nextClusterVersion := upgradePath[0]
-	if err := checkUpdatedAddonsFromClusterVersion(currentClusterVersion, nextClusterVersion); err != nil {
-		return err
 	}
 	return nil
 }
