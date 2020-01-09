@@ -21,6 +21,7 @@ import (
 	"flag"
 
 	"github.com/spf13/pflag"
+	"k8s.io/klog"
 )
 
 const (
@@ -46,5 +47,7 @@ func RegisterVerboseFlag(local *pflag.FlagSet) {
 		pflagFlag.Name = verboseLevelFlagLong
 		pflagFlag.Usage = verboseLevelFlagUsage
 		local.AddFlag(pflagFlag)
+	} else {
+		klog.Fatalf("failed to find flag in global flagset (flag): %s", verboseLevelFlagShort)
 	}
 }
