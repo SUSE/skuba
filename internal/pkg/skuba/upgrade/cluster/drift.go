@@ -27,12 +27,12 @@ import (
 
 func driftedNodesWithVersions(currentClusterVersion *version.Version, nodesVersionInfo kubernetes.NodeVersionInfoMap) []kubernetes.NodeVersionInfo {
 	driftedNodes := []kubernetes.NodeVersionInfo{}
-	for _, node := range nodesVersionInfo {
-		if node.Unschedulable {
+	for _, nodeVersionInfo := range nodesVersionInfo {
+		if nodeVersionInfo.Unschedulable() {
 			continue
 		}
-		if node.DriftsFromClusterVersion(currentClusterVersion) {
-			driftedNodes = append(driftedNodes, node)
+		if nodeVersionInfo.DriftsFromClusterVersion(currentClusterVersion) {
+			driftedNodes = append(driftedNodes, nodeVersionInfo)
 		}
 	}
 	return driftedNodes

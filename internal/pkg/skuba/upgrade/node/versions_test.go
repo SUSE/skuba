@@ -29,6 +29,7 @@ import (
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/testutil"
 )
 
 type TestVersionInquirer struct {
@@ -41,7 +42,7 @@ func (ti TestVersionInquirer) AvailablePlatformVersions() []*version.Version {
 
 func (ti TestVersionInquirer) NodeVersionInfoForClusterVersion(node *corev1.Node, clusterVersion *version.Version) kubernetes.NodeVersionInfo {
 	res := kubernetes.NodeVersionInfo{
-		Nodename:                node.ObjectMeta.Name,
+		Node:                    node,
 		ContainerRuntimeVersion: version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.ContainerRuntime, clusterVersion, ti.AvailableVersions)),
 		KubeletVersion:          version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Kubelet, clusterVersion, ti.AvailableVersions)),
 	}
@@ -71,7 +72,7 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.14.0"),
 					KubeletVersion:   version.MustParseSemantic("v1.14.0"),
 				},
@@ -84,7 +85,7 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.9"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.14.0"),
 					KubeletVersion:   version.MustParseSemantic("v1.14.9"),
 				},
@@ -97,7 +98,7 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.13.0"),
 					KubeletVersion:   version.MustParseSemantic("v1.14.0"),
 				},
@@ -110,7 +111,7 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.9"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.14.9"),
 					KubeletVersion:   version.MustParseSemantic("v1.14.0"),
 				},
@@ -123,7 +124,7 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.14.0"),
 					KubeletVersion:   version.MustParseSemantic("v1.13.0"),
 				},
@@ -136,12 +137,12 @@ func TestNodesVersionAligned(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			allNodesVersioningInfo: kubernetes.NodeVersionInfoMap{
 				"cp1": {
-					Nodename:         "cp1",
+					Node:             testutil.ControlPlaneNode("cp1"),
 					APIServerVersion: version.MustParseSemantic("v1.14.0"),
 					KubeletVersion:   version.MustParseSemantic("v1.14.0"),
 				},
 				"worker1": {
-					Nodename:       "worker1",
+					Node:           testutil.WorkerNode("worker1"),
 					KubeletVersion: version.MustParseSemantic("v1.12.0"),
 				},
 			},
@@ -169,22 +170,24 @@ const (
 
 func nodeVersion(node, nodeVersion string, nodeRole nodeRole) kubernetes.NodeVersionInfo {
 	res := kubernetes.NodeVersionInfo{
-		Nodename:                node,
 		ContainerRuntimeVersion: version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
 		KubeletVersion:          version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
 	}
 	if nodeRole == controlPlane {
+		res.Node = testutil.ControlPlaneNode(node)
 		res.APIServerVersion = version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion))
 		res.ControllerManagerVersion = version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion))
 		res.SchedulerVersion = version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion))
 		res.EtcdVersion = version.MustParseSemantic("3.3.11")
+	} else {
+		res.Node = testutil.WorkerNode(node)
 	}
 	return res
 }
 
 func controlPlaneVersion(node, nodeVersion, etcdVersion string) kubernetes.NodeVersionInfo {
 	return kubernetes.NodeVersionInfo{
-		Nodename:                 node,
+		Node:                     testutil.ControlPlaneNode(node),
 		ContainerRuntimeVersion:  version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
 		KubeletVersion:           version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
 		APIServerVersion:         version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
@@ -203,25 +206,6 @@ func nodeVersionMap(controlPlaneNodes, workerNodes map[string]string) kubernetes
 		res[node] = nodeVersion(node, version, worker)
 	}
 	return res
-}
-
-func controlPlaneNode(name string) corev1.Node {
-	return corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				kubeadmconstants.LabelNodeRoleMaster: "",
-			},
-		},
-	}
-}
-
-func workerNode(name string) corev1.Node {
-	return corev1.Node{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	}
 }
 
 func versionInquirer(versions ...string) kubernetes.VersionInquirer {
@@ -266,7 +250,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		currentClusterVersion                       *version.Version
 		versionInquirer                             kubernetes.VersionInquirer
 		allNodesVersioningInfo                      kubernetes.NodeVersionInfoMap
-		node                                        corev1.Node
+		node                                        *corev1.Node
 		currentKubernetesVersion                    string
 		expectedNodeVersionInfoUpdate               NodeVersionInfoUpdate
 		expectedIsFirstControlPlaneNodeToBeUpgraded bool
@@ -279,7 +263,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:    version.MustParseSemantic("v1.14.0"),
 			versionInquirer:          versionInquirer("1.14.0"),
 			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
-			node:                     controlPlaneNode("cp1"),
+			node:                     testutil.ControlPlaneNode("cp1"),
 			currentKubernetesVersion: "1.14.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
@@ -294,7 +278,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:    version.MustParseSemantic("v1.14.0"),
 			versionInquirer:          versionInquirer("1.14.0", "1.15.0"),
 			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
-			node:                     controlPlaneNode("cp1"),
+			node:                     testutil.ControlPlaneNode("cp1"),
 			currentKubernetesVersion: "1.14.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
@@ -309,7 +293,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:    version.MustParseSemantic("v1.15.0"),
 			versionInquirer:          versionInquirer("1.14.0", "1.15.0"),
 			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.15.0", "cp2": "1.14.0"}, map[string]string{}),
-			node:                     controlPlaneNode("cp2"),
+			node:                     testutil.ControlPlaneNode("cp2"),
 			currentKubernetesVersion: "1.15.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp2", "1.14.0", controlPlane),
@@ -324,7 +308,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic("v1.14.0"),
 			versionInquirer:        versionInquirer("1.13.0", "1.14.0", "1.15.0"),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{"worker1": "1.13.0"}),
-			node:                   controlPlaneNode("cp1"),
+			node:                   testutil.ControlPlaneNode("cp1"),
 			expectedError:          true,
 		},
 		{
@@ -332,7 +316,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:    version.MustParseSemantic("v1.15.0"),
 			versionInquirer:          versionInquirer("1.15.0", "1.15.2"),
 			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.15.0"}),
-			node:                     controlPlaneNode("cp1"),
+			node:                     testutil.ControlPlaneNode("cp1"),
 			currentKubernetesVersion: "1.15.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.15.0", controlPlane),
@@ -354,7 +338,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 				},
 			}, "1.15.0"),
 			allNodesVersioningInfo:   kubernetes.NodeVersionInfoMap{"cp1": controlPlaneVersion("cp1", "1.15.0", "3.3.11")},
-			node:                     controlPlaneNode("cp1"),
+			node:                     testutil.ControlPlaneNode("cp1"),
 			currentKubernetesVersion: "1.15.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: controlPlaneVersion("cp1", "1.15.0", "3.3.11"),
@@ -367,7 +351,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		{
 			name:                   "node name not found",
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
-			node:                   controlPlaneNode("cp0"),
+			node:                   testutil.ControlPlaneNode("cp0"),
 			expectedError:          true,
 		},
 	}
@@ -375,7 +359,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 	for _, tt := range versions {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			nodeVersionInfoUpdate, err := controlPlaneUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
+			nodeVersionInfoUpdate, err := controlPlaneUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, tt.node, tt.versionInquirer)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
@@ -444,7 +428,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 		currentClusterVersion         *version.Version
 		versionInquirer               kubernetes.VersionInquirer
 		allNodesVersioningInfo        kubernetes.NodeVersionInfoMap
-		node                          corev1.Node
+		node                          *corev1.Node
 		expectedNodeVersionInfoUpdate NodeVersionInfoUpdate
 		expectedHasMajorOrMinorUpdate bool
 		expectedIsUpdated             bool
@@ -455,7 +439,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
 			versionInquirer:        versionInquirer("1.14.1", "1.15.0"),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.1"}, map[string]string{"worker1": "1.14.1"}),
-			node:                   workerNode("worker1"),
+			node:                   testutil.WorkerNode("worker1"),
 			expectedError:          true,
 		},
 		{
@@ -463,7 +447,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
 			versionInquirer:        versionInquirer("1.14.1", "1.15.0"),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.14.1", "worker2": "1.15.0"}),
-			node:                   workerNode("worker1"),
+			node:                   testutil.WorkerNode("worker1"),
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("worker1", "1.14.1", worker),
 				Update:  nodeVersion("worker1", "1.15.0", worker),
@@ -476,7 +460,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic(latestVersion),
 			versionInquirer:        versionInquirer(latestVersion),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{}, map[string]string{"worker1": latestVersion}),
-			node:                   workerNode("worker1"),
+			node:                   testutil.WorkerNode("worker1"),
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("worker1", latestVersion, worker),
 				Update:  nodeVersion("worker1", latestVersion, worker),
@@ -489,7 +473,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
 			versionInquirer:        versionInquirer("1.14.0", "1.15.0"),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0", "cp2": "1.14.0"}, map[string]string{"worker1": "1.14.0"}),
-			node:                   workerNode("worker1"),
+			node:                   testutil.WorkerNode("worker1"),
 			expectedError:          true,
 		},
 		{
@@ -497,7 +481,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 			currentClusterVersion:  version.MustParseSemantic("v1.15.2"),
 			versionInquirer:        versionInquirer("1.15.0", "1.15.2"),
 			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.2"}, map[string]string{"worker1": "1.15.0"}),
-			node:                   workerNode("worker1"),
+			node:                   testutil.WorkerNode("worker1"),
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("worker1", "1.15.0", worker),
 				Update:  nodeVersion("worker1", "1.15.2", worker),
@@ -510,7 +494,7 @@ func TestWorkerUpdateStatusWithAvailableVersions(t *testing.T) {
 	for _, tt := range versions {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			nodeVersionInfoUpdate, err := workerUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, &tt.node, tt.versionInquirer)
+			nodeVersionInfoUpdate, err := workerUpdateStatusWithAvailableVersions(tt.currentClusterVersion, tt.allNodesVersioningInfo, tt.node, tt.versionInquirer)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)

@@ -25,9 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -36,14 +34,13 @@ var (
 )
 
 type NodeVersionInfo struct {
-	Nodename                 string
+	Node                     *v1.Node
 	ContainerRuntimeVersion  *version.Version
 	KubeletVersion           *version.Version
 	APIServerVersion         *version.Version
 	ControllerManagerVersion *version.Version
 	SchedulerVersion         *version.Version
 	EtcdVersion              *version.Version
-	Unschedulable            bool
 }
 
 type NodeVersionInfoMap map[string]NodeVersionInfo
@@ -60,7 +57,7 @@ func (si StaticVersionInquirer) AvailablePlatformVersions() []*version.Version {
 
 func (si StaticVersionInquirer) NodeVersionInfoForClusterVersion(node *v1.Node, clusterVersion *version.Version) NodeVersionInfo {
 	res := NodeVersionInfo{
-		Nodename:                node.ObjectMeta.Name,
+		Node:                    node,
 		ContainerRuntimeVersion: version.MustParseSemantic(ComponentVersionForClusterVersion(ContainerRuntime, clusterVersion)),
 		KubeletVersion:          version.MustParseSemantic(ComponentVersionForClusterVersion(Kubelet, clusterVersion)),
 	}
@@ -73,8 +70,12 @@ func (si StaticVersionInquirer) NodeVersionInfoForClusterVersion(node *v1.Node, 
 	return res
 }
 
+func (nvi NodeVersionInfo) Unschedulable() bool {
+	return nvi.Node.Spec.Unschedulable
+}
+
 func (nvi NodeVersionInfo) IsControlPlane() bool {
-	return nvi.APIServerVersion != nil
+	return IsControlPlane(nvi.Node)
 }
 
 func (nvi NodeVersionInfo) String() string {
@@ -131,10 +132,14 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 	if err != nil {
 		return NodeVersionInfoMap{}, errors.Wrap(err, "could not retrieve node list")
 	}
+	podList, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+	if err != nil {
+		return NodeVersionInfoMap{}, errors.Wrap(err, "could not retrieve pods")
+	}
 
 	result := NodeVersionInfoMap{}
 	for _, node := range nodeList.Items {
-		nodeVersion, err := nodeVersioningInfo(client, node.ObjectMeta.Name)
+		nodeVersion, err := nodeVersioningInfo(&node, podList)
 		if err != nil {
 			return NodeVersionInfoMap{}, err
 		}
@@ -144,25 +149,10 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 	return result, nil
 }
 
-// NodeVersioningInfo returns related versioning information about a node
-func NodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersionInfo, error) {
-	nodeVersions, err := nodeVersioningInfo(client, nodeName)
-	if err != nil {
-		return NodeVersionInfo{}, errors.Wrap(err, "unable to get node versioning info")
-	}
-
-	return nodeVersions, nil
-}
-
-func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersionInfo, error) {
-	nodeObject, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
-	if err != nil {
-		return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve node object")
-	}
-
-	kubeletVersion := version.MustParseSemantic(nodeObject.Status.NodeInfo.KubeletVersion)
-	containerRuntimeVersionRaw := nodeObject.Status.NodeInfo.ContainerRuntimeVersion
-	unschedulable := nodeObject.Spec.Unschedulable
+func nodeVersioningInfo(node *v1.Node, podList *v1.PodList) (NodeVersionInfo, error) {
+	nodeName := node.ObjectMeta.Name
+	kubeletVersion := version.MustParseSemantic(node.Status.NodeInfo.KubeletVersion)
+	containerRuntimeVersionRaw := node.Status.NodeInfo.ContainerRuntimeVersion
 
 	// Extract the container runtime version from the raw version
 	containerRuntimeVersion, err := version.ParseSemantic(runtimeVersionRegexp.FindStringSubmatch(containerRuntimeVersionRaw)[1])
@@ -171,62 +161,39 @@ func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersio
 	}
 
 	nodeVersions := NodeVersionInfo{
-		Nodename:                nodeName,
+		Node:                    node,
 		ContainerRuntimeVersion: containerRuntimeVersion,
 		KubeletVersion:          kubeletVersion,
-		Unschedulable:           unschedulable,
 	}
 
 	// find out the container image tags, depending on the role of the node
-	if IsControlPlane(nodeObject) {
-		// track last error so we can properly raise it at the end of the retry
-		var lastError error
-
-		err := wait.ExponentialBackoff(retry.DefaultBackoff, func() (done bool, err error) {
-			// list all the pods
-			allPods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
-			// check for error
-			if err != nil {
-				lastError = errors.New("could not retrieve pods")
-				return false, nil
-			}
-			// check for empty pod list
-			if len(allPods.Items) == 0 {
-				lastError = errors.New("list of pods is empty")
-				return false, nil
-			}
-			// check that the needed pods exist
-			apiserverPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-apiserver-%s", nodeName))
-			if err != nil {
-				lastError = errors.Wrap(err, "could not retrieve api server pod")
-				return false, nil
-			}
-			controllerManagerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-controller-manager-%s", nodeName))
-			if err != nil {
-				lastError = errors.Wrap(err, "could not retrieve controller manager pod")
-				return false, nil
-			}
-			schedulerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-scheduler-%s", nodeName))
-			if err != nil {
-				lastError = errors.Wrap(err, "could not retrieve scheduler pod")
-				return false, nil
-			}
-			etcdPod, err := getPodFromPodList(allPods, fmt.Sprintf("etcd-%s", nodeName))
-			if err != nil {
-				lastError = errors.Wrap(err, "could not retrieve etcd pod")
-				return false, nil
-			}
-
-			nodeVersions.APIServerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(apiserverPod))
-			nodeVersions.ControllerManagerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(controllerManagerPod))
-			nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
-			nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
-
-			return true, nil
-		})
-		if err != nil {
-			return NodeVersionInfo{}, lastError
+	if IsControlPlane(node) {
+		// check for empty pod list
+		if len(podList.Items) == 0 {
+			return NodeVersionInfo{}, errors.New("list of pods is empty")
 		}
+		// check that the needed pods exist
+		apiserverPod, err := getPodFromPodList(podList, fmt.Sprintf("kube-apiserver-%s", nodeName))
+		if err != nil {
+			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve api server pod")
+		}
+		controllerManagerPod, err := getPodFromPodList(podList, fmt.Sprintf("kube-controller-manager-%s", nodeName))
+		if err != nil {
+			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve controller manager pod")
+		}
+		schedulerPod, err := getPodFromPodList(podList, fmt.Sprintf("kube-scheduler-%s", nodeName))
+		if err != nil {
+			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve scheduler pod")
+		}
+		etcdPod, err := getPodFromPodList(podList, fmt.Sprintf("etcd-%s", nodeName))
+		if err != nil {
+			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve etcd pod")
+		}
+
+		nodeVersions.APIServerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(apiserverPod))
+		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(controllerManagerPod))
+		nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
+		nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
 	}
 	return nodeVersions, nil
 }
@@ -246,7 +213,7 @@ func allWorkerNodesTolerateVersionWithVersioningInfo(allNodesVersioningInfo Node
 		if nodeInfo.IsControlPlane() {
 			continue
 		}
-		if !nodeInfo.Unschedulable && !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+		if !nodeInfo.Unschedulable() && !nodeInfo.ToleratesClusterVersion(clusterVersion) {
 			return false
 		}
 	}
