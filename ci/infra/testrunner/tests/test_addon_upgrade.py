@@ -73,7 +73,7 @@ def test_addon_upgrade_plan(deployment, kubectl, skuba):
     u_img = change_one_addon_image(addons_dict, 'new_tag', skip=[u_manif[0]])
 
     u_img_msg = '{0}: {1} -> {2}'.format(u_img[0], u_img[1][0], u_img[1][1])
-    u_manif_msg = '{0}: {1} -> {1} (manifest version from {2} to {3})'.format(
+    u_manif_msg = '{0}: {1} (manifest version from {2} to {3})'.format(
         u_manif[0], u_manif[1], u_manif[2][0], u_manif[2][1]
     )
     n_addon_msg = '{0}: {1} (new addon)'.format(rm_addon[0], rm_addon[1])

@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -37,7 +39,7 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 			},
@@ -47,11 +49,11 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 				"another-node": {
-					Nodename:       "another-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 			},
@@ -61,11 +63,11 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.5"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.5"),
 				},
 				"slightly-drifed-node": {
-					Nodename:       "slightly-drifted-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 			},
@@ -75,17 +77,17 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 				"drifted-node": {
-					Nodename:       "drifted-node",
+					Node:           workerNode("drifted-node"),
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
 			},
 			expectedDriftedNodes: []kubernetes.NodeVersionInfo{
 				{
-					Nodename:       "drifted-node",
+					Node:           workerNode("drifted-node"),
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
 			},
@@ -94,21 +96,21 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.5"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.5"),
 				},
 				"slightly-drifted-node": {
-					Nodename:       "slightly-drifted-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 				"drifted-node": {
-					Nodename:       "drifted-node",
+					Node:           workerNode("drifted-node"),
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
 			},
 			expectedDriftedNodes: []kubernetes.NodeVersionInfo{
 				{
-					Nodename:       "drifted-node",
+					Node:           workerNode("drifted-node"),
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
 				},
 			},
@@ -117,13 +119,12 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			currentClusterVersion: version.MustParseSemantic("v1.14.0"),
 			nodesVersionInfo: kubernetes.NodeVersionInfoMap{
 				"a-node": {
-					Nodename:       "a-node",
+					Node:           workerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.14.0"),
 				},
 				"drifted-unschedulable-node": {
-					Nodename:       "drifted-unschedulable-node",
+					Node:           unschedulableWorkerNode(""),
 					KubeletVersion: version.MustParseSemantic("v1.13.0"),
-					Unschedulable:  true,
 				},
 			},
 			expectedDriftedNodes: []kubernetes.NodeVersionInfo{},
@@ -138,4 +139,18 @@ func TestDriftedNodesWithVersions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func workerNode(name string) *corev1.Node {
+	return &corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+}
+
+func unschedulableWorkerNode(name string) *corev1.Node {
+	ret := workerNode(name)
+	ret.Spec.Unschedulable = true
+	return ret
 }

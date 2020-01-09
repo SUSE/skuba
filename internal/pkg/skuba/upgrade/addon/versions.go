@@ -70,6 +70,12 @@ func addonsByName(addons kubernetes.AddonsVersion) []kubernetes.Addon {
 	return sortedAddons
 }
 
+// hasAddonVersionBump returns true if the version of a given addon is different in the current and
+// the addon upgrade sets.
+func hasAddonVersionBump(addonVersionInfoUpdate AddonVersionInfoUpdate, addon kubernetes.Addon) bool {
+	return addonVersionInfoUpdate.Current[addon].Version != addonVersionInfoUpdate.Updated[addon].Version
+}
+
 func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 	for _, addon := range addonsByName(updatedAddons.Updated) {
 		if updatedAddons.Current[addon] == nil && updatedAddons.Updated[addon] != nil {
@@ -81,15 +87,12 @@ func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 			continue
 		}
 
-		// At this point we know that this addon has a greater manifest version, if the addon version
-		// is different than the one stored, we will show that to the user. If the versions are equals
-		// (string comparison), we will show the manifest version bump as additional information.
-		if updatedAddons.Current[addon].Version != updatedAddons.Updated[addon].Version {
+		if hasAddonVersionBump(updatedAddons, addon) {
 			fmt.Printf("  - %s: %s -> %s\n", addon, updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version)
 		} else {
-			if len(updatedAddons.Current[addon].Version) > 0 && len(updatedAddons.Updated[addon].Version) > 0 {
-				fmt.Printf("  - %s: %s -> %s (manifest version from %d to %d)\n", addon,
-					updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version,
+			if len(updatedAddons.Current[addon].Version) > 0 {
+				fmt.Printf("  - %s: %s (manifest version from %d to %d)\n", addon,
+					updatedAddons.Current[addon].Version,
 					updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
 			} else {
 				fmt.Printf("  - %s (manifest version from %d to %d)\n", addon,
