@@ -38,15 +38,15 @@ func UpdatedAddons(client clientset.Interface, clusterVersion *version.Version) 
 	if err != nil {
 		return AddonVersionInfoUpdate{}, err
 	}
-	return UpdatedAddonsForAddonsVersion(clusterVersion, skubaConfig.AddonsVersion), nil
+	return UpdatedAddonsForAddonsVersion(clusterVersion, skubaConfig.AddonsVersion, kubernetes.AllAddonVersionsForClusterVersion), nil
 }
 
-func UpdatedAddonsForAddonsVersion(clusterVersion *version.Version, addonsVersion kubernetes.AddonsVersion) AddonVersionInfoUpdate {
+func UpdatedAddonsForAddonsVersion(clusterVersion *version.Version, addonsVersion kubernetes.AddonsVersion, clusterAddonsKnownVersions kubernetes.ClusterAddonsKnownVersions) AddonVersionInfoUpdate {
 	aviu := AddonVersionInfoUpdate{
 		Current: kubernetes.AddonsVersion{},
 		Updated: kubernetes.AddonsVersion{},
 	}
-	latestAddonVersions := kubernetes.AllAddonVersionsForClusterVersion(clusterVersion)
+	latestAddonVersions := clusterAddonsKnownVersions(clusterVersion)
 	for addonName, addonLatestVersion := range latestAddonVersions {
 		addonCurrentVersion := addonsVersion[addonName]
 		aviu.Current[addonName] = addonCurrentVersion

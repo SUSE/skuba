@@ -13,5 +13,5 @@ def test_upgrade_plan_all_fine(setup, skuba, kubectl, platform):
     out = skuba.cluster_upgrade_plan()
 
     assert out.find(
-        "Congratulations! You are already at the latest version available"
+        "All nodes match the current cluster version"
     ) != -1
