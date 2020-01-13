@@ -77,6 +77,8 @@ type KubernetesVersion struct {
 
 type KubernetesVersions map[string]KubernetesVersion
 
+type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVersion
+
 var (
 	supportedVersions = KubernetesVersions{
 		"1.16.2": KubernetesVersion{

@@ -57,7 +57,7 @@ func (si StaticVersionInquirer) AvailablePlatformVersions() []*version.Version {
 
 func (si StaticVersionInquirer) NodeVersionInfoForClusterVersion(node *v1.Node, clusterVersion *version.Version) NodeVersionInfo {
 	res := NodeVersionInfo{
-		Node:                    node,
+		Node:                    node.DeepCopy(),
 		ContainerRuntimeVersion: version.MustParseSemantic(ComponentVersionForClusterVersion(ContainerRuntime, clusterVersion)),
 		KubeletVersion:          version.MustParseSemantic(ComponentVersionForClusterVersion(Kubelet, clusterVersion)),
 	}
@@ -161,7 +161,7 @@ func nodeVersioningInfo(node *v1.Node, podList *v1.PodList) (NodeVersionInfo, er
 	}
 
 	nodeVersions := NodeVersionInfo{
-		Node:                    node,
+		Node:                    node.DeepCopy(),
 		ContainerRuntimeVersion: containerRuntimeVersion,
 		KubeletVersion:          kubeletVersion,
 	}
@@ -195,6 +195,7 @@ func nodeVersioningInfo(node *v1.Node, podList *v1.PodList) (NodeVersionInfo, er
 		nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
 		nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
 	}
+
 	return nodeVersions, nil
 }
 
