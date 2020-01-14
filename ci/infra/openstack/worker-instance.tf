@@ -94,6 +94,7 @@ resource "openstack_networking_floatingip_v2" "worker_ext" {
 }
 
 resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
+  depends_on = [openstack_compute_instance_v2.worker]
   count = var.workers
   floating_ip = element(
     openstack_networking_floatingip_v2.worker_ext.*.address,
@@ -103,7 +104,10 @@ resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
-  depends_on = [openstack_compute_instance_v2.worker]
+  depends_on = [
+    openstack_compute_instance_v2.worker,
+    openstack_compute_floatingip_associate_v2.worker_ext_ip,
+  ]
   count      = var.workers
 
   connection {
