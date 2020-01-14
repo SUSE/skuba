@@ -10,7 +10,7 @@ resource "openstack_networking_secgroup_rule_v2" "lb_api_server" {
   port_range_min    = 6443
   port_range_max    = 6443
   remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = "${openstack_networking_secgroup_v2.load_balancer.id}"
+  security_group_id = openstack_networking_secgroup_v2.load_balancer.id
 }
 
 # Needed to allow access from the LB to dex (32000) and gangway (32001)
@@ -21,5 +21,6 @@ resource "openstack_networking_secgroup_rule_v2" "lb_k8s_auth_svcs" {
   port_range_min    = 32000
   port_range_max    = 32001
   remote_ip_prefix  = "0.0.0.0/0"
-  security_group_id = "${openstack_networking_secgroup_v2.load_balancer.id}"
+  security_group_id = openstack_networking_secgroup_v2.load_balancer.id
 }
+

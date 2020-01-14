@@ -7,7 +7,7 @@ output "ip_workers" {
 }
 
 output "ip_internal_load_balancer" {
-  value = "${openstack_lb_loadbalancer_v2.lb.vip_address}"
+  value = openstack_lb_loadbalancer_v2.lb.vip_address
 }
 
 output "ip_load_balancer" {
