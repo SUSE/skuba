@@ -4,7 +4,7 @@ variable "image_name" {
 }
 
 variable "repositories" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "Urls of the repositories to mount via cloud-init"
 }
@@ -80,7 +80,7 @@ variable "stack_name" {
 }
 
 variable "authorized_keys" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "SSH keys to inject into all the nodes"
 }
@@ -91,13 +91,13 @@ variable "key_pair" {
 }
 
 variable "ntp_servers" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of ntp servers to configure"
 }
 
 variable "packages" {
-  type = "list"
+  type = list(string)
 
   default = [
     "kernel-default",
@@ -131,3 +131,4 @@ variable "ca_file" {
   default     = ""
   description = "Used to specify the path to your custom CA file"
 }
+

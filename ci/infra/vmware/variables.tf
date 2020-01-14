@@ -1,12 +1,23 @@
-variable "template_name" {}
-variable "stack_name" {}
-variable "vsphere_datastore" {}
-variable "vsphere_datacenter" {}
-variable "vsphere_network" {}
-variable "vsphere_resource_pool" {}
+variable "template_name" {
+}
+
+variable "stack_name" {
+}
+
+variable "vsphere_datastore" {
+}
+
+variable "vsphere_datacenter" {
+}
+
+variable "vsphere_network" {
+}
+
+variable "vsphere_resource_pool" {
+}
 
 variable "authorized_keys" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "SSH keys to inject into all the nodes"
 }
@@ -27,19 +38,19 @@ variable "guest_id" {
 }
 
 variable "ntp_servers" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of ntp servers to configure"
 }
 
 variable "packages" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of additional packages to install"
 }
 
 variable "repositories" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "URLs of the repositories to mount via cloud-init"
 }
@@ -96,28 +107,30 @@ variable "master_disk_size" {
 
 #### To be moved to separate vsphere.tf? ####
 
-provider "vsphere" {}
+provider "vsphere" {
+}
 
 data "vsphere_resource_pool" "pool" {
-  name          = "${var.vsphere_resource_pool}"
-  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+  name          = var.vsphere_resource_pool
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 data "vsphere_datastore" "datastore" {
-  name          = "${var.vsphere_datastore}"
-  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+  name          = var.vsphere_datastore
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 data "vsphere_datacenter" "dc" {
-  name = "${var.vsphere_datacenter}"
+  name = var.vsphere_datacenter
 }
 
 data "vsphere_network" "network" {
-  name          = "${var.vsphere_network}"
-  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+  name          = var.vsphere_network
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 data "vsphere_virtual_machine" "template" {
-  name          = "${var.template_name}"
-  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+  name          = var.template_name
+  datacenter_id = data.vsphere_datacenter.dc.id
 }
+
