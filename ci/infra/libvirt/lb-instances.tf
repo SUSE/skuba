@@ -101,7 +101,7 @@ resource "libvirt_domain" "lb" {
     network_id     = libvirt_network.network.id
     hostname       = "${var.stack_name}-lb"
     addresses      = [cidrhost(var.network_cidr, 256)]
-    wait_for_lease = 1
+    wait_for_lease = true
   }
 
   graphics {
