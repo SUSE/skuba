@@ -86,7 +86,7 @@ resource "libvirt_domain" "worker" {
     network_id     = libvirt_network.network.id
     hostname       = "${var.stack_name}-worker-${count.index}"
     addresses      = [cidrhost(var.network_cidr, 768 + count.index)]
-    wait_for_lease = 1
+    wait_for_lease = true
   }
 
   graphics {
