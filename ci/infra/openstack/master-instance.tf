@@ -80,6 +80,7 @@ resource "openstack_networking_floatingip_v2" "master_ext" {
 }
 
 resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
+  depends_on = [openstack_compute_instance_v2.master]
   count = var.masters
   floating_ip = element(
     openstack_networking_floatingip_v2.master_ext.*.address,
@@ -89,7 +90,10 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
 }
 
 resource "null_resource" "master_wait_cloudinit" {
-  depends_on = [openstack_compute_instance_v2.master]
+  depends_on = [
+    openstack_compute_instance_v2.master,
+    openstack_compute_floatingip_associate_v2.master_ext_ip
+  ]
   count      = var.masters
 
   connection {
