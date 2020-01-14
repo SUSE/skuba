@@ -86,7 +86,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",
-		"skuba-update.start.no-wait",
+		"skuba-update.start.no-block",
 		"skuba-update-timer.enable",
 	)
 

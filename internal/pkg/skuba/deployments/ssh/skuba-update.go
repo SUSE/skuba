@@ -18,7 +18,7 @@
 package ssh
 
 func init() {
-	stateMap["skuba-update.start.no-wait"] = skubaUpdateStartNoWait
+	stateMap["skuba-update.start.no-block"] = skubaUpdateStartNoWait
 	stateMap["skuba-update-timer.enable"] = skubaUpdateTimerEnable
 	stateMap["skuba-update-timer.disable"] = skubaUpdateTimerDisable
 }
