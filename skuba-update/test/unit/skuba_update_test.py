@@ -146,13 +146,16 @@ def test_main(
     main()
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
-        call(['zypper', 'ref', '-s'], stdout=None, stderr=None, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'ref', '-s'],
+            stdout=None, stderr=None, env=ANY
+        ),
         call([
-            'zypper', '--non-interactive',
+            'zypper', '--userdata', 'skuba-update', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=None, stderr=None, env=ANY),
         call(
-            ['zypper', 'ps', '-sss'],
+            ['zypper', '--userdata', 'skuba-update', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
         ),
         call(
@@ -163,7 +166,10 @@ def test_main(
             ['systemctl', 'restart', 'some_service2'],
             stdout=None, stderr=None, env=ANY
         ),
-        call(['zypper', 'needs-rebooting'], stdout=None, stderr=None, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'needs-rebooting'],
+            stdout=None, stderr=None, env=ANY
+        ),
     ]
 
 
@@ -210,7 +216,10 @@ def test_main_annotate_only(
     main()
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
-        call(['zypper', 'ref', '-s'], stdout=None, stderr=None, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'ref', '-s'],
+            stdout=None, stderr=None, env=ANY
+        ),
         call([
             'rpm', '-q', 'caasp-release', '--queryformat', '%{VERSION}'
         ], stdout=-1, stderr=-1, env=ANY),
@@ -245,24 +254,26 @@ def test_main_zypper_returns_100(
     main()
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
-        call(['zypper', 'ref', '-s'], stdout=None, stderr=None, env=ANY),
         call([
-            'zypper', '--non-interactive',
+            'zypper', '--userdata', 'skuba-update', 'ref', '-s'
+        ], stdout=None, stderr=None, env=ANY),
+        call([
+            'zypper', '--userdata', 'skuba-update', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=None, stderr=None, env=ANY),
         call([
-            'zypper', '--non-interactive',
+            'zypper', '--userdata', 'skuba-update', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
         ], stdout=None, stderr=None, env=ANY),
         call(
-            ['zypper', 'ps', '-sss'],
+            ['zypper', '--userdata', 'skuba-update', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
         ),
         call([
             'rpm', '-q', 'caasp-release', '--queryformat', '%{VERSION}'
         ], stdout=-1, stderr=-1, env=ANY),
         call([
-            'zypper', 'needs-rebooting'
+            'zypper', '--userdata', 'skuba-update', 'needs-rebooting'
         ], stdout=None, stderr=None, env=ANY),
     ]
 
@@ -295,11 +306,11 @@ def test_run_zypper_command(mock_subprocess):
     mock_process.communicate.return_value = (b'stdout', b'stderr')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    assert run_zypper_command(['zypper', 'patch']) == 0
+    assert run_zypper_command(['patch']) == 0
     mock_process.returncode = ZYPPER_EXIT_INF_RESTART_NEEDED
     mock_subprocess.return_value = mock_process
     assert run_zypper_command(
-        ['zypper', 'patch']) == ZYPPER_EXIT_INF_RESTART_NEEDED
+        ['patch']) == ZYPPER_EXIT_INF_RESTART_NEEDED
 
 
 @patch('subprocess.Popen')
@@ -310,10 +321,10 @@ def test_run_zypper_command_failure(mock_subprocess):
     mock_subprocess.return_value = mock_process
     exception = False
     try:
-        run_zypper_command(['zypper', 'patch']) == 'stdout'
+        run_zypper_command(['patch']) == 'stdout'
     except Exception as e:
         exception = True
-        assert '"zypper patch" failed' in str(e)
+        assert '"zypper --userdata skuba-update patch" failed' in str(e)
     assert exception
 
 
@@ -421,7 +432,8 @@ def test_annotate_updates_empty(mock_subprocess, mock_annotate, mock_name):
     annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -447,7 +459,8 @@ def test_annotate_updates(mock_subprocess, mock_annotate, mock_name):
     annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -476,7 +489,8 @@ def test_annotate_updates_available(mock_subprocess, mock_open, mock_name):
 
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         ),
         call(
@@ -513,7 +527,8 @@ def test_annotate_updates_bad_xml(mock_subprocess, mock_annotate, mock_name):
     annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -543,7 +558,8 @@ def test_annotate_updates_security(
     annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
@@ -573,7 +589,8 @@ def test_annotate_updates_available_is_reboot(
     annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
-            ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+            ['zypper', '--userdata', 'skuba-update',
+             '--non-interactive', '--xmlout', 'list-patches'],
             stdout=-1, stderr=-1, env=ANY
         )
     ]
