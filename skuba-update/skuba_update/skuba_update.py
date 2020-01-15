@@ -75,7 +75,7 @@ def main():
     if os.geteuid() != 0:
         raise Exception('root privileges are required to run this tool')
 
-    run_zypper_command(['zypper', 'ref', '-s'])
+    run_zypper_command(['ref', '-s'])
     if not args.annotate_only:
         code = update()
         restart_services()
@@ -142,7 +142,7 @@ def annotate_updates_available(node_name):
     """
 
     patch_xml = run_zypper_command(
-        ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+        ['--non-interactive', '--xmlout', 'list-patches'],
         needsOutput=True
     ).output
     updates = get_update_list(patch_xml)
@@ -241,7 +241,7 @@ def restart_services():
     restart.
     """
 
-    result = run_zypper_command(['zypper', 'ps', '-sss'], needsOutput=True)
+    result = run_zypper_command(['ps', '-sss'], needsOutput=True)
     for service in result.output.splitlines():
         cmd = run_command(['systemctl', 'restart', service], needsOutput=False)
         if cmd.returncode != 0:
@@ -272,7 +272,7 @@ def is_reboot_needed():
     """
 
     return run_zypper_command(
-        ['zypper', 'needs-rebooting']
+        ['needs-rebooting']
     ) == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
@@ -312,10 +312,11 @@ def run_zypper_command(command, needsOutput=False):
     Run the given zypper command. The command is expected to be a tuple which
     also contains the 'zypper' string. It returns the exit code from zypper.
     """
+    zypperCommand = ['zypper', '--userdata', 'skuba-update', ] + command
 
-    process = run_command(command, needsOutput)
+    process = run_command(zypperCommand, needsOutput)
     if is_zypper_error(process.returncode):
-        raise Exception('"{0}" failed'.format(' '.join(command)))
+        raise Exception('"{0}" failed'.format(' '.join(zypperCommand)))
     if needsOutput:
         return process
     return process.returncode
@@ -323,8 +324,8 @@ def run_zypper_command(command, needsOutput=False):
 
 def run_zypper_patch():
     return run_zypper_command([
-        'zypper', '--non-interactive',
-        '--non-interactive-include-reboot-patches', 'patch'
+        '--non-interactive', '--non-interactive-include-reboot-patches',
+        'patch'
     ])
 
 
