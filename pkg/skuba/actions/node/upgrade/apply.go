@@ -164,7 +164,10 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 	if skubaUpdateWasEnabled {
-		err = target.Apply(nil, "skuba-update-timer.enable")
+		err = target.Apply(nil,
+			"skuba-update.start.no-block",
+			"skuba-update-timer.enable",
+		)
 		if err != nil {
 			return err
 		}
