@@ -78,7 +78,7 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 		updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
 		patternName = fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion)
 	}
-	_, _, err = t.ssh("zypper", "--non-interactive", "install", patternName)
+	_, _, err = t.ssh("zypper", "--userdata", "skuba-update", "--non-interactive", "install", patternName)
 	return err
 }
 
