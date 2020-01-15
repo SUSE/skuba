@@ -17,3 +17,15 @@ class Libvirt(Terraform):
     def _cleanup_platform(self):
         self.destroy()
 
+    def get_lb_ipaddr(self):
+        self._load_tfstate()
+        return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]["{}-lb".format(self.conf.terraform.stack_name)]
+
+    def get_nodes_ipaddrs(self, role):
+        self._load_tfstate()
+
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role: {}".format(role))
+        role_key = "ip_" + role + "s"
+
+        return list(self.state["modules"][0]["outputs"][role_key]["value"].values())
