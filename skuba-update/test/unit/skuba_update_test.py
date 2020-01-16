@@ -29,6 +29,7 @@ from skuba_update.skuba_update import (
     is_reboot_needed,
     reboot_sentinel_file,
     annotate_updates_available,
+    annotate_caasp_release_version,
     get_update_list,
     restart_services,
     REBOOT_REQUIRED_PATH,
@@ -37,7 +38,8 @@ from skuba_update.skuba_update import (
     ZYPPER_EXIT_INF_REBOOT_NEEDED,
     KUBE_UPDATES_KEY,
     KUBE_SECURITY_UPDATES_KEY,
-    KUBE_DISRUPTIVE_UPDATES_KEY
+    KUBE_DISRUPTIVE_UPDATES_KEY,
+    KUBE_CAASP_RELEASE_VERSION_KEY
 )
 
 
@@ -111,12 +113,17 @@ def test_main_no_root(mock_subprocess, mock_args):
     assert exception
 
 
+@patch('skuba_update.skuba_update.node_name_from_machine_id')
+@patch('skuba_update.skuba_update.annotate_caasp_release_version')
 @patch('skuba_update.skuba_update.annotate_updates_available')
 @patch('argparse.ArgumentParser.parse_args')
 @patch('os.environ.get', new={}.get, spec_set=True)
 @patch('os.geteuid')
 @patch('subprocess.Popen')
-def test_main(mock_subprocess, mock_geteuid, mock_args, mock_annotate):
+def test_main(
+    mock_subprocess, mock_geteuid, mock_args,
+    mock_annotate, mock_annotate_version, mock_name
+):
     return_values = [
         (b'some_service1\nsome_service2', b''),
         (b'zypper 1.14.15', b'')
@@ -183,13 +190,14 @@ def test_restart_services_error(mock_zypp_cmd, mock_subprocess, capsys):
     assert 'returned non zero exit code' in out
 
 
+@patch('skuba_update.skuba_update.node_name_from_machine_id')
 @patch('skuba_update.skuba_update.annotate_updates_available')
 @patch('argparse.ArgumentParser.parse_args')
 @patch('os.environ.get', new={}.get, spec_set=True)
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main_annotate_only(
-        mock_subprocess, mock_geteuid, mock_args, mock_annotate
+        mock_subprocess, mock_geteuid, mock_args, mock_annotate, mock_name
 ):
     args = Mock()
     args.annotate_only = True
@@ -203,16 +211,20 @@ def test_main_annotate_only(
     assert mock_subprocess.call_args_list == [
         call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
         call(['zypper', 'ref', '-s'], stdout=None, stderr=None, env=ANY),
+        call([
+            'rpm', '-q', 'caasp-release', '--queryformat', '%{VERSION}'
+        ], stdout=-1, stderr=-1, env=ANY),
     ]
 
 
+@patch('skuba_update.skuba_update.node_name_from_machine_id')
 @patch('skuba_update.skuba_update.annotate_updates_available')
 @patch('argparse.ArgumentParser.parse_args')
 @patch('os.environ.get', new={}.get, spec_set=True)
 @patch('os.geteuid')
 @patch('subprocess.Popen')
 def test_main_zypper_returns_100(
-        mock_subprocess, mock_geteuid, mock_args, mock_annotate
+        mock_subprocess, mock_geteuid, mock_args, mock_annotate, mock_name
 ):
     return_values = [(b'', b''), (b'zypper 1.14.15', b'')]
 
@@ -246,6 +258,9 @@ def test_main_zypper_returns_100(
             ['zypper', 'ps', '-sss'],
             stdout=-1, stderr=-1, env=ANY
         ),
+        call([
+            'rpm', '-q', 'caasp-release', '--queryformat', '%{VERSION}'
+        ], stdout=-1, stderr=-1, env=ANY),
         call([
             'zypper', 'needs-rebooting'
         ], stdout=None, stderr=None, env=ANY),
@@ -403,7 +418,7 @@ def test_annotate_updates_empty(mock_subprocess, mock_annotate, mock_name):
     )
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
             ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
@@ -429,7 +444,7 @@ def test_annotate_updates(mock_subprocess, mock_annotate, mock_name):
     )
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
             ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
@@ -457,7 +472,7 @@ def test_annotate_updates_available(mock_subprocess, mock_open, mock_name):
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
 
     assert mock_subprocess.call_args_list == [
         call(
@@ -495,7 +510,7 @@ def test_annotate_updates_bad_xml(mock_subprocess, mock_annotate, mock_name):
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
             ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
@@ -525,7 +540,7 @@ def test_annotate_updates_security(
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
             ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
@@ -555,7 +570,7 @@ def test_annotate_updates_available_is_reboot(
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
 
-    annotate_updates_available()
+    annotate_updates_available(mock_name.return_value)
     assert mock_subprocess.call_args_list == [
         call(
             ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
@@ -566,6 +581,33 @@ def test_annotate_updates_available_is_reboot(
         call('node', 'mynode', KUBE_UPDATES_KEY, 'yes'),
         call('node', 'mynode', KUBE_SECURITY_UPDATES_KEY, 'no'),
         call('node', 'mynode', KUBE_DISRUPTIVE_UPDATES_KEY, 'yes')
+    ]
+
+
+@patch('skuba_update.skuba_update.node_name_from_machine_id')
+@patch('skuba_update.skuba_update.annotate')
+@patch('subprocess.Popen')
+def test_annotate_caasp_release_version(
+    mock_subprocess, mock_annotate, mock_name
+):
+    mock_name.return_value = 'mynode'
+
+    mock_process = Mock()
+    mock_process.communicate.return_value = (
+        b'1.2.3', b''
+    )
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+
+    annotate_caasp_release_version(mock_name.return_value)
+    assert mock_subprocess.call_args_list == [
+        call(
+            ['rpm', '-q', 'caasp-release', '--queryformat', '%{VERSION}'],
+            stdout=-1, stderr=-1, env=ANY
+        )
+    ]
+    assert mock_annotate.call_args_list == [
+        call('node', 'mynode', KUBE_CAASP_RELEASE_VERSION_KEY, '1.2.3'),
     ]
 
 

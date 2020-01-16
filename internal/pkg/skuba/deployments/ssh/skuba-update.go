@@ -18,16 +18,22 @@
 package ssh
 
 func init() {
-	stateMap["skuba-update.start"] = skubaUpdateStart
-	stateMap["skuba-update.stop"] = skubaUpdateStop
+	stateMap["skuba-update.start.no-block"] = skubaUpdateStartNoBlock
+	stateMap["skuba-update-timer.enable"] = skubaUpdateTimerEnable
+	stateMap["skuba-update-timer.disable"] = skubaUpdateTimerDisable
 }
 
-func skubaUpdateStart(t *Target, data interface{}) error {
+func skubaUpdateStartNoBlock(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "start", "--no-block", "skuba-update")
+	return err
+}
+
+func skubaUpdateTimerEnable(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "--now", "skuba-update.timer")
 	return err
 }
 
-func skubaUpdateStop(t *Target, data interface{}) error {
+func skubaUpdateTimerDisable(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "disable", "--now", "skuba-update.timer")
 	return err
 }

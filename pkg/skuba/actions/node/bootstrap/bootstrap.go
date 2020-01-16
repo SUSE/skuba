@@ -143,7 +143,8 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
-		"skuba-update.start",
+		"skuba-update.start.no-block",
+		"skuba-update-timer.enable",
 	)
 	if err != nil {
 		return err

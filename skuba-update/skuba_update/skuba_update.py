@@ -56,6 +56,7 @@ KUBECONFIG_PATH = '/etc/kubernetes/kubelet.conf'
 KUBE_UPDATES_KEY = 'caasp.suse.com/has-updates'
 KUBE_SECURITY_UPDATES_KEY = 'caasp.suse.com/has-security-updates'
 KUBE_DISRUPTIVE_UPDATES_KEY = 'caasp.suse.com/has-disruptive-updates'
+KUBE_CAASP_RELEASE_VERSION_KEY = 'caasp.suse.com/caasp-release-version'
 
 
 def main():
@@ -78,10 +79,10 @@ def main():
     if not args.annotate_only:
         code = update()
         restart_services()
-        annotate_updates_available()
+        annotate_node()
         reboot_sentinel_file(code)
     else:
-        annotate_updates_available()
+        annotate_node()
 
 
 def parse_args():
@@ -123,7 +124,13 @@ def update():
     return code
 
 
-def annotate_updates_available():
+def annotate_node():
+    node_name = node_name_from_machine_id()
+    annotate_updates_available(node_name)
+    annotate_caasp_release_version(node_name)
+
+
+def annotate_updates_available(node_name):
     """
     Performs a zypper list-patches and annotates the node like so:
 
@@ -134,7 +141,6 @@ def annotate_updates_available():
          flag is set.
     """
 
-    node_name = node_name_from_machine_id()
     patch_xml = run_zypper_command(
         ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
         needsOutput=True
@@ -151,6 +157,23 @@ def annotate_updates_available():
     annotate(
         'node', node_name, KUBE_DISRUPTIVE_UPDATES_KEY,
         'yes' if has_disruptive_updates(updates) else 'no'
+    )
+
+
+def annotate_caasp_release_version(node_name):
+    """
+    Performs fetch caasp-release version and annotates to the node.
+    """
+
+    cmd = run_command(['rpm', '-q', 'caasp-release',
+                       '--queryformat', '%{VERSION}'])
+    if cmd.returncode != 0 or not cmd.output:
+        log('Failed get caasp-release rpm package version')
+        return
+
+    annotate(
+        'node', node_name, KUBE_CAASP_RELEASE_VERSION_KEY,
+        cmd.output,
     )
 
 

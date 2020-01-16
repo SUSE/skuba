@@ -209,12 +209,13 @@ upgrades. The tool is currently returning fake data.
 
 ```
 $ kubectl caasp cluster status
-NAME      OS-IMAGE             KERNEL-VERSION                CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES
-master0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-master1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-master2   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-worker0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-worker1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   cri-o://1.13.0      <none>        <none>
+NAME      OS-IMAGE                              KERNEL-VERSION           KUBELET-VERSION   CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES   CAASP-RELEASE-VERSION
+master0   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+master1   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+master2   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker0   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker1   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker2   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
 ```
 
 ## Demo

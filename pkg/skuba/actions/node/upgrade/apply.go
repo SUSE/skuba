@@ -26,13 +26,14 @@ import (
 	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
+	"github.com/pkg/errors"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
-	"github.com/pkg/errors"
 )
 
 func Apply(client clientset.Interface, target *deployments.Target) error {
@@ -109,7 +110,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
 	if skubaUpdateWasEnabled {
-		err = target.Apply(nil, "skuba-update.stop")
+		err = target.Apply(nil, "skuba-update-timer.disable")
 		if err != nil {
 			return err
 		}
@@ -163,7 +164,10 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 	if skubaUpdateWasEnabled {
-		err = target.Apply(nil, "skuba-update.start")
+		err = target.Apply(nil,
+			"skuba-update.start.no-block",
+			"skuba-update-timer.enable",
+		)
 		if err != nil {
 			return err
 		}
