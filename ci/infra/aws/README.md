@@ -71,16 +71,16 @@ Once the infrastructure has been created, you can obtain the details with
 
 ```console
 $ terraform output
-control_plane.private_dns = [
-    ip-10-1-1-55.eu-central-1.compute.internal
-]
-control_plane.public_ip = [
-    3.121.219.168
-]
+control_plane.private_dns = {
+    i-1234567890abcdef0 = ip-10-1-1-55.eu-central-1.compute.internal
+}
+control_plane.public_ip = {
+    i-1234567890abcdef1 = 3.121.219.168
+}
 elb_address = k8s-elb-1487845812.eu-central-1.elb.amazonaws.com
-nodes.private_dns = [
-    ip-10-1-1-157.eu-central-1.compute.internal
-]
+nodes.private_dns = {
+    i-1234567890abcdef2 = ip-10-1-1-157.eu-central-1.compute.internal
+}
 ```
 
 Then you can initialize the cluster with `skuba cluster init`, using the Load Balancer (`elb_address` in the Terraform output) as the control plane endpoint:
