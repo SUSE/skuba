@@ -23,7 +23,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/pkg/errors"
@@ -159,10 +158,6 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 
-	if err := target.Apply(nil, "kubernetes.wait-for-kubelet"); err != nil {
-		klog.Errorf("Kubelet could not register node %s. Please check the kubelet system logs and be aware that services kured or skuba-update will stay disabled", target.Nodename)
-		return err
-	}
 	if skubaUpdateWasEnabled {
 		err = target.Apply(nil,
 			"skuba-update.start.no-block",
