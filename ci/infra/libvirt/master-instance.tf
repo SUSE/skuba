@@ -53,7 +53,7 @@ data "template_file" "master-cloud-init" {
 resource "libvirt_volume" "master" {
   name           = "${var.stack_name}-master-volume-${count.index}"
   pool           = var.pool
-  size           = var.disk_size
+  size           = var.master_disk_size
   base_volume_id = libvirt_volume.img.id
   count          = var.masters
 }
