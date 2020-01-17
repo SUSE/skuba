@@ -24,7 +24,7 @@ import (
 
 // IsServiceEnabled returns if a service is enabled
 func (t *Target) IsServiceEnabled(serviceName string) (bool, error) {
-	klog.V(1).Infof("checking if %s is enabled", serviceName)
+	klog.V(2).Infof("checking if %s is enabled", serviceName)
 	isEnabled := true
 	_, _, err := t.silentSsh("systemctl", "is-enabled", serviceName)
 	if err != nil {

@@ -165,7 +165,7 @@ func (t *Target) internalSshWithStdin(silent bool, stdin string, command string,
 		finalCommand = fmt.Sprintf("sudo sh -c '%s'", finalCommand)
 	}
 	if !silent {
-		klog.V(1).Infof("running command: %q", finalCommand)
+		klog.V(2).Infof("running command: %q", finalCommand)
 	}
 	if err := session.Start(finalCommand); err != nil {
 		return "", "", err
@@ -188,7 +188,7 @@ func readerStreamer(reader io.Reader, outputChan chan<- string, description stri
 	for scanner.Scan() {
 		result.Write([]byte(scanner.Text()))
 		if description == "stdout" && !silent {
-			klog.V(1).Infof("%s", scanner.Text())
+			klog.V(2).Infof("%s", scanner.Text())
 		} else if description == "stderr" {
 			klog.Errorf("%s", scanner.Text())
 		}

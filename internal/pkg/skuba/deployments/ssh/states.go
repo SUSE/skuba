@@ -32,12 +32,12 @@ type Runner func(t *Target, data interface{}) error
 
 func (t *Target) Apply(data interface{}, states ...string) error {
 	for _, stateName := range states {
-		klog.V(1).Infof("=== applying state %s ===", stateName)
+		klog.V(2).Infof("=== applying state %s ===", stateName)
 		if state, stateExists := stateMap[stateName]; stateExists {
 			if err := state(t, data); err != nil {
 				return errors.Wrapf(err, "failed to apply state %s", stateName)
 			}
-			klog.V(1).Infof("=== state %s applied successfully ===", stateName)
+			klog.V(2).Infof("=== state %s applied successfully ===", stateName)
 		} else {
 			return errors.New(fmt.Sprintf("state does not exist: %s", stateName))
 		}
