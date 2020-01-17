@@ -68,7 +68,7 @@ func CreateAndWaitForJob(client clientset.Interface, name string, spec batchv1.J
 			klog.V(1).Infof("failed to get status for job %s, continuing...", name)
 		} else {
 			if job.Status.Active > 0 {
-				klog.V(1).Infof("job %s is active, waiting...", name)
+				klog.V(3).Infof("job %s is active, waiting...", name)
 			} else {
 				if job.Status.Succeeded > 0 {
 					klog.V(1).Infof("job %s executed successfully", name)

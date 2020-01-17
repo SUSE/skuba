@@ -44,7 +44,7 @@ func Lock(client clientset.Interface) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to patch daemonset with kured locking annotation")
 	}
-	klog.V(1).Info("successfully annotated daemonset with kured locking annotation")
+	klog.V(2).Info("successfully annotated daemonset with kured locking annotation")
 	return nil
 }
 
@@ -56,6 +56,6 @@ func Unlock(client clientset.Interface) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to patch daemonset with kured unlocking annotation")
 	}
-	klog.V(1).Info("successfully removed kured locking annotation")
+	klog.V(2).Info("successfully removed kured locking annotation")
 	return nil
 }
