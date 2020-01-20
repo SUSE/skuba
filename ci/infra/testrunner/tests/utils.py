@@ -62,14 +62,15 @@ def wait(func, *args, **kwargs):
         try:
             return func(*args, **kwargs)
         except TimeoutError:
-            if elapsed > 0 and int(time.time())-start >= elapsed:
-               reason = "maximum wait time exceeded: {}s".format(elapsed)
-               break
             reason = "timeout of {}s exceded".format(timeout)
         except allow as ex:
             reason = "{}: '{}'".format(ex.__class__.__name__, ex)
         finally:
             signal.alarm(0)
+
+        if elapsed > 0 and int(time.time())-start >= elapsed:
+            reason = "maximum wait time exceeded: {}s".format(elapsed)
+            break
 
         if retries > 0 and attempts == retries:
             break
