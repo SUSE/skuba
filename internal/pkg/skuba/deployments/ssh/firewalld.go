@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,20 @@
 
 package ssh
 
+import (
+	"k8s.io/klog"
+)
+
 func init() {
-	stateMap["firewalld.disable"] = apparmorStart
+	stateMap["firewalld.disable"] = firewalldDisable
 }
 
 func firewalldDisable(t *Target, data interface{}) error {
-	_, _, err := t.ssh("systemctl", "disable", "--now", "firewalld")
-	return err
+	_, _, err := t.ssh("systemctl", "list-units", "--type=service", "firewalld", "|", "grep", "firewalld")
+	if err == nil {
+		_, _, err := t.ssh("systemctl", "disable", "--now", "firewalld")
+		return err
+	}
+	klog.V(4).Info("=== Could not find firewalld.service ===")
+	return nil
 }

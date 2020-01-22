@@ -78,6 +78,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 	statesToApply = append(statesToApply,
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"firewalld.disable",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
