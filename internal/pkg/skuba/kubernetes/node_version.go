@@ -25,7 +25,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -128,13 +130,32 @@ func (nvi NodeVersionInfo) ToleratesClusterVersion(clusterVersion *version.Versi
 
 // AllNodesVersioningInfo returns the version info for all nodes in the cluster
 func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, error) {
-	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	var lastErr error
+	var nodeList *v1.NodeList
+	err := wait.ExponentialBackoff(retry.DefaultBackoff, func() (bool, error) {
+		var err error
+		nodeList, err = client.CoreV1().Nodes().List(metav1.ListOptions{})
+		if err != nil {
+			lastErr = err
+			return false, nil
+		}
+		return true, nil
+	})
 	if err != nil {
-		return NodeVersionInfoMap{}, errors.Wrap(err, "could not retrieve node list")
+		return NodeVersionInfoMap{}, errors.Wrap(lastErr, "could not retrieve node list")
 	}
-	podList, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+	var podList *v1.PodList
+	err = wait.ExponentialBackoff(retry.DefaultBackoff, func() (bool, error) {
+		var err error
+		podList, err = client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+		if err != nil {
+			lastErr = err
+			return false, nil
+		}
+		return true, nil
+	})
 	if err != nil {
-		return NodeVersionInfoMap{}, errors.Wrap(err, "could not retrieve pods")
+		return NodeVersionInfoMap{}, errors.Wrap(lastErr, "could not retrieve pods")
 	}
 
 	result := NodeVersionInfoMap{}
