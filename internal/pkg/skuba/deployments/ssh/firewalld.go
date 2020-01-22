@@ -26,7 +26,7 @@ func init() {
 }
 
 func firewalldDisable(t *Target, data interface{}) error {
-	_, _, err := t.ssh("systemctl", "list-units", "--type=service", "firewalld", "|", "grep", "firewalld")
+	_, _, err := t.ssh("systemctl", "cat", "firewalld")
 	if err == nil {
 		_, _, err := t.ssh("systemctl", "disable", "--now", "firewalld")
 		return err

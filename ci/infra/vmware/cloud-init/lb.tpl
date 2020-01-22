@@ -36,7 +36,6 @@ runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
   # start another service by either `enable --now` or `start` will create a
   # deadlock. Instead, we have to use the `--no-block-` flag.
-  - [ systemctl, disable, --now, --no-block, firewalld ]
   # The template machine should have been cleaned up, so no machine-id exists
   - [ dbus-uuidgen, --ensure ]
   - [ systemd-machine-id-setup ]
