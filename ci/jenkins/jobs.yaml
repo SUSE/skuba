@@ -85,7 +85,7 @@
         - '{name}-release-staging-on-demand'
 
 - job:
-    name: caasp-jobs/caasp-jjb
+    name: caasp-jobs/caasp-jjb-skuba
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
