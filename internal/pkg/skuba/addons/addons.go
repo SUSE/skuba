@@ -20,16 +20,25 @@ package addons
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/dynamic"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/restmapper"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -252,11 +261,61 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		}
 		renderedManifest = string(renderedManifestBytes)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", "-")
-	cmd.Stdin = bytes.NewBuffer([]byte(renderedManifest))
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
-		return err
+
+	var obj unstructured.Unstructured
+	yamlDecoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(renderedManifest)), 4096)
+	for { // Process each document in the yaml stream
+		decodeErr := yamlDecoder.Decode(&obj)
+		if decodeErr == io.EOF {
+			break
+		}
+		data, err := runtime.Encode(unstructured.UnstructuredJSONScheme, &obj)
+		if err != nil {
+			return err
+		}
+		accessor := meta.NewAccessor()
+		name, err := accessor.Name(&obj)
+		if err != nil {
+			return err
+		}
+		namespace, err := accessor.Namespace(&obj)
+		if err != nil {
+			return err
+		}
+		forceConflicts := true
+		options := &metav1.PatchOptions{
+			Force:        &forceConflicts,
+			FieldManager: "skuba",
+		}
+		gvk := obj.GroupVersionKind()
+		gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
+		groupResources, err := restmapper.GetAPIGroupResources(client.Discovery())
+		if err != nil {
+			return err
+		}
+		mapping, err := restmapper.NewDiscoveryRESTMapper(groupResources).RESTMapping(gk, gvk.Version)
+		if err != nil {
+			return err
+		}
+		cfg, err := ioutil.ReadFile(skubaconstants.KubeConfigAdminFile())
+		if err != nil {
+			return err
+		}
+		clientCfg, err := clientcmd.RESTConfigFromKubeConfig(cfg)
+		if err != nil {
+			return err
+		}
+		dynamicClient, err := dynamic.NewForConfig(clientCfg)
+		if err != nil {
+			return err
+		}
+		_, err = dynamicClient.Resource(mapping.Resource).
+			Namespace(namespace).
+			Patch(name, "application/apply-patch+yaml", data, *options)
+		if err != nil {
+			klog.Errorf("failed to patch resource: %v", err)
+			break
+		}
 	}
 
 	replicaHelper, err := replica.NewHelper(client)
