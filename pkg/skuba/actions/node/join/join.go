@@ -74,7 +74,9 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		statesToApply = append(statesToApply, "kubernetes.join.upload-secrets")
 	}
 
-	statesToApply = append(statesToApply,
+	statesToApply = append(
+		statesToApply,
+		"kernel.check-modules",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
 		"firewalld.disable",
