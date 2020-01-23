@@ -135,6 +135,7 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		"kubernetes.bootstrap.upload-secrets",
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"firewalld.disable",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
