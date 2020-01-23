@@ -19,6 +19,9 @@ package ssh
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -35,6 +38,10 @@ var (
 			Attribute: "net.ipv4.ip_forward",
 			Value:     "1",
 		},
+		"net-ipv4-conf-all-forwarding": {
+			Attribute: "net.ipv4.conf.all.forwarding",
+			Value:     "1",
+		},
 		"net-bridge-bridge-nf-call-iptables": {
 			Attribute: "net.bridge.bridge-nf-call-iptables",
 			Value:     "1",
@@ -43,8 +50,22 @@ var (
 )
 
 func init() {
+	stateMap["kernel.check-modules"] = kernelCheckModules
 	stateMap["kernel.load-modules"] = kernelLoadModules
 	stateMap["kernel.configure-parameters"] = kernelConfigureParameters
+}
+
+func kernelCheckModules(t *Target, data interface{}) error {
+	errs := []string{}
+	for _, module := range modules {
+		if err := infoModule(t, module); err != nil {
+			errs = append(errs, fmt.Sprintf("module %s not found: %s", module, err))
+		}
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "\n"))
+	}
+	return nil
 }
 
 func kernelLoadModules(t *Target, data interface{}) error {
@@ -61,6 +82,13 @@ func kernelConfigureParameters(t *Target, data interface{}) error {
 		if err := configureParameter(t, parameterName, parameter.Attribute, parameter.Value); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func infoModule(t *Target, module string) error {
+	if _, _, err := t.ssh(fmt.Sprintf("modinfo %s", module)); err != nil {
+		return err
 	}
 	return nil
 }
