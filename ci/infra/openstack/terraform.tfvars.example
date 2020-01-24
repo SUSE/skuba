@@ -1,7 +1,14 @@
 # Name of the image to use
+# Only used if image_id is empty
 # EXAMPLE:
 # image_name = "SLE-15-SP1-JeOS-GMC"
 image_name = ""
+
+# ID of the image to use
+# Will overwrite image_name unless its empty
+# EXAMPLE:
+# image_id = "da398424-9dfc-4dcf-96fc-55e2d7ebf561"
+image_id   = ""
 
 # Name of the internal network to be created
 # EXAMPLE:

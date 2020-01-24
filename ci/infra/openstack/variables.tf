@@ -1,6 +1,11 @@
 variable "image_name" {
   default     = ""
-  description = "Name of the image to use"
+  description = "Name of the image to use. Only used if image_id is empty."
+}
+
+variable "image_id" {
+  default     = ""
+  description = "ID of the image to use. overwrites image_name unless its empty."
 }
 
 variable "repositories" {

@@ -68,6 +68,7 @@ resource "openstack_compute_instance_v2" "worker" {
   count      = var.workers
   name       = "caasp-worker-${var.stack_name}-${count.index}"
   image_name = var.image_name
+  image_id   = var.image_id
   key_pair   = var.key_pair
 
   depends_on = [
