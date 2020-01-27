@@ -36,6 +36,17 @@ func Status(client clientset.Interface) error {
 	}
 
 	for _, node := range nodeList.Items {
+		status := node.Status.Conditions[len(node.Status.Conditions)-1].Status
+		if status == "True" {
+			node.Labels["node-status.kubernetes.io"] = "Ready"
+		} else {
+			node.Labels["node-status.kubernetes.io"] = "NotReady"
+		}
+
+		if ok := node.Spec.Unschedulable; ok {
+			node.Labels["node-status.kubernetes.io"] = node.Labels["node-status.kubernetes.io"] + ",SchedulingDisabled"
+		}
+
 		for label := range node.Labels {
 			if strings.Contains(label, "node-role.kubernetes.io") && len(strings.Split(label, "/")) > 0 {
 				node.Labels["caasp-role.kubernetes.io"] = strings.Split(label, "/")[1]
@@ -45,6 +56,7 @@ func Status(client clientset.Interface) error {
 
 	outputFormat := "custom-columns=" +
 		"NAME:.metadata.name," +
+		"STATUS:.metadata.labels.node-status\\.kubernetes\\.io," +
 		"ROLE:.metadata.labels.caasp-role\\.kubernetes\\.io," +
 		"OS-IMAGE:.status.nodeInfo.osImage," +
 		"KERNEL-VERSION:.status.nodeInfo.kernelVersion," +
