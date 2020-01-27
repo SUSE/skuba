@@ -19,6 +19,7 @@ package cluster
 
 import (
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +35,24 @@ func Status(client clientset.Interface) error {
 		return errors.Wrap(err, "could not retrieve node list")
 	}
 
-	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,KUBELET-VERSION:.status.nodeInfo.kubeletVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates,CAASP-RELEASE-VERSION:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
+	for _, node := range nodeList.Items {
+		for label := range node.Labels {
+			if strings.Contains(label, "node-role.kubernetes.io") && len(strings.Split(label, "/")) > 0 {
+				node.Labels["caasp-role.kubernetes.io"] = strings.Split(label, "/")[1]
+			}
+		}
+	}
+
+	outputFormat := "custom-columns=" +
+		"NAME:.metadata.name," +
+		"ROLE:.metadata.labels.caasp-role\\.kubernetes\\.io," +
+		"OS-IMAGE:.status.nodeInfo.osImage," +
+		"KERNEL-VERSION:.status.nodeInfo.kernelVersion," +
+		"KUBELET-VERSION:.status.nodeInfo.kubeletVersion," +
+		"CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion," +
+		"HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates," +
+		"HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates," +
+		"CAASP-RELEASE-VERSION:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
 
 	printFlags := kubectlget.NewGetPrintFlags()
 	printFlags.OutputFormat = &outputFormat
