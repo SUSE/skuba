@@ -161,12 +161,8 @@ kind: Deployment
 metadata:
   name: oidc-dex
   namespace: kube-system
-  labels:
-    app: oidc-dex
-    caasp.suse.com/skuba-replica-ha: "true"
 spec:
   replicas: 3
-  revisionHistoryLimit: 0
   selector:
     matchLabels:
       app: oidc-dex
