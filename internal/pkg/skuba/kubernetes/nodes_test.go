@@ -82,62 +82,6 @@ func createNode(name string, isControlPlane bool, machineID string) corev1.Node 
 	}
 }
 
-func TestGetAllNodes(t *testing.T) {
-	tests := []struct {
-		name          string
-		fakeClientset *fake.Clientset
-		expect        int
-	}{
-		{
-			name: "get nodes when cluster has 1 master",
-			fakeClientset: fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						m1,
-					},
-				},
-			),
-			expect: 1,
-		},
-		{
-			name: "get control plane node when cluster has 1 master, 1 worker",
-			fakeClientset: fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						m1,
-						w1,
-					},
-				},
-			),
-			expect: 2,
-		},
-		{
-			name: "get all node when cluster has 2 master, 2 worker",
-			fakeClientset: fake.NewSimpleClientset(
-				&corev1.NodeList{
-					Items: []corev1.Node{
-						m1, m2,
-						w1, w2,
-					},
-				},
-			),
-			expect: 4,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			actual, _ := GetAllNodes(tt.fakeClientset)
-			actualSize := len(actual.Items)
-			if actualSize != tt.expect {
-				t.Errorf("returned node number (%d) does not match the expected one (%d)", actualSize, tt.expect)
-				return
-			}
-		})
-	}
-}
-
 func TestGetControlPlaneNodes(t *testing.T) {
 	tests := []struct {
 		name          string
