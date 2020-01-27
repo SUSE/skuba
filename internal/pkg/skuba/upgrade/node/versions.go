@@ -224,10 +224,11 @@ func controlPlaneUpdateStatusWithAvailableVersions(currentClusterVersion *versio
 	if !nodeVersioningInfo.EqualsClusterVersion(currentClusterVersion) {
 		return NodeVersionInfoUpdate{}, errors.Errorf("cannot infer how to upgrade this node from version %s to version %s", nodeVersioningInfo.String(), currentClusterVersion.String())
 	}
-	// This node is up to date and there are not newer versions available of the platform
+	// This node is up to date and there are not newer versions available of the platform. In any case, return the latest
+	// version components known to our static map in case a patch or metadata version changed.
 	return NodeVersionInfoUpdate{
 		Current: nodeVersioningInfo,
-		Update:  nodeVersioningInfo,
+		Update:  versionInquirer.NodeVersionInfoForClusterVersion(node, currentClusterVersion),
 	}, nil
 }
 
