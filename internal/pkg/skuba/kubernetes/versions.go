@@ -93,8 +93,8 @@ var (
 			AddonsVersion: AddonsVersion{
 				Cilium:  &AddonVersion{"1.5.3", 1},
 				Kured:   &AddonVersion{"1.2.0-rev4", 1},
-				Dex:     &AddonVersion{"2.16.0", 4},
-				Gangway: &AddonVersion{"3.1.0-rev4", 4},
+				Dex:     &AddonVersion{"2.16.0", 3},
+				Gangway: &AddonVersion{"3.1.0-rev4", 3},
 				PSP:     &AddonVersion{"", 1},
 			},
 		},
@@ -113,8 +113,8 @@ var (
 			AddonsVersion: AddonsVersion{
 				Cilium:  &AddonVersion{"1.5.3", 1},
 				Kured:   &AddonVersion{"1.2.0-rev4", 1},
-				Dex:     &AddonVersion{"2.16.0", 4},
-				Gangway: &AddonVersion{"3.1.0-rev4", 4},
+				Dex:     &AddonVersion{"2.16.0", 3},
+				Gangway: &AddonVersion{"3.1.0-rev4", 3},
 				PSP:     &AddonVersion{"", 1},
 			},
 		},

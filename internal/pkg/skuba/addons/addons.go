@@ -33,7 +33,6 @@ import (
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/internal/pkg/skuba/replica"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
@@ -258,15 +257,6 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
 		return err
 	}
-
-	replicaHelper, err := replica.NewHelper(client)
-	if err != nil {
-		return err
-	}
-	if err := replicaHelper.UpdateNodes(); err != nil {
-		return err
-	}
-
 	if addon.callbacks != nil {
 		if err := addon.callbacks.afterApply(addonConfiguration, skubaConfiguration); err != nil {
 			// TODO: should we rollback here?
