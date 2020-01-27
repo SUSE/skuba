@@ -30,11 +30,6 @@ import (
 	kubectldrain "k8s.io/kubernetes/pkg/kubectl/drain"
 )
 
-// GetAllNodes returns the list of nodes
-func GetAllNodes(client clientset.Interface) (*corev1.NodeList, error) {
-	return client.CoreV1().Nodes().List(metav1.ListOptions{})
-}
-
 // GetControlPlaneNodes returns the list of master nodes by matching
 // "node-role.kubernetes.io/master" label.
 func GetControlPlaneNodes(client clientset.Interface) (*corev1.NodeList, error) {
