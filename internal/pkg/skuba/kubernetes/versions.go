@@ -81,7 +81,7 @@ var (
 		"1.16.2": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.16.2",
-				ContainerRuntimeVersion: "1.16.0",
+				ContainerRuntimeVersion: "1.16.1",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
 				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
