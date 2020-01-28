@@ -49,15 +49,25 @@ data "template_file" "master-cloud-init" {
   }
 }
 
+resource "openstack_compute_servergroup_v2" "servergroup" {
+  name     = "servergroup-${var.stack_name}"
+  policies = ["anti-affinity"]
+}
+
 resource "openstack_compute_instance_v2" "master" {
   count      = var.masters
   name       = "caasp-master-${var.stack_name}-${count.index}"
   image_name = var.image_name
   key_pair   = var.key_pair
 
+  scheduler_hints {
+    group = openstack_compute_servergroup_v2.servergroup.id
+  }
+
   depends_on = [
     openstack_networking_network_v2.network,
     openstack_networking_subnet_v2.subnet,
+    openstack_compute_servergroup_v2.servergroup,
   ]
 
   flavor_name = var.master_size
