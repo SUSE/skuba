@@ -78,12 +78,6 @@
         - '{name}-test_remove_master'
         - '{name}-test_remove_worker'
 
-- project:
-    name: caasp-jobs/validation/caasp-v4
-    jobs:
-        - '{name}-devel-base-nightly'
-        - '{name}-release-staging-on-demand'
-
 - job:
     name: caasp-jobs/caasp-jjb-skuba
     project-type: pipeline
