@@ -37,46 +37,29 @@
           - '{name}-update-nightly'
 
 - project:
-    name: caasp-jobs/e2e/caasp-v4-openstack
+    name: caasp-jobs/e2e/caasp-v4
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
-    platform: openstack
+    platform:
+        - openstack
+        - vmware
+    test:
+        - 'test_upgrade_plan_all_fine'
+        - 'test_upgrade_plan_from_previous'
+        - 'test_upgrade_plan_from_previous_with_upgraded_control_plane'
+        - 'test_upgrade_apply_all_fine'
+        - 'test_upgrade_apply_from_previous'
+        - 'test_upgrade_apply_user_lock'
+        - 'test_cilium'
+        - 'test_deployments'
+        - 'test_dockercaps'
+        - 'test_addon_upgrade_plan'
+        - 'test_addon_upgrade_apply'
+        - 'test_remove_master'
+        - 'test_remove_worker'
     jobs:
-        - '{name}-test_upgrade_plan_all_fine-nightly'
-        - '{name}-test_upgrade_plan_from_previous-nightly'
-        - '{name}-test_upgrade_plan_from_previous_with_upgraded_control_plane-nightly'
-        - '{name}-test_upgrade_apply_all_fine-nightly'
-        - '{name}-test_upgrade_apply_from_previous-nightly'
-        - '{name}-test_upgrade_apply_user_lock-nightly'
-        - '{name}-test_cilium-nightly'
-        - '{name}-test_deployments-nightly'
-        - '{name}-test_dockercaps-nightly'
-        - '{name}-test_addon_upgrade_plan-nightly'
-        - '{name}-test_addon_upgrade_apply-nightly'
-        - '{name}-test_remove_master'
-        - '{name}-test_remove_worker'
-
-- project:
-    name: caasp-jobs/e2e/caasp-v4-vmware
-    repo-name: skuba
-    repo-owner: SUSE
-    repo-credentials: github-token
-    platform: vmware
-    jobs:
-        - '{name}-test_upgrade_plan_all_fine-nightly'
-        - '{name}-test_upgrade_plan_from_previous-nightly'
-        - '{name}-test_upgrade_plan_from_previous_with_upgraded_control_plane-nightly'
-        - '{name}-test_upgrade_apply_all_fine-nightly'
-        - '{name}-test_upgrade_apply_from_previous-nightly'
-        - '{name}-test_upgrade_apply_user_lock-nightly'
-        - '{name}-test_cilium-nightly'
-        - '{name}-test_deployments-nightly'
-        - '{name}-test_dockercaps-nightly'
-        - '{name}-test_addon_upgrade_plan-nightly'
-        - '{name}-test_addon_upgrade_apply-nightly'
-        - '{name}-test_remove_master'
-        - '{name}-test_remove_worker'
+        - '{name}-{platform}-{test}-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
