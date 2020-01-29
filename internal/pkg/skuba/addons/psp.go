@@ -118,10 +118,6 @@ roleRef:
   kind: ClusterRole
   name: suse:caasp:psp:privileged
 subjects:
-# Only authenticated users
-- kind: Group
-  apiGroup: rbac.authorization.k8s.io
-  name: system:authenticated
 # All ServiceAccounts in the 'kube-system' namespace
 - kind: Group
   apiGroup: rbac.authorization.k8s.io
