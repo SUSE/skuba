@@ -1,6 +1,11 @@
 # prefix for resources
 stack_name = "my-k8s"
 
+# Extra tags to add to all the resources
+#tags = {
+#  "key": "value"
+#}
+
 # a SSH public key for accessing the machines
 authorized_keys = [
   "ssh-rsa AAAAB3NzaC1yc2EA...",
