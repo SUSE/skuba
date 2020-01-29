@@ -146,9 +146,6 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService); err != nil {
 			return err
 		}
-		if err := t.UploadFileContents("/etc/sysconfig/kubelet", assets.KubeletSysconfig); err != nil {
-			return err
-		}
 	} else {
 		if err := t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
 			return err
