@@ -22,7 +22,6 @@
       platform: openstack
       jobs:
           - '{name}-conformance'
-          - '{name}-nightly'
           - '{name}-update-nightly'
 
 - project:
@@ -33,7 +32,6 @@
       platform: vmware
       jobs:
           - '{name}-conformance'
-          - '{name}-nightly'
           - '{name}-update-nightly'
 
 - project:
