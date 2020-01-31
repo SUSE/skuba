@@ -76,7 +76,7 @@ class Terraform(Platform):
 
     def get_lb_ipaddr(self):
         self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]["{}-lb".format(self.stack_name())]
+        return self.state["outputs"]["ip_load_balancer"]["value"]["{}-lb".format(self.stack_name())]
 
     def get_num_nodes(self, role):
         return len(self.get_nodes_ipaddrs(role))
@@ -92,7 +92,7 @@ class Terraform(Platform):
             raise ValueError("Invalid role: {}".format(role))
 
         role_key = "ip_" + role + "s"
-        return list(self.state["modules"][0]["outputs"][role_key]["value"].values())
+        return list(self.state["outputs"][role_key]["value"].values())
 
     @step
     def _fetch_terraform_output(self):

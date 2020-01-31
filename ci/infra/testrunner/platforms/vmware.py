@@ -41,4 +41,4 @@ class VMware(Terraform):
 
     def get_lb_ipaddr(self):
         self._load_tfstate()
-        return self.state["modules"][0]["outputs"]["ip_load_balancer"]["value"]["{}-lb-0".format(self.stack_name())]
+        return self.state["outputs"]["ip_load_balancer"]["value"]["{}-lb-0".format(self.stack_name())]
