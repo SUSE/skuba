@@ -39,6 +39,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
+	"github.com/SUSE/skuba/internal/pkg/skuba/replica"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -101,6 +102,14 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		if err := cni.CiliumUpdateConfigMap(client); err != nil {
 			return err
 		}
+	}
+
+	replicaHelper, err := replica.NewHelper(client)
+	if err != nil {
+		return err
+	}
+	if err := replicaHelper.UpdateNodes(); err != nil {
+		return err
 	}
 
 	fmt.Println("[join] node successfully joined the cluster")
