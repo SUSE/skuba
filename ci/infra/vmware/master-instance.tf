@@ -90,6 +90,7 @@ resource "vsphere_virtual_machine" "master" {
 }
 
 resource "null_resource" "master_wait_cloudinit" {
+  depends_on = [vsphere_virtual_machine.master]
   count = var.masters
 
   connection {

@@ -90,6 +90,7 @@ resource "vsphere_virtual_machine" "worker" {
 }
 
 resource "null_resource" "worker_wait_cloudinit" {
+  depends_on = [vsphere_virtual_machine.worker]
   count = var.workers
 
   connection {
