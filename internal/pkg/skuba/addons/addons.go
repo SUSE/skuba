@@ -15,6 +15,8 @@
  *
  */
 
+// Package addons provides the mechanism to extend the kubernetes functionality by applying
+// addons that provide new functions. This package also includes the addons
 package addons
 
 import (
@@ -102,6 +104,8 @@ func (renderContext renderContext) ManifestVersion() string {
 	return fmt.Sprintf("%s-%d", addonVersion.Version, addonVersion.ManifestVersion)
 }
 
+// registerAddon incorporates one addon information to the Addons map that keeps track of the
+// addons which will get deployed
 func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority, getImageCallbacks []getImageCallback) {
 	Addons[addon] = Addon{
 		addon:             addon,
@@ -112,6 +116,8 @@ func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callba
 	}
 }
 
+// addonsByPriority sorts the addons in the Addons map by their priority set by the
+// addon.addonPriority uint and returns a slice
 func addonsByPriority() []Addon {
 	sortedAddons := make([]Addon, len(Addons))
 	i := 0
@@ -125,6 +131,8 @@ func addonsByPriority() []Addon {
 	return sortedAddons
 }
 
+// DeployAddons loops over the sorted list of addons, checks if each needs to be deployed and
+// triggers its deployment
 func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration, applyBehavior ApplyBehavior) error {
 	skubaConfiguration, err := skuba.GetSkubaConfiguration(client)
 	if err != nil {
@@ -154,6 +162,8 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 	return nil
 }
 
+// Render substitutes the variables in the template and returns a string with the addon
+// manifest ready
 func (addon Addon) Render(addonConfiguration AddonConfiguration) (string, error) {
 	template, err := template.New("").Parse(addon.templater(addonConfiguration))
 	if err != nil {
@@ -170,10 +180,12 @@ func (addon Addon) Render(addonConfiguration AddonConfiguration) (string, error)
 	return rendered.String(), nil
 }
 
+// IsPresentForClusterVersion verifies if the Addon can be deployed with the current k8s version
 func (addon Addon) IsPresentForClusterVersion(clusterVersion *version.Version) bool {
 	return kubernetes.AddonVersionForClusterVersion(addon.addon, clusterVersion) != nil
 }
 
+// HasToBeApplied decides if the Addon is deployed by checking its version with addonVersionLower
 func (addon Addon) HasToBeApplied(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) (bool, error) {
 	if !addon.IsPresentForClusterVersion(addonConfiguration.ClusterVersion) {
 		// TODO (ereslibre): this logic can be triggered if some registered
@@ -199,6 +211,7 @@ func (addon Addon) HasToBeApplied(addonConfiguration AddonConfiguration, skubaCo
 	return addonVersionLower(currentAddonVersion, addonVersion), nil
 }
 
+// needsRender decides if the config file needs to be rendered by checking the applyBehavior var
 func (addon Addon) needsRender(applyBehavior ApplyBehavior) bool {
 	if applyBehavior == AlwaysRender {
 		return true
@@ -207,14 +220,17 @@ func (addon Addon) needsRender(applyBehavior ApplyBehavior) bool {
 	return err != nil
 }
 
+// addonPath returns the path to the Addon manifest directory
 func (addon Addon) addonPath() string {
 	return filepath.Join(skubaconstants.AddonsDir(), string(addon.addon))
 }
 
+// manifestPath returns the path to the Addon manifest file
 func (addon Addon) manifestPath() string {
 	return filepath.Join(addon.addonPath(), fmt.Sprintf("%s.yaml", addon.addon))
 }
 
+// Write creates the manifest yaml file of the Addon after rendering its template
 func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	addonManifest, err := addon.Render(addonConfiguration)
 	if err != nil {
@@ -229,6 +245,8 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	return nil
 }
 
+// Apply deploys the addon by calling kubectl apply and pointing to the generated addon
+// manifest
 func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration, applyBehavior ApplyBehavior) error {
 	klog.V(1).Infof("applying %q addon", addon.addon)
 	if addon.callbacks != nil {
@@ -267,6 +285,7 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 	return updateSkubaConfigMapWithAddonVersion(client, addon.addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
 
+// Images returns the images required for this Addon to properly function
 func (addon Addon) Images(imageTag string) []string {
 	images := []string{}
 	for _, cb := range addon.getImageCallbacks {
@@ -275,6 +294,7 @@ func (addon Addon) Images(imageTag string) []string {
 	return images
 }
 
+// addonVersionLower checks if the updated version of the Addon is greater than the current
 func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.AddonVersion) bool {
 	// If we don't have a version to compare to, assume it's not lower
 	if current == nil {
@@ -283,6 +303,8 @@ func addonVersionLower(current *kubernetes.AddonVersion, updated *kubernetes.Add
 	return current.ManifestVersion < updated.ManifestVersion
 }
 
+// updateSkubaConfigMapWithAddonVersion updates the general Skuba config to include the
+// information of the Addon which was deployed
 func updateSkubaConfigMapWithAddonVersion(client clientset.Interface, addon kubernetes.Addon, clusterVersion *version.Version, skubaConfiguration *skuba.SkubaConfiguration) error {
 	addonVersion := kubernetes.AddonVersionForClusterVersion(addon, clusterVersion)
 	if skubaConfiguration.AddonsVersion == nil {
