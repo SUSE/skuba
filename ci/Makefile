@@ -48,9 +48,13 @@ test_jenkins_jobs:
 update_jenkins_jobs:
 	jenkins-jobs  --ignore-cache --conf ${JENKINS_JOB_CONFIG} update ${JENKINS_JOBS_DIR}/:${JENKINS_JOBS_DIR}/templates/
 
+.PHONY: update_pkgs
+update_pkgs:
+	sudo zypper update --allow-vendor-change -y kubernetes-client terraform terraform-provider-*
+
 # Stages
 .PHONY: pre_deployment
-pre_deployment: info
+pre_deployment: info update_pkgs
 
 .PHONY: pr_checks
 pr_checks: git_rebase_check
