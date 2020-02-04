@@ -22,7 +22,6 @@
       platform: openstack
       jobs:
           - '{name}-conformance'
-          - '{name}-update-nightly'
 
 - project:
       name: caasp-jobs/caasp-v4-vmware
@@ -32,7 +31,6 @@
       platform: vmware
       jobs:
           - '{name}-conformance'
-          - '{name}-update-nightly'
 
 - project:
     name: caasp-jobs/e2e/caasp-v4
@@ -59,6 +57,7 @@
         - 'test_remove_worker'
     jobs:
         - '{name}-{platform}-{test}-nightly'
+        - '{name}-{platform}-update-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
