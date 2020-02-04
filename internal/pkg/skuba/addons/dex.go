@@ -161,6 +161,8 @@ kind: Deployment
 metadata:
   name: oidc-dex
   namespace: kube-system
+  labels:
+    app: oidc-dex
 spec:
   replicas: 3
   selector:
