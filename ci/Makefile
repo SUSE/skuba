@@ -125,6 +125,10 @@ test_e2e:
 test_cpi_openstack:
 	${TEST_RUNNER} -v vars.yaml -p openstack test --verbose --suite test_cpi_openstack.py
 
+.PHONY: test_hard_reboot
+test_hard_reboot:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_node_reboot.py --test test_hard_reboot
+
 .PHONY: test_remove_master
 test_remove_master:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_masters.py --test test_remove_master

@@ -43,6 +43,7 @@
         - openstack
         - vmware
     test:
+        - 'test_hard_reboot'
         - 'test_upgrade_plan_all_fine'
         - 'test_upgrade_plan_from_previous'
         - 'test_upgrade_plan_from_previous_with_upgraded_control_plane'
