@@ -83,12 +83,13 @@ var (
 )
 
 type Target struct {
-	target     *deployments.Target
-	user       string
-	targetName string
-	sudo       bool
-	port       int
-	client     *ssh.Client
+	target       *deployments.Target
+	user         string
+	targetName   string
+	sudo         bool
+	port         int
+	verboseLevel string
+	client       *ssh.Client
 }
 
 // GetFlags adds init flags bound to the config to the specified flagset
@@ -108,17 +109,18 @@ func (t Target) String() string {
 	return fmt.Sprintf("%s@%s:%d", t.user, t.target.Target, t.port)
 }
 
-func (t *Target) GetDeployment(nodename string, role *deployments.Role) *deployments.Target {
+func (t *Target) GetDeployment(nodename string, role *deployments.Role, verboseLevel string) *deployments.Target {
 	res := deployments.Target{
 		Target:   t.targetName,
 		Nodename: nodename,
 		Role:     role,
 	}
 	res.Actionable = &Target{
-		target: &res,
-		user:   t.user,
-		sudo:   t.sudo,
-		port:   t.port,
+		target:       &res,
+		user:         t.user,
+		sudo:         t.sudo,
+		port:         t.port,
+		verboseLevel: verboseLevel,
 	}
 	return &res
 }

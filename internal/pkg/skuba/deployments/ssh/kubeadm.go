@@ -62,7 +62,7 @@ func kubeadmInit(t *Target, data interface{}) error {
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors)
+	_, _, err := t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors, "-v", t.verboseLevel)
 	return err
 }
 
@@ -98,12 +98,12 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err = t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors)
+	_, _, err = t.ssh("kubeadm", "join", "--config", remoteKubeadmInitConfFile, ignorePreflightErrors, "-v", t.verboseLevel)
 	return err
 }
 
 func kubeadmReset(t *Target, data interface{}) error {
-	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--ignore-preflight-errors", "all", "--force")
+	_, _, err := t.ssh("kubeadm", "reset", "--cri-socket", "/var/run/crio/crio.sock", "--ignore-preflight-errors", "all", "--force", "-v", t.verboseLevel)
 	return err
 }
 
@@ -126,11 +126,11 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 		}
 	}()
 
-	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "--config", remoteKubeadmUpgradeConfFile, "-y")
+	_, _, err := t.ssh("kubeadm", "upgrade", "apply", "--config", remoteKubeadmUpgradeConfFile, "-y", "-v", t.verboseLevel)
 	return err
 }
 
 func kubeadmUpgradeNode(t *Target, data interface{}) error {
-	_, _, err := t.ssh("kubeadm", "upgrade", "node")
+	_, _, err := t.ssh("kubeadm", "upgrade", "node", "-v", t.verboseLevel)
 	return err
 }
