@@ -6,7 +6,7 @@
 
 
 pipeline {
-    agent { node { label 'caasp-team-private' } }
+    agent { node { label 'caasp-team-private-integration' } }
 
     environment {
         VMWARE_ENV_FILE = credentials('vmware-env')

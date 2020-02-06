@@ -1,7 +1,7 @@
 // this pipeline runs os acceptance tests for skuba-update
 
 pipeline {
-    agent { node { label 'caasp-team-private' } }
+    agent { node { label 'caasp-team-private-integration' } }
     environment {
         GITHUB_TOKEN = credentials('github-token')
         JENKINS_JOB_CONFIG = credentials('jenkins-job-config')

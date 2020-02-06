@@ -3,7 +3,7 @@
  */
 
 pipeline {
-   agent { node { label 'caasp-team-private' } }
+   agent { node { label 'caasp-team-private-integration' } }
 
    parameters {
         string(name: 'E2E_MAKE_TARGET_NAME', defaultValue: 'all', description: 'The make target to run (only e2e related)')
