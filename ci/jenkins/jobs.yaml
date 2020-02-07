@@ -1,5 +1,5 @@
 - project:
-    name: caasp-jobs/caasp-v4
+    name: caasp-jobs/v4/pr
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
@@ -15,25 +15,18 @@
         - '{name}-jjb-validation'
 
 - project:
-      name: caasp-jobs/caasp-v4-openstack
+      name: caasp-jobs/v4/conformance
       repo-name: skuba
       repo-owner: SUSE
       repo-credentials: github-token
-      platform: openstack
+      platform:
+        - openstack
+        - vmware
       jobs:
-          - '{name}-conformance'
+          - '{name}-{platform}-conformance'
 
 - project:
-      name: caasp-jobs/caasp-v4-vmware
-      repo-name: skuba
-      repo-owner: SUSE
-      repo-credentials: github-token
-      platform: vmware
-      jobs:
-          - '{name}-conformance'
-
-- project:
-    name: caasp-jobs/e2e/caasp-v4
+    name: caasp-jobs/v4/e2e
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
