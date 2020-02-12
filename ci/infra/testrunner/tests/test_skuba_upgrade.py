@@ -1,7 +1,7 @@
 import time
 import pytest
 
-from tests.utils import (check_nodes_ready, wait)
+from tests.utils import (check_pods_ready, check_nodes_ready, wait)
 
 PREVIOUS_VERSION = "1.15.2"
 CURRENT_VERSION = "1.16.2"
@@ -9,6 +9,7 @@ CURRENT_VERSION = "1.16.2"
 @pytest.fixture
 def setup(request, platform, skuba):
     def cleanup():
+        platform.gather_logs()
         platform.cleanup()
 
     request.addfinalizer(cleanup)
@@ -49,6 +50,15 @@ def node_is_upgraded(kubectl, platform, role, nr):
                 break
         else:
             time.sleep(2)
+
+    # allow system pods to come up again after the upgrade
+    wait(check_pods_ready,
+         kubectl,
+         namespace="kube-system",
+         wait_delay=60,
+         wait_backoff=30,
+         wait_elapsed=60*10,
+         wait_allow=(AssertionError))
 
     cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
     return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1

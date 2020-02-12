@@ -25,7 +25,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -143,12 +145,7 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 }
 
 // NodeVersioningInfo returns related versioning information about a node
-func NodeVersioningInfo(nodeName string) (NodeVersionInfo, error) {
-	client, err := GetAdminClientSet()
-	if err != nil {
-		return NodeVersionInfo{}, errors.Wrap(err, "unable to get admin client set")
-	}
-
+func NodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersionInfo, error) {
 	nodeVersions, err := nodeVersioningInfo(client, nodeName)
 	if err != nil {
 		return NodeVersionInfo{}, errors.Wrap(err, "unable to get node versioning info")
@@ -168,40 +165,69 @@ func nodeVersioningInfo(client clientset.Interface, nodeName string) (NodeVersio
 	unschedulable := nodeObject.Spec.Unschedulable
 
 	// Extract the container runtime version from the raw version
-	containerRuntimeVersion := runtimeVersionRegexp.FindStringSubmatch(containerRuntimeVersionRaw)[1]
+	containerRuntimeVersion, err := version.ParseSemantic(runtimeVersionRegexp.FindStringSubmatch(containerRuntimeVersionRaw)[1])
+	if err != nil {
+		return NodeVersionInfo{}, errors.Wrapf(err, "could not retrieve node %q container runtime version", nodeName)
+	}
 
 	nodeVersions := NodeVersionInfo{
 		Nodename:                nodeName,
-		ContainerRuntimeVersion: version.MustParseSemantic(containerRuntimeVersion),
+		ContainerRuntimeVersion: containerRuntimeVersion,
 		KubeletVersion:          kubeletVersion,
 		Unschedulable:           unschedulable,
 	}
 
 	// find out the container image tags, depending on the role of the node
 	if IsControlPlane(nodeObject) {
-		apiServerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-apiserver", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve apiserver pod")
-		}
-		controllerManagerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-controller-manager", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve controller-manager pod")
-		}
-		schedulerTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "kube-scheduler", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve scheduler pod")
-		}
-		etcdTag, err := getPodContainerImageTag(client, metav1.NamespaceSystem, fmt.Sprintf("%s-%s", "etcd", nodeName))
-		if err != nil {
-			return NodeVersionInfo{}, errors.Wrap(err, "could not retrieve etcd pod")
-		}
+		// track last error so we can properly raise it at the end of the retry
+		var lastError error
 
-		nodeVersions.APIServerVersion = version.MustParseSemantic(apiServerTag)
-		nodeVersions.ControllerManagerVersion = version.MustParseSemantic(controllerManagerTag)
-		nodeVersions.SchedulerVersion = version.MustParseSemantic(schedulerTag)
-		nodeVersions.EtcdVersion = version.MustParseSemantic(etcdTag)
+		err := wait.ExponentialBackoff(retry.DefaultBackoff, func() (done bool, err error) {
+			// list all the pods
+			allPods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+			// check for error
+			if err != nil {
+				lastError = errors.New("could not retrieve pods")
+				return false, nil
+			}
+			// check for empty pod list
+			if len(allPods.Items) == 0 {
+				lastError = errors.New("list of pods is empty")
+				return false, nil
+			}
+			// check that the needed pods exist
+			apiserverPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-apiserver-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve api server pod")
+				return false, nil
+			}
+			controllerManagerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-controller-manager-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve controller manager pod")
+				return false, nil
+			}
+			schedulerPod, err := getPodFromPodList(allPods, fmt.Sprintf("kube-scheduler-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve scheduler pod")
+				return false, nil
+			}
+			etcdPod, err := getPodFromPodList(allPods, fmt.Sprintf("etcd-%s", nodeName))
+			if err != nil {
+				lastError = errors.Wrap(err, "could not retrieve etcd pod")
+				return false, nil
+			}
+
+			nodeVersions.APIServerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(apiserverPod))
+			nodeVersions.ControllerManagerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(controllerManagerPod))
+			nodeVersions.SchedulerVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(schedulerPod))
+			nodeVersions.EtcdVersion = version.MustParseSemantic(getPodContainerImageTagFromPodObject(etcdPod))
+
+			return true, nil
+		})
+		if err != nil {
+			return NodeVersionInfo{}, lastError
+		}
 	}
-
 	return nodeVersions, nil
 }
 

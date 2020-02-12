@@ -56,6 +56,7 @@ KUBECONFIG_PATH = '/etc/kubernetes/kubelet.conf'
 KUBE_UPDATES_KEY = 'caasp.suse.com/has-updates'
 KUBE_SECURITY_UPDATES_KEY = 'caasp.suse.com/has-security-updates'
 KUBE_DISRUPTIVE_UPDATES_KEY = 'caasp.suse.com/has-disruptive-updates'
+KUBE_CAASP_RELEASE_VERSION_KEY = 'caasp.suse.com/caasp-release-version'
 
 
 def main():
@@ -74,14 +75,14 @@ def main():
     if os.geteuid() != 0:
         raise Exception('root privileges are required to run this tool')
 
-    run_zypper_command(['zypper', 'ref', '-s'])
+    run_zypper_command(['ref', '-s'])
     if not args.annotate_only:
         code = update()
         restart_services()
-        annotate_updates_available()
+        annotate_node()
         reboot_sentinel_file(code)
     else:
-        annotate_updates_available()
+        annotate_node()
 
 
 def parse_args():
@@ -123,7 +124,13 @@ def update():
     return code
 
 
-def annotate_updates_available():
+def annotate_node():
+    node_name = node_name_from_machine_id()
+    annotate_updates_available(node_name)
+    annotate_caasp_release_version(node_name)
+
+
+def annotate_updates_available(node_name):
     """
     Performs a zypper list-patches and annotates the node like so:
 
@@ -134,9 +141,8 @@ def annotate_updates_available():
          flag is set.
     """
 
-    node_name = node_name_from_machine_id()
     patch_xml = run_zypper_command(
-        ['zypper', '--non-interactive', '--xmlout', 'list-patches'],
+        ['--non-interactive', '--xmlout', 'list-patches'],
         needsOutput=True
     ).output
     updates = get_update_list(patch_xml)
@@ -151,6 +157,23 @@ def annotate_updates_available():
     annotate(
         'node', node_name, KUBE_DISRUPTIVE_UPDATES_KEY,
         'yes' if has_disruptive_updates(updates) else 'no'
+    )
+
+
+def annotate_caasp_release_version(node_name):
+    """
+    Performs fetch caasp-release version and annotates to the node.
+    """
+
+    cmd = run_command(['rpm', '-q', 'caasp-release',
+                       '--queryformat', '%{VERSION}'])
+    if cmd.returncode != 0 or not cmd.output:
+        log('Failed get caasp-release rpm package version')
+        return
+
+    annotate(
+        'node', node_name, KUBE_CAASP_RELEASE_VERSION_KEY,
+        cmd.output,
     )
 
 
@@ -218,7 +241,7 @@ def restart_services():
     restart.
     """
 
-    result = run_zypper_command(['zypper', 'ps', '-sss'], needsOutput=True)
+    result = run_zypper_command(['ps', '-sss'], needsOutput=True)
     for service in result.output.splitlines():
         cmd = run_command(['systemctl', 'restart', service], needsOutput=False)
         if cmd.returncode != 0:
@@ -249,7 +272,7 @@ def is_reboot_needed():
     """
 
     return run_zypper_command(
-        ['zypper', 'needs-rebooting']
+        ['needs-rebooting']
     ) == ZYPPER_EXIT_INF_REBOOT_NEEDED
 
 
@@ -289,10 +312,11 @@ def run_zypper_command(command, needsOutput=False):
     Run the given zypper command. The command is expected to be a tuple which
     also contains the 'zypper' string. It returns the exit code from zypper.
     """
+    zypperCommand = ['zypper', '--userdata', 'skuba-update', ] + command
 
-    process = run_command(command, needsOutput)
+    process = run_command(zypperCommand, needsOutput)
     if is_zypper_error(process.returncode):
-        raise Exception('"{0}" failed'.format(' '.join(command)))
+        raise Exception('"{0}" failed'.format(' '.join(zypperCommand)))
     if needsOutput:
         return process
     return process.returncode
@@ -300,8 +324,8 @@ def run_zypper_command(command, needsOutput=False):
 
 def run_zypper_patch():
     return run_zypper_command([
-        'zypper', '--non-interactive',
-        '--non-interactive-include-reboot-patches', 'patch'
+        '--non-interactive', '--non-interactive-include-reboot-patches',
+        'patch'
     ])
 
 

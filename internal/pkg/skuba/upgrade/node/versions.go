@@ -18,6 +18,7 @@
 package node
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
@@ -29,6 +30,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 )
 
@@ -86,6 +88,64 @@ func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client cli
 		currentClusterVersion.Patch() <= nviu.Current.KubeletVersion.Patch()
 
 	return isControlPlane && allControlPlanesMatchVersion && matchesClusterVersion, nil
+}
+
+// NodeUpgradeableCheck returns whether a given node is upgradeable or not, taking global cluster restrictions into account.
+// If all preconditions are met for the given node, no error will be returned.
+func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interface, currentClusterVersion *version.Version) error {
+	errorMessages := []string{}
+	isFirstControlPlaneNodeToBeUpgraded, err := nviu.IsFirstControlPlaneNodeToBeUpgraded(client)
+	if err != nil {
+		return err
+	}
+	if isFirstControlPlaneNodeToBeUpgraded {
+		// First check if all schedulable workers will tolerate the version we are upgrading to. If they don't, they need to be upgraded first.
+		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(client, nviu.Update.APIServerVersion)
+		if err != nil {
+			return err
+		}
+		if !upgradeable {
+			errorMessages = append(errorMessages, fmt.Sprintf("Make sure all schedulable worker nodes match the current cluster version: %s, and retry after upgrading them", currentClusterVersion))
+		}
+		// Then check if we have addon upgrades available that would need to be applied first.
+		updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
+		if err != nil {
+			return err
+		}
+		if addon.HasAddonUpdate(updatedAddons) {
+			errorMessages = append(errorMessages, fmt.Sprintf("There are addon upgrades available for the current cluster version (%s) that need to be applied first", currentClusterVersion))
+		}
+	} else {
+		// There is already at least one updated control plane node
+		if nviu.Current.IsControlPlane() {
+			// Secondary control plane, check if all schedulable worker nodes tolerate the current cluster version
+			upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(client, currentClusterVersion)
+			if err != nil {
+				return err
+			}
+			if !upgradeable {
+				errorMessages = append(errorMessages, fmt.Sprintf("Make sure all schedulable worker nodes match the current cluster version: %s, and retry after upgrading them", currentClusterVersion))
+			}
+		} else {
+			// Worker node, check if all control plane nodes match the current cluster version
+			upgradeable, err := kubernetes.AllControlPlanesMatchVersion(client, currentClusterVersion)
+			if err != nil {
+				return err
+			}
+			if !upgradeable {
+				errorMessages = append(errorMessages, fmt.Sprintf("Make sure all control plane nodes match the current cluster version: %s, and retry after upgrading them", currentClusterVersion))
+			}
+		}
+	}
+	if len(errorMessages) > 0 {
+		var errorMessage bytes.Buffer
+		errorMessage.WriteString(fmt.Sprintf("node %s cannot be upgraded yet. The following errors were detected:\n", nviu.Current.Nodename))
+		for _, error := range errorMessages {
+			errorMessage.WriteString(fmt.Sprintf(" - %s\n", error))
+		}
+		return errors.New(errorMessage.String())
+	}
+	return nil
 }
 
 func UpdateStatus(client clientset.Interface, nodeName string) (NodeVersionInfoUpdate, error) {

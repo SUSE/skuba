@@ -58,7 +58,7 @@ func Test_Login(t *testing.T) {
 		srvCb              func() *httptest.Server
 		cfg                LoginConfig
 		expectedKubeConfCb func(string, string) *clientcmdapi.Config
-		expectedError      bool
+		expectedErrorMsg   string
 	}{
 		{
 			name:  "secure ssl/tls",
@@ -196,7 +196,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				AuthConnector:      "ldap123",
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: invalid input auth connector ID",
 		},
 		{
 			name:  "invalid root ca",
@@ -207,7 +207,7 @@ func Test_Login(t *testing.T) {
 				RootCAPath:  "testdata/invalid.crt",
 				ClusterName: "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: no valid certificates found in root CA file",
 		},
 		{
 			name:  "cert file not exist",
@@ -218,7 +218,7 @@ func Test_Login(t *testing.T) {
 				RootCAPath:  "testdata/nonexist.crt",
 				ClusterName: "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: "read CA failed: open testdata/nonexist.crt: no such file or directory",
 		},
 		{
 			name:  "auth failed",
@@ -228,7 +228,7 @@ func Test_Login(t *testing.T) {
 				Password:           "1234",
 				InsecureSkipVerify: true,
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: invalid username or password",
 		},
 		{
 			name:  "invalid url",
@@ -239,25 +239,18 @@ func Test_Login(t *testing.T) {
 				Password:           mockDefaultPassword,
 				InsecureSkipVerify: true,
 			},
-			expectedError: true,
+			expectedErrorMsg: "parse url: parse http://%41:8080/: invalid URL escape \"%41\"",
 		},
 		{
-			name: "oidc server with http",
-			srvCb: func() *httptest.Server {
-				mux := http.NewServeMux()
-				mux.HandleFunc("/.well-known/openid-configuration", openIDHandler())
-				mux.HandleFunc("/auth", authSingleConnectorHandler())
-				mux.HandleFunc("/auth/local", authLocalHandler())
-				mux.HandleFunc("/token", tokenHandler())
-				mux.HandleFunc("/approval", approvalHandler())
-				return httptest.NewServer(mux)
-			},
+			name:  "oidc server with incorrect port number",
+			srvCb: startServer,
 			cfg: LoginConfig{
+				DexServer:   "http://127.0.0.1:32001/",
 				Username:    mockDefaultUsername,
 				Password:    mockDefaultPassword,
 				ClusterName: "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: fmt.Sprintf("auth failed: failed to query provider http://127.0.0.1:32001/ (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)"),
 		},
 		{
 			name: "issuer scopes supported invalid",
@@ -272,7 +265,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				ClusterName:        "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: failed to parse provider scopes_supported: json: cannot unmarshal number into Go struct field .scopes_supported of type string",
 		},
 		{
 			name: "issuer no claims",
@@ -287,7 +280,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				ClusterName:        "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: failed on get auth code url: Get ?access_type=offline&client_id=oidc-cli&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=audience%3Aserver%3Aclient_id%3Aoidc: unsupported protocol scheme \"\"",
 		},
 		{
 			name: "approval body content incorrect",
@@ -306,7 +299,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				ClusterName:        "test-cluster-name",
 			},
-			expectedError: true,
+			expectedErrorMsg: "auth failed: failed to extract token from OOB response",
 		},
 	}
 
@@ -321,12 +314,19 @@ func Test_Login(t *testing.T) {
 			}
 			gotKubeConfig, err := Login(tt.cfg)
 
-			if tt.expectedError {
+			if tt.expectedErrorMsg != "" {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
+					return
+				}
+				if err.Error() != tt.expectedErrorMsg {
+					t.Errorf("got error msg %s, want %s", err.Error(), tt.expectedErrorMsg)
+					return
 				}
 				return
-			} else if !tt.expectedError && err != nil {
+			}
+
+			if err != nil {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}

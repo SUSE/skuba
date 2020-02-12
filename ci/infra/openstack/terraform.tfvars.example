@@ -54,7 +54,7 @@ master_size = ""
 worker_size = ""
 
 # Attach persistent volumes to workers
-workers_vol_enabled = 0
+workers_vol_enabled = false
 
 # Size of the worker volumes in GB
 workers_vol_size = 5
@@ -63,8 +63,8 @@ workers_vol_size = 5
 # dnsdomain = "my.domain.com"
 dnsdomain = ""
 
-# Set DNS Entry (0 is false, 1 is true)
-dnsentry = 0
+# Set DNS Entry
+dnsentry = false
 
 # define the repositories to use
 # EXAMPLE:

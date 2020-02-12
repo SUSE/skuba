@@ -19,6 +19,7 @@ package cluster
 
 import (
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +35,36 @@ func Status(client clientset.Interface) error {
 		return errors.Wrap(err, "could not retrieve node list")
 	}
 
-	outputFormat := "custom-columns=NAME:.metadata.name,OS-IMAGE:.status.nodeInfo.osImage,KERNEL-VERSION:.status.nodeInfo.kernelVersion,KUBELET-VERSION:.status.nodeInfo.kubeletVersion,CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion,HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates,HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates"
+	for _, node := range nodeList.Items {
+		status := node.Status.Conditions[len(node.Status.Conditions)-1].Status
+		if status == "True" {
+			node.Labels["node-status.kubernetes.io"] = "Ready"
+		} else {
+			node.Labels["node-status.kubernetes.io"] = "NotReady"
+		}
+
+		if ok := node.Spec.Unschedulable; ok {
+			node.Labels["node-status.kubernetes.io"] = node.Labels["node-status.kubernetes.io"] + ",SchedulingDisabled"
+		}
+
+		for label := range node.Labels {
+			if strings.Contains(label, "node-role.kubernetes.io") && len(strings.Split(label, "/")) > 0 {
+				node.Labels["caasp-role.kubernetes.io"] = strings.Split(label, "/")[1]
+			}
+		}
+	}
+
+	outputFormat := "custom-columns=" +
+		"NAME:.metadata.name," +
+		"STATUS:.metadata.labels.node-status\\.kubernetes\\.io," +
+		"ROLE:.metadata.labels.caasp-role\\.kubernetes\\.io," +
+		"OS-IMAGE:.status.nodeInfo.osImage," +
+		"KERNEL-VERSION:.status.nodeInfo.kernelVersion," +
+		"KUBELET-VERSION:.status.nodeInfo.kubeletVersion," +
+		"CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion," +
+		"HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates," +
+		"HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates," +
+		"CAASP-RELEASE-VERSION:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
 
 	printFlags := kubectlget.NewGetPrintFlags()
 	printFlags.OutputFormat = &outputFormat

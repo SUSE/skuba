@@ -14,7 +14,7 @@ variable "image_uri" {
 }
 
 variable "repositories" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "Urls of the repositories to mount via cloud-init"
 }
@@ -25,19 +25,19 @@ variable "stack_name" {
 }
 
 variable "authorized_keys" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "SSH keys to inject into all the nodes"
 }
 
 variable "ntp_servers" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of NTP servers to configure"
 }
 
 variable "packages" {
-  type = "list"
+  type = list(string)
 
   default = [
     "kernel-default",
@@ -78,19 +78,19 @@ variable "disk_size" {
 }
 
 variable "dns_domain" {
-  type        = "string"
+  type        = string
   default     = "caasp.local"
   description = "Name of DNS Domain"
 }
 
 variable "network_cidr" {
-  type        = "string"
+  type        = string
   default     = "10.17.0.0/22"
   description = "Network used by the cluster"
 }
 
 variable "network_mode" {
-  type        = "string"
+  type        = string
   default     = "nat"
   description = "Network mode used by the cluster"
 }
@@ -111,7 +111,7 @@ variable "lb_vcpu" {
 }
 
 variable "lb_repositories" {
-  type = "map"
+  type = map(string)
 
   default = {
     sle_server_pool    = "http://download.suse.de/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
@@ -152,3 +152,4 @@ variable "worker_vcpu" {
   default     = 2
   description = "Amount of virtual CPUs for a worker"
 }
+

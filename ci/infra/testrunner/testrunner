@@ -7,6 +7,7 @@ echo "Starting $0 script"
 SDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 VENVDIR=${WORKSPACE:-~}/py3venv
 export VENVDIR=${VENVDIR}
+PIP_VERBOSE=${PIP_VERBOSE:-"false"}
 
 setup_python_env() {
   type python3 >/dev/null 2>&1 || sudo zypper install --no-confirm python3
@@ -18,7 +19,12 @@ setup_python_env() {
   source ${VENVDIR}/bin/activate
   # Not calling to `pip3` directly because its shebang can exceed 128 characters
   # and this operation will fail. Check: https://github.com/pypa/pip/issues/1773
-  python -m pip install -r "${SDIR}/requirements.txt" &>/dev/null
+  if [[ $PIP_VERBOSE == "true" ]]; then
+    python -m pip install -r "${SDIR}/requirements.txt"
+  else
+    python -m pip install -r "${SDIR}/requirements.txt" &>/dev/null
+  fi
+  
 }
 
 setup_python_env

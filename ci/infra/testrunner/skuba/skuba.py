@@ -73,7 +73,7 @@ class Skuba:
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         master0_name = self.platform.get_nodes_names("master")[0]
-        cmd = (f'node bootstrap --user {self.conf.nodeuser} --sudo --target '
+        cmd = (f'node bootstrap --user {self.conf.terraform.nodeuser} --sudo --target '
                f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
@@ -94,7 +94,7 @@ class Skuba:
             raise Exception(Format.alert("Node {role}-{nr} is not deployed in "
                                          "infrastructure".format(role=role, nr=nr)))
 
-        cmd = (f'node join --role {role} --user {self.conf.nodeuser} '
+        cmd = (f'node join --role {role} --user {self.conf.terraform.nodeuser} '
                f' --sudo --target {ip_addrs[nr]} {node_names[nr]}')
         try:
             self._run_skuba(cmd)
@@ -220,7 +220,7 @@ class Skuba:
             cmd = f'node upgrade plan {node_names[nr]}'
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
-            cmd = (f'node upgrade apply --user {self.conf.nodeuser} --sudo'
+            cmd = (f'node upgrade apply --user {self.conf.terraform.nodeuser} --sudo'
                    f' --target {ip_addrs[nr]}')
         else:
             raise ValueError("Invalid action '{}'".format(action))

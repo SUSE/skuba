@@ -16,4 +16,3 @@ class Libvirt(Terraform):
     @timeout(600)
     def _cleanup_platform(self):
         self.destroy()
-

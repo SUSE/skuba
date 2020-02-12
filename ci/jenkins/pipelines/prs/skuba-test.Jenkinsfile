@@ -5,7 +5,7 @@
  */
 
 pipeline {
-    agent { node { label 'caasp-team-private' } }
+    agent { node { label 'caasp-team-private-integration' } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
@@ -16,6 +16,7 @@ pipeline {
         PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
+        PIP_VERBOSE = 'true'
     }
 
 
@@ -136,7 +137,7 @@ pipeline {
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
             sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
-            archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             junit('skuba/ci/infra/testrunner/*.xml')
         }
         cleanup {

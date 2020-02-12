@@ -52,11 +52,7 @@ func GetSkubaConfiguration(client clientset.Interface) (*SkubaConfiguration, err
 	return skubaConfiguration, nil
 }
 
-func UpdateSkubaConfiguration(skubaConfiguration *SkubaConfiguration) error {
-	clientSet, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "error getting client set")
-	}
+func UpdateSkubaConfiguration(client clientset.Interface, skubaConfiguration *SkubaConfiguration) error {
 	marshaledSkubaConfiguration, err := yaml.Marshal(skubaConfiguration)
 	if err != nil {
 		return errors.Wrap(err, "error marshaling SkubaConfiguration")
@@ -68,12 +64,12 @@ func UpdateSkubaConfiguration(skubaConfiguration *SkubaConfiguration) error {
 		},
 		Data: map[string]string{SkubaConfigurationKeyName: string(marshaledSkubaConfiguration)},
 	}
-	if _, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(&configMap); err != nil {
+	if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(&configMap); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "unable to create configmap")
 		}
 
-		if _, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&configMap); err != nil {
+		if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&configMap); err != nil {
 			return errors.Wrap(err, "unable to update configmap")
 		}
 	}

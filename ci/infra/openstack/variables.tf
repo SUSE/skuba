@@ -4,7 +4,7 @@ variable "image_name" {
 }
 
 variable "repositories" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "Urls of the repositories to mount via cloud-init"
 }
@@ -55,7 +55,7 @@ variable "workers" {
 }
 
 variable "workers_vol_enabled" {
-  default     = 0
+  default     = false
   description = "Attach persistent volumes to workers"
 }
 
@@ -70,7 +70,7 @@ variable "dnsdomain" {
 }
 
 variable "dnsentry" {
-  default     = 0
+  default     = false
   description = "DNS Entry"
 }
 
@@ -80,7 +80,7 @@ variable "stack_name" {
 }
 
 variable "authorized_keys" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "SSH keys to inject into all the nodes"
 }
@@ -91,13 +91,13 @@ variable "key_pair" {
 }
 
 variable "ntp_servers" {
-  type        = "list"
+  type        = list(string)
   default     = []
   description = "List of ntp servers to configure"
 }
 
 variable "packages" {
-  type = "list"
+  type = list(string)
 
   default = [
     "kernel-default",
@@ -110,6 +110,11 @@ variable "packages" {
 variable "username" {
   default     = "sles"
   description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
+}
+
+variable "password" {
+  default     = "sles"
+  description = "Default password for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
 variable "caasp_registry_code" {
@@ -131,3 +136,4 @@ variable "ca_file" {
   default     = ""
   description = "Used to specify the path to your custom CA file"
 }
+

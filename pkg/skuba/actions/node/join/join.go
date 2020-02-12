@@ -76,14 +76,18 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 	statesToApply = append(statesToApply,
 		"kernel.load-modules",
 		"kernel.configure-parameters",
+		"firewalld.disable",
 		"apparmor.start",
 		criConfigure,
 		"cri.start",
-		"kubelet.servercert.create",
+		"kubelet.rootcert.upload",
+		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",
-		"skuba-update.start")
+		"skuba-update.start.no-block",
+		"skuba-update-timer.enable",
+	)
 
 	fmt.Println("[join] applying states to new node")
 

@@ -128,6 +128,8 @@ When this command has finished, some secrets will have been copied to your
 * Generated secrets will be copied inside the `pki` folder
 * The administrative `admin.conf` file of the cluster has been copied in
   root of the `company-cluster` folder
+  * The `company-cluster/admin.conf` file is the `kubeconfig` configuration
+    required by `kubectl` and other command line tools
 
 ## Growing a cluster
 
@@ -205,16 +207,17 @@ call to the same commands presented in `skuba` as `kubectl caasp` when installin
 `kubectl-caasp` binary in your path.
 
 The purpose of the tool is to provide a quick way to see if nodes have pending
-upgrades. The tool is currently returning fake data.
+upgrades.
 
 ```
 $ kubectl caasp cluster status
-NAME      OS-IMAGE             KERNEL-VERSION                CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES
-master0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-master1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-master2   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-worker0   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   docker://18.6.1     <none>        <none>
-worker1   openSUSE Leap 15.0   4.12.14-lp150.12.28-default   cri-o://1.13.0      <none>        <none>
+NAME      STATUS   ROLE     OS-IMAGE                              KERNEL-VERSION           KUBELET-VERSION   CONTAINER-RUNTIME   HAS-UPDATES   HAS-DISRUPTIVE-UPDATES   CAASP-RELEASE-VERSION
+master0   Ready    master   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+master1   Ready    master   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+master2   Ready    master   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker0   Ready    <none>   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker1   Ready    <none>   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
+worker2   Ready    <none>   SUSE Linux Enterprise Server 15 SP1   4.12.14-197.29-default   v1.16.2           cri-o://1.16.0      no            no                       4.1.0
 ```
 
 ## Demo

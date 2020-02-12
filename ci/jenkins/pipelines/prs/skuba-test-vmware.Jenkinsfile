@@ -4,10 +4,9 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
-def shouldRun = false
 
 pipeline {
-    agent { node { label 'caasp-team-private' } }
+    agent { node { label 'caasp-team-private-integration' } }
 
     environment {
         VMWARE_ENV_FILE = credentials('vmware-env')
@@ -18,6 +17,7 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         FILTER_SUBDIRECTORY = 'ci/infra/vmware'
+        PIP_VERBOSE = 'true'
     }
 
     stages {
@@ -49,7 +49,6 @@ pipeline {
                             echo "Unhandled error:\n${err}"
                         }
                     }
-                    
 
                     if (!allowExecution) {
                         echo "Test execution for unknown user (${CHANGE_AUTHOR}) disallowed"
@@ -63,6 +62,12 @@ pipeline {
         stage('Setting GitHub in-progress status') { steps {
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
+
+        stage('Check for changes') { steps {
+            script {
+                env.shouldRun = !sh(script: "${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") ==~ /does not contain changes/
+            }
+        }}
 
         stage('Git Clone') { steps {
             deleteDir()
@@ -82,16 +87,16 @@ pipeline {
             }
         }}
 
-        stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
-            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
-        } }
-
-        stage('Check for changes') { steps {
-            script {
-                shouldRun = sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") ==~ "contains changes"
+        stage('Getting Ready For Cluster Deployment') {
+            when {
+                expression { return shouldRun }
             }
-        } }
+
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
+                sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+            }
+        }
 
         stage('Cluster Deployment') {
             when {
@@ -118,7 +123,7 @@ pipeline {
             script {
                 if (shouldRun) {
                     sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
-                    zip(archive: true, dir: 'testrunner_logs', zipFile: 'testrunner_logs.zip')
+                    zip(archive: true, dir: 'platform_logs', zipFile: 'platform_logs.zip')
                 }
             }
         }

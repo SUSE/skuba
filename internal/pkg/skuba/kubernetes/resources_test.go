@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func Test_DoesResourceExistWithError(t *testing.T) {
+func TestDoesResourceExistWithError(t *testing.T) {
 	fakeWorker := corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "worker",

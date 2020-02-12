@@ -3,7 +3,7 @@
  */
 
 pipeline {
-    agent { node { label 'caasp-team-private' } }
+    agent { node { label 'caasp-team-private-integration' } }
 
     environment {
         OPENRC = credentials('ecp-openrc')
@@ -60,7 +60,7 @@ pipeline {
             sh(script: 'make lint', label: 'make lint')
         } }
         stage('Checking status of git tree') { steps {
-            sh(script: 'test -z $(git status --porcelain go.mod go.sum vendor/) || { echo "there are uncommitted changes. This should never happen"; exit 1; }', label: 'git tree status')
+            sh(script: 'test -z "$(git status --porcelain go.mod go.sum vendor/)" || { echo "there are uncommitted changes. This should never happen"; exit 1; }', label: 'git tree status')
         } }
 
         // TODO: Add here golint later on

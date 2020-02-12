@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
+	"github.com/SUSE/skuba/cmd/skuba/flags"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba/actions/node/upgrade"
@@ -74,7 +75,7 @@ func newUpgradeApplyCmd() *cobra.Command {
 				klog.Errorf("unable to get admin client set: %s", err)
 				os.Exit(1)
 			}
-			if err := upgrade.Apply(clientSet, target.GetDeployment("", nil)); err != nil {
+			if err := upgrade.Apply(clientSet, target.GetDeployment("", nil, flags.GetVerboseFlagLevel())); err != nil {
 				fmt.Printf("Unable to apply node upgrade: %s\n", err)
 				os.Exit(1)
 			}

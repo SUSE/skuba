@@ -4,7 +4,7 @@ skuba - tool to manage the full lifecycle of a Kubernetes cluster
 
 # SYNOPSIS
 **skuba**
-[**--help**|**-h**] [**-v**]
+[**-h**|**--help**] [**-v**|**--verbosity**]
 *command* [*args*]
 
 # DESCRIPTION
@@ -13,11 +13,11 @@ reconfiguration in an easy way.
 
 # GLOBAL OPTIONS
 
-**--help, -h**
+**-h, --help**
   Print usage statement.
 
-**-v**
-  number for the log level verbosity [0-10].
+**-v, --verbosity**
+  Log level [0-5]. 0 (Only Error and Warning) to 5 (Maximum detail).
 
 # COMMANDS
 

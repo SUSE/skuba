@@ -3,7 +3,7 @@
  */
 
 pipeline {
-   agent { node { label 'caasp-team-private' } }
+   agent { node { label 'caasp-team-private-integration' } }
 
    parameters {
         string(name: 'E2E_MAKE_TARGET_NAME', defaultValue: 'all', description: 'The make target to run (only e2e related)')
@@ -36,7 +36,7 @@ pipeline {
             archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'testrunner_logs/**/*', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
         }
         cleanup {
             sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
