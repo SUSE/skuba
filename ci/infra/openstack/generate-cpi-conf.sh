@@ -1,9 +1,11 @@
 #!/bin/bash
 #shellcheck disable=SC2145,SC2016
 log()   { (>&1 echo -e "$@") ; }
-cmd()   { log "[ CMD ] $@" ; }
 info()  { log "[ INFO ] $@" ; }
 error() { (>&2 echo -e "[ ERROR ] $@") ;}
+append_deployment_cmd()   {
+  echo "$@" >> "${SKUBA_DEPLOYMENT_SCRIPT}"
+}
 
 if [ -z "${OS_AUTH_URL}" ] || [ -z "${OS_USERNAME}" ] || \
    [ -z "${OS_PASSWORD}" ] || [ -z "${OS_PROJECT_ID}" ] || \
@@ -14,6 +16,7 @@ if [ -z "${OS_AUTH_URL}" ] || [ -z "${OS_USERNAME}" ] || \
     exit 1
 fi
 
+SKUBA_DEPLOYMENT_SCRIPT="caasp-deploy.sh"
 OPENSTACK_CONF="openstack.conf"
 
 umask 077
@@ -57,23 +60,38 @@ if [ -z "${TR_STACK}" ] || [ -z "${TR_LB_IP}" ] || \
     exit 1
 fi
 
-info "### Run following commands to bootstrap skuba cluster:\\n"
-cmd " skuba cluster init --control-plane ${TR_LB_IP} --cloud-provider openstack ${TR_STACK}-cluster"
-cmd " mv openstack.conf ${TR_STACK}-cluster/cloud/openstack/openstack.conf"
-cmd " cd ${TR_STACK}-cluster"
+cat << EOF > "${SKUBA_DEPLOYMENT_SCRIPT}"
+#!/bin/bash
+set -e
+
+skuba cluster init --control-plane ${TR_LB_IP} --cloud-provider openstack ${TR_STACK}-cluster
+cp openstack.conf ${TR_STACK}-cluster/cloud/openstack/openstack.conf
+cd ${TR_STACK}-cluster
+EOF
 
 i=0
 for MASTER in $TR_MASTER_IPS; do
     if [ $i -eq "0" ]; then
-        cmd " skuba node bootstrap --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-0"
+        append_deployment_cmd "skuba node bootstrap --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-0"
     else
-        cmd " skuba node join --role master --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-${i}"
+        append_deployment_cmd "skuba node join --role master --target ${MASTER} --sudo --user ${TR_USERNAME} caasp-master-${TR_STACK}-${i}"
     fi
     ((++i))
 done
 
 i=0
 for WORKER in $TR_WORKER_IPS; do
-    cmd " skuba node join --role worker --target ${WORKER} --sudo --user ${TR_USERNAME} caasp-worker-${TR_STACK}-${i}"
+    append_deployment_cmd "skuba node join --role worker --target ${WORKER} --sudo --user ${TR_USERNAME} caasp-worker-${TR_STACK}-${i}"
     ((++i))
 done
+
+cat << EOF >> "${SKUBA_DEPLOYMENT_SCRIPT}"
+
+echo "Cluster creation done."
+echo "You can now use the cluster by doing:"
+echo "  export KUBECONFIG=$(pwd)/${TR_STACK}-cluster/admin.conf"
+echo "  kubectl get nodes"
+EOF
+chmod 755 ${SKUBA_DEPLOYMENT_SCRIPT}
+
+info "### Run the following command to bootstrap a skuba cluster: ./${SKUBA_DEPLOYMENT_SCRIPT}"
