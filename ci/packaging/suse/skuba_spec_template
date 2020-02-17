@@ -93,6 +93,7 @@ make %{?_smp_mflags} docs
 # skuba-update install
 #
 
+echo %{version} > VERSION
 pushd skuba-update
 python3 setup.py install --root %{buildroot} \
     --install-script %{_sbindir}
