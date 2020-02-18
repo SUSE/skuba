@@ -9,6 +9,7 @@ pipeline {
     agent { node { label 'caasp-team-private-integration' } }
 
     environment {
+        SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         VMWARE_ENV_FILE = credentials('vmware-env')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'vmware'
@@ -95,17 +96,37 @@ pipeline {
             steps {
                 sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
                 sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+                sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
             }
         }
 
-        stage('Cluster Deployment') {
-            when {
-                expression { return shouldRun }
-            }
+        stage('Cluster Provisioning') {
             steps {
-                sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-                archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
+                sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Provision')
+            }
+        }
+
+       stage('Run Pre Bootstrap Tests') {
+           steps {
+               sh(script: 'make -f skuba/ci/Makefile test_pre_bootstrap', label: 'Test Pre Bootstrap')
+           }
+       }
+
+        stage('Cluster Bootstrap') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
+            }
+        }
+
+       stage('Run Post Bootstrap Tests') {
+           steps {
+               sh(script: 'make -f skuba/ci/Makefile test_post_bootstrap', label: 'Test Post Bootstrap')
+           }
+       }
+
+        stage('Join Nodes') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
             }
         }
 
