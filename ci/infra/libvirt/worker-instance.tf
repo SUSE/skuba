@@ -53,7 +53,7 @@ data "template_file" "worker-cloud-init" {
 resource "libvirt_volume" "worker" {
   name           = "${var.stack_name}-worker-volume-${count.index}"
   pool           = var.pool
-  size           = var.disk_size
+  size           = var.worker_disk_size
   base_volume_id = libvirt_volume.img.id
   count          = var.workers
 }

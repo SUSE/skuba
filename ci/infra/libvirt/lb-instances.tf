@@ -72,7 +72,7 @@ data "template_file" "lb_cloud_init_userdata" {
 resource "libvirt_volume" "lb" {
   name           = "${var.stack_name}-lb-volume"
   pool           = var.pool
-  size           = var.disk_size
+  size           = var.lb_disk_size
   base_volume_id = libvirt_volume.img.id
 }
 

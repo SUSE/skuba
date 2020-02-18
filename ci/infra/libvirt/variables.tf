@@ -72,11 +72,6 @@ variable "rmt_server_name" {
   description = "SUSE Repository Mirroring Server Name"
 }
 
-variable "disk_size" {
-  default     = "25769803776"
-  description = "Disk size (in bytes)"
-}
-
 variable "dns_domain" {
   type        = string
   default     = "caasp.local"
@@ -110,6 +105,11 @@ variable "lb_vcpu" {
   description = "Amount of virtual CPUs for a load balancer node"
 }
 
+variable "lb_disk_size" {
+  default     = "25769803776"
+  description = "Disk size (in bytes)"
+}
+
 variable "lb_repositories" {
   type = map(string)
 
@@ -138,6 +138,11 @@ variable "master_vcpu" {
   description = "Amount of virtual CPUs for a master"
 }
 
+variable "master_disk_size" {
+  default     = "25769803776"
+  description = "Disk size (in bytes)"
+}
+
 variable "workers" {
   default     = 2
   description = "Number of worker nodes"
@@ -153,3 +158,7 @@ variable "worker_vcpu" {
   description = "Amount of virtual CPUs for a worker"
 }
 
+variable "worker_disk_size" {
+  default     = "25769803776"
+  description = "Disk size (in bytes)"
+}
