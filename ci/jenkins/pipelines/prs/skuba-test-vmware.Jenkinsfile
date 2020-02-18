@@ -143,8 +143,13 @@ pipeline {
         always {
             script {
                 if (shouldRun) {
+                    archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+                    archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+                    archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+                    archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
                     sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
                     zip(archive: true, dir: 'platform_logs', zipFile: 'platform_logs.zip')
+                    junit('skuba/ci/infra/testrunner/*.xml')
                 }
             }
         }
