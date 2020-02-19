@@ -2,13 +2,13 @@ resource "aws_elb" "kube_api" {
   connection_draining       = false
   cross_zone_load_balancing = true
   idle_timeout              = 400
-  instances                 = ["${aws_instance.control_plane.*.id}"]
+  instances                 = aws_instance.control_plane.*.id
   name                      = "${var.stack_name}-elb"
-  subnets                   = ["${aws_subnet.public.0.id}"]
+  subnets                   = [aws_subnet.public.id]
 
   security_groups = [
-    "${aws_security_group.elb.id}",
-    "${aws_security_group.egress.id}",
+    aws_security_group.elb.id,
+    aws_security_group.egress.id,
   ]
 
   # kube
@@ -47,5 +47,6 @@ resource "aws_elb" "kube_api" {
 }
 
 output "elb_address" {
-  value = "${aws_elb.kube_api.dns_name}"
+  value = aws_elb.kube_api.dns_name
 }
+
