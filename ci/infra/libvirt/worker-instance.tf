@@ -68,7 +68,7 @@ resource "libvirt_cloudinit_disk" "worker" {
 
 resource "libvirt_domain" "worker" {
   count      = var.workers
-  name       = "${var.stack_name}-worker-domain-${count.index}"
+  name       = "${var.stack_name}-worker-${count.index}"
   memory     = var.worker_memory
   vcpu       = var.worker_vcpu
   cloudinit  = element(libvirt_cloudinit_disk.worker.*.id, count.index)
@@ -82,10 +82,10 @@ resource "libvirt_domain" "worker" {
     volume_id = element(libvirt_volume.worker.*.id, count.index)
   }
 
+  qemu_agent = true
+
   network_interface {
-    network_id     = libvirt_network.network.id
-    hostname       = "${var.stack_name}-worker-${count.index}"
-    addresses      = [cidrhost(var.network_cidr, 768 + count.index)]
+    bridge = "${var.bridge}"
     wait_for_lease = true
   }
 

@@ -68,7 +68,7 @@ resource "libvirt_cloudinit_disk" "master" {
 
 resource "libvirt_domain" "master" {
   count      = var.masters
-  name       = "${var.stack_name}-master-domain-${count.index}"
+  name       = "${var.stack_name}-master-${count.index}"
   memory     = var.master_memory
   vcpu       = var.master_vcpu
   cloudinit  = element(libvirt_cloudinit_disk.master.*.id, count.index)
@@ -82,10 +82,10 @@ resource "libvirt_domain" "master" {
     volume_id = element(libvirt_volume.master.*.id, count.index)
   }
 
+  qemu_agent = true
+
   network_interface {
-    network_id     = libvirt_network.network.id
-    hostname       = "${var.stack_name}-master-${count.index}"
-    addresses      = [cidrhost(var.network_cidr, 512 + count.index)]
+    bridge = "${var.bridge}"
     wait_for_lease = true
   }
 

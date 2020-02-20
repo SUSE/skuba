@@ -13,8 +13,8 @@ data "template_file" "haproxy_apiserver_backends_master" {
   template = "server $${fqdn} $${ip}:6443\n"
 
   vars = {
-    fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    fqdn = "${var.stack_name}-master-${count.index}"
+    ip   = element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)
   }
 }
 
@@ -23,8 +23,8 @@ data "template_file" "haproxy_gangway_backends_master" {
   template = "server $${fqdn} $${ip}:32001\n"
 
   vars = {
-    fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    fqdn = "${var.stack_name}-master-${count.index}"
+    ip   = element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)
   }
 }
 
@@ -33,8 +33,8 @@ data "template_file" "haproxy_dex_backends_master" {
   template = "server $${fqdn} $${ip}:32000\n"
 
   vars = {
-    fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    fqdn = "${var.stack_name}-master-${count.index}"
+    ip   = element(libvirt_domain.master.*.network_interface.0.addresses.0, count.index)
   }
 }
 
@@ -84,7 +84,7 @@ resource "libvirt_cloudinit_disk" "lb" {
 }
 
 resource "libvirt_domain" "lb" {
-  name      = "${var.stack_name}-lb-domain"
+  name      = "${var.stack_name}-lb"
   memory    = var.lb_memory
   vcpu      = var.lb_vcpu
   cloudinit = libvirt_cloudinit_disk.lb.id
@@ -97,10 +97,10 @@ resource "libvirt_domain" "lb" {
     volume_id = libvirt_volume.lb.id
   }
 
+  qemu_agent = true
+
   network_interface {
-    network_id     = libvirt_network.network.id
-    hostname       = "${var.stack_name}-lb"
-    addresses      = [cidrhost(var.network_cidr, 256)]
+    bridge = "${var.bridge}"
     wait_for_lease = true
   }
 

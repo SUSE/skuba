@@ -3,6 +3,11 @@ variable "libvirt_uri" {
   description = "URL of libvirt connection - default to localhost"
 }
 
+variable "bridge" {
+  default     = "br0"
+  description = "Brctl device with enslaved adapter connected to uplink on hypervisor" 
+}
+
 variable "pool" {
   default     = "default"
   description = "Pool to be used to store all the volumes"
@@ -72,21 +77,9 @@ variable "rmt_server_name" {
   description = "SUSE Repository Mirroring Server Name"
 }
 
-variable "dns_domain" {
-  type        = string
-  default     = "caasp.local"
-  description = "Name of DNS Domain"
-}
-
-variable "network_cidr" {
-  type        = string
-  default     = "10.17.0.0/22"
-  description = "Network used by the cluster"
-}
-
 variable "network_mode" {
   type        = string
-  default     = "nat"
+  default     = "bridge"
   description = "Network mode used by the cluster"
 }
 

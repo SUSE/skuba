@@ -1,0 +1,70 @@
+libvirt_uri = "qemu+ssh://thehejik@zeus.qa.suse.cz/system"
+
+# URL of the image to use
+# EXAMPLE:
+# image_uri = "SLE-15-SP1-JeOS-GMC"
+# NOTE: You can also use absolute path to image stored on machine from where terraform apply is called
+# The link bellow points to my custom JeOS image for KVM with enabled cloud-init and with qemu-guest-agent preinstalled (needed for bridge)
+image_uri = "http://download.suse.de/ibs/home:/thehejik:/branches:/Devel:/JeOS:/SLE-15-SP1/images/SLES15-SP1-JeOS.x86_64-kvm-and-xen.qcow2"
+
+# Brctl device with enslaved adapter connected to uplink on hypervisor
+bridge = "br0"
+
+# Identifier to make all your resources unique and avoid clashes with other users of this terraform project
+stack_name = "th"
+
+# Number of lb nodes
+lbs = 1
+
+# Number of master nodes
+masters = 3
+
+# Number of worker nodes
+workers = 2
+
+# Username for the cluster nodes
+# EXAMPLE:
+username = "sles"
+
+# Password for the cluster nodes
+# EXAMPLE:
+password = "linux"
+
+# define the repositories to use
+# EXAMPLE:
+# repositories = {
+#   repository1 = "http://example.my.repo.com/repository1/"
+#   repository2 = "http://example.my.repo.com/repository2/"
+# }
+repositories = {}
+
+# define the repositories to use for the loadbalancer node
+# EXAMPLE:
+# repositories = {
+#   repository1 = "http://example.my.repo.com/repository3/"
+#   repository2 = "http://example.my.repo.com/repository4/"
+# }
+#lb_repositories = {
+#	sle_server_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Product-SLES/15-SP1/x86_64/product/"
+#	basesystem_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP1/x86_64/product/"
+#	ha_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Product-HA/15-SP1/x86_64/product/"
+#	ha_updates = "http://download.suse.de/ibs/SUSE/Updates/SLE-Product-HA/15-SP1/x86_64/update/"
+#	sle_server_updates = "http://download.suse.de/ibs/SUSE/Updates/SLE-Product-SLES/15-SP1/x86_64/update/"
+#	basesystem_updates = "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP1/x86_64/update/"
+#  }
+
+# Minimum required packages. Do not remove them.
+# Feel free to add more packages
+packages = []
+
+# ssh keys to inject into all the nodes
+# EXAMPLE:
+# authorized_keys = [
+#  "ssh-rsa <key-content>"
+# ]
+authorized_keys = [
+  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC2G7k0zGAjd+0LzhbPcGLkdJrJ/LbLrFxtXe+LPAkrphizfRxdZpSC7Dvr5Vewrkd/kfYObiDc6v23DHxzcilVC2HGLQUNeUer/YE1mL4lnXC1M3cb4eU+vJ/Gyr9XVOOReDRDBCwouaL7IzgYNCsm0O5v2z/w9ugnRLryUY180/oIGeE/aOI1HRh6YOsIn7R3Rv55y8CYSqsbmlHWiDC6iZICZtvYLYmUmCgPX2Fg2eT+aRbAStUcUERm8h246fs1KxywdHHI/6o3E1NNIPIQ0LdzIn5aWvTCd6D511L4rf/k5zbdw/Gql0AygHBR/wnngB5gSDERLKfigzeIlCKf Unsafe Shared Key"
+]
+
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
