@@ -1,11 +1,15 @@
 resource "aws_security_group" "egress" {
   description = "egress traffic"
   name        = "${var.stack_name}-egress"
-  vpc_id      = "${aws_vpc.platform.id}"
+  vpc_id      = aws_vpc.platform.id
 
-  tags = "${merge(local.basic_tags, map(
-    "Name", "${var.stack_name}-egress",
-    "Class", "SecurityGroup"))}"
+  tags = merge(
+    local.basic_tags,
+    {
+      "Name"  = "${var.stack_name}-egress"
+      "Class" = "SecurityGroup"
+    },
+  )
 
   egress {
     from_port   = 0
@@ -14,3 +18,4 @@ resource "aws_security_group" "egress" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
