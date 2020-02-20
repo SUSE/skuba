@@ -2,6 +2,7 @@ import pytest
 import requests
 
 
+@pytest.mark.pr
 def test_nginx_deployment(deployment, kubectl):
     workers = kubectl.skuba.num_of_nodes("worker")
     kubectl.run_kubectl("create deployment nginx --image=nginx:stable-alpine")

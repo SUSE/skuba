@@ -19,6 +19,7 @@ def check_pods_ready(kubectl):
         assert pod_status in ['Running', 'Completed'], f'Pod {pod_name} status {pod_status} != Running or Completed'
 
 
+@pytest.mark.pr
 @pytest.mark.parametrize('node_type,node_number', [('master', 1), ('worker', 0)])
 def test_hard_reboot(deployment, platform, skuba, kubectl, node_type, node_number):
     assert skuba.num_of_nodes(node_type) > node_number
