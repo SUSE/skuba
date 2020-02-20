@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}-code-author'
+    name: '{name}/code-author'
     project-type: multibranch
     periodic-folder-trigger: 5m
     number-to-keep: 30

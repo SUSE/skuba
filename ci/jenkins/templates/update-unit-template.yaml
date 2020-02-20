@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}-update-unit'
+    name: '{name}/update-unit'
     project-type: multibranch
     periodic-folder-trigger: 5m
     number-to-keep: 30

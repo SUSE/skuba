@@ -5,14 +5,14 @@
     repo-credentials: github-token
     platform: openstack
     jobs:
-        - '{name}-test'
-        - '{name}-test-vmware'
-        - '{name}-update-unit'
-        - '{name}-update-acceptance'
-        - '{name}-code-lint'
-        - '{name}-code-author'
-        - '{name}-handle-pr'
-        - '{name}-jjb-validation'
+        - '{name}/test'
+        - '{name}/test-vmware'
+        - '{name}/update-unit'
+        - '{name}/update-acceptance'
+        - '{name}/code-lint'
+        - '{name}/code-author'
+        - '{name}/handle-pr'
+        - '{name}/jjb-validation'
 
 - project:
       name: caasp-jobs/v4/conformance
@@ -23,7 +23,7 @@
         - openstack
         - vmware
       jobs:
-          - '{name}-{platform}-conformance'
+          - '{name}/{platform}-conformance'
 
 - project:
     name: caasp-jobs/v4/e2e
@@ -49,8 +49,8 @@
         - 'test_remove_master'
         - 'test_remove_worker'
     jobs:
-        - '{name}-{platform}-{test}-nightly'
-        - '{name}-{platform}-update-nightly'
+        - '{name}/{platform}/{test}-nightly'
+        - '{name}/{platform}/update-nightly'
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba

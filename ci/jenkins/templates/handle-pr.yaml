@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}-handle-pr'
+    name: '{name}/handle-pr'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
