@@ -7,10 +7,10 @@ locals {
 }
 
 resource "aws_iam_policy" "master" {
-  name        = "${local.aws_iam_policy_master_terraform}"
+  name        = local.aws_iam_policy_master_terraform
   path        = "/"
   description = "IAM policy needed by CPI on master nodes"
-  count       = "${length(var.iam_profile_master) == 0 ? 1 : 0}"
+  count       = length(var.iam_profile_master) == 0 ? 1 : 0
 
   policy = <<EOF
 {
@@ -81,13 +81,14 @@ resource "aws_iam_policy" "master" {
   ]
 }
 EOF
+
 }
 
 resource "aws_iam_policy" "worker" {
-  name        = "${local.aws_iam_policy_worker_terraform}"
+  name        = local.aws_iam_policy_worker_terraform
   path        = "/"
   description = "IAM policy needed by CPI on worker nodes"
-  count       = "${length(var.iam_profile_worker) == 0 ? 1 : 0}"
+  count       = length(var.iam_profile_worker) == 0 ? 1 : 0
 
   policy = <<EOF
 {
@@ -111,4 +112,6 @@ resource "aws_iam_policy" "worker" {
   ]
 }
 EOF
+
 }
+
