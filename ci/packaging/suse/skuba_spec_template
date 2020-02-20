@@ -137,6 +137,16 @@ for file in ci/infra/bare-metal/*.*; do
   install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/autoyast/bare-metal
 done
 
+# Copy aws terraform templates
+install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/aws
+install -d -m 0755 ci/infra/aws/cloud-init %{buildroot}/%{_datadir}/caasp/terraform/aws/cloud-init
+for file in ci/infra/aws/*.*; do
+  install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/aws/
+done
+for file in ci/infra/aws/cloud-init/*.*; do
+  install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/aws/cloud-init
+done
+
 cd $HOME/go/bin
 install -D -m 0755 skuba %{buildroot}/%{_bindir}/skuba
 install -D -m 0755 kubectl-caasp %{buildroot}/%{_bindir}/kubectl-caasp
@@ -192,5 +202,7 @@ ln -sf service %{buildroot}%{_sbindir}/rcskuba-update
 %{_datadir}/caasp/terraform/vmware/cloud-init
 %{_datadir}/caasp/autoyast
 %{_datadir}/caasp/autoyast/bare-metal
+%{_datadir}/caasp/terraform/aws
+%{_datadir}/caasp/terraform/aws/cloud-init
 
 %changelog
