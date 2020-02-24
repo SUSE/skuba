@@ -222,7 +222,7 @@ def main():
         options.func(options)
     except Exception as ex:
         logger.error("Exception executing testrunner command '{}': {}".format(
-            options.command, ex, exc_info=True))
+            options.command, ex), exc_info=True)
         sys.exit(255)
 
 
