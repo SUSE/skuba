@@ -106,17 +106,108 @@ rules:
     resourceNames: ['suse.caasp.psp.privileged']
     verbs: ['use']
 ---
-# Allow CaaSP nodes to use the privileged
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: suse:caasp:psp:kube-proxy
+roleRef:
+  kind: ClusterRole
+  name: suse:caasp:psp:privileged
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: kube-proxy
+  namespace: kube-system
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: suse.caasp.psp.kube-system
+  annotations:
+    {{.AnnotatedVersion}}
+{{- if .KubernetesVersionAtLeast "1.15.0" }}
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+{{- end }}
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: runtime/default
+spec:
+  # Privileged
+  privileged: false
+  # Volumes and File Systems
+  volumes:
+    # Kubernetes Pseudo Volume Types
+    - configMap
+    - secret
+    - emptyDir
+    - downwardAPI
+    - projected
+    - persistentVolumeClaim
+    # Kubernetes Host Volume Types
+    - hostPath
+    # Networked Storage
+    - nfs
+    - rbd
+    - cephFS
+    - glusterfs
+    - fc
+    - iscsi
+    # Cloud Volumes
+    - cinder
+    - gcePersistentDisk
+    - awsElasticBlockStore
+    - azureDisk
+    - azureFile
+    - vsphereVolume
+  readOnlyRootFilesystem: false
+  # Users and groups
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  # Privilege Escalation
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
+  # Capabilities
+  allowedCapabilities:
+    - 'NET_BIND_SERVICE'
+  defaultAddCapabilities: []
+  requiredDropCapabilities: []
+  # Host namespaces
+  hostPID: false
+  hostIPC: false
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  # SELinux
+  seLinux:
+    # SELinux is unused in CaaSP
+    rule: 'RunAsAny'
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: suse:caasp:psp:kube-system
+rules:
+  - apiGroups: ['policy']
+    resources: ['podsecuritypolicies']
+    resourceNames: ['suse.caasp.psp.kube-system']
+    verbs: ['use']
+---
+# Allow CaaSP nodes to use the kube-system
 # PodSecurityPolicy.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: suse:caasp:psp:privileged
+  name: suse:caasp:psp:kube-system
   namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: suse:caasp:psp:privileged
+  name: suse:caasp:psp:kube-system
 subjects:
 # Only authenticated users
 - kind: Group
