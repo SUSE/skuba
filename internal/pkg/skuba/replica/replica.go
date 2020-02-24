@@ -47,75 +47,75 @@ const (
 	retryInterval         = kubeadmconstants.DiscoveryRetryInterval
 	retryTimeout          = kubeadmconstants.PatchNodeTimeout
 	patchAffinityRemove   = `[
-		 {
-			 "op":"remove",
-			 "path":"/spec/template/spec/affinity"
-		 }
-	 ]`
+		{
+			"op":"remove",
+			"path":"/spec/template/spec/affinity"
+		}
+	]`
 	patchAffinityRequired = `{
-		 "spec": {
-			 "template": {
-				 "spec": {
-					 "affinity": {
-						 "podAntiAffinity": {
-							 "requiredDuringSchedulingIgnoredDuringExecution": [
-								 {
-									 "labelSelector": {
-										 "matchExpressions": [
-											 {
-												 "key": "app",
-												 "operator": "In",
-												 "values": [
-													 "%s"
-												 ]
-											 }
-										 ]
-									 },
-									 "topologyKey": "kubernetes.io/hostname"
-								 }
-							 ]
-						 }
-					 }
-				 }
-			 }
-		 }
-	 }`
+		"spec": {
+			"template": {
+				"spec": {
+					"affinity": {
+						"podAntiAffinity": {
+							"requiredDuringSchedulingIgnoredDuringExecution": [
+								{
+									"labelSelector": {
+										"matchExpressions": [
+											{
+												"key": "app",
+												"operator": "In",
+												"values": [
+													"%s"
+												]
+											}
+										]
+									},
+									"topologyKey": "kubernetes.io/hostname"
+								}
+							]
+						}
+					}
+				}
+			}
+		}
+	}`
 	patchAffinityPreferred = `{
-		 "spec": {
-			 "template": {
-				 "spec": {
-					 "affinity": {
-						 "podAntiAffinity": {
-							 "preferredDuringSchedulingIgnoredDuringExecution": [
-								 {
-									 "weight": 100,
-									 "podAffinityTerm": {
-										 "labelSelector": {
-											 "matchExpressions": [
-												 {
-													 "key": "app",
-													 "operator": "In",
-													 "values": [
-														 "%s"
-													 ]
-												 }
-											 ]
-										 },
-										 "topologyKey": "kubernetes.io/hostname"
-									 }
-								 }
-							 ]
-						 }
-					 }
-				 }
-			 }
-		 }
-	 }`
+		"spec": {
+			"template": {
+				"spec": {
+					"affinity": {
+						"podAntiAffinity": {
+							"preferredDuringSchedulingIgnoredDuringExecution": [
+								{
+									"weight": 100,
+									"podAffinityTerm": {
+										"labelSelector": {
+											"matchExpressions": [
+												{
+													"key": "app",
+													"operator": "In",
+													"values": [
+														"%s"
+													]
+												}
+											]
+										},
+										"topologyKey": "kubernetes.io/hostname"
+									}
+								}
+							]
+						}
+					}
+				}
+			}
+		}
+	}`
 	patchReplicas = `{
-		 "spec": {
-			 "replicas": %v
-		 }
-	 }`
+		"spec": {
+			"replicas": %v
+		}
+	}`
 )
 
 // Helper provide methods for replica update of deployment
@@ -247,10 +247,9 @@ func (r *Helper) updateDeploymentReplica(size int) (*appsv1.Deployment, error) {
 	return r.Client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.Deployment.ObjectMeta.Name, types.StrategicMergePatchType, []byte(replicaJSON))
 }
 
-// UpdateNodes patches for replicas affinity rules after adding of nodes.
-// This updates affinity rule to preferredDuringSchedulingIgnoredDuringExecution of
-// cluster size less then replica size,
-// And updates affinity rule to requiredDuringSchedulingIgnoredDuringExecution when
+// UpdateNodes patches for replicas affinity rules after adding nodes, before removing nodes, or after addon
+// upgrade. This updates affinity rule to preferredDuringSchedulingIgnoredDuringExecution of cluster size
+// less then replica size, and updates affinity rule to requiredDuringSchedulingIgnoredDuringExecution when
 // cluster size is equal or greater to replicas.
 func (r *Helper) UpdateNodes() error {
 	if err := r.deploymentsHelper(); err != nil {
@@ -266,22 +265,21 @@ func (r *Helper) UpdateNodes() error {
 			r.ReplicaSize = r.MinSize
 		}
 
-		nodes := r.ClusterSize
 		updated := false
 		var err error
 		switch {
-		case nodes >= r.ReplicaSize:
+		case r.ClusterSize >= r.ReplicaSize:
 			updated, err = r.replaceAffinity(preferred, required)
 			if err != nil {
 				return err
 			}
-		case nodes >= r.MinSize:
+		case r.ClusterSize >= r.MinSize:
 			updated, err = r.replaceAffinity(required, preferred)
 			if err != nil {
 				return err
 			}
 		}
-		if !updated && nodes <= r.ReplicaSize {
+		if !updated && r.ClusterSize <= r.ReplicaSize {
 			// update replicas to trigger pod re-distribution when affinity is in
 			// preferredDuringSchedulingIgnoredDuringExecution.
 			if _, err := r.updateDeploymentReplica(r.ClusterSize - 1); err != nil {
@@ -328,29 +326,30 @@ func (r *Helper) UpdateBeforeNodeDrains() error {
 			updated = true
 		}
 		if updated {
-			var err error
+			var e error
 			retry := retryCount
-			err = r.waitForUpdates(&retry, &err)
-			if err != nil {
+			if err := r.waitForUpdates(retry, e); err != nil {
 				return err
 			}
+			klog.Infof("deployment %s is available", deployment.Name)
 		}
 	}
 
 	return nil
 }
 
-func (r *Helper) waitForUpdates(retry *int, e *error) error {
+func (r *Helper) waitForUpdates(retry int, newErr error) error {
 	switch {
-	case *retry == 0:
-		return errors.Wrap(*e, "retry exhausted")
+	case retry == 0:
+		return errors.Wrap(newErr, "retry exhausted")
 	default:
-		if *e = r.waitForDeploymentReplicas(); *e == nil {
-			return *e
+		if newErr = r.waitForDeploymentReplicas(); newErr == nil {
+			return nil
 		}
-		*retry--
 
-		klog.Warningf("waiting for deployment be available: %d", *retry)
+		retry--
+
+		klog.Warningf("waiting for deployment be available: %d", retry)
 
 		time.Sleep(retryInterval)
 
@@ -358,7 +357,7 @@ func (r *Helper) waitForUpdates(retry *int, e *error) error {
 			return err
 		}
 
-		if err := r.waitForUpdates(retry, e); err != nil {
+		if err := r.waitForUpdates(retry, newErr); err != nil {
 			return err
 		}
 	}
