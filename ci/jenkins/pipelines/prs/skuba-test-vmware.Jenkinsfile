@@ -19,6 +19,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         FILTER_SUBDIRECTORY = 'ci/infra/vmware'
         PIP_VERBOSE = 'true'
+        SKUBA_VERBOSITY = 0
     }
 
     stages {

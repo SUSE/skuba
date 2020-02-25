@@ -17,6 +17,7 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         PIP_VERBOSE = 'true'
+        SKUBA_VERBOSITY = 0
     }
 
 
