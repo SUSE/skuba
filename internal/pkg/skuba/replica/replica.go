@@ -343,13 +343,13 @@ func (r *Helper) waitForUpdates(retry int, newErr error) error {
 	case retry == 0:
 		return errors.Wrap(newErr, "retry exhausted")
 	default:
+		klog.Warningf("waiting for deployment be available: %d", retry)
+
 		if newErr = r.waitForDeploymentReplicas(); newErr == nil {
 			return nil
 		}
 
 		retry--
-
-		klog.Warningf("waiting for deployment be available: %d", retry)
 
 		time.Sleep(retryInterval)
 
