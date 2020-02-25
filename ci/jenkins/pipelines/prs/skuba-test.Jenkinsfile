@@ -120,6 +120,7 @@ pipeline {
 
         stage('Join Nodes') {
             steps {
+                sleep(time: 120, unit: "SECONDS")
                 sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
             }
         }
