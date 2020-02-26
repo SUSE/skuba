@@ -1,9 +1,9 @@
 {
-    "vsphere_datastore": "3PAR",
-    "vsphere_datacenter": "PROVO",
+    "vsphere_datastore": "node51-2",
+    "vsphere_datacenter": "NUREMBERG",
     "vsphere_network": "VM Network",
-    "vsphere_resource_pool": "CaaSP_RP",
-    "template_name": "SLES15-SP1-GM-up190905-guestinfo",
+    "vsphere_resource_pool": "CaaSP_CI",
+    "template_name": "SLES15-SP1-GM-up191203-guestinfo_node51",
     "firmware": "bios",
     "stack_name": "caasp-jenkins-v4",
     "masters": 1,
