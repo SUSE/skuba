@@ -20,3 +20,19 @@ class Kubectl:
             return self.utils.runshellcommand(shell_cmd, stdin=stdin)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(shell_cmd)) from ex
+
+    def get_node_names_by_role(self, role):
+        """Returns a list of node names for a given role
+        Uses selectors to get the nodes. Master nodes have the node-role.kubernetes.io/master="" label, while other
+        nodes (workers) dont even have the label.
+        """
+
+        if role not in ("master", "worker"):
+            raise ValueError("Invalid role {}".format(role))
+
+        roles = {
+            "master": "==",
+            "worker": "!="
+        }
+        command = f"get nodes --selector=node-role.kubernetes.io/master{roles.get(role)}"" -o jsonpath='{.items[*].metadata.name}'"
+        return self.run_kubectl(command).split()
