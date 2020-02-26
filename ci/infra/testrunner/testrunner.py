@@ -99,6 +99,14 @@ def ssh(options):
         role=options.role, nr=options.node, cmd=" ".join(options.cmd))
 
 
+def ssh_all(options):
+    plat = platforms.get_platform(options.conf, options.platform)
+    ipaddress = plat.get_nodes_ipaddrs(options.role)
+
+    for node in ipaddress:
+        plat.utils.ssh_run(node, " ".join(options.cmd))
+
+
 def main():
     help_str = """
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
@@ -193,6 +201,15 @@ def main():
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
     cmd_ssh = commands.add_parser("ssh", parents=[node_args, ssh_args], help="Execute command in node via ssh.")
     cmd_ssh.set_defaults(func=ssh)
+
+    ssh_all_args = ArgumentParser(add_help=False)
+    ssh_all_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER,
+                          help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
+    ssh_all_args.add_argument("-r", "--role", dest="role", choices=["master", "worker"],
+                           help='role of the node to be added or deleted. eg: --role master')
+    cmd_ssh_all = commands.add_parser("ssh_all", parents=[ssh_all_args], help="Execute command in all nodes via ssh.")
+    cmd_ssh_all.set_defaults(func=ssh_all)
+
 
     test_args = ArgumentParser(add_help=False)
     test_args.add_argument("-f", "--filter", dest="mark", help="Filter the tests based on markers")

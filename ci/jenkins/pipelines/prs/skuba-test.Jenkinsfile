@@ -108,6 +108,7 @@ pipeline {
 
         stage('Cluster Bootstrap') {
             steps {
+                sh(script: 'make -f skuba/ci/Makefile fix_etcd', label: 'ramfs for etcd dir')
                 sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
             }
         }

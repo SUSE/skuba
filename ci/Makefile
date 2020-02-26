@@ -140,3 +140,7 @@ test_remove_master:
 .PHONY: test_remove_worker
 test_remove_worker:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_workers.py --test test_remove_worker
+
+.PHONY: fix_etcd
+fix_etcd:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} ssh_all -r master -c "sudo mkdir -p /var/lib/etcd && sudo mount -t tmpfs -o size=1048M tmpfs /var/lib/etcd"
