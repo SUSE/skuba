@@ -49,8 +49,6 @@ runcmd:
   # With a new machine-id generated the journald daemon will work and can be restarted
   # Without a new machine-id it should be in a failed state
   - [ systemctl, restart, systemd-journald ]
-  # LB firewall is not disabled via skuba, so we need to manually disable it
-  - [ systemctl, disable, firewalld, --now ]
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
