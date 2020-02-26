@@ -1,5 +1,5 @@
 {
-    "image_name": "SLES15-SP1-JeOS.x86_64-QU1",
+    "image_name": "SLES15-SP1-JeOS.x86_64-QU2",
     "internal_net": "testing",
     "internal_subnet": "testing-subnet",
     "internal_router": "testing-router",
