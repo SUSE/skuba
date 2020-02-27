@@ -25,7 +25,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/version"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
@@ -183,6 +182,18 @@ func nodeVersion(node, nodeVersion string, nodeRole nodeRole) kubernetes.NodeVer
 	return res
 }
 
+func controlPlaneVersion(node, nodeVersion, etcdVersion string) kubernetes.NodeVersionInfo {
+	return kubernetes.NodeVersionInfo{
+		Nodename:                 node,
+		ContainerRuntimeVersion:  version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
+		KubeletVersion:           version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
+		APIServerVersion:         version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
+		ControllerManagerVersion: version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
+		SchedulerVersion:         version.MustParseSemantic(fmt.Sprintf("v%s", nodeVersion)),
+		EtcdVersion:              version.MustParseSemantic(etcdVersion),
+	}
+}
+
 func nodeVersionMap(controlPlaneNodes, workerNodes map[string]string) kubernetes.NodeVersionInfoMap {
 	res := kubernetes.NodeVersionInfoMap{}
 	for node, version := range controlPlaneNodes {
@@ -239,6 +250,16 @@ func versionInquirer(versions ...string) kubernetes.VersionInquirer {
 	return res
 }
 
+func versionInquirerWithOverride(overrides map[string]func(*kubernetes.KubernetesVersion), versions ...string) kubernetes.VersionInquirer {
+	versionsWithOverride := versionInquirer(versions...).(TestVersionInquirer)
+	for version, versionMap := range versionsWithOverride.AvailableVersions {
+		if overrideFunc, ok := overrides[version]; ok {
+			overrideFunc(&versionMap)
+		}
+	}
+	return versionsWithOverride
+}
+
 func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 	var versions = []struct {
 		name                                        string
@@ -246,7 +267,7 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		versionInquirer                             kubernetes.VersionInquirer
 		allNodesVersioningInfo                      kubernetes.NodeVersionInfoMap
 		node                                        corev1.Node
-		client                                      clientset.Interface
+		currentKubernetesVersion                    string
 		expectedNodeVersionInfoUpdate               NodeVersionInfoUpdate
 		expectedIsFirstControlPlaneNodeToBeUpgraded bool
 		expectedHasMajorOrMinorUpdate               bool
@@ -254,24 +275,12 @@ func TestControlPlaneUpdateStatusWithAvailableVersions(t *testing.T) {
 		expectedError                               bool
 	}{
 		{
-			name:                   "first control plane to be upgraded; no upgrades available",
-			currentClusterVersion:  version.MustParseSemantic("v1.14.0"),
-			versionInquirer:        versionInquirer("1.14.0"),
-			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
-			node:                   controlPlaneNode("cp1"),
-			client: fake.NewSimpleClientset(&corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      kubeadmconstants.KubeadmConfigConfigMap,
-					Namespace: metav1.NamespaceSystem,
-				},
-				Data: map[string]string{
-					kubeadmconstants.ClusterConfigurationConfigMapKey: `
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.14.0
-`,
-				},
-			}),
+			name:                     "first control plane to be upgraded; no upgrades available",
+			currentClusterVersion:    version.MustParseSemantic("v1.14.0"),
+			versionInquirer:          versionInquirer("1.14.0"),
+			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
+			node:                     controlPlaneNode("cp1"),
+			currentKubernetesVersion: "1.14.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp1", "1.14.0", controlPlane),
@@ -281,24 +290,12 @@ kubernetesVersion: v1.14.0
 			expectedIsUpdated:                           true,
 		},
 		{
-			name:                   "first control plane to be upgraded; upgrades available",
-			currentClusterVersion:  version.MustParseSemantic("v1.14.0"),
-			versionInquirer:        versionInquirer("1.14.0", "1.15.0"),
-			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
-			node:                   controlPlaneNode("cp1"),
-			client: fake.NewSimpleClientset(&corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      kubeadmconstants.KubeadmConfigConfigMap,
-					Namespace: metav1.NamespaceSystem,
-				},
-				Data: map[string]string{
-					kubeadmconstants.ClusterConfigurationConfigMapKey: `
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.14.0
-`,
-				},
-			}),
+			name:                     "first control plane to be upgraded; upgrades available",
+			currentClusterVersion:    version.MustParseSemantic("v1.14.0"),
+			versionInquirer:          versionInquirer("1.14.0", "1.15.0"),
+			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.14.0"}, map[string]string{}),
+			node:                     controlPlaneNode("cp1"),
+			currentKubernetesVersion: "1.14.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp1", "1.15.0", controlPlane),
@@ -308,24 +305,12 @@ kubernetesVersion: v1.14.0
 			expectedIsUpdated:                           false,
 		},
 		{
-			name:                   "secondary control plane to be upgraded; upgrades available",
-			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
-			versionInquirer:        versionInquirer("1.14.0", "1.15.0"),
-			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0", "cp2": "1.14.0"}, map[string]string{}),
-			node:                   controlPlaneNode("cp2"),
-			client: fake.NewSimpleClientset(&corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      kubeadmconstants.KubeadmConfigConfigMap,
-					Namespace: metav1.NamespaceSystem,
-				},
-				Data: map[string]string{
-					kubeadmconstants.ClusterConfigurationConfigMapKey: `
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.15.0
-`,
-				},
-			}),
+			name:                     "secondary control plane to be upgraded; upgrades available",
+			currentClusterVersion:    version.MustParseSemantic("v1.15.0"),
+			versionInquirer:          versionInquirer("1.14.0", "1.15.0"),
+			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.15.0", "cp2": "1.14.0"}, map[string]string{}),
+			node:                     controlPlaneNode("cp2"),
+			currentKubernetesVersion: "1.15.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp2", "1.14.0", controlPlane),
 				Update:  nodeVersion("cp2", "1.15.0", controlPlane),
@@ -343,27 +328,37 @@ kubernetesVersion: v1.15.0
 			expectedError:          true,
 		},
 		{
-			name:                   "first control plane to be upgraded; patch version",
-			currentClusterVersion:  version.MustParseSemantic("v1.15.0"),
-			versionInquirer:        versionInquirer("1.15.0", "1.15.2"),
-			allNodesVersioningInfo: nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.15.0"}),
-			node:                   controlPlaneNode("cp1"),
-			client: fake.NewSimpleClientset(&corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      kubeadmconstants.KubeadmConfigConfigMap,
-					Namespace: metav1.NamespaceSystem,
-				},
-				Data: map[string]string{
-					kubeadmconstants.ClusterConfigurationConfigMapKey: `
-apiVersion: kubeadm.k8s.io/v1beta1
-kind: ClusterConfiguration
-kubernetesVersion: v1.15.0
-`,
-				},
-			}),
+			name:                     "first control plane to be upgraded; patch version",
+			currentClusterVersion:    version.MustParseSemantic("v1.15.0"),
+			versionInquirer:          versionInquirer("1.15.0", "1.15.2"),
+			allNodesVersioningInfo:   nodeVersionMap(map[string]string{"cp1": "1.15.0"}, map[string]string{"worker1": "1.15.0"}),
+			node:                     controlPlaneNode("cp1"),
+			currentKubernetesVersion: "1.15.0",
 			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
 				Current: nodeVersion("cp1", "1.15.0", controlPlane),
 				Update:  nodeVersion("cp1", "1.15.2", controlPlane),
+			},
+			expectedIsFirstControlPlaneNodeToBeUpgraded: true,
+			expectedHasMajorOrMinorUpdate:               false,
+			expectedIsUpdated:                           false,
+		},
+		{
+			name:                  "first control plane to be upgraded; metadata version",
+			currentClusterVersion: version.MustParseSemantic("v1.15.0"),
+			versionInquirer: versionInquirerWithOverride(map[string]func(*kubernetes.KubernetesVersion){
+				"1.15.0": func(version *kubernetes.KubernetesVersion) {
+					version.ComponentContainerVersion[kubernetes.Etcd] = &kubernetes.ContainerImageTag{
+						Name: version.ComponentContainerVersion[kubernetes.Etcd].Name,
+						Tag:  "3.3.11-1",
+					}
+				},
+			}, "1.15.0"),
+			allNodesVersioningInfo:   kubernetes.NodeVersionInfoMap{"cp1": controlPlaneVersion("cp1", "1.15.0", "3.3.11")},
+			node:                     controlPlaneNode("cp1"),
+			currentKubernetesVersion: "1.15.0",
+			expectedNodeVersionInfoUpdate: NodeVersionInfoUpdate{
+				Current: controlPlaneVersion("cp1", "1.15.0", "3.3.11"),
+				Update:  controlPlaneVersion("cp1", "1.15.0", "3.3.11-1"),
 			},
 			expectedIsFirstControlPlaneNodeToBeUpgraded: true,
 			expectedHasMajorOrMinorUpdate:               false,
@@ -396,7 +391,29 @@ kubernetesVersion: v1.15.0
 				return
 			}
 
-			isFirstControlPlaneNodeToBeUpgraded, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(tt.client)
+			var client *fake.Clientset
+			if len(tt.currentKubernetesVersion) > 0 {
+				kubeadmConfig := fmt.Sprintf(`
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: v%s
+`, tt.currentKubernetesVersion)
+				client = fake.NewSimpleClientset(
+					&corev1.ConfigMap{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      kubeadmconstants.KubeadmConfigConfigMap,
+							Namespace: metav1.NamespaceSystem,
+						},
+						Data: map[string]string{
+							kubeadmconstants.ClusterConfigurationConfigMapKey: kubeadmConfig,
+						},
+					},
+				)
+			} else {
+				client = fake.NewSimpleClientset()
+			}
+
+			isFirstControlPlaneNodeToBeUpgraded, err := nodeVersionInfoUpdate.IsFirstControlPlaneNodeToBeUpgraded(client)
 			if err != nil {
 				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
