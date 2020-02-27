@@ -121,12 +121,12 @@ const (
 // Helper provide methods for replica update of deployment
 // resource that has highAvailabilitylabel.
 type Helper struct {
-	Client      clientset.Interface
-	ClusterSize int
-	Deployments *appsv1.DeploymentList
-	Deployment  *appsv1.Deployment
-	ReplicaSize int
-	MinSize     int
+	client      clientset.Interface
+	clusterSize int
+	deployments *appsv1.DeploymentList
+	deployment  *appsv1.Deployment
+	replicaSize int
+	minSize     int
 }
 
 // NewHelper creates a helper to update deployment replicas.
@@ -137,15 +137,15 @@ func NewHelper(client clientset.Interface) (*Helper, error) {
 	}
 
 	return &Helper{
-		Client:      client,
-		ClusterSize: len(node.Items),
-		MinSize:     minSize,
+		client:      client,
+		clusterSize: len(node.Items),
+		minSize:     minSize,
 	}, nil
 }
 
 // deploymentsHelper updates deployment list in Helper object
 func (r *Helper) deploymentsHelper() error {
-	deployments, err := r.Client.AppsV1().Deployments(metav1.NamespaceSystem).List(
+	deployments, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).List(
 		metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=true", highAvailabilitylabel),
 		},
@@ -153,17 +153,17 @@ func (r *Helper) deploymentsHelper() error {
 	if err != nil {
 		return err
 	}
-	r.Deployments = deployments
+	r.deployments = deployments
 	return nil
 }
 
 // deploymentHelper updates deployment in Helper object
 func (r *Helper) deploymentHelper(name string) error {
-	deployment, err := r.Client.AppsV1().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
+	deployment, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	r.Deployment = deployment
+	r.deployment = deployment
 	return nil
 }
 
@@ -171,10 +171,10 @@ func (r *Helper) deploymentHelper(name string) error {
 func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error) {
 	// doRemove will remove only when affinity path exists
 	doRemove := false
-	affinity := r.Deployment.Spec.Template.Spec.Affinity
+	affinity := r.deployment.Spec.Template.Spec.Affinity
 	if affinity != nil && affinity.PodAntiAffinity != nil {
-		preferredList := len(r.Deployment.Spec.Template.Spec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution)
-		requiredList := len(r.Deployment.Spec.Template.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution)
+		preferredList := len(r.deployment.Spec.Template.Spec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution)
+		requiredList := len(r.deployment.Spec.Template.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution)
 		switch remove {
 		case preferred:
 			// when preferred affinity exist it will be removed first
@@ -207,9 +207,9 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 	var affinityJSON string
 	switch create {
 	case required:
-		affinityJSON = fmt.Sprintf(patchAffinityRequired, r.Deployment.ObjectMeta.Name)
+		affinityJSON = fmt.Sprintf(patchAffinityRequired, r.deployment.ObjectMeta.Name)
 	default:
-		affinityJSON = fmt.Sprintf(patchAffinityPreferred, r.Deployment.ObjectMeta.Name)
+		affinityJSON = fmt.Sprintf(patchAffinityPreferred, r.deployment.ObjectMeta.Name)
 	}
 
 	// At least one node needs to be free of the affinity rules for pods to re-distribute.
@@ -218,14 +218,14 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 	// when tries to create a new deployment with `preferred`. This is due to the conflict to its original rule.
 	// But this ends up with less of replicas. So need the following patch to bring the replicas to the right size
 	// after affinity updated.
-	if _, err := r.updateDeploymentReplica(r.ClusterSize - 1); err != nil {
+	if _, err := r.updateDeploymentReplica(r.clusterSize - 1); err != nil {
 		return false, err
 	}
-	_, err := r.Client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.Deployment.ObjectMeta.Name, types.StrategicMergePatchType, []byte(affinityJSON))
+	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.deployment.ObjectMeta.Name, types.StrategicMergePatchType, []byte(affinityJSON))
 	if err != nil {
 		return false, err
 	}
-	if _, err := r.updateDeploymentReplica(r.ReplicaSize); err != nil {
+	if _, err := r.updateDeploymentReplica(r.replicaSize); err != nil {
 		return false, err
 	}
 
@@ -234,7 +234,7 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 
 // removeAffinity patch to remove affinity from deployment
 func (r *Helper) removeAffinity() error {
-	_, err := r.Client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.Deployment.ObjectMeta.Name, types.JSONPatchType, []byte(patchAffinityRemove))
+	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.deployment.ObjectMeta.Name, types.JSONPatchType, []byte(patchAffinityRemove))
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func (r *Helper) removeAffinity() error {
 // updateDeploymentReplic patch to update replica size of deployment
 func (r *Helper) updateDeploymentReplica(size int) (*appsv1.Deployment, error) {
 	replicaJSON := fmt.Sprintf(patchReplicas, size)
-	return r.Client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.Deployment.ObjectMeta.Name, types.StrategicMergePatchType, []byte(replicaJSON))
+	return r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(r.deployment.ObjectMeta.Name, types.StrategicMergePatchType, []byte(replicaJSON))
 }
 
 // UpdateNodes patches for replicas affinity rules after adding nodes, before removing nodes, or after addon
@@ -256,36 +256,36 @@ func (r *Helper) UpdateNodes() error {
 		return err
 	}
 
-	for _, deployment := range r.Deployments.Items {
+	for _, deployment := range r.deployments.Items {
 		if err := r.deploymentHelper(deployment.Name); err != nil {
 			return err
 		}
-		r.ReplicaSize = int(*r.Deployment.Spec.Replicas)
-		if r.ReplicaSize == 0 {
-			r.ReplicaSize = r.MinSize
+		r.replicaSize = int(*r.deployment.Spec.Replicas)
+		if r.replicaSize == 0 {
+			r.replicaSize = r.minSize
 		}
 
 		updated := false
 		var err error
 		switch {
-		case r.ClusterSize >= r.ReplicaSize:
+		case r.clusterSize >= r.replicaSize:
 			updated, err = r.replaceAffinity(preferred, required)
 			if err != nil {
 				return err
 			}
-		case r.ClusterSize >= r.MinSize:
+		case r.clusterSize >= r.minSize:
 			updated, err = r.replaceAffinity(required, preferred)
 			if err != nil {
 				return err
 			}
 		}
-		if !updated && r.ClusterSize <= r.ReplicaSize {
+		if !updated && r.clusterSize <= r.replicaSize {
 			// update replicas to trigger pod re-distribution when affinity is in
 			// preferredDuringSchedulingIgnoredDuringExecution.
-			if _, err := r.updateDeploymentReplica(r.ClusterSize - 1); err != nil {
+			if _, err := r.updateDeploymentReplica(r.clusterSize - 1); err != nil {
 				return err
 			}
-			if _, err := r.updateDeploymentReplica(r.ReplicaSize); err != nil {
+			if _, err := r.updateDeploymentReplica(r.replicaSize); err != nil {
 				return err
 			}
 		}
@@ -301,12 +301,12 @@ func (r *Helper) UpdateBeforeNodeDrains() error {
 		return err
 	}
 
-	for _, deployment := range r.Deployments.Items {
+	for _, deployment := range r.deployments.Items {
 		if err := r.deploymentHelper(deployment.Name); err != nil {
 			return err
 		}
-		r.ReplicaSize = int(*r.Deployment.Spec.Replicas)
-		if r.ClusterSize > r.ReplicaSize {
+		r.replicaSize = int(*r.deployment.Spec.Replicas)
+		if r.clusterSize > r.replicaSize {
 			continue
 		}
 
@@ -314,13 +314,13 @@ func (r *Helper) UpdateBeforeNodeDrains() error {
 		if err != nil {
 			return err
 		}
-		if !updated && r.ClusterSize <= r.ReplicaSize {
+		if !updated {
 			// update replicas to trigger pod re-distribution when affinity is in
 			// preferredDuringSchedulingIgnoredDuringExecution.
-			if _, err := r.updateDeploymentReplica(r.ClusterSize - 1); err != nil {
+			if _, err := r.updateDeploymentReplica(r.clusterSize - 1); err != nil {
 				return err
 			}
-			if _, err := r.updateDeploymentReplica(r.ReplicaSize); err != nil {
+			if _, err := r.updateDeploymentReplica(r.replicaSize); err != nil {
 				return err
 			}
 			updated = true
@@ -364,13 +364,13 @@ func (r *Helper) waitForUpdates(retry int, newErr error) error {
 
 func (r *Helper) waitForDeploymentReplicas() error {
 	return wait.PollImmediate(retryInterval, retryTimeout, func() (bool, error) {
-		if err := r.deploymentHelper(r.Deployment.Name); err != nil {
+		if err := r.deploymentHelper(r.deployment.Name); err != nil {
 			return false, err
 		}
 
-		if r.Deployment.Status.UpdatedReplicas != *r.Deployment.Spec.Replicas ||
-			r.Deployment.Status.Replicas != *r.Deployment.Spec.Replicas ||
-			r.Deployment.Status.AvailableReplicas != *r.Deployment.Spec.Replicas {
+		if r.deployment.Status.UpdatedReplicas != *r.deployment.Spec.Replicas ||
+			r.deployment.Status.Replicas != *r.deployment.Spec.Replicas ||
+			r.deployment.Status.AvailableReplicas != *r.deployment.Spec.Replicas {
 			return false, nil
 		}
 
@@ -379,7 +379,7 @@ func (r *Helper) waitForDeploymentReplicas() error {
 }
 
 func (r *Helper) removePendingPods() error {
-	pods, err := r.Client.CoreV1().Pods(metav1.NamespaceSystem).List(
+	pods, err := r.client.CoreV1().Pods(metav1.NamespaceSystem).List(
 		metav1.ListOptions{},
 	)
 	if err != nil {
@@ -395,7 +395,7 @@ func (r *Helper) removePendingPods() error {
 		}
 		if !ready {
 			klog.Warningf("removing pending pod: %s", pod.Name)
-			err := r.Client.CoreV1().Pods(metav1.NamespaceSystem).Delete(pod.Name, &metav1.DeleteOptions{})
+			err := r.client.CoreV1().Pods(metav1.NamespaceSystem).Delete(pod.Name, &metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}

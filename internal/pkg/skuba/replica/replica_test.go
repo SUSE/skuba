@@ -54,8 +54,8 @@ func TestNewHelper(t *testing.T) {
 			t.Errorf("error not expected, but an error was reported (%v)", err.Error())
 		}
 		expect := len(nodes.Items)
-		if helper.ClusterSize != expect {
-			t.Errorf("returned cluster size (%v) does not match the expected one (%v)", helper.ClusterSize, expect)
+		if helper.clusterSize != expect {
+			t.Errorf("returned cluster size (%v) does not match the expected one (%v)", helper.clusterSize, expect)
 		}
 	})
 }
@@ -178,12 +178,12 @@ func TestUpdateNodes(t *testing.T) {
 			)
 			for _, d := range deployments.Items {
 				replicaSize := int(*d.Spec.Replicas)
-				switch nodes := replicaHelper.ClusterSize; {
+				switch nodes := replicaHelper.clusterSize; {
 				case nodes >= replicaSize:
 					if len(d.Spec.Template.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution) == 0 {
 						t.Error("expect affinity \"requiredDuringSchedulingIgnoredDuringExecution\", but affinity not exist")
 					}
-				case nodes >= replicaHelper.MinSize:
+				case nodes >= replicaHelper.minSize:
 					if len(d.Spec.Template.Spec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution) == 0 {
 						t.Error("expect affinity \"preferredDuringSchedulingIgnoredDuringExecution\", but affinity not exist")
 					}
@@ -308,7 +308,7 @@ func TestUpdateDrainNodes(t *testing.T) {
 				replicaSize := int(*d.Spec.Replicas)
 				preferredList := len(d.Spec.Template.Spec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution)
 				requiredList := len(d.Spec.Template.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution)
-				switch nodes := replicaHelper.ClusterSize; {
+				switch nodes := replicaHelper.clusterSize; {
 				case nodes > replicaSize:
 					if requiredList == 0 {
 						t.Error("expect affinity \"requiredDuringSchedulingIgnoredDuringExecution\", but affinity not exist")
