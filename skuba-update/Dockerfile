@@ -20,7 +20,7 @@ COPY test/unit-tests-init.sh /init
 
 RUN zypper -n ref && \
     zypper -n in python3-setuptools python3-pip ShellCheck lsof && \
-    pip install -r /dev-requirements.txt && \
+    pip install -r /dev-requirements.txt --ignore-installed && \
     chmod +x /init && \
     useradd -m -d /home/suse -s /bin/bash suse && \
     zypper clean -a
