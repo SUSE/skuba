@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func Test_GenerateSessionKey(t *testing.T) {
+func TestGenerateSessionKey(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputLen  int
@@ -61,7 +61,7 @@ func Test_GenerateSessionKey(t *testing.T) {
 	}
 }
 
-func Test_CreateOrUpdateSessionKeyToSecret(t *testing.T) {
+func TestCreateOrUpdateSessionKeyToSecret(t *testing.T) {
 	tests := []struct {
 		name string
 		key  []byte
@@ -83,7 +83,95 @@ func Test_CreateOrUpdateSessionKeyToSecret(t *testing.T) {
 	}
 }
 
-func Test_CreateCert(t *testing.T) {
+func TestGetClientSecret(t *testing.T) {
+	manifest := `
+clusterName: example
+redirectURL: "https://example.com/callback"
+scopes: ["openid", "email", "groups", "profile", "offline_access"]
+serveTLS: true
+authorizeURL: "https://example.com:32000/auth"
+tokenURL: "https://example.com:32000/token"
+keyFile: /etc/gangway/pki/tls.key
+certFile: /etc/gangway/pki/tls.crt
+clientID: "oidc"
+clientSecret: "someClientSecret"
+usernameClaim: "email"
+apiServerURL: "https://example.com:6443"
+cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+trustedCAPath: /etc/gangway/pki/ca.crt
+customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
+`
+
+	tests := []struct {
+		name               string
+		client             clientset.Interface
+		expectedError      bool
+		expectClientSecret string
+	}{
+		{
+			name: "get client secret success",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configmapName,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{
+					"gangway.yaml": manifest,
+				},
+			}),
+			expectClientSecret: "someClientSecret",
+		},
+		{
+			name: "client secret not exist",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configmapName,
+					Namespace: metav1.NamespaceDefault,
+				},
+				Data: map[string]string{
+					"gangway.yaml": manifest,
+				},
+			}),
+			expectClientSecret: "",
+		},
+		{
+			name: "client secret key not exist",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configmapName,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{
+					"ooxx.yaml": manifest,
+				},
+			}),
+			expectClientSecret: "",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			gotClientSecret, err := GetClientSecret(tt.client)
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("error expected on %s, but no error reported", tt.name)
+				}
+				return
+			} else if err != nil {
+				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
+				return
+			}
+
+			if gotClientSecret != tt.expectClientSecret {
+				t.Errorf("got %s, want %s", gotClientSecret, tt.expectClientSecret)
+				return
+			}
+		})
+	}
+}
+
+func TestCreateCert(t *testing.T) {
 	tests := []struct {
 		name                string
 		pkiPath             string
@@ -124,7 +212,7 @@ func Test_CreateCert(t *testing.T) {
 	}
 }
 
-func Test_GangwaySecretExists(t *testing.T) {
+func TestGangwaySecretExists(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface
@@ -171,7 +259,7 @@ func Test_GangwaySecretExists(t *testing.T) {
 	}
 }
 
-func Test_GangwayCertExists(t *testing.T) {
+func TestGangwayCertExists(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface
@@ -218,7 +306,7 @@ func Test_GangwayCertExists(t *testing.T) {
 	}
 }
 
-func Test_RestartPods(t *testing.T) {
+func TestRestartPods(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface

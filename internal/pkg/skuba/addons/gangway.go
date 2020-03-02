@@ -18,12 +18,13 @@
 package addons
 
 import (
+	"github.com/pkg/errors"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 func init() {
@@ -49,6 +50,14 @@ func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skuba
 	if err != nil {
 		return errors.Wrap(err, "could not get admin client set")
 	}
+
+	// Read gangway client secret from secret resource if present
+	// in order to update global variable gangwayClientSecret.
+	gangwayClientSecret, err = gangway.GetClientSecret(client)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if gangway client secret exists")
+	}
+
 	gangwaySecretExists, err := gangway.GangwaySecretExists(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if gangway secret exists")

@@ -24,11 +24,13 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/apiclient"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+	"sigs.k8s.io/yaml"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
@@ -41,6 +43,8 @@ const (
 
 	sessionKey    = "session-key"
 	secretKeyName = "oidc-gangway-secret"
+
+	configmapName = "oidc-gangway-config"
 )
 
 // GenerateSessionKey generates session key
@@ -71,6 +75,32 @@ func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) er
 	}
 
 	return nil
+}
+
+// GetClientSecret returns the client secret from configmap
+func GetClientSecret(client clientset.Interface) (string, error) {
+	type config struct {
+		ClientSecret string `yaml:"clientSecret"`
+	}
+
+	cm, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(configmapName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	data, ok := cm.Data["gangway.yaml"]
+	if !ok {
+		return "", nil
+	}
+
+	c := config{}
+	if err := yaml.Unmarshal([]byte(data), &c); err != nil {
+		return "", err
+	}
+	return c.ClientSecret, nil
 }
 
 // CreateCert creates a signed certificate for gangway
