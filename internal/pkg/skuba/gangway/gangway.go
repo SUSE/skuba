@@ -93,8 +93,9 @@ func GetClientSecret(client clientset.Interface) (string, error) {
 
 	data, ok := cm.Data["gangway.yaml"]
 	if !ok {
-	    return "", nil
+		return "", nil
 	}
+
 	c := config{}
 	if err := yaml.Unmarshal([]byte(data), &c); err != nil {
 		return "", err

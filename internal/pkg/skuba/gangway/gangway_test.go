@@ -134,6 +134,19 @@ customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 			}),
 			expectClientSecret: "",
 		},
+		{
+			name: "client secret key not exist",
+			client: fake.NewSimpleClientset(&corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      configmapName,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Data: map[string]string{
+					"ooxx.yaml": manifest,
+				},
+			}),
+			expectClientSecret: "",
+		},
 	}
 
 	for _, tt := range tests {
