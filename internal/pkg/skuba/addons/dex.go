@@ -18,12 +18,14 @@
 package addons
 
 import (
+	"github.com/pkg/errors"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
+	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 var gangwayClientSecret string
@@ -54,10 +56,20 @@ func renderDexTemplate(addonConfiguration AddonConfiguration) string {
 type dexCallbacks struct{}
 
 func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+	var err error
+
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return errors.Wrap(err, "could not get admin client set")
 	}
+
+	// Read gangway client secret from secret resource if present
+	// in order to update global variable gangwayClientSecret.
+	gangwayClientSecret, err = gangway.GetClientSecret(client)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if gangway client secret exists")
+	}
+
 	dexCertExists, err := dex.DexCertExists(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if dex certificate exists")
