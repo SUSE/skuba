@@ -18,9 +18,11 @@
 package addons
 
 import (
+	"github.com/pkg/errors"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/metricsserver"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
@@ -44,10 +46,31 @@ func renderMetricsServerTemplate(addonConfiguration AddonConfiguration) string {
 type metricsServerCallbacks struct{}
 
 func (metricsServerCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return errors.Wrap(err, "could not get admin client set")
+	}
+
+	exist, err := metricsserver.IsCertExist(client)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine metrics-server cert exist")
+	}
+
+	if !exist {
+		if err := metricsserver.CreateCert(client, skubaconstants.PkiDir()); err != nil {
+			return errors.Wrap(err, "unable to create metrics-server certificate")
+		}
+	}
+
 	return nil
 }
 
 func (metricsServerCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+	// Update caBundle value as Kubernetes CA
+
+	// Get Kubernetes CA
+	// Patch update apiservice v1beta1.metrics.k8s.io caBundle value
+
 	return nil
 }
 
@@ -176,8 +199,8 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
           - metrics-server
-          - --cert-dir=/tmp
-          - --logtostderr
+          - --tls-cert-file=/etc/metrics-server/pki/tls.crt
+          - --tls-private-key-file=/etc/metrics-server/pki/tls.key
           - --secure-port=8443
           - --kubelet-preferred-address-types=InternalIP,InternalDNS,Hostname,ExternalIP,ExternalDNS
           - --kubelet-certificate-authority=/var/lib/kubelet/pki/kubelet-ca.crt
@@ -208,17 +231,23 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
-        - mountPath: /var/lib/kubelet/pki/kubelet-ca.crt
-          name: pki
+        - name: kubelet-cert-path
+          mountPath: /var/lib/kubelet/pki/kubelet-ca.crt
+          readOnly: true
+        - name: metrics-server-cert-path
+          mountPath: /etc/metrics-server/pki
           readOnly: true
       # mount in tmp so we can safely use from-scratch images and/or read-only containers
       volumes:
       - name: tmp
         emptyDir: {}
-      - hostPath:
+      - name: kubelet-cert-path
+        hostPath:
           path: /var/lib/kubelet/pki/kubelet-ca.crt
           type: File
-        name: pki
+      - name: metrics-server-cert-path
+        secret:
+          secretName: metrics-server-cert
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -233,8 +262,9 @@ spec:
     namespace: kube-system
   group: metrics.k8s.io
   version: v1beta1
-  insecureSkipTLSVerify: true
+  insecureSkipTLSVerify: false
   groupPriorityMinimum: 100
   versionPriority: 100
+  caBundle: null
 `
 )
