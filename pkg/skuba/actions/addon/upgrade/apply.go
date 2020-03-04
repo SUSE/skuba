@@ -26,6 +26,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/replica"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 )
 
@@ -69,6 +70,15 @@ func Apply(client clientset.Interface) error {
 		if err := addons.DeployAddons(client, addonConfiguration); err != nil {
 			return errors.Wrap(err, "[apply] Failed to deploy addons")
 		}
+
+		replicaHelper, err := replica.NewHelper(client)
+		if err != nil {
+			return err
+		}
+		if err := replicaHelper.UpdateNodes(); err != nil {
+			return err
+		}
+
 		fmt.Println("[apply] Successfully upgraded addons")
 	} else {
 		fmt.Printf("[apply] Congratulations! Addons for %s are already at the latest version available\n", currentVersion)

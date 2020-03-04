@@ -133,8 +133,10 @@ metadata:
   namespace: kube-system
   labels:
     app: oidc-gangway
+    caasp.suse.com/skuba-replica-ha: "true"
 spec:
   replicas: 3
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: oidc-gangway
