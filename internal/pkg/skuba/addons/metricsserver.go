@@ -18,7 +18,14 @@
 package addons
 
 import (
+	"bufio"
+	"encoding/base64"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/pkg/errors"
+	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -37,6 +44,31 @@ func GetMetricsServerImage(imageTag string) string {
 
 func (renderContext renderContext) MetricsServerImage() string {
 	return GetMetricsServerImage(kubernetes.AddonVersionForClusterVersion(kubernetes.MetricsServer, renderContext.config.ClusterVersion).Version)
+}
+
+func (renderContext renderContext) CABundle() string {
+	// base64 encoded Kubernetes CA certificate
+	path := filepath.Join(skubaconstants.PkiDir(), kubeadmconstants.CACertName)
+	fi, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return ""
+	}
+	if fi.IsDir() {
+		return ""
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+
+	reader := bufio.NewReader(f)
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return ""
+	}
+
+	return base64.StdEncoding.EncodeToString(content)
 }
 
 func renderMetricsServerTemplate(addonConfiguration AddonConfiguration) string {
@@ -66,11 +98,6 @@ func (metricsServerCallbacks) beforeApply(addonConfiguration AddonConfiguration,
 }
 
 func (metricsServerCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	// Update caBundle value as Kubernetes CA
-
-	// Get Kubernetes CA
-	// Patch update apiservice v1beta1.metrics.k8s.io caBundle value
-
 	return nil
 }
 
@@ -265,6 +292,6 @@ spec:
   insecureSkipTLSVerify: false
   groupPriorityMinimum: 100
   versionPriority: 100
-  caBundle: null
+  caBundle: {{.CABundle}}
 `
 )

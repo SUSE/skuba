@@ -39,7 +39,7 @@ func CreateCert(client clientset.Interface, pkiPath string) error {
 	// Load kubernetes CA
 	caCert, caKey, err := pkiutil.TryLoadCertAndKeyFromDisk(pkiPath, constants.CACertAndKeyBaseName)
 	if err != nil {
-		return errors.Errorf("unable to load kubernetes CA certificate and key %v", err)
+		return errors.Wrap(err, "unable to load kubernetes CA certificate and key")
 	}
 
 	// Generate metrics-server certificate
