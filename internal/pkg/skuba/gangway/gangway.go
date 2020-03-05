@@ -20,7 +20,6 @@ package gangway
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -133,17 +132,14 @@ func CreateCert(client clientset.Interface, pkiPath, kubeadmInitConfPath string)
 	return nil
 }
 
-func GangwaySecretExists(client clientset.Interface) (bool, error) {
+// IsSessionKeyExist checks gangway session key exists in secret resource
+func IsSessionKeyExist(client clientset.Interface) (bool, error) {
 	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretKeyName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
-func GangwayCertExists(client clientset.Interface) (bool, error) {
+// IsCertExist checks gangway certificate exists in secret resource
+func IsCertExist(client clientset.Interface) (bool, error) {
 	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
-}
-
-func RestartPods(client clientset.Interface) error {
-	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
-	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
 }

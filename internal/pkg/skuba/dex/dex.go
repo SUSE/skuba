@@ -83,12 +83,8 @@ func GenerateClientSecret() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func DexCertExists(client clientset.Interface) (bool, error) {
+// IsCertExist checks dex certificate exists in secret resource
+func IsCertExist(client clientset.Interface) (bool, error) {
 	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
-}
-
-func RestartPods(client clientset.Interface) error {
-	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
-	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
 }

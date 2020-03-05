@@ -212,7 +212,7 @@ func TestCreateCert(t *testing.T) {
 	}
 }
 
-func TestGangwaySecretExists(t *testing.T) {
+func TestIsSessionKeyExist(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface
@@ -241,7 +241,7 @@ func TestGangwaySecretExists(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GangwaySecretExists(tt.client)
+			got, err := IsSessionKeyExist(tt.client)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
@@ -259,7 +259,7 @@ func TestGangwaySecretExists(t *testing.T) {
 	}
 }
 
-func TestGangwayCertExists(t *testing.T) {
+func TestIsCertExist(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface
@@ -288,7 +288,7 @@ func TestGangwayCertExists(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GangwayCertExists(tt.client)
+			got, err := IsCertExist(tt.client)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
@@ -301,57 +301,6 @@ func TestGangwayCertExists(t *testing.T) {
 
 			if got != tt.expectedExist {
 				t.Errorf("expect %t, got %t\n", tt.expectedExist, got)
-			}
-		})
-	}
-}
-
-func TestRestartPods(t *testing.T) {
-	tests := []struct {
-		name          string
-		client        clientset.Interface
-		expectedError bool
-	}{
-		{
-			name: "restart pod successfully",
-			client: fake.NewSimpleClientset(&corev1.PodList{
-				Items: []corev1.Pod{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "gangway-pod-1",
-							Labels: map[string]string{"app": "oidc-gangway"},
-						},
-					},
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "gangway-pod-2",
-							Labels: map[string]string{"app": "oidc-gangway"},
-						},
-					},
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "gangway-pod-3",
-							Labels: map[string]string{"app": "oidc-gangway"},
-						},
-					},
-				},
-			}),
-			expectedError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			err := RestartPods(tt.client)
-			if tt.expectedError {
-				if err == nil {
-					t.Errorf("error expected on %s, but no error reported", tt.name)
-				}
-				return
-			} else if err != nil {
-				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
-				return
 			}
 		})
 	}

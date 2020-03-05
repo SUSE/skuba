@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func Test_GenerateClientSecret(t *testing.T) {
+func TestGenerateClientSecret(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputLen  int
@@ -58,7 +58,7 @@ func Test_GenerateClientSecret(t *testing.T) {
 	}
 }
 
-func Test_CreateCert(t *testing.T) {
+func TestCreateCert(t *testing.T) {
 	tests := []struct {
 		name                string
 		pkiPath             string
@@ -99,7 +99,7 @@ func Test_CreateCert(t *testing.T) {
 	}
 }
 
-func Test_DexCertExists(t *testing.T) {
+func TestIsCertExist(t *testing.T) {
 	tests := []struct {
 		name          string
 		client        clientset.Interface
@@ -128,7 +128,7 @@ func Test_DexCertExists(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DexCertExists(tt.client)
+			got, err := IsCertExist(tt.client)
 			if tt.expectedError {
 				if err == nil {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
@@ -141,57 +141,6 @@ func Test_DexCertExists(t *testing.T) {
 
 			if got != tt.expectedExist {
 				t.Errorf("expect %t, got %t\n", tt.expectedExist, got)
-			}
-		})
-	}
-}
-
-func Test_RestartPods(t *testing.T) {
-	tests := []struct {
-		name          string
-		client        clientset.Interface
-		expectedError bool
-	}{
-		{
-			name: "restart pod successfully",
-			client: fake.NewSimpleClientset(&corev1.PodList{
-				Items: []corev1.Pod{
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "dex-pod-1",
-							Labels: map[string]string{"app": "oidc-dex"},
-						},
-					},
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "dex-pod-2",
-							Labels: map[string]string{"app": "oidc-dex"},
-						},
-					},
-					{
-						ObjectMeta: metav1.ObjectMeta{
-							Name:   "dex-pod-3",
-							Labels: map[string]string{"app": "oidc-dex"},
-						},
-					},
-				},
-			}),
-			expectedError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			err := RestartPods(tt.client)
-			if tt.expectedError {
-				if err == nil {
-					t.Errorf("error expected on %s, but no error reported", tt.name)
-				}
-				return
-			} else if err != nil {
-				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
-				return
 			}
 		})
 	}

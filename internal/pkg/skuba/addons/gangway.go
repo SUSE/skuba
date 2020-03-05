@@ -55,18 +55,16 @@ func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skuba
 	// in order to update global variable gangwayClientSecret.
 	gangwayClientSecret, err = gangway.GetClientSecret(client)
 	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway client secret exists")
+		return errors.Wrap(err, "unable to determine gangway client secret exists")
 	}
 
-	gangwaySecretExists, err := gangway.GangwaySecretExists(client)
+	// Check session key
+	sessionKeyExist, err := gangway.IsSessionKeyExist(client)
 	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway secret exists")
+		return errors.Wrap(err, "unable to determine gangway session key exists")
 	}
-	gangwayCertExists, err := gangway.GangwayCertExists(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway cert exists")
-	}
-	if !gangwaySecretExists {
+
+	if !sessionKeyExist {
 		key, err := gangway.GenerateSessionKey()
 		if err != nil {
 			return errors.Wrap(err, "unable to generate gangway session key")
@@ -76,15 +74,19 @@ func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skuba
 			return errors.Wrap(err, "unable to create/update gangway session key to secret")
 		}
 	}
-	err = gangway.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile())
+
+	// Check certificate
+	certExist, err := gangway.IsCertExist(client)
 	if err != nil {
-		return errors.Wrap(err, "unable to create gangway certificate")
+		return errors.Wrap(err, "unable to determine gangway cert exists")
 	}
-	if gangwayCertExists {
-		if err := gangway.RestartPods(client); err != nil {
-			return err
+
+	if !certExist {
+		if err := gangway.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile()); err != nil {
+			return errors.Wrap(err, "unable to create gangway certificate")
 		}
 	}
+
 	return nil
 }
 

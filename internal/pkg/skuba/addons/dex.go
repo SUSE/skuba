@@ -67,22 +67,20 @@ func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConf
 	// in order to update global variable gangwayClientSecret.
 	gangwayClientSecret, err = gangway.GetClientSecret(client)
 	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway client secret exists")
+		return errors.Wrap(err, "unable to determine gangway client secret exists")
 	}
 
-	dexCertExists, err := dex.DexCertExists(client)
+	certExist, err := dex.IsCertExist(client)
 	if err != nil {
-		return errors.Wrap(err, "unable to determine if dex certificate exists")
+		return errors.Wrap(err, "unable to determine dex certificate exists")
 	}
-	err = dex.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile())
-	if err != nil {
-		return errors.Wrap(err, "unable to create dex certificate")
-	}
-	if dexCertExists {
-		if err := dex.RestartPods(client); err != nil {
-			return err
+
+	if !certExist {
+		if err := dex.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile()); err != nil {
+			return errors.Wrap(err, "unable to create dex certificate")
 		}
 	}
+
 	return nil
 }
 
