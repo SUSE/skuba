@@ -195,12 +195,10 @@ def get_update_list(patch_xml):
 
 def has_updates(update_list):
     """
-    Returns true if there are updates available.
+    Returns true if there are updates available except optional packages.
     """
-    if update_list is None or len(update_list) == 0:
-        return False
-    else:
-        return True
+
+    return filter_updates(update_list, 'category', lambda x: x != 'optional')
 
 
 def has_security_updates(update_list):
@@ -225,12 +223,13 @@ def filter_updates(update_list, attrib, attrib_check):
     attribute (attrib) that is also passing the checker
     function (attrib_check)
     """
+    if update_list is None or len(update_list) == 0:
+        return False
 
-    if has_updates(update_list):
-        for update in update_list:
-            attr = update.attrib.get(attrib, '')
-            if attrib_check(attr):
-                return True
+    for update in update_list:
+        attr = update.attrib.get(attrib, '')
+        if attrib_check(attr):
+            return True
 
     return False
 
@@ -323,6 +322,10 @@ def run_zypper_command(command, needsOutput=False):
 
 
 def run_zypper_patch():
+    """
+    Run patch updates without --with-optional. --with-optional can cause
+    conflicts with K8s upgrade scenario.
+    """
     return run_zypper_command([
         '--non-interactive', '--non-interactive-include-reboot-patches',
         'patch'
