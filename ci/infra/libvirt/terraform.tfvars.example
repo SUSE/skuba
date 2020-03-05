@@ -1,6 +1,17 @@
+# URL of the libvirt server
+# EXAMPLE:
+# libvirt_uri = "qemu:///system"
+libvirt_uri = ""
+
+# Path of the key file used to connect to the libvirt server
+# Note this value will be appended to the libvirt_uri as a 'keyfile' query: <libvirt_uri>?keyfile=<libvirt_keyfile>
+# EXAMPLE:
+# libvirt_keyfile = "~/.ssh/custom_id"
+libvirt_uri = ""
+
 # URL of the image to use
 # EXAMPLE:
-# image_uri = "SLE-15-SP1-JeOS-GMC"
+# image_uri = "http://download.suse.com/..."
 image_uri = ""
 
 # Identifier to make all your resources unique and avoid clashes with other users of this terraform project

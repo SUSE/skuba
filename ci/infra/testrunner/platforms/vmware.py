@@ -13,6 +13,7 @@ class VMware(Terraform):
             msg = (f'Your VMware env file path "{conf.vmware.env_file}" does not exist.\n\t    '
                    'Check the VMware env file path in your configured yaml file.')
             raise ValueError(Format.alert(msg))
+        self.platform_new_vars = {}
 
     def _env_setup_cmd(self):
         return f"source {self.conf.vmware.env_file}"

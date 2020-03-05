@@ -3,10 +3,9 @@
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
-    platform: openstack
     jobs:
         - '{name}/test'
-        - '{name}/test-vmware'
+        - '{name}/test-libvirt'
         - '{name}/update-unit'
         - '{name}/update-acceptance'
         - '{name}/code-lint'

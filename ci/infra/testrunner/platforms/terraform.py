@@ -151,6 +151,8 @@ class Terraform(Platform):
             "authorized_keys": [self.utils.authorized_keys()]
         }
 
+        new_vars.update(self.platform_new_vars)
+
         for k, v in new_vars.items():
             if tfvars.get(k) is not None:
                 if isinstance(v, list):

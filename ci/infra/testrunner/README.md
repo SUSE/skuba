@@ -299,15 +299,20 @@ or as an environment variable: `export VMWARE_ENV_FILE=/path/to/vmware-env.sh`
 
 #### Libvirt
 
-`testrunner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. Moreover, the version of this plugin must be compatible with the version of terraform used by skuba (and by extension, the testrunner) which as of today is `0.11`. [This version](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) has been tested to work. Notice it requires an updated version of libvirt (4.1.0 or above). 
+`testrunner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. However this is available from the development [CaaSP repositories](http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/) for SLE15-SP1 or from the public [openSUSE repositories](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) for non SLE15-SP1 hosts. Notice it requires an updated version of libvirt (4.1.0 or above).
 
-Once the plugin is installed locally, it must be made available to terraform by copying the plugin binary to `ci/infra/libvirt/terraform.d/plugins/linux_<arch>/`, where `<arch>` is the architecture of the computer where terraform is running (e.g. `amd64`).
+There three configuration variables required for libvirt operations, all configurable from the configuration yaml file or by environment variables like any other variable in the yaml file:
 
-**Note**: setting the `tf_plugin_dir` parameter in the `testrunner` configuration as shown bellow **will not work**. The reason is that terraform will disable the [default discovery process](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery) and therefore the other required plugings will not be available.
+```yaml
+libvirt:
+  uri: "qemu:///system" #os.getenv("LIBVIRT_URI")
+  keyfile: "" #os.getenv("LIBVIRT_KEYFILE")
+  image_uri: "" #os.getenv("LIBVIRT_IMAGE_URI")
 ```
-terraform:
-  plugin_dir: "/path/to/libvirt/provider"
-```
+
+`uri` is the URI used by the libvirt client to connect the libvirt host `qemu:///system` for local libvirt services.
+`keyfile` is the path of the keyfile used to connect to the libbirt `uri`. This path is included as part of the `uri` as a query. Consider a remote ssh uri as `qemu+ssh://<user>@<libvirt_host>/system`, defining a `keyfile` turns it into `qemu+ssh://<user>@<libvirt_host>/system?keyfile=<keyfile_path>`
+`image_uri` is the URI that will be used to pull the image for the VMs deployment, usually this points to some JeOS image.Note the image is expected to include cloud-init.
 
 ### Jenkins Setup
 

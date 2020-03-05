@@ -1,10 +1,10 @@
 - job-template:
-    name: '{name}/test-vmware'
+    name: '{name}/test-libvirt'
     project-type: multibranch
     periodic-folder-trigger: 5m
     number-to-keep: 30
     days-to-keep: 30
-    script-path: ci/jenkins/pipelines/prs/skuba-test-vmware.Jenkinsfile
+    script-path: ci/jenkins/pipelines/prs/skuba-test-libvirt.Jenkinsfile
     wrappers:
       - timeout:
           timeout: 120

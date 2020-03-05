@@ -12,6 +12,8 @@ class Openstack(Terraform):
         if not os.path.isfile(conf.openstack.openrc):
             raise ValueError(Format.alert(f"Your openrc file path \"{conf.openstack.openrc}\" does not exist.\n\t    "
                                           "Check your openrc file path in a configured yaml file"))
+        self.platform_new_vars = {}
+
 
     def _env_setup_cmd(self):
         return f"source {self.conf.openstack.openrc}"
