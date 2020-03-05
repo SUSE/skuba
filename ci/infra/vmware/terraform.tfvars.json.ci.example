@@ -1,6 +1,7 @@
 {
     "vsphere_datastore": "node51-2",
     "vsphere_datacenter": "NUREMBERG",
+    "vsphere_datastore_cluster": null,
     "vsphere_network": "VM Network",
     "vsphere_resource_pool": "CaaSP_CI",
     "template_name": "SLES15-SP1-GM-up191203-guestinfo_node51",
