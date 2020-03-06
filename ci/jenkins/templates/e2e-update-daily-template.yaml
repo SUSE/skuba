@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}/{platform}/update-nightly'
+    name: '{name}/{platform}/update-daily'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
@@ -29,4 +29,4 @@
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: skuba
-        script-path: skuba/ci/jenkins/pipelines/skuba-update-nightly.Jenkinsfile
+        script-path: skuba/ci/jenkins/pipelines/skuba-update-daily.Jenkinsfile
