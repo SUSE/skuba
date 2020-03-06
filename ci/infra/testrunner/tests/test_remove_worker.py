@@ -3,15 +3,6 @@ from tests.utils import wait
 
 
 @pytest.mark.disruptive
-def test_add_worker(bootstrap, skuba):
-    skuba.node_join(role="worker", nr=0)
-    masters = skuba.num_of_nodes("master")
-    workers = skuba.num_of_nodes("worker")
-    assert masters == 1
-    assert workers == 1
-
-
-@pytest.mark.disruptive
 def test_remove_worker(deployment, conf, platform, skuba, kubectl):
     workers = kubectl.get_node_names_by_role("worker")
     workers_count = len(workers)

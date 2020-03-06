@@ -34,7 +34,7 @@
         - openstack
         - vmware
     test:
-        - 'test_hard_reboot'
+        - 'test_node_reboot'
         - 'test_upgrade_plan_all_fine'
         - 'test_upgrade_plan_from_previous'
         - 'test_upgrade_plan_from_previous_with_upgraded_control_plane'
@@ -42,12 +42,12 @@
         - 'test_upgrade_apply_from_previous'
         - 'test_upgrade_apply_user_lock'
         - 'test_cilium'
-        - 'test_deployments'
+        - 'test_nginx_deployment'
         - 'test_dockercaps'
-        - 'test_addon_upgrade_plan'
-        - 'test_addon_upgrade_apply'
+        - 'test_addon_upgrade'
         - 'test_remove_master'
         - 'test_remove_worker'
+        - 'test_add_worker'
     jobs:
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
