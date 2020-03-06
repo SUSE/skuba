@@ -105,9 +105,15 @@ customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 	tests := []struct {
 		name               string
 		client             clientset.Interface
-		expectedError      bool
+		gClientSecret      string
 		expectClientSecret string
 	}{
+		{
+			name:               "get from global client secret",
+			client:             fake.NewSimpleClientset(),
+			gClientSecret:      "someClientSecret",
+			expectClientSecret: "someClientSecret",
+		},
 		{
 			name: "get client secret success",
 			client: fake.NewSimpleClientset(&corev1.ConfigMap{
@@ -132,7 +138,6 @@ customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 					"gangway.yaml": manifest,
 				},
 			}),
-			expectClientSecret: "",
 		},
 		{
 			name: "client secret key not exist",
@@ -145,26 +150,35 @@ customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 					"ooxx.yaml": manifest,
 				},
 			}),
-			expectClientSecret: "",
 		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			gotClientSecret, err := GetClientSecret(tt.client)
-			if tt.expectedError {
-				if err == nil {
-					t.Errorf("error expected on %s, but no error reported", tt.name)
+			defer func() {
+				// cleanup global client secret
+				gClientSecret = ""
+			}()
+
+			if tt.gClientSecret != "" {
+				// test global client secret
+				gClientSecret = tt.gClientSecret
+			}
+
+			gotClientSecret := GetClientSecret(tt.client)
+
+			if tt.gClientSecret != "" {
+				// check global client secret
+				if gotClientSecret != tt.expectClientSecret {
+					t.Errorf("got %s, want %s", gotClientSecret, tt.expectClientSecret)
+					return
 				}
-				return
-			} else if err != nil {
-				t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err)
 				return
 			}
 
-			if gotClientSecret != tt.expectClientSecret {
-				t.Errorf("got %s, want %s", gotClientSecret, tt.expectClientSecret)
+			if gotClientSecret == "" {
+				t.Error("expect client secret not empty")
 				return
 			}
 		})
