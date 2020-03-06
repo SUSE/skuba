@@ -6,6 +6,15 @@ REBASE := rebase.py
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
+ifdef SUITE
+SUITE_CMD=--suite ${SUITE}
+endif
+ifdef TEST
+ifndef SUITE
+$(error SUITE is required for selecting a test )
+endif
+TEST_CMD=--test ${TEST}
+endif
 
 .PHONY: all
 all: deploy bootstrap
@@ -69,6 +78,10 @@ bootstrap: bootstrap_environment
 post_run: gather_logs cleanup
 
 # e2e Tests
+.PHONY: test
+test:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD} --list
+
 .PHONY: test_upgrade_plan_all_fine
 test_upgrade_plan_all_fine:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_all_fine
