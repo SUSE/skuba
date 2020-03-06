@@ -121,13 +121,13 @@ data "vsphere_resource_pool" "pool" {
 }
 
 data "vsphere_datastore" "datastore" {
-  count         = var.vsphere_datastore == null ? 0 : 1
+  count         = var.vsphere_datastore == "null" ||  var.vsphere_datastore == null ? 0 : 1
   name          = var.vsphere_datastore
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
 data "vsphere_datastore_cluster" "datastore" {
-  count         = var.vsphere_datastore_cluster == null ? 0 : 1
+  count         = var.vsphere_datastore_cluster == "null" ||  var.vsphere_datastore_cluster == null ? 0 : 1
   name          = var.vsphere_datastore_cluster
   datacenter_id = data.vsphere_datacenter.dc.id
 }
