@@ -86,33 +86,6 @@ func Test_renderContext_DexImage(t *testing.T) {
 	}
 }
 
-func Test_renderContext_GangwayClientSecret(t *testing.T) {
-	type test struct {
-		name          string
-		renderContext renderContext
-		want          string
-	}
-	for _, ver := range kubernetes.AvailableVersions() {
-		tt := test{
-			name:          "get gangway client secret when cluster version is " + ver.String(),
-			renderContext: renderContext{},
-			want:          "[[:alpha:][:digit:]]{20}",
-		}
-		t.Run(tt.name, func(t *testing.T) {
-			got := tt.renderContext.GangwayClientSecret()
-			matched, err := regexp.Match(tt.want, []byte(got))
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if !matched {
-				t.Errorf("renderContext.GangwayClientSecret() = %v, want %v", got, tt.want)
-				return
-			}
-		})
-	}
-}
-
 func Test_dexCallbacks_beforeApply(t *testing.T) {
 	type test struct {
 		name               string

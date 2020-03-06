@@ -39,6 +39,15 @@ func (renderContext renderContext) GangwayImage() string {
 	return GetGangwayImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
 }
 
+func (renderContext renderContext) GangwayClientSecret() string {
+	client, err := kubernetes.GetAdminClientSet()
+	if err != nil {
+		return ""
+	}
+
+	return gangway.GetClientSecret(client)
+}
+
 func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {
 	return gangwayManifest
 }
@@ -49,13 +58,6 @@ func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skuba
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
 		return errors.Wrap(err, "could not get admin client set")
-	}
-
-	// Read gangway client secret from secret resource if present
-	// in order to update global variable gangwayClientSecret.
-	gangwayClientSecret, err = gangway.GetClientSecret(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway client secret exists")
 	}
 
 	gangwaySecretExists, err := gangway.GangwaySecretExists(client)

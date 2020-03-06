@@ -32,6 +32,7 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 	"sigs.k8s.io/yaml"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	"github.com/SUSE/skuba/internal/pkg/skuba/util"
@@ -77,8 +78,34 @@ func CreateOrUpdateSessionKeyToSecret(client clientset.Interface, key []byte) er
 	return nil
 }
 
-// GetClientSecret returns the client secret from configmap
-func GetClientSecret(client clientset.Interface) (string, error) {
+// gClientSecret is a global variable to hold
+// the generated client secret or existed client secret
+var gClientSecret string
+
+// GetClientSecret returns the client secret from global variable if present
+// or from gangway ConfigMap if present
+// otherwise generates a new client secret and stores it in gClientSecret
+func GetClientSecret(client clientset.Interface) string {
+	// global client secret existed, returns it
+	if gClientSecret != "" {
+		return gClientSecret
+	}
+
+	// global client secret not exist, read from ConfigMap
+	clientSecret, err := getClientSecretFromConfigMap(client)
+	if err != nil || clientSecret == "" {
+		// generate a new client secret if read ConfigMap error
+		// or client secret is not exist
+		clientSecret = dex.GenerateClientSecret()
+	}
+
+	// update global client secret
+	gClientSecret = clientSecret
+
+	return gClientSecret
+}
+
+func getClientSecretFromConfigMap(client clientset.Interface) (string, error) {
 	type config struct {
 		ClientSecret string `yaml:"clientSecret"`
 	}
