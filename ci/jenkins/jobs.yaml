@@ -49,8 +49,8 @@
         - 'test_remove_master'
         - 'test_remove_worker'
     jobs:
-        - '{name}/{platform}/{test}-nightly'
-        - '{name}/{platform}/update-nightly'
+        - '{name}/{platform}/{test}-daily'
+        - '{name}/{platform}/update-daily'
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
