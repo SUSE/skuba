@@ -92,39 +92,16 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
-        stage('Cluster Provisioning') {
+        stage('Deploy cluster') {
             steps {
                 sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Provision')
-            }
-        }
-
-       stage('Run Pre Bootstrap Tests') {
-           steps {
-               sh(script: 'make -f skuba/ci/Makefile test_pre_bootstrap', label: 'Test Pre Bootstrap')
-           }
-       }
-
-        stage('Cluster Bootstrap') {
-            steps {
                 sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
-            }
-        }
-
-       stage('Run Post Bootstrap Tests') {
-           steps {
-               sh(script: 'make -f skuba/ci/Makefile test_post_bootstrap', label: 'Test Post Bootstrap')
-           }
-       }
-
-        stage('Join Nodes') {
-            steps {
                 sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
             }
         }
 
-
         stage('Run e2e tests') { steps {
-            sh(script: "make -f skuba/ci/Makefile test_e2e", label: "test_e2e")
+            sh(script: "make -f skuba/ci/Makefile test_pr", label: "test_pr")
         } }
 
     }

@@ -27,3 +27,6 @@ ci/packaging/suse/obs_files
 
 # ignore skuba
 /skuba
+
+# ignore junit files
+ci/infra/testrunner/pr.xml
