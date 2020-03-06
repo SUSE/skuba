@@ -25,7 +25,7 @@ pipeline {
 
         stage('Run Skuba e2e Test') {
             steps {
-                sh(script: "make -f skuba/ci/Makefile ${E2E_MAKE_TARGET_NAME}", label: "${E2E_MAKE_TARGET_NAME}")
+                sh(script: "make -f skuba/ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME}", label: "${E2E_MAKE_TARGET_NAME}")
             }
         }
    }

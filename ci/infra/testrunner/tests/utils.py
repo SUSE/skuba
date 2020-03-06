@@ -1,6 +1,10 @@
 import json
 import signal
 import time
+import yaml
+
+PREVIOUS_VERSION = "1.15.2"
+CURRENT_VERSION = "1.16.2"
 
 
 def check_nodes_ready(kubectl):
@@ -12,6 +16,43 @@ def check_nodes_ready(kubectl):
     for node in nodes:
         node_name, node_status = node.split(":")
         assert node_status == "True", f'Node {node_name} is not Ready'
+
+
+def node_is_ready(platform, kubectl, role, nr):
+    node_name = platform.get_nodes_names(role)[nr]
+    cmd = ("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}"
+           "{{@.type}}={{@.status}};{{end}}'").format(node_name)
+
+    return kubectl.run_kubectl(cmd).find("Ready=True") != -1
+
+
+def node_is_upgraded(kubectl, platform, role, nr):
+    node_name = platform.get_nodes_names(role)[nr]
+    for attempt in range(20):
+        if platform.all_apiservers_responsive():
+            # kubernetes might be a little bit slow with updating the NodeVersionInfo
+            cmd = ("get nodes {} -o jsonpath="
+                   "'{{.status.nodeInfo.kubeletVersion}}'").format(node_name)
+            version = kubectl.run_kubectl(cmd)
+            if version.find(PREVIOUS_VERSION) == 0:
+                time.sleep(2)
+            else:
+                break
+        else:
+            time.sleep(2)
+
+    # allow system pods to come up again after the upgrade
+    wait(check_pods_ready,
+         kubectl,
+         namespace="kube-system",
+         wait_delay=60,
+         wait_backoff=30,
+         wait_elapsed=60*10,
+         wait_allow=(AssertionError))
+
+    cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
+    return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
+
 
 def check_pods_ready(kubectl, namespace=None, pods=[], statuses=['Running', 'Succeeded']):
     
@@ -81,3 +122,41 @@ def wait(func, *args, **kwargs):
 
     raise Exception("Failed waiting for function {} after {} attemps due to {}".format(func.__name__, attempts, reason))
 
+
+def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
+    """
+    Initialize the cluster with the given kubernetes_version, bootstrap it and
+    join nodes.
+    """
+
+    skuba.cluster_init(kubernetes_version)
+    skuba.node_bootstrap()
+
+    skuba.join_nodes()
+
+    wait(check_nodes_ready,
+         kubectl,
+         wait_delay=60,
+         wait_backoff=30,
+         wait_elapsed=60*10,
+         wait_allow=(AssertionError))
+
+
+def create_skuba_config(kubectl, configmap_data, dry_run=False):
+    return kubectl.run_kubectl(
+        'create configmap skuba-config --from-literal {0} -o yaml --namespace kube-system {1}'.format(
+            configmap_data, '--dry-run' if dry_run else ''
+        )
+    )
+
+
+def replace_skuba_config(kubectl, configmap_data):
+    new_configmap = create_skuba_config(kubectl, configmap_data, dry_run=True)
+    return kubectl.run_kubectl("replace -f -", stdin=new_configmap.encode())
+
+
+def get_skuba_configuration_dict(kubectl):
+    skubaConf_yml = kubectl.run_kubectl(
+        "get configmap skuba-config --namespace kube-system -o jsonpath='{.data.SkubaConfiguration}'"
+    )
+    return yaml.load(skubaConf_yml, Loader=yaml.FullLoader)

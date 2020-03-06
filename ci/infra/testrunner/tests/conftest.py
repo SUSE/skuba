@@ -89,3 +89,14 @@ def kubectl(conf, target):
 def platform(conf, target):
     platform = platforms.get_platform(conf, target)
     return platform
+
+
+@pytest.fixture
+def setup(request, platform, skuba):
+    def cleanup():
+        platform.gather_logs()
+        platform.cleanup()
+
+    request.addfinalizer(cleanup)
+
+    platform.provision(num_master=3, num_worker=3)
