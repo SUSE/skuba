@@ -1,6 +1,6 @@
 GO ?= GO111MODULE=on go
 
-GOMODFLAG ?=-mod=vendor
+GOMODFLAG ?=
 
 #retrieve go version details for version check
 GO_VERSION     := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
@@ -84,7 +84,7 @@ go-version-check:
 .PHONY: lint
 lint: deps
 	# explicitly enable GO111MODULE otherwise go mod will fail
-	GO111MODULE=on go mod tidy && GO111MODULE=on go mod vendor && GO111MODULE=on go mod verify
+	GO111MODULE=on go mod tidy && GO111MODULE=on go mod verify
 	# run go vet
 	$(GO) vet ./...
 	# run go gmt

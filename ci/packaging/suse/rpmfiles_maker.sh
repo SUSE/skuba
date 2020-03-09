@@ -41,6 +41,11 @@ then
       "$branch_project" "$branch_name"
     osc -A 'https://api.suse.de' co -o "$work_dir" \
       "$branch_project/$branch_name"
+    log "Running OBS services"
+    (
+        cd "$work_dir"
+        osc -A 'https://api.suse.de' service run go_modules
+    )
     log "Updating IBS branch"
     cp -v "$rpm_files/skuba.spec" "$rpm_files/skuba.tar.gz" "$work_dir/"
     cat "$rpm_files/skuba.changes.append" \

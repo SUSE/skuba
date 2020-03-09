@@ -28,6 +28,7 @@ License:        Apache-2.0
 Group:          System/Management
 URL:            https://github.com/SUSE/skuba
 Source0:        %{name}.tar.gz
+Source1:        vendor.tar.gz
 Patch0:         0001-Patch-out-load-balancer.patch
 BuildRequires:  go-go-md2man
 BuildRequires:  golang-packaging
@@ -75,6 +76,7 @@ including patches requiring reboot.
 # TAG and CLOSEST_TAG envvars are populated so the Makefile will read this information
 export TAG="%%TAG"
 export CLOSEST_TAG="%%CLOSEST_TAG"
+export GOMODFLAG=-mod=vendor
 mkdir -pv $HOME/go/src/%{go_project}
 cp -avr * $HOME/go/src/%{go_project}
 cd $HOME/go/src/%{go_project}
