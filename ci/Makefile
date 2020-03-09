@@ -6,6 +6,15 @@ REBASE := rebase.py
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
+ifdef SUITE
+SUITE_CMD=--suite ${SUITE}.py
+endif
+ifdef TEST
+ifndef SUITE
+$(error SUITE is required for selecting a test )
+endif
+TEST_CMD=--test ${TEST}
+endif
 
 .PHONY: all
 all: deploy bootstrap
@@ -69,70 +78,11 @@ bootstrap: bootstrap_environment
 post_run: gather_logs cleanup
 
 # e2e Tests
-.PHONY: test_upgrade_plan_all_fine
-test_upgrade_plan_all_fine:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_all_fine
-
-.PHONY: test_upgrade_plan_from_previous
-test_upgrade_plan_from_previous:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous
-
-.PHONY: test_addon_upgrade_plan
-test_addon_upgrade_plan:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_addon_upgrade.py --test test_addon_upgrade_plan
-
-.PHONY: test_addon_upgrade_plan
-test_addon_upgrade_apply:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_addon_upgrade.py --test test_addon_upgrade_apply
-
-.PHONY: test_upgrade_plan_from_previous_with_upgraded_control_plane
-test_upgrade_plan_from_previous_with_upgraded_control_plane:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_plan_from_previous_with_upgraded_control_plane
-
-.PHONY: test_upgrade_apply_all_fine
-test_upgrade_apply_all_fine:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_all_fine
-
-.PHONY: test_upgrade_apply_from_previous
-test_upgrade_apply_from_previous:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_from_previous
-
-.PHONY: test_upgrade_apply_user_lock
-test_upgrade_apply_user_lock:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_skuba_upgrade.py --test test_upgrade_apply_user_lock
-
-.PHONY: test_cilium
-test_cilium:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_cilium.py
-
-.PHONY: test_deployments
-test_deployments:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_deployments.py
-
-.PHONY: test_dockercaps
-test_dockercaps:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_dockercaps.py
-
-.PHONY: test_e2e
-test_e2e:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit e2e --filter "not disruptive and not flaky" --skip-setup deployed
+.PHONY: test
+test:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD} --list
 
 .PHONY: test_pr
 test_pr:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit pr --filter "pr" --skip-setup deployed
 
-.PHONY: test_cpi_openstack
-test_cpi_openstack:
-	${TEST_RUNNER} -v vars.yaml -p openstack test --verbose --suite test_cpi_openstack.py
-
-.PHONY: test_hard_reboot
-test_hard_reboot:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_node_reboot.py --test test_hard_reboot
-
-.PHONY: test_remove_master
-test_remove_master:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_masters.py --test test_remove_master
-
-.PHONY: test_remove_worker
-test_remove_worker:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --suite test_workers.py --test test_remove_worker
