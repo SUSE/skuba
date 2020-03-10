@@ -80,7 +80,7 @@ post_run: gather_logs cleanup
 # e2e Tests
 .PHONY: test
 test:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD} --list
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD}
 
 .PHONY: test_pr
 test_pr:
