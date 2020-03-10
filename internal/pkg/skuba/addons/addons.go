@@ -77,11 +77,12 @@ patches:
 var Addons = map[kubernetes.Addon]Addon{}
 
 type Addon struct {
-	addon             kubernetes.Addon
-	templater         addonTemplater
-	callbacks         addonCallbacks
-	addonPriority     addonPriority
-	getImageCallbacks []getImageCallback
+	addon              kubernetes.Addon
+	templater          addonTemplater
+	preflightTemplater preflightAddonTemplater
+	callbacks          addonCallbacks
+	addonPriority      addonPriority
+	getImageCallbacks  []getImageCallback
 }
 
 type addonCallbacks interface {
@@ -96,6 +97,7 @@ type AddonConfiguration struct {
 }
 
 type addonTemplater func(AddonConfiguration) string
+type preflightAddonTemplater func(AddonConfiguration) string
 type getImageCallback func(imageTag string) string
 
 type renderContext struct {
@@ -117,13 +119,14 @@ func (renderContext renderContext) ManifestVersion() string {
 
 // registerAddon incorporates one addon information to the Addons map that keeps track of the
 // addons which will get deployed
-func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, callbacks addonCallbacks, addonPriority addonPriority, getImageCallbacks []getImageCallback) {
+func registerAddon(addon kubernetes.Addon, addonTemplater addonTemplater, preflightAddonTemplater preflightAddonTemplater, callbacks addonCallbacks, addonPriority addonPriority, getImageCallbacks []getImageCallback) {
 	Addons[addon] = Addon{
-		addon:             addon,
-		templater:         addonTemplater,
-		callbacks:         callbacks,
-		addonPriority:     addonPriority,
-		getImageCallbacks: getImageCallbacks,
+		addon:              addon,
+		templater:          addonTemplater,
+		preflightTemplater: preflightAddonTemplater,
+		callbacks:          callbacks,
+		addonPriority:      addonPriority,
+		getImageCallbacks:  getImageCallbacks,
 	}
 }
 
@@ -173,6 +176,17 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 	return nil
 }
 
+func (addon Addon) renderTemplate(template *template.Template, addonConfiguration AddonConfiguration) (string, error) {
+	var rendered bytes.Buffer
+	if err := template.Execute(&rendered, renderContext{
+		addon:  addon,
+		config: addonConfiguration,
+	}); err != nil {
+		return "", errors.Wrap(err, "could not render manifest template")
+	}
+	return rendered.String(), nil
+}
+
 // Render substitutes the variables in the template and returns a string with the addon
 // manifest ready
 func (addon Addon) Render(addonConfiguration AddonConfiguration) (string, error) {
@@ -180,15 +194,15 @@ func (addon Addon) Render(addonConfiguration AddonConfiguration) (string, error)
 	if err != nil {
 		return "", errors.Wrap(err, "could not parse manifest template")
 	}
-	var rendered bytes.Buffer
-	err = template.Execute(&rendered, renderContext{
-		addon:  addon,
-		config: addonConfiguration,
-	})
+	return addon.renderTemplate(template, addonConfiguration)
+}
+
+func (addon Addon) RenderPreflight(addonConfiguration AddonConfiguration) (string, error) {
+	template, err := template.New("").Parse(addon.preflightTemplater(addonConfiguration))
 	if err != nil {
-		return "", errors.Wrap(err, "could not render manifest template")
+		return "", errors.Wrap(err, "could not parse preflight template")
 	}
-	return rendered.String(), nil
+	return addon.renderTemplate(template, addonConfiguration)
 }
 
 // IsPresentForClusterVersion verifies if the Addon can be deployed with the current k8s version
@@ -238,8 +252,16 @@ func (addon Addon) manifestFilename() string {
 	return fmt.Sprintf("%s.yaml", addon.addon)
 }
 
+func (addon Addon) preflightManifestFilename() string {
+	return fmt.Sprintf("%s-preflight.yaml", addon.addon)
+}
+
 func (addon Addon) manifestPath(rootDir string) string {
 	return filepath.Join(addon.baseResourcesDir(rootDir), addon.manifestFilename())
+}
+
+func (addon Addon) preflightManifestPath(rootDir string) string {
+	return filepath.Join(addon.baseResourcesDir(rootDir), addon.preflightManifestFilename())
 }
 
 func (addon Addon) kustomizeContents(resourceManifests []string, patchManifests []string) (string, error) {
@@ -285,20 +307,43 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	return nil
 }
 
+// applyPreflight applies the preflight deployment/daemonset manifest if such
+// is defined by the addon. It returns a bool whether preflight was defined
+// by the addon and an error.
+func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, sandboxDir string) (bool, error) {
+	renderedPreflightManifest, err := addon.RenderPreflight(addonConfiguration)
+	if err != nil {
+		return false, err
+	}
+	if renderedPreflightManifest == "" {
+		return false, nil
+	}
+	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+	if err := ioutil.WriteFile(preflightManifestPath, []byte(renderedPreflightManifest), 0600); err != nil {
+		return true, errors.Wrapf(err, "could not create %q addon manifests", addon.addon)
+	}
+	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
+	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
+		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+		return true, err
+	}
+	return true, nil
+}
+
+func (addon Addon) deletePreflight(sandboxDir string) error {
+	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+	cmd := exec.Command("kubectl", "delete", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
+	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
+		klog.Errorf("failed to run kubectl delete: %s", combinedOutput)
+		return err
+	}
+	return nil
+}
+
 // Apply deploys the addon by calling kubectl apply and pointing to the generated addon
 // manifest
 func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	klog.V(1).Infof("applying %q addon", addon.addon)
-	if addon.callbacks != nil {
-		if err := addon.callbacks.beforeApply(addonConfiguration, skubaConfiguration); err != nil {
-			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.addon, err)
-			return err
-		}
-	}
-	renderedManifest, err := addon.Render(addonConfiguration)
-	if err != nil {
-		return err
-	}
 	sandboxDir, err := addon.createSandbox()
 	if err != nil {
 		return errors.Wrapf(err, "could not create %q addon sandbox", addon.addon)
@@ -310,6 +355,31 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 	if err := os.MkdirAll(baseResourcesDir, 0700); err != nil {
 		return errors.Wrapf(err, "unable to create directory: %s", baseResourcesDir)
 	}
+
+	hasPreflight := false
+	if addon.preflightTemplater != nil {
+		hasPreflight, err = addon.applyPreflight(addonConfiguration, sandboxDir)
+		if err != nil {
+			return err
+		}
+	}
+	if addon.callbacks != nil {
+		if err := addon.callbacks.beforeApply(addonConfiguration, skubaConfiguration); err != nil {
+			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.addon, err)
+			return err
+		}
+	}
+	if hasPreflight {
+		if err := addon.deletePreflight(sandboxDir); err != nil {
+			return err
+		}
+	}
+
+	renderedManifest, err := addon.Render(addonConfiguration)
+	if err != nil {
+		return err
+	}
+
 	patchResourcesDir := addon.patchResourcesDir(sandboxDir)
 	if err := os.MkdirAll(patchResourcesDir, 0700); err != nil {
 		return errors.Wrapf(err, "unable to create directory: %s", patchResourcesDir)

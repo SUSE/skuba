@@ -215,9 +215,13 @@ func Test_ciliumCallbacks_beforeApply(t *testing.T) {
 	}
 	for _, ver := range kubernetes.AvailableVersions() {
 		tt := test{
-			name:               "Test Cilium callbacks beforeApply when cluster version is " + ver.String(),
-			addonConfiguration: AddonConfiguration{},
-			wantErr:            true,
+			name: "Test Cilium callbacks beforeApply when cluster version is " + ver.String(),
+			addonConfiguration: AddonConfiguration{
+				ClusterVersion: ver,
+				ControlPlane:   "",
+				ClusterName:    "",
+			},
+			wantErr: true,
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			c := ciliumCallbacks{}

@@ -28,7 +28,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
+	registerAddon(kubernetes.Dex, renderDexTemplate, nil, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
 }
 
 func GetDexImage(imageTag string) string {
