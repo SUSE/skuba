@@ -93,11 +93,11 @@ var (
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:        &AddonVersion{"1.5.3", 1},
-				Kured:         &AddonVersion{"1.3.0", 2},
+				Kured:         &AddonVersion{"1.3.0", 3},
 				Dex:           &AddonVersion{"2.16.0", 5},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
 				MetricsServer: &AddonVersion{"0.3.6", 0},
-				PSP:           &AddonVersion{"", 1},
+				PSP:           &AddonVersion{"", 2},
 			},
 		},
 		"1.15.2": KubernetesVersion{
