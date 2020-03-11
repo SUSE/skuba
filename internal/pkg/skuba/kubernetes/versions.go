@@ -32,11 +32,12 @@ type Addon string
 type Component string
 
 const (
-	Cilium  Addon = "cilium"
-	Kured   Addon = "kured"
-	Dex     Addon = "dex"
-	Gangway Addon = "gangway"
-	PSP     Addon = "psp"
+	Cilium        Addon = "cilium"
+	Kured         Addon = "kured"
+	Dex           Addon = "dex"
+	Gangway       Addon = "gangway"
+	MetricsServer Addon = "metrics-server"
+	PSP           Addon = "psp"
 
 	Kubelet          Component = "kubelet"
 	ContainerRuntime Component = "cri-o"
@@ -91,11 +92,12 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.3.0", 2},
-				Dex:     &AddonVersion{"2.16.0", 5},
-				Gangway: &AddonVersion{"3.1.0-rev4", 4},
-				PSP:     &AddonVersion{"", 1},
+				Cilium:        &AddonVersion{"1.5.3", 1},
+				Kured:         &AddonVersion{"1.3.0", 2},
+				Dex:           &AddonVersion{"2.16.0", 5},
+				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
+				MetricsServer: &AddonVersion{"0.3.6", 0},
+				PSP:           &AddonVersion{"", 1},
 			},
 		},
 		"1.15.2": KubernetesVersion{
