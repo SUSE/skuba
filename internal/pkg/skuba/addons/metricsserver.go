@@ -46,10 +46,8 @@ func (renderContext renderContext) MetricsServerImage() string {
 	return GetMetricsServerImage(kubernetes.AddonVersionForClusterVersion(kubernetes.MetricsServer, renderContext.config.ClusterVersion).Version)
 }
 
-// CABundle returns base64 encoded Kubernetes CA certificate
-//
+// CABundle returns base64 encoded Kubernetes CA certificate.
 // When skuba cluster init, at this time Kubernetes CA has not generated yet, render the caBundle empty string.
-//
 // When skuba bootstrap and skuba addon upgrade apply, the Kubernetes CA file existed (by kubeadm generated or user provides the custom CA).
 // When applying addon, the manifest would be re-render again, at this time, the caBundle rendered with base64 encoded Kubernetes CA.
 func (renderContext renderContext) CABundle() string {
