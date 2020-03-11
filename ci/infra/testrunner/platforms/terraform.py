@@ -140,7 +140,14 @@ class Terraform(Platform):
             "stack_name": self.stack_name(),
             "username": self.conf.terraform.nodeuser,
             "masters": self.conf.terraform.master.count,
+            "master_memory": self.conf.terraform.master.memory,
+            "master_vcpu": self.conf.terraform.master.cpu,
             "workers": self.conf.terraform.worker.count,
+            "worker_memory": self.conf.terraform.worker.memory,
+            "worker_vcpu": self.conf.terraform.worker.cpu,
+            "lbs": self.conf.terraform.lb.count,
+            "lb_memory": self.conf.terraform.lb.memory,
+            "lb_vcpu": self.conf.terraform.lb.cpu,
             "authorized_keys": [self.utils.authorized_keys()]
         }
 
