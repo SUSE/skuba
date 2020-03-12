@@ -208,12 +208,18 @@ metadata:
   namespace: kube-system
   labels:
     app: metrics-server
+    caasp.suse.com/skuba-replica-ha: "true"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: metrics-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
   template:
     metadata:
       name: metrics-server
