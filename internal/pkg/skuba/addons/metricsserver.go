@@ -208,7 +208,6 @@ metadata:
   namespace: kube-system
   labels:
     app: metrics-server
-    caasp.suse.com/skuba-replica-ha: "true"
 spec:
   replicas: 2
   revisionHistoryLimit: 3
