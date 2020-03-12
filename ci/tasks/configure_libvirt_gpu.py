@@ -1,7 +1,7 @@
 import argparse
 import logging
-import os
 import subprocess
+import tempfile
 import time
 import xml.etree.ElementTree as ET
 
@@ -30,9 +30,9 @@ class ConfigureLibvirtDevice:
         if not device_addresses:
             raise Exception(f'Was not able to retrieve device addresses for {device_id}')
 
-        config_file = configure._write_config_file(f'gpu_{device_id}', device_addresses)
+        config_file = configure._write_config_file(device_addresses)
 
-        self._run_cmd(f'virsh attach-device {domain} --file {config_file} --config')
+        self._run_cmd(f'virsh attach-device {domain} --file {config_file.name} --config')
 
     def start_domain(self, domain):
         logger.info(f'Starting {domain}')
@@ -70,16 +70,16 @@ class ConfigureLibvirtDevice:
 
         return status in current_status
 
-    def _write_config_file(self, name, device_addresses):
-        config_path = os.path.join(os.getcwd(), f'{name}.xml')
+    def _write_config_file(self, device_addresses):
         xml_doc = ET.Element('hostdev', attrib={'mode': 'subsystem', 'type': 'pci', 'managed': 'yes'})
         source = ET.SubElement(xml_doc, 'source')
         source.extend(device_addresses)
 
-        with open(config_path, 'w') as f:
-            f.write(str(ET.tostring(xml_doc), 'utf-8'))
+        f = tempfile.NamedTemporaryFile('w', encoding='utf-8')
+        logging.debug(f'Config file path {f.name}')
+        f.write(str(ET.tostring(xml_doc), 'utf-8'))
 
-        return config_path
+        return f
 
 
 def define_parser(parser):
