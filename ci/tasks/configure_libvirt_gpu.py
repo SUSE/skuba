@@ -21,11 +21,15 @@ class ConfigureLibvirtDevice:
 
     def detach_device(self, device_id):
         logger.info(f'Detaching {device_id} from host')
-        self._run_cmd(f'virsh nodedev-dettach {device_id}')
+        self._run_cmd(f'virsh nodedev-detach {device_id}')
 
     def attach_device(self, domain, device_id):
         logger.info(f'Attaching {device_id} to {domain}')
         device_addresses = configure._get_device_addresses(device_id)
+
+        if not device_addresses:
+            raise Exception(f'Was not able to retrieve device addresses for {device_id}')
+
         config_file = configure._write_config_file(f'gpu_{device_id}', device_addresses)
 
         self._run_cmd(f'virsh attach-device {domain} --file {config_file} --config')
@@ -47,10 +51,10 @@ class ConfigureLibvirtDevice:
         logger.debug(cmd)
 
         proc = subprocess.run(cmd,
-                            encoding='utf8',
-                            shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+                              encoding='utf8',
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
         if proc.returncode != 0:
             raise Exception(f'Received exit code {proc.returncode} while running command {cmd}\n{proc.stdout}')
 
@@ -86,7 +90,8 @@ def define_parser(parser):
                         help='ID of the device to attach e.g. pci_0000_03_00_0')
 
     parser.add_argument('--debug', action='store_true',
-                        help='ID of the device to attach e.g. pci_0000_03_00_0')
+                        help='Enable debugging output')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Attach a host device to a libvirt VM')
