@@ -1,11 +1,6 @@
-GOMOD ?= on
-GO ?= GO111MODULE=$(GOMOD) go
+GO ?= GO111MODULE=on go
 
-#Don't enable mod=vendor when GOMOD is off or else go build/install will fail
 GOMODFLAG ?=-mod=vendor
-ifeq ($(GOMOD), off)
-GOMODFLAG=
-endif
 
 #retrieve go version details for version check
 GO_VERSION     := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
