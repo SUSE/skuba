@@ -1,0 +1,28 @@
+# ignore the ssh kill messages
+ok /^ *Killed previous instance of ssh-agent* /
+# ignore known hosts added
+ok /^ *Warning\: Permanently added .* to the list of known hosts* /
+# ignore identity added
+ok /^ *Identity added/
+# ignore packages with NOKEY
+ok /^ *Header V3 DSA\/SHA1 Signature* /
+
+# important parts
+start /^*entering/
+start /^*exiting/
+
+info /^Apply complete\! Resources:/
+info /^make \-f skuba\/ci\/Makefile/
+
+
+
+# common error
+error /(?i)error/
+error /(?i)\bfail(ure|ed)?\b/
+error /(?i)fatal/
+
+# common warning
+warning /(?i)warning/
+
+# common debug
+debug /(?i)debug/
