@@ -3,7 +3,7 @@
  */
 
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+    agent { node { label 'caasp-team-private-integration-go13' } }
 
     environment {
         OPENRC = credentials('ecp-openrc')

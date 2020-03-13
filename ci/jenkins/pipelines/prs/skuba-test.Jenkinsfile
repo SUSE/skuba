@@ -5,7 +5,7 @@
  */
 
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+    agent { node { label 'caasp-team-private-integration-go13' } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
