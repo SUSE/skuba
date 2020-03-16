@@ -16,7 +16,6 @@ pipeline {
         PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
-        PIP_VERBOSE = 'true'
     }
 
     stages {
