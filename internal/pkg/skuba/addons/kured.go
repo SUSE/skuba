@@ -132,6 +132,7 @@ spec:
   selector:
     matchLabels:
       name: kured
+  revisionHistoryLimit: 3
   updateStrategy:
     type: RollingUpdate
   template:

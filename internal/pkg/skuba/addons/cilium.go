@@ -112,6 +112,7 @@ metadata:
   name: cilium
   namespace: kube-system
 spec:
+  revisionHistoryLimit: 3
   updateStrategy:
     type: "RollingUpdate"
     rollingUpdate:
@@ -324,6 +325,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:

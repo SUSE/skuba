@@ -92,8 +92,8 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:        &AddonVersion{"1.5.3", 1},
-				Kured:         &AddonVersion{"1.3.0", 3},
+				Cilium:        &AddonVersion{"1.5.3", 2},
+				Kured:         &AddonVersion{"1.3.0", 4},
 				Dex:           &AddonVersion{"2.16.0", 5},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
 				MetricsServer: &AddonVersion{"0.3.6", 0},
@@ -113,8 +113,8 @@ var (
 				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 1},
-				Kured:   &AddonVersion{"1.2.0-rev4", 1},
+				Cilium:  &AddonVersion{"1.5.3", 2},
+				Kured:   &AddonVersion{"1.2.0-rev4", 2},
 				Dex:     &AddonVersion{"2.16.0", 5},
 				Gangway: &AddonVersion{"3.1.0-rev4", 4},
 				PSP:     &AddonVersion{"", 1},
