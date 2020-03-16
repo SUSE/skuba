@@ -24,6 +24,7 @@ class BaseConfig:
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
+        obj.libvirt = BaseConfig.Libvirt()
         obj.skuba = BaseConfig.Skuba()
         obj.test = BaseConfig.Test()
         obj.log = BaseConfig.Log()
@@ -37,7 +38,8 @@ class BaseConfig:
             BaseConfig.Openstack,
             BaseConfig.Terraform,
             BaseConfig.Skuba,
-            BaseConfig.VMware
+            BaseConfig.VMware,
+            BaseConfig.Libvirt
         )
 
         # vars get the values from yaml file
@@ -103,6 +105,12 @@ class BaseConfig:
             self.env_file = None
             self.template_name = None
 
+    class Libvirt:
+        def __init__(self):
+            super().__init__()
+            self.uri = "qemu:///system"
+            self.keyfile = None
+            self.image_uri = None
 
     class Packages:
         def __init__(self):

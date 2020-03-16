@@ -42,5 +42,10 @@ vmware:
   env_file: "" #os.getenv("VMWARE_ENV_FILE")
   template_name: "SLES15-SP1-GM-guestinfo" #os.getenv("VMWARE_TEMPLATE_NAME")
 
+libvirt:
+  uri: "qemu:///system" #os.getenv("LIBVIRT_URI")
+  keyfile: "" #os.getenv("LIBVIRT_KEYFILE")
+  image_uri: "" #os.getenv("LIBVIRT_IMAGE_URI") 
+
 log:
   level: DEBUG

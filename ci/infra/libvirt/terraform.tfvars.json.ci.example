@@ -1,14 +1,14 @@
 {
     "libvirt_uri": "qemu:///system",
+    "libvirt_keyfile": "",
     "pool": "default",
-    "image_uri": "SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU1.qcow2",
+    "image_uri": "",
     "stack_name": "testing",
     "network_cidr": "10.17.0.0/22",
     "dns_domain": "caasp.local",
     "masters": 1,
     "workers": 2,
     "username": "sles",
-    "password": "linux",
     "repositories": {
         "caasp_devel": "http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/",
         "suse_ca": "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP1/",

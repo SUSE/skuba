@@ -35,6 +35,8 @@ Copy the `terraform.tfvars.example` to `terraform.tfvars` and provide reasonable
 
 ## Variables
 
+`libvirt_uri` - URL of the libvirt host
+`libvirt_keyfile` - The key file used for the connection to a remote libvirt server
 `image_uri` - URL of the image to use
 `stack_name` - Identifier to make all your resources unique and avoid clashes with other users of this terraform project
 `authorized_keys` - A list of ssh public keys that will be installed on all nodes
