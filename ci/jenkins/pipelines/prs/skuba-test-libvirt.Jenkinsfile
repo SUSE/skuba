@@ -16,7 +16,7 @@ pipeline {
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         PIP_VERBOSE = 'true'
-        LIBVIRT_URI = 'qemu+ssh://jenkins@node52.cloud.suse.de/system'
+        LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
         LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
         LIBVIRT_IMAGE_URI = 'http://download.suse.de/install/SLE-15-SP1-JeOS-QU2/SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU2.qcow2'
     }
