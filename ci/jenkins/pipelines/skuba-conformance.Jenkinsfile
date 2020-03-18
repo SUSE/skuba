@@ -10,6 +10,21 @@ pipeline {
     }
 
     stages {
+
+        stage('Git Clone') { steps {
+            deleteDir()
+            checkout([$class: 'GitSCM',
+                      branches: [[name: "*/${BRANCH}"]],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions: [[$class: 'LocalBranch'],
+                                   [$class: 'WipeWorkspace'],
+                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba'],
+                                   [$class: 'ChangelogToBranch', options: [compareRemote: "origin", compareTarget: "master"]]],
+                      submoduleCfg: [],
+                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
+                                           credentialsId: 'github-token',
+                                           url: 'https://github.com/SUSE/skuba']]])
+        }}
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
