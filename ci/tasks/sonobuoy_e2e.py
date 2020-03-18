@@ -30,42 +30,29 @@ class SonobuoyE2eTests:
         logger.info(delete)
 
     def collect_results(self, retries, sonobuoy_args):
-        error = None
         attempts = 0
 
-        if 'Sonobuoy has completed' in self._get_status():
-            results = None
+        results = None
 
-            while retries > attempts:
-                try:
-                    attempts += 1
-                    logger.info(f'Attempting to retrieve the results {attempts}/{retries}')
-                    results = self._sonobuoy('retrieve results' + ' '.join(sonobuoy_args))
+        while retries > attempts:
+            try:
+                attempts += 1
+                logger.info(f'Attempting to retrieve the results {attempts}/{retries}')
+                results = self._sonobuoy('retrieve results' + ' '.join(sonobuoy_args))
 
-                except SonobuoyE2eTestsError:
-                    if retries == attempts:
-                        error = 'Could not retrieve sonobuoy results'
-                        break
-                    time.sleep(self.default_sleep)
-                else:
-                    break
+            except SonobuoyE2eTestsError:
+                if retries == attempts:
+                    raise SonobuoyE2eTestsError('Could not retrieve sonobuoy results')
+                time.sleep(self.default_sleep)
 
-            self._extract_results(results.strip())
-        else:
-            error = 'Sonobuoy e2e tests failed'
+        self._extract_results(results.strip())
 
-        if error is not None:
-            raise SonobuoyE2eTestsError(error)
-
-    def run_tests(self, timeout, sonobuoy_args):
+    def run_tests(self, sonobuoy_args):
         logger.info('Getting the sonobuoy image...')
         self._pull_image()
 
-        logger.info('Starting the tests')
+        logger.info('Starting the tests, they can take up to 2-3 hours')
         self._start_the_tests(sonobuoy_args)
-
-        logger.info('Waiting for the tests to finish can take up to 2-3 hours...')
-        self._wait_for_the_tests(timeout)
 
     def _extract_results(self, results_path):
         if tarfile.is_tarfile(results_path):
@@ -74,11 +61,6 @@ class SonobuoyE2eTests:
             os.remove(results_path)
         else:
             raise SonobuoyE2eTestsError(f'Could not extract results from {results_path}')
-
-    def _get_status(self):
-        status = self._sonobuoy('status')
-        logger.info(status)
-        return status
 
     def _pull_image(self):
         cmd = f'docker pull {self.sonobuoy_image}:{self.sonobuoy_version}'
@@ -106,45 +88,7 @@ class SonobuoyE2eTests:
         return self._run_cmd(cmd)
 
     def _start_the_tests(self, sonobuoy_args):
-        self._sonobuoy('run ' + ' '.join(sonobuoy_args))
-
-        logger.info('Waiting for the tests to start...')
-        start_time = time.time()
-        run_time = int(time.time() - start_time)
-
-        # Shouldn't take more than 5 min for the tests to start
-        while run_time < 300:
-            try:
-                if 'Sonobuoy is still running' in self._get_status():
-                    logger.info('Tests have started!')
-                    break
-            except SonobuoyE2eTestsError:
-                pass
-
-            time.sleep(self.default_sleep)
-            run_time = int(time.time() - start_time)
-
-        if run_time >= 300:
-            raise SonobuoyE2eTestsError('Timed out while waiting for the tests to start.')
-
-    def _wait_for_the_tests(self, timeout):
-        start_time = time.time()
-        run_time = int(time.time() - start_time)
-        last_check = run_time
-        timeout = timeout * 60
-
-        while run_time < timeout:
-            # Check the status every two minutes
-            if run_time - last_check >= 120:
-                last_check = run_time
-                if 'Sonobuoy is still running' not in self._get_status():
-                    break
-
-            time.sleep(self.default_sleep)
-            run_time = int(time.time() - start_time)
-
-        if 'Sonobuoy is still running' in self._get_status():
-            raise SonobuoyE2eTestsError('Sonobuoy e2e tests ran out of time')
+        self._sonobuoy('run ' + ' '.join(sonobuoy_args) + '--wait')
 
 
 class SonobuoyE2eTestsError(Exception):
@@ -157,7 +101,7 @@ def run_tests(args, sonobuoy_args):
                                     args.sonobuoy_image,
                                     args.sonobuoy_version)
 
-    sonobuoy_e2e.run_tests(args.timeout, sonobuoy_args)
+    sonobuoy_e2e.run_tests(sonobuoy_args)
 
 
 def collect_results(args, sonobuoy_args):
@@ -194,10 +138,10 @@ def define_parser(parser):
                                help='Set the sonobuoy version to be used')
 
     run_parser = subparsers.add_parser('run', help='Run the tests', parents=[shared_parser])
-    run_parser.add_argument('--timeout',
+    run_parser.add_argument('--max_failures',
                             type=int,
-                            default=180,
-                            help='How long to wait for the tests to finish in minutes')
+                            default=5,
+                            help='How many failures to allow in a row while checking the test status')
     run_parser.set_defaults(func=run_tests)
 
     collect_parser = subparsers.add_parser('collect', help='Collect the results', parents=[shared_parser])

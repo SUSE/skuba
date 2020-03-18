@@ -17,8 +17,6 @@ pipeline {
 
         stage('Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfstate")
-            archiveArtifacts("skuba/ci/infra/${PLATFORM}/terraform.tfvars.json")
         } }
 
         stage('Bootstrap Cluster') { steps {
@@ -27,17 +25,28 @@ pipeline {
             sh(script: "skuba/ci/infra/testrunner/testrunner --platform ${PLATFORM} join-node --role worker --node 1", label: 'Join Worker 1')
         } }
 
-        stage('Conformance Tests') { steps {
-            sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Run Conformance')
-            sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Collect Results')
-            archiveArtifacts('results/**/*')
-            junit('results/plugins/e2e/results/**/*.xml')
-            sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Cleanup Cluster')
-        } }
+        stage('Conformance Tests') {
+            options { timeout(time: 200, unit: 'MINUTES', activity: false) }
+            steps {
+                sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Run Conformance')
+                sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Collect Results')
+                sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Cleanup Cluster')
+            }
+            post {
+                always {
+
+                }
+            }
+        }
 
     }
     post {
         always {
+            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+            archiveArtifacts('results/**/*')
+            junit('results/plugins/e2e/results/**/*.xml')
             sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
             zip(archive: true, dir: 'platform_logs', zipFile: 'platform_logs.zip')
         }
