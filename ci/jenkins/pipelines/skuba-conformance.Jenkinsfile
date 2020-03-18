@@ -47,11 +47,6 @@ pipeline {
                 sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Collect Results')
                 sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf", label: 'Cleanup Cluster')
             }
-            post {
-                always {
-
-                }
-            }
         }
 
     }
