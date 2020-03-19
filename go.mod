@@ -3,6 +3,7 @@ module github.com/SUSE/skuba
 require (
 	github.com/coreos/go-oidc v0.0.0-20180117170138-065b426bd416
 	github.com/pkg/errors v0.8.0
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/spf13/cobra v0.0.0-20180319062004-c439c4fa0937
 	github.com/spf13/pflag v1.0.1
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2

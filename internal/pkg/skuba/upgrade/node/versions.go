@@ -139,7 +139,7 @@ func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interfac
 	}
 	if len(errorMessages) > 0 {
 		var errorMessage bytes.Buffer
-		errorMessage.WriteString(fmt.Sprintf("node %s cannot be upgraded yet. The following errors were detected:\n", nviu.Current.Nodename))
+		errorMessage.WriteString(fmt.Sprintf("node %s cannot be upgraded yet. The following errors were detected:\n", nviu.Current.Node.ObjectMeta.Name))
 		for _, error := range errorMessages {
 			errorMessage.WriteString(fmt.Sprintf(" - %s\n", error))
 		}
@@ -177,7 +177,7 @@ func nodesVersionAligned(version *version.Version, allNodesVersioningInfo kubern
 }
 
 func isSchedulableWorkerNode(nodeVersionInfo kubernetes.NodeVersionInfo) bool {
-	return !nodeVersionInfo.Unschedulable && !nodeVersionInfo.IsControlPlane()
+	return !nodeVersionInfo.Unschedulable() && !nodeVersionInfo.IsControlPlane()
 }
 
 func controlPlaneUpdateStatus(currentClusterVersion *version.Version, allNodesVersioningInfo kubernetes.NodeVersionInfoMap, node *v1.Node) (NodeVersionInfoUpdate, error) {
