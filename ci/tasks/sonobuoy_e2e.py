@@ -39,7 +39,7 @@ class SonobuoyE2eTests:
                 attempts += 1
                 logger.info(f'Attempting to retrieve the results {attempts}/{retries}')
                 results = self._sonobuoy('retrieve results' + ' '.join(sonobuoy_args))
-
+                break
             except SonobuoyE2eTestsError:
                 if retries == attempts:
                     raise SonobuoyE2eTestsError('Could not retrieve sonobuoy results')
