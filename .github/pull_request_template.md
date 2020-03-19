@@ -58,3 +58,10 @@ We are in *v4-maintenance phase*, so we will restrict what can be merged to prev
 
 <!-- Remember, if this is a work in progress please pre-append [WIP] to the title until you are ready! 
     If you can, please apply all applicable labels to help reviews out! -->
+
+
+## CI Feedback
+
+Is the CI being useful to you? Does it help preventing buggy code to be merged? Or do you think we should focus more on faster tests?
+Please let us know by filling up this questionaire https://forms.office.com/Pages/ResponsePage.aspx?id=PIFrheUWpUmF7G8IHhO1J0O6RIepIKpNtPmF_phYPbdURFhLR0pTTFQ3UDE0NUFNUFk0RDM1UzY1UC4u
+
