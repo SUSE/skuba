@@ -52,9 +52,9 @@ pipeline {
             archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
             archiveArtifacts('results/**/*')
-            junit('results/plugins/e2e/results/**/*.xml')
-            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run')
+            sh(script: 'make --keep-going -f skuba/ci/Makefile post_run', label: 'Post Run', returnStatus: true)
             zip(archive: true, dir: 'platform_logs', zipFile: 'platform_logs.zip')
+            junit('results/plugins/e2e/results/**/*.xml')
         }
         cleanup {
             dir("${WORKSPACE}") {
