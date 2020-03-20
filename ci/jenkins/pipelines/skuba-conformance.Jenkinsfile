@@ -30,14 +30,10 @@ pipeline {
             sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
         } }
 
-        stage('Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
-        } }
-
-        stage('Bootstrap Cluster') { steps {
+        stage('Deploy cluster') { steps {
+            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Deploy')
             sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
-            sh(script: "skuba/ci/infra/testrunner/testrunner --platform ${PLATFORM} join-node --role worker --node 0", label: 'Join Worker 0')
-            sh(script: "skuba/ci/infra/testrunner/testrunner --platform ${PLATFORM} join-node --role worker --node 1", label: 'Join Worker 1')
+            sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
         } }
 
         stage('Conformance Tests') {
