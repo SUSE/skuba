@@ -198,7 +198,6 @@ func AddonVersionWithAvailableVersions(addon Addon, clusterVersion *version.Vers
 	if addonVersion, found := currentKubernetesVersion.AddonsVersion[addon]; found {
 		return addonVersion
 	}
-	klog.Errorf("unknown addon %q version", addon)
 	return nil
 }
 
