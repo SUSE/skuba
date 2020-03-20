@@ -70,7 +70,8 @@ data "template_file" "lb_cloud_init_userdata" {
 }
 
 resource "libvirt_volume" "lb" {
-  name           = "${var.stack_name}-lb-volume"
+  count          = var.lbs
+  name           = "${var.stack_name}-lb-${count.index}-volume"
   pool           = var.pool
   size           = var.lb_disk_size
   base_volume_id = libvirt_volume.img.id
@@ -84,7 +85,8 @@ resource "libvirt_cloudinit_disk" "lb" {
 }
 
 resource "libvirt_domain" "lb" {
-  name      = "${var.stack_name}-lb-domain"
+  count     = var.lbs
+  name      = "${var.stack_name}-lb-domain-${count.index}"
   memory    = var.lb_memory
   vcpu      = var.lb_vcpu
   cloudinit = libvirt_cloudinit_disk.lb.id
@@ -94,12 +96,15 @@ resource "libvirt_domain" "lb" {
   }
 
   disk {
-    volume_id = libvirt_volume.lb.id
+    volume_id = element(
+      libvirt_volume.lb.*.id,
+      count.index,
+    )
   }
 
   network_interface {
     network_id     = libvirt_network.network.id
-    hostname       = "${var.stack_name}-lb"
+    hostname       = "${var.stack_name}-lb-${count.index}"
     addresses      = [cidrhost(var.network_cidr, 256)]
     wait_for_lease = true
   }
