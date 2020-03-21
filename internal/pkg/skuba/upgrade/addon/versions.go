@@ -50,7 +50,7 @@ func UpdatedAddonsForAddonsVersion(clusterVersion *version.Version, addonsVersio
 	for addonName, addonLatestVersion := range latestAddonVersions {
 		addonCurrentVersion := addonsVersion[addonName]
 		aviu.Current[addonName] = addonCurrentVersion
-		if addonCurrentVersion == nil || (addonLatestVersion.ManifestVersion > addonCurrentVersion.ManifestVersion) {
+		if addonCurrentVersion == nil || (addonLatestVersion.ManifestVersion > addonCurrentVersion.ManifestVersion) || (addonCurrentVersion.Version != addonLatestVersion.Version) {
 			aviu.Updated[addonName] = addonLatestVersion
 		}
 	}
@@ -89,6 +89,9 @@ func PrintAddonUpdates(updatedAddons AddonVersionInfoUpdate) {
 
 		if hasAddonVersionBump(updatedAddons, addon) {
 			fmt.Printf("  - %s: %s -> %s\n", addon, updatedAddons.Current[addon].Version, updatedAddons.Updated[addon].Version)
+			if updatedAddons.Current[addon].ManifestVersion != updatedAddons.Updated[addon].ManifestVersion {
+				fmt.Printf("       (manifest version from %d to %d)\n", updatedAddons.Current[addon].ManifestVersion, updatedAddons.Updated[addon].ManifestVersion)
+			}
 		} else {
 			if len(updatedAddons.Current[addon].Version) > 0 {
 				fmt.Printf("  - %s: %s (manifest version from %d to %d)\n", addon,
