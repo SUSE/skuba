@@ -81,7 +81,7 @@ type ciliumCallbacks struct{}
 
 func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	ciliumVersion := kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, addonConfiguration.ClusterVersion).Version
-	client, err := kubernetes.GetAdminClientSet()
+	client, config, err := kubernetes.GetAdminClientSetWithConfig()
 	if err != nil {
 		return errors.Wrap(err, "unable to get admin client set")
 	}
@@ -89,6 +89,21 @@ func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaC
 		return err
 	}
 	if err := cni.CreateOrUpdateCiliumConfigMap(client, ciliumVersion); err != nil {
+		return err
+	}
+
+	// Handle migration from etcd to CRD when upgrading from Cilium 1.5.
+	needsMigration, err := cni.NeedsEtcdToCrdMigration(client, ciliumVersion)
+	if err != nil {
+		return err
+	}
+	if !needsMigration {
+		return nil
+	}
+	if err := cni.MigrateEtcdToCrd(client, config); err != nil {
+		return err
+	}
+	if err := cni.RemoveEtcdConfig(client); err != nil {
 		return err
 	}
 
