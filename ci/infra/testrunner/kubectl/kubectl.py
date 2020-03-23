@@ -2,7 +2,7 @@ import platforms
 
 from skuba.skuba import Skuba
 from utils.utils import (Utils)
-
+from time import sleep
 
 class Kubectl:
 
@@ -36,3 +36,14 @@ class Kubectl:
         }
         command = f"get nodes --selector=node-role.kubernetes.io/master{roles.get(role)}"" -o jsonpath='{.items[*].metadata.name}'"
         return self.run_kubectl(command).split()
+
+    def inhibit_kured(self):
+        max_attempt = 18
+        current_attempt = 0
+        while current_attempt <= max_attempt:
+            try:
+                self.run_kubectl("-n kube-system annotate ds kured weave.works/kured-node-lock='{\"nodeID\":\"manual\"}'")
+                break
+            except Exception:
+                current_attempt += 1
+                sleep(10)

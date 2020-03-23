@@ -37,6 +37,11 @@ pipeline {
             sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
         } }
 
+        stage('Inhibit kured reboots') { steps {
+            sh(script: 'make -f skuba/ci/Makefile inhibit_kured')
+            }
+        }
+
         stage('Conformance Tests') {
             options { timeout(time: 200, unit: 'MINUTES', activity: false) }
             steps {

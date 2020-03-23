@@ -86,3 +86,7 @@ test:
 test_pr:
 	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose --junit pr --filter "pr" --skip-setup deployed
 
+.PHONE: inhibit_kured
+inhibit_kured:
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} inhibit_kured
+
