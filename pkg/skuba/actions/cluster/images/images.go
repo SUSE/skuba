@@ -35,6 +35,9 @@ func Images() error {
 
 		for addonName, addon := range addons.Addons {
 			addonVersion := kubernetes.AddonVersionForClusterVersion(addonName, version)
+			if addonVersion == nil {
+				continue
+			}
 			imageList := addon.Images(addonVersion.Version)
 			for _, image := range imageList {
 				fmt.Printf("%-10v %v\n", version, image)
