@@ -88,7 +88,6 @@ resource "libvirt_domain" "master" {
   network_interface {
     network_id     = libvirt_network.network.id
     hostname       = "${var.stack_name}-master-${count.index}"
-    addresses      = [cidrhost(var.network_cidr, 512 + count.index)]
     wait_for_lease = true
   }
 
@@ -105,7 +104,7 @@ resource "null_resource" "master_wait_cloudinit" {
   connection {
     host = element(
       libvirt_domain.master.*.network_interface.0.addresses.0,
-      count.index,
+      count.index
     )
     user     = var.username
     password = var.password
@@ -128,7 +127,7 @@ resource "null_resource" "master_reboot" {
       user = var.username
       host = element(
         libvirt_domain.master.*.network_interface.0.addresses.0,
-        count.index,
+        count.index
       )
     }
 
