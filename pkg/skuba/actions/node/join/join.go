@@ -101,7 +101,8 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
-		if err := cni.CiliumUpdateConfigMap(client); err != nil {
+		ciliumVersion := kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, currentClusterVersion).Version
+		if err := cni.CiliumUpdateConfigMap(client, ciliumVersion); err != nil {
 			return err
 		}
 	}
