@@ -5,5 +5,8 @@
 # SUSE CaaSP Product Registration Code
 #caasp_registry_code = ""
 
+# SLE HA product registration code - required by LB node if created
+#ha_registry_code = ""
+
 # SUSE Repository Mirroring Server Name (FQDN)
 #rmt_server_name = "rmt.example.com"
