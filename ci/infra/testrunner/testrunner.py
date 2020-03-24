@@ -44,7 +44,7 @@ def bootstrap(options):
     skuba.node_bootstrap(
         cloud_provider=options.cloud_provider,
         timeout=options.timeout
-    ) 
+    )
 
 
 
@@ -219,7 +219,8 @@ def main():
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
 
-    cmd_inhibit_kured = commands.add_parser("inhibit_kured")
+    cmd_inhibit_kured = commands.add_parser("inhibit_kured",
+                           help="Prevent kured to reboot nodes")
     cmd_inhibit_kured.set_defaults(func=inhibit_kured)
 
     options = parser.parse_args()
