@@ -101,8 +101,8 @@ data "template_file" "lb_cloud_init_userdata" {
 }
 
 resource "libvirt_volume" "lb" {
-  count          = var.lbs
-  name           = "${var.stack_name}-lb-${count.index}-volume"
+  count          = var.create_lb ? 1 : 0
+  name           = "${var.stack_name}-lb-volume"
   pool           = var.pool
   size           = var.lb_disk_size
   base_volume_id = libvirt_volume.img.id
@@ -116,8 +116,8 @@ resource "libvirt_cloudinit_disk" "lb" {
 }
 
 resource "libvirt_domain" "lb" {
-  count     = var.lbs
-  name      = "${var.stack_name}-lb-domain-${count.index}"
+  count     = var.create_lb ? 1 : 0
+  name      = "${var.stack_name}-lb-domain"
   memory    = var.lb_memory
   vcpu      = var.lb_vcpu
   cloudinit = libvirt_cloudinit_disk.lb.id
@@ -135,7 +135,7 @@ resource "libvirt_domain" "lb" {
 
   network_interface {
     network_id     = libvirt_network.network.id
-    hostname       = "${var.stack_name}-lb-${count.index}"
+    hostname       = "${var.stack_name}-lb"
     addresses      = [cidrhost(var.network_cidr, 256)]
     wait_for_lease = true
   }
@@ -148,7 +148,7 @@ resource "libvirt_domain" "lb" {
 
 resource "null_resource" "lb_wait_cloudinit" {
   depends_on = [libvirt_domain.lb]
-  count      = var.lbs
+  count      = var.create_lb ? 1 : 0
 
   connection {
     host = element(
@@ -169,7 +169,7 @@ resource "null_resource" "lb_wait_cloudinit" {
 
 resource "null_resource" "lb_push_haproxy_cfg" {
   depends_on = [null_resource.lb_wait_cloudinit]
-  count      = var.lbs
+  count      = var.create_lb ? 1 : 0
 
   triggers = {
     master_count = var.masters
