@@ -131,7 +131,7 @@ def define_parser(parser):
                                default=os.environ.get('KUBECONFIG'),
                                help='Path to kubeconfig file')
     shared_parser.add_argument('--sonobuoy-image',
-                               default='gcr.io/heptio-images/sonobuoy',
+                               default='sonobuoy/sonobuoy',
                                help='Set the sonobuoy image to be used')
     shared_parser.add_argument('--sonobuoy-version',
                                default='latest',

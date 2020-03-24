@@ -11,6 +11,7 @@ from argparse import REMAINDER, ArgumentParser
 
 import platforms
 from skuba import Skuba
+from kubectl import Kubectl
 from tests import TestDriver
 from utils import BaseConfig, Logger, Utils
 
@@ -43,7 +44,7 @@ def bootstrap(options):
     skuba.node_bootstrap(
         cloud_provider=options.cloud_provider,
         timeout=options.timeout
-    ) 
+    )
 
 
 
@@ -97,6 +98,10 @@ def test(options):
 def ssh(options):
     platforms.get_platform(options.conf, options.platform).ssh_run(
         role=options.role, nr=options.node, cmd=" ".join(options.cmd))
+
+
+def inhibit_kured(options):
+    Kubectl(options.conf, options.platform).inhibit_kured()
 
 
 def main():
@@ -213,6 +218,10 @@ def main():
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
+
+    cmd_inhibit_kured = commands.add_parser("inhibit_kured",
+                           help="Prevent kured to reboot nodes")
+    cmd_inhibit_kured.set_defaults(func=inhibit_kured)
 
     options = parser.parse_args()
     try:

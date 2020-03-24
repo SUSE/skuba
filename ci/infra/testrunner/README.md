@@ -400,6 +400,7 @@ positional arguments:
     join-nodes            add multiple provisioned nodes k8s.
     ssh                   Execute command in node via ssh.
     test                  execute tests
+    inhibit_kured       Prevent kured to reboot nodes
 
 optional arguments:
   -h, --help            show this help message and exit
