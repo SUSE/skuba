@@ -94,8 +94,11 @@ def platform(conf, target):
 @pytest.fixture
 def setup(request, platform, skuba):
     def cleanup():
-        platform.gather_logs()
-        platform.cleanup()
+        # if platform was not allocated, gather_logs may fail. Ignore.
+        try:
+            platform.gather_logs()
+        finally:
+            platform.cleanup()
 
     request.addfinalizer(cleanup)
 
