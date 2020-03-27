@@ -41,6 +41,7 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
+// Basic initial cluster configuration
 type InitConfiguration struct {
 	ClusterName       string
 	ControlPlane      string
@@ -51,6 +52,9 @@ type InitConfiguration struct {
 	CoreDNSImageTag   string
 	CloudProvider     string
 	StrictCapDefaults bool
+	// Note: UseHyperKube can be removed when we drop the support of
+	// provisioning clusters of version 1.17.
+	UseHyperKube bool
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHost() string {
@@ -75,11 +79,18 @@ func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
 func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
 	kubernetesVersion := kubernetes.LatestVersion()
 	var err error
+	needsHyperKube := false
 	if kubernetesDesiredVersion != "" {
 		kubernetesVersion, err = versionutil.ParseSemantic(kubernetesDesiredVersion)
 		if err != nil || !kubernetes.IsVersionAvailable(kubernetesVersion) {
 			return InitConfiguration{}, fmt.Errorf("Version %s does not exist or cannot be parsed.\n", kubernetesDesiredVersion)
 		}
+	}
+
+	// Without this, it will be impossible to greenfield an older caasp cluster:
+	// defaults have been changed in 1.17, so we *need* to have UseHyperKubeImage: set into the init configuration.
+	if kubernetesVersion.Minor() < 18 {
+		needsHyperKube = true
 	}
 
 	return InitConfiguration{
@@ -92,6 +103,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
 		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 		StrictCapDefaults: strictCapDefaults,
+		UseHyperKube:      needsHyperKube,
 	}, nil
 }
 
@@ -234,7 +246,7 @@ func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
 				PodSubnet:     "10.244.0.0/16",
 				ServiceSubnet: "10.96.0.0/12",
 			},
-			UseHyperKubeImage: true,
+			UseHyperKubeImage: initConfiguration.UseHyperKube,
 		},
 	}
 	if len(initConfiguration.CloudProvider) > 0 {

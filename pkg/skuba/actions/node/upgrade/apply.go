@@ -96,6 +96,15 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
 			return errors.Wrap(err, "error adding target information to init configuration")
 		}
+
+		// Upgrade 1.17 to 1.18.
+		// This updated UseHyperKube field in-memory (unsets it).
+		// Note: The cluster cm is uploaded at the end of the kubeadm process, as usual.
+		// The whole paragraph can be removed when upgrading from 1.17 is removed.
+		if currentClusterVersion.Minor() == 17 {
+			initCfg.UseHyperKubeImage = false
+		}
+
 		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
 			Group:   "kubeadm.k8s.io",
