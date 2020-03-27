@@ -17,17 +17,25 @@ TEST_CMD=--test ${TEST}
 endif
 
 .PHONY: all
-all: deploy bootstrap
+all: provision deploy
 
 # Steps
 
-.PHONY: bootstrap_environment
-bootstrap_environment:
+.PHONY: provision 
+provision:
+	${TEST_RUNNER} --platform ${PLATFORM} provision
+
+.PHONY: bootstrap
+bootstrap:
 	${TEST_RUNNER} --platform ${PLATFORM} bootstrap
 
-.PHONY: create_environment
-create_environment:
-	${TEST_RUNNER} --platform ${PLATFORM} provision
+.PHONY: join_nodes 
+join_nodes:
+	${TEST_RUNNER} --platform ${PLATFORM} join-nodes
+
+.PHONY: deploy 
+deploy:
+	${TEST_RUNNER} --platform ${PLATFORM} deploy
 
 .PHONY: cleanup
 cleanup:
@@ -44,10 +52,6 @@ git_rebase_check:
 .PHONY: info
 info:
 	${TEST_RUNNER} --platform ${PLATFORM} info
-
-.PHONY: join_nodes
-join_nodes:
-	${TEST_RUNNER} --platform ${PLATFORM} join-nodes
 
 .PHONY: test_jenkins_jobs
 test_jenkins_jobs:
@@ -67,12 +71,6 @@ pre_deployment: info update_pkgs
 
 .PHONY: pr_checks
 pr_checks: git_rebase_check
-
-.PHONY: deploy
-deploy: create_environment
-
-.PHONY: bootstrap
-bootstrap: bootstrap_environment
 
 .PHONY: post_run
 post_run: gather_logs cleanup
