@@ -46,7 +46,6 @@
         - 'test_addon_upgrade'
         - 'test_remove_master'
         - 'test_remove_worker'
-        - 'test_add_worker'
     jobs:
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
