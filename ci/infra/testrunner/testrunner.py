@@ -69,7 +69,7 @@ def get_logs(options):
 
 def join_node(options):
     Skuba(options.conf, options.platform).node_join(
-        role=options.role, nr=options.node)
+        role=options.role, nr=options.node, timeout=options.timeout)
 
 
 def join_nodes(options):
@@ -178,9 +178,12 @@ def main():
                            help='role of the node to be added or deleted. eg: --role master')
     node_args.add_argument("-n", "--node", dest="node", type=int,
                            help='node to be added or deleted.  eg: -n 0')
+   # End of common parameters
 
     cmd_join_node = commands.add_parser("join-node", parents=[node_args],
                                         help="add node in k8s cluster with the given role.")
+    cmd_join_node.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the node to become ready (seconds)")
     cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],

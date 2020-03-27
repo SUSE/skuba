@@ -461,6 +461,28 @@ optional arguments:
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting the master nodes to become ready (seconds)
 ```
+
+### Node commands
+
+Common parameters
+
+```
+  -h, --help            show this help message and exit
+  -r {master,worker}, --role {master,worker}
+                        role of the node to be added or deleted. eg: --role
+                        master
+  -n NODE, --node NODE  node to be added or deleted. eg: -n 0
+
+```
+#### Join Node
+
+Joins node to cluster with the given role
+
+```
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for waiting a node to become ready (seconds)
+```
+
 #### Node Upgrade command
 
 ```
