@@ -43,6 +43,7 @@ func newRootCmd() *cobra.Command {
 		NewNodeCmd(),
 		NewAuthCmd(),
 		NewAddonCmd(),
+		NewCheckCmd(),
 	)
 
 	flags.RegisterVerboseFlag(cmd.PersistentFlags())
