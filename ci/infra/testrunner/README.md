@@ -22,7 +22,7 @@
   - [Provision](#provision-command)
   - [Node commands](#node-commands)
     - [Node Upgrade](#node-upgrade-command)
-  - [Ssh](#ssh-command)
+    - [Ssh](#ssh-command)
   - [Test](#test-command)
 - [Examples](#examples)
   - [Create K8s Cluster](#create-k8s-cluster)
@@ -395,6 +395,7 @@ positional arguments:
     status              check K8s cluster status
     cluster-upgrade-plan
                         Cluster upgrade plan
+    check-node          check node health
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
     node-upgrade        upgrade kubernetes version in node
@@ -440,16 +441,6 @@ optional arguments:
                         timeout for waiting a node to become ready (seconds)
 ```
 
-### Node commands
-
-```
-  -h, --help            show this help message and exit
-  -r {master,worker}, --role {master,worker}
-                        role of the node to be added or deleted. eg: --role
-                        master
-  -n NODE, --node NODE  node to be added or deleted. eg: -n 0
-
-```
 ### Join nodes
 
 ```
@@ -485,23 +476,26 @@ Joins node to cluster with the given role
 
 #### Node Upgrade command
 
+Upgrades node
+
 ```
   -h, --help            show this help message and exit
   -a {plan,apply}, --action {plan,apply}
                         action: plan or apply upgrade
 ```
 
-### Ssh command
+#### Ssh command
+
+Executes command in a node
 
 ```
-  -h, --help            show this help message and exit
-  -r {master,worker}, --role {master,worker}
-                        role of the node to be added or deleted. eg: --role
-                        master
-  -n NODE, --node NODE  node to be added or deleted. eg: -n 0
   -c ..., --cmd ...     remote command and its arguments. e.g ls -al. Must be
                         last argument for ssh command
 ```
+
+#### Check command
+
+Checkes the status of a node
 
 ### Test command
 
@@ -529,7 +523,6 @@ optional arguments:
                         level of detail in traceback for test failure
 
 ```
-
 
 ## Examples 
 

@@ -14,6 +14,7 @@ from skuba import Skuba
 from kubectl import Kubectl
 from tests import TestDriver
 from utils import BaseConfig, Logger, Utils
+from checks import Checker
 
 __version__ = "0.0.3"
 
@@ -80,16 +81,17 @@ def join_nodes(options):
         timeout=options.timeout
     )
 
-
 def remove_node(options):
     Skuba(options.conf, options.platform).node_remove(
         role=options.role, nr=options.node)
-
 
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
         action=options.upgrade_action, role=options.role, nr=options.node)
 
+def node_check(options):
+    Checker(options.conf, options.platform).check_node(
+        role=options.role, node=options.node)
 
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
@@ -195,6 +197,10 @@ def main():
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
+
+    cmd_check_node = commands.add_parser("check-node", parents=[node_args],
+                                          help="check node health")
+    cmd_check_node.set_defaults(func=node_check)
 
     # Start Join Nodes
     cmd_join_nodes = commands.add_parser("join-nodes",
