@@ -5,20 +5,16 @@ class Kubectl:
 
     def __init__(self, conf, platform):
         self.conf = conf
+        self.binpath = conf.kubectl.binpath
+        self.kubeconfig = conf.kubectl.kubeconfig
         self.utils = Utils(self.conf)
 
     def run_kubectl(self, command, stdin=None):
-        kubeconfig = self.get_kubeconfig()
-
-        shell_cmd = "kubectl --kubeconfig={} {}".format(kubeconfig, command)
+        shell_cmd = f'{self.binpath} --kubeconfig={self.kubeconfig} {command}'
         try:
             return self.utils.runshellcommand(shell_cmd, stdin=stdin)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(shell_cmd)) from ex
-
-    def get_kubeconfig(self):
-        path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
-        return path
 
     def get_node_names_by_role(self, role):
         """Returns a list of node names for a given role

@@ -183,6 +183,12 @@ skuba:
   verbosity: 5
 ```
 
+### Kubectl
+
+The kubectl section defines the configuration of the kubectl tool. 
+* binpath: path to the kubectl binary. Defaults to `/usr/bin/kubectl`
+* kubeconf: path to the kubeconfig file. defaults to `<workspace>/test-cluster/admin.conf`
+
 ### Log
 
 Testrunner sends output to both a console and file logger handlers, configured using the following `log` variables:

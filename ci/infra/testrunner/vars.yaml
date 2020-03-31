@@ -8,6 +8,10 @@ skuba:
   srcpath: "" # path to skuba source
   verbosity: 10  # default value passed to skuba with -v
 
+#Kubectl setup
+#kubectl:
+#  path: #path to kubectl binary (defaults to /usr/bin/kubectl)
+
 # platform settings
 terraform:
   internal_net: "" # name of the internal network
