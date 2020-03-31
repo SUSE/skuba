@@ -501,7 +501,13 @@ Executes command in a node
 
 #### Check command
 
-Checkes the status of a node
+Checks the status of a node. If no check is specified, all checks that apply to
+the node's role are executed.
+
+```
+  -c CHECKS [CHECKS ...], --check CHECKS [CHECKS ...]
+                        check to be executed (multiple checks can be specified)
+```
 
 ### Test command
 
