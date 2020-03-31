@@ -92,7 +92,7 @@ def test(options):
     test_driver = TestDriver(options.conf, options.platform)
     test_driver.run(module=options.module, test_suite=options.test_suite, test=options.test,
                     verbose=options.verbose, collect=options.collect, skip_setup=options.skip_setup,
-                    mark=options.mark, junit=options.junit)
+                    mark=options.mark, traceback=options.traceback, junit=options.junit)
 
 
 def ssh(options):
@@ -215,6 +215,8 @@ def main():
                                 "'provisioned' For when you have already provisioned the nodes.\n"
                                 "'bootstrapped' For when you have already bootstrapped the cluster.\n"
                                 "'deployed' For when you already have a fully deployed cluster.")
+    test_args.add_argument("--traceback", default="short", choices=['long', 'short', 'line', 'no'],
+                           help="level of detail in traceback for test failure")
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)

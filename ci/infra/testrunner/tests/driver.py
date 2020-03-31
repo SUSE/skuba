@@ -14,17 +14,6 @@ PYTEST_RC = {
     5: "no tests were collected"
 }
 
-
-class PyTestOpts:
-
-    NO_CAPTURE_LOGS = "--show-capture=no"
-
-    SHOW_OUTPUT = "-s"
-
-    VERBOSE = "-v"
-
-    COLLECT_TESTS = "--collect-only"
-
 class TestDriver:
     def __init__(self, conf, platform):
         self.conf = conf
@@ -32,7 +21,7 @@ class TestDriver:
 
     def run(self, module=None, test_suite=None,
             test=None, verbose=False, collect=False,
-            skip_setup=None, mark=None, junit=None):
+            skip_setup=None, mark=None, junit=None, traceback="short"):
         opts = []
 
         vars_opt = "--vars={}".format(self.conf.yaml_path)
@@ -42,16 +31,16 @@ class TestDriver:
         opts.append(platform_opt)
 
         if verbose:
-            opts.append(PyTestOpts.SHOW_OUTPUT)
+            opts.append("-s")
 
         # Dont capture logs
-        opts.append(PyTestOpts.NO_CAPTURE_LOGS)
+        opts.append("--show-capture=no")
 
         # generete detailed test results
-        opts.append(PyTestOpts.VERBOSE)
+        opts.append("-v")
 
         if collect:
-            opts.append(PyTestOpts.COLLECT_TESTS)
+            opts.append("--collect-only")
 
         if skip_setup is not None:
             opts.append(f"--skip-setup={skip_setup}")
@@ -61,6 +50,8 @@ class TestDriver:
 
         if mark is not None:
             opts.append(f'-m {mark}')
+
+        opts.append(f'--tb={traceback}')
 
         test_path = module if module is not None else "tests"
 
