@@ -42,10 +42,14 @@ const (
 	Kubelet          Component = "kubelet"
 	ContainerRuntime Component = "cri-o"
 
-	Hyperkube Component = "hyperkube"
-	Etcd      Component = "etcd"
-	CoreDNS   Component = "coredns"
-	Pause     Component = "pause"
+	APIServer         Component = "apiserver"
+	ControllerManager Component = "controllermanager"
+	Scheduler         Component = "scheduler"
+	Proxy             Component = "proxy"
+	Hyperkube         Component = "hyperkube"
+	Etcd              Component = "etcd"
+	CoreDNS           Component = "coredns"
+	Pause             Component = "pause"
 
 	Tooling Component = "tooling"
 )
@@ -81,17 +85,44 @@ type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVe
 
 var (
 	supportedVersions = KubernetesVersions{
+		"1.18.0": KubernetesVersion{
+			ComponentHostVersion: ComponentHostVersion{
+				KubeletVersion:          "1.18.0",
+				ContainerRuntimeVersion: "1.17.0",
+			},
+			ComponentContainerVersion: ComponentContainerVersion{
+				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.18.0"},
+				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.18.0"},
+				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.18.0"},
+				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.18.0"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
+				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+			},
+			AddonsVersion: AddonsVersion{
+				Cilium:        &AddonVersion{"1.5.3", 2},
+				Kured:         &AddonVersion{"1.3.0", 4},
+				Dex:           &AddonVersion{"2.23.0", 6},
+				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
+				MetricsServer: &AddonVersion{"0.3.6", 0},
+				PSP:           &AddonVersion{"", 2},
+			},
+		},
 		"1.17.4": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.17.4",
 				ContainerRuntimeVersion: "1.17.0",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
-				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
-				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.6.5"},
-				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.5"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
+				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:        &AddonVersion{"1.5.3", 2},
@@ -108,11 +139,14 @@ var (
 				ContainerRuntimeVersion: "1.16.1",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
-				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.3.15"},
-				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.6.2"},
-				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
+				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
+				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
+				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.3.15"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.2"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
+				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:        &AddonVersion{"1.5.3", 2},
@@ -129,11 +163,14 @@ var (
 				ContainerRuntimeVersion: "1.15.2",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				Hyperkube: &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
-				Etcd:      &ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
-				CoreDNS:   &ContainerImageTag{Name: "coredns", Tag: "1.3.1"},
-				Pause:     &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:   &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
+				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
+				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
+				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.3.1"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
+				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:  &AddonVersion{"1.5.3", 2},
@@ -166,17 +203,8 @@ func ComponentVersionForClusterVersion(component Component, clusterVersion *vers
 	return ComponentVersionWithAvailableVersions(component, clusterVersion, supportedVersions)
 }
 
-func ComponentContainerImageWithAvailableVersions(component Component, clusterVersion *version.Version, availableVersions KubernetesVersions) string {
-	currentKubernetesVersion := availableVersions[clusterVersion.String()]
-	if componentVersion, found := currentKubernetesVersion.ComponentContainerVersion[component]; found {
-		return images.GetGenericImage(skuba.ImageRepository, componentVersion.Name, componentVersion.Tag)
-	}
-	klog.Errorf("unknown component %q container image", component)
-	return ""
-}
-
-func AllComponentContainerImagesWithAvailableVersions(clusterVersion *version.Version, availableVersions KubernetesVersions) []Component {
-	currentKubernetesVersion := availableVersions[clusterVersion.String()]
+func AllComponentContainerImagesForClusterVersion(clusterVersion *version.Version) []Component {
+	currentKubernetesVersion := supportedVersions[clusterVersion.String()]
 
 	components := make([]Component, 0)
 	for component := range currentKubernetesVersion.ComponentContainerVersion {
@@ -185,24 +213,21 @@ func AllComponentContainerImagesWithAvailableVersions(clusterVersion *version.Ve
 	return components
 }
 
-func AllComponentContainerImagesForClusterVersion(clusterVersion *version.Version) []Component {
-	return AllComponentContainerImagesWithAvailableVersions(clusterVersion, supportedVersions)
-}
-
 func ComponentContainerImageForClusterVersion(component Component, clusterVersion *version.Version) string {
-	return ComponentContainerImageWithAvailableVersions(component, clusterVersion, supportedVersions)
+	currentKubernetesVersion := supportedVersions[clusterVersion.String()]
+	if componentDetails, found := currentKubernetesVersion.ComponentContainerVersion[component]; found {
+		return images.GetGenericImage(skuba.ImageRepository, componentDetails.Name, componentDetails.Tag)
+	}
+	klog.Errorf("unknown component %q container image", component)
+	return ""
 }
 
-func AddonVersionWithAvailableVersions(addon Addon, clusterVersion *version.Version, availableVersions KubernetesVersions) *AddonVersion {
-	currentKubernetesVersion := availableVersions[clusterVersion.String()]
+func AddonVersionForClusterVersion(addon Addon, clusterVersion *version.Version) *AddonVersion {
+	currentKubernetesVersion := supportedVersions[clusterVersion.String()]
 	if addonVersion, found := currentKubernetesVersion.AddonsVersion[addon]; found {
 		return addonVersion
 	}
 	return nil
-}
-
-func AddonVersionForClusterVersion(addon Addon, clusterVersion *version.Version) *AddonVersion {
-	return AddonVersionWithAvailableVersions(addon, clusterVersion, supportedVersions)
 }
 
 func AllAddonVersionsForClusterVersion(clusterVersion *version.Version) AddonsVersion {
