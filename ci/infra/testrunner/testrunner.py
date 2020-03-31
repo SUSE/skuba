@@ -91,7 +91,8 @@ def node_upgrade(options):
 
 def node_check(options):
     Checker(options.conf, options.platform).check_node(
-        checks=options.checks, role=options.role, node=options.node)
+         role=options.role, node=options.node,
+         checks=options.checks, stage=options.stage)
 
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
@@ -202,6 +203,8 @@ def main():
                                           help="check node health")
     cmd_check_node.add_argument("-c", "--check", dest="checks", nargs='+',
                                 help="check to be executed (multiple checks can be specified")
+    cmd_check_node.add_argument("-s", "--stage", dest="stage", 
+                                help="only execute checks that apply to this stage")
     cmd_check_node.set_defaults(func=node_check)
 
     # Start Join Nodes

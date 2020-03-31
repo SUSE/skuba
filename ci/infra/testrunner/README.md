@@ -507,6 +507,8 @@ the node's role are executed.
 ```
   -c CHECKS [CHECKS ...], --check CHECKS [CHECKS ...]
                         check to be executed (multiple checks can be specified)
+  -s STAGE, -stage STAGE
+                        only execute checks that apply to this stage
 ```
 
 ### Test command

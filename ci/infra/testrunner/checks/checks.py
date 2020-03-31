@@ -4,15 +4,17 @@ import platforms
 from kubectl import Kubectl
 from utils.utils import Utils
 
-_checks_by_role = {}
-_checks_by_name = {}
+_checks_by_role  = {}
+_checks_by_name  = {}
+_checks_by_stage = {}
 
-def check(description=None, roles=[], check_timeout=300, check_backoff=20):
+def check(description=None, roles=[], stages=[], check_timeout=300, check_backoff=20):
     """Decorator for waiting a check to become true.
        Can receve the following arguments when invoking the check function
        description: used for reporting. if not defined, check
                     function name is used
        roles: list of node roles this check applies
+       stages: list of deployment stages this check applies to (e.g provisioned, joined)
        check_timeout: the timeout for the check
        check_backoff: the backoff between retries
 
@@ -45,10 +47,16 @@ def check(description=None, roles=[], check_timeout=300, check_backoff=20):
                 time.sleep(backoff)
 
         _checks_by_name[check.__name__] = wait_condition
+
         for role in roles:
            role_checks = _checks_by_role.get(role, [])
            role_checks.append(wait_condition)
            _checks_by_role[role] = role_checks
+
+        for stage in stages:
+           stage_checks = _checks_by_stage.get(stage, [])
+           stage_checks.append(wait_condition)
+           _checks_by_stage[stage] = stage_checks
 
         return wait_condition
 
@@ -64,7 +72,7 @@ class Checker:
         self.platform = platform
 
 
-    def check_node(self, role, node, checks=None, timeout=180, backoff=20):
+    def check_node(self, role, node, checks=None, stage=None, timeout=180, backoff=20):
         if checks:
             check_names = checks
             checks = []
@@ -72,6 +80,9 @@ class Checker:
                 checks.append(_checks_by_name[name])
         else:
             checks = _checks_by_role.get(role, [])
+            # filter by stage
+            if stage:
+               checks= [c for c in checks if c in _checks_by_stage.get(stage, [])]
 
         start   = int(time.time())
         for check in checks:
@@ -96,7 +107,7 @@ def check_etcd_health(conf, platform, role, node):
     output = platform.ssh_run(role, node, cmd)
     return output.find("true") > -1
 
-@check(description="check node is ready", roles = ["master", "worker"])
+@check(description="check node is ready", roles = ["master", "worker"], stages=["joined"])
 def check_node_ready(conf, platform, role, node):
     platform = platforms.get_platform(conf, platform)
     node_name = platform.get_nodes_names(role)[node]
@@ -104,5 +115,3 @@ def check_node_ready(conf, platform, role, node):
            "{{@.type}}={{@.status}};{{end}}'").format(node_name)
     kubectl = Kubectl(conf, platform)
     return kubectl.run_kubectl(cmd).find("Ready=True") != -1
-
-
