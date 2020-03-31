@@ -57,30 +57,29 @@ class Checker:
         self.conf = conf
         self.utils = Utils(self.conf)
         self.utils.setup_ssh()
-        self.platform = platforms.get_platform(conf, platform)
+        self.platform = platform
 
 
     def check_node(self, role, node, timeout=180, backoff=20):
         start   = int(time.time())
         for check in _checks.get(role, []):
             remaining = timeout-(int(time.time())-start)
-            check(self.platform, role, node, check_timeout=remaining, check_backoff=backoff)
+            check(self.conf, self.platform, role, node, check_timeout=remaining, check_backoff=backoff)
 
 
 @check(name="apiserver healthz", roles=['master'])
-def check_apiserver_healthz(platform, role, node):
+def check_apiserver_healthz(conf, platform, role, node):
+     platform = platforms.get_platform(conf, platform)
      cmd =   'curl -Ls --insecure https://localhost:6443/healthz'
      output = platform.ssh_run(role, node, cmd)
      return output.find("ok") > -1
 
 @check(name="etcd health", roles=['master'])
-def check_etcd_health(platform, role, node):
+def check_etcd_health(conf, platform, role, node):
+    platform = platforms.get_platform(conf, platform)
     cmd = ('sudo curl -Ls --cacert /etc/kubernetes/pki/etcd/ca.crt '
            '--key /etc/kubernetes/pki/etcd/server.key '
            '--cert /etc/kubernetes/pki/etcd/server.crt '
            'https://localhost:2379/health')
     output = platform.ssh_run(role, node, cmd)
     return output.find("true") > -1
-
-
-
