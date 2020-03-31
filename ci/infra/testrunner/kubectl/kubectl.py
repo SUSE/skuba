@@ -1,6 +1,3 @@
-import platforms
-
-from skuba.skuba import Skuba
 from utils.utils import (Utils)
 from time import sleep
 
@@ -9,17 +6,19 @@ class Kubectl:
     def __init__(self, conf, platform):
         self.conf = conf
         self.utils = Utils(self.conf)
-        self.platform = platforms.get_platform(conf, platform)
-        self.skuba = Skuba(conf, platform)
 
     def run_kubectl(self, command, stdin=None):
-        kubeconfig = self.skuba.get_kubeconfig()
+        kubeconfig = self.get_kubeconfig()
 
         shell_cmd = "kubectl --kubeconfig={} {}".format(kubeconfig, command)
         try:
             return self.utils.runshellcommand(shell_cmd, stdin=stdin)
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(shell_cmd)) from ex
+
+    def get_kubeconfig(self):
+        path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
+        return path
 
     def get_node_names_by_role(self, role):
         """Returns a list of node names for a given role
