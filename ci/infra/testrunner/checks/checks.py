@@ -1,6 +1,7 @@
 import time
 
 import platforms
+from kubectl import Kubectl
 from utils.utils import Utils
 
 _checks_by_role = {}
@@ -94,3 +95,14 @@ def check_etcd_health(conf, platform, role, node):
            'https://localhost:2379/health')
     output = platform.ssh_run(role, node, cmd)
     return output.find("true") > -1
+
+@check(description="check node is ready", roles = ["master", "worker"])
+def check_node_ready(conf, platform, role, node):
+    platform = platforms.get_platform(conf, platform)
+    node_name = platform.get_nodes_names(role)[node]
+    cmd = ("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}"
+           "{{@.type}}={{@.status}};{{end}}'").format(node_name)
+    kubectl = Kubectl(conf, platform)
+    return kubectl.run_kubectl(cmd).find("Ready=True") != -1
+
+
