@@ -229,11 +229,15 @@ def main():
         Logger.config_logger(conf, level=options.log_level)
         options.conf = conf
         options.func(options)
+    except SystemExit as ex:
+       if ex.code > 0:
+          logger.error(f'Command {options.command} ended with error code {ex.code}')
+          sys.exit(ex.code)
     except Exception as ex:
-        logger.error("Exception executing testrunner command '{}': {}".format(
-            options.command, ex), exc_info=True)
+        logger.error(f'Exception {ex} executing command {options.command}', exc_info=True)
         sys.exit(255)
 
+    sys.exit(0)
 
 if __name__ == '__main__':
     main()

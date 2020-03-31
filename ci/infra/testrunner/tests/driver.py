@@ -5,6 +5,15 @@ import pytest
 FILEPATH = os.path.realpath(__file__)
 TESTRUNNER_DIR = os.path.dirname(os.path.dirname(FILEPATH))
 
+PYTEST_RC = {
+    0: "all tests passed successfully",
+    1: "some of the tests failed",
+    2: "execution was interrupted by the user",
+    3: "internal error happened while executing tests",
+    4: "pytest command line usage error",
+    5: "no tests were collected"
+}
+
 
 class PyTestOpts:
 
@@ -15,7 +24,6 @@ class PyTestOpts:
     VERBOSE = "-v"
 
     COLLECT_TESTS = "--collect-only"
-
 
 class TestDriver:
     def __init__(self, conf, platform):
@@ -74,5 +82,10 @@ class TestDriver:
 
         result = pytest.main(args=opts)
 
-        if not junit and result > 0:
-            raise AssertionError("Running {} failed.\nExit Code: {}".format(test_path, result))
+        if result in [0, 1]:
+            raise SystemExit(result)
+
+        if result in [2, 3, 4, 5]:
+            raise Exception(f'error executing test {PYTEST_RC[result]}')
+
+        raise Exception(f'unexpected return code from pytest {result}')
