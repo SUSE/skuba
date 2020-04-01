@@ -4,12 +4,12 @@ from tests.utils import setup_kubernetes_version
 
 
 @pytest.mark.disruptive
-def test_upgrade_apply_all_fine(setup, platform, skuba, kubectl):
+def test_upgrade_apply_all_fine(provision, platform, skuba, kubectl):
     """
     Starting from a up-to-date cluster, check what node upgrade apply reports.
     """
 
-    setup_kubernetes_version(platform, skuba, kubectl)
+    setup_kubernetes_version(skuba, kubectl)
 
     # node upgrade apply
     masters = platform.get_num_nodes("master")

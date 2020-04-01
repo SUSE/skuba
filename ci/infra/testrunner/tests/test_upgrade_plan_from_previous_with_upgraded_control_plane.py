@@ -4,12 +4,12 @@ from tests.utils import PREVIOUS_VERSION, CURRENT_VERSION, setup_kubernetes_vers
 
 
 @pytest.mark.disruptive
-def test_upgrade_plan_from_previous_with_upgraded_control_plane(setup, skuba, kubectl, platform):
+def test_upgrade_plan_from_previous_with_upgraded_control_plane(provision, skuba, kubectl, platform):
     """
     Starting from an updated control plane, check what cluster/node plan report.
     """
 
-    setup_kubernetes_version(platform, skuba, kubectl, PREVIOUS_VERSION)
+    setup_kubernetes_version(skuba, kubectl, PREVIOUS_VERSION)
 
     masters = platform.get_num_nodes("master")
     for n in range(0, masters):
