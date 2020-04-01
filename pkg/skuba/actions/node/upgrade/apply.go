@@ -20,8 +20,10 @@ package upgrade
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
@@ -30,6 +32,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes/retry"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
@@ -138,6 +141,16 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	} else if err := target.Apply(nil, "kubeadm.upgrade.node"); err != nil {
 		return err
 	}
+	if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
+		err = target.Apply(nil,
+			"kubernetes.stop-kubelet",
+			"cri.wipe-pods",
+			"cri.stop",
+		)
+		if err != nil {
+			return err
+		}
+	}
 	err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 	}, "kubernetes.install-node-pattern")
@@ -152,7 +165,8 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	err = target.Apply(nil,
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
-		"kubernetes.restart-services",
+		"cri.start",
+		"kubernetes.start-kubelet",
 	)
 	if err != nil {
 		return err
@@ -167,8 +181,24 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			return err
 		}
 	}
+
 	if !kuredWasLocked {
-		if err := kured.Unlock(client); err != nil {
+		// Since pods were removed on a previous step, we will want to
+		// retry requests that try to reach the apiserver while it is
+		// still initializing. If this is the only control plane node
+		// available, or if the external load balancer didn't yet realize
+		// this apiserver is down we should make sure that this request
+		// eventually succeeds.
+		//
+		// Retry for 5 minutes maximum, retrying in intervals of 10
+		// seconds
+		err := retry.OnAnyError(
+			wait.Backoff{Duration: 10 * time.Second, Steps: 30},
+			func() error {
+				return kured.Unlock(client)
+			},
+		)
+		if err != nil {
 			return err
 		}
 	}

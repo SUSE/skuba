@@ -29,6 +29,8 @@ import (
 func init() {
 	stateMap["cri.configure"] = criConfigure
 	stateMap["cri.start"] = criStart
+	stateMap["cri.stop"] = criStop
+	stateMap["cri.wipe-pods"] = criWipePods
 }
 
 func criConfigure(t *Target, data interface{}) error {
@@ -60,5 +62,15 @@ func criConfigure(t *Target, data interface{}) error {
 
 func criStart(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "--now", "crio")
+	return err
+}
+
+func criStop(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "stop", "crio")
+	return err
+}
+
+func criWipePods(t *Target, data interface{}) error {
+	_, _, err := t.ssh("crictl", "rmp", "-fa")
 	return err
 }
