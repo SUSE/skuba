@@ -40,7 +40,8 @@ func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
 	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
-	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
+	stateMap["kubernetes.start-kubelet"] = kubernetesStartKubelet
+	stateMap["kubernetes.stop-kubelet"] = kubernetesStopKubelet
 }
 
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
@@ -77,7 +78,12 @@ func kubernetesInstallNodePattern(t *Target, data interface{}) error {
 	return err
 }
 
-func kubernetesRestartServices(t *Target, data interface{}) error {
-	_, _, err := t.ssh("systemctl", "restart", "crio", "kubelet")
+func kubernetesStartKubelet(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "enable", "--now", "kubelet")
+	return err
+}
+
+func kubernetesStopKubelet(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "stop", "kubelet")
 	return err
 }
