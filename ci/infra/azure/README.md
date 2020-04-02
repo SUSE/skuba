@@ -34,6 +34,17 @@ The SLES images [do not yet support cloud-init](https://docs.microsoft.com/en-us
 terraform leverages the Azure Linux Extension capabilities provided by
 the [Azure Linux Agent](https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/agent-linux).
 
+### Using spot instances
+
+It's possible to create a [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms)
+both for the master and worker nodes.
+
+This can be done by setting these variables to `true` (they are set to
+`false` by default):
+
+  * `master_use_spot_instance`
+  * `worker_use_spot_instance`
+
 ## Network layout
 
 All the nodes are placed inside of the same virtual network, within the same

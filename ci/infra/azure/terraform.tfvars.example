@@ -1,0 +1,23 @@
+# prefix for resources
+#stack_name = "flavio-caasp"
+
+# a SSH public key for accessing the machines
+#admin_ssh_key = ""
+
+## To register CaaSP product please use ONLY ONE of the following method
+# - register against SUSE Customer Service, with SUSE CaaSP Product Registration Code
+# - register against local SUSE Repository Mirroring Server
+#
+# SUSE CaaSP Product Registration Code:
+#caasp_registry_code = ""
+#
+# SUSE Repository Mirroring Server Name (FQDN):
+#rmt_server_name = "rmt.example.com"
+
+#create_bastionhost       = true
+
+masters                  = 3
+master_use_spot_instance = true
+
+workers                  = 2
+worker_use_spot_instance = true
