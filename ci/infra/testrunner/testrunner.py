@@ -94,6 +94,10 @@ def node_check(options):
          role=options.role, node=options.node,
          checks=options.checks, stage=options.stage)
 
+def cluster_check(options):
+    Checker(options.conf, options.platform).check_cluster(
+         checks=options.checks, stage=options.stage)
+
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
     test_driver.run(module=options.module, test_suite=options.test_suite, test=options.test,
@@ -203,7 +207,7 @@ def main():
                                           help="check node health")
     cmd_check_node.add_argument("-c", "--check", dest="checks", nargs='+',
                                 help="check to be executed (multiple checks can be specified")
-    cmd_check_node.add_argument("-s", "--stage", dest="stage", 
+    cmd_check_node.add_argument("-s", "--stage", dest="stage",
                                 help="only execute checks that apply to this stage")
     cmd_check_node.set_defaults(func=node_check)
 
@@ -249,6 +253,14 @@ def main():
     cmd_inhibit_kured = commands.add_parser("inhibit_kured",
                            help="Prevent kured to reboot nodes")
     cmd_inhibit_kured.set_defaults(func=inhibit_kured)
+
+    cmd_check_cluster = commands.add_parser("check-cluster",
+                                          help="check cluster health")
+    cmd_check_cluster.add_argument("-c", "--check", dest="checks", nargs='+',
+                                help="check to be executed (multiple checks can be specified")
+    cmd_check_cluster.add_argument("-s", "--stage", dest="stage",
+                                help="only execute checks that apply to this stage")
+    cmd_check_cluster.set_defaults(func=cluster_check)
 
     options = parser.parse_args()
     try:

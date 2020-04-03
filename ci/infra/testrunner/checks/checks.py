@@ -4,15 +4,25 @@ import platforms
 from kubectl import Kubectl
 from utils.utils import Utils
 
-_checks_by_role  = {}
-_checks_by_name  = {}
-_checks_by_stage = {}
 
-def check(description=None, roles=[], stages=[], check_timeout=300, check_backoff=20):
+class Check():
+    def __init__(self, name, description, func, scope, roles=[], stages=[]):
+        self.name = name
+        self.description = description
+        self.func = func
+        self.scope = scope
+        self.roles = roles
+        self.stages = stages
+
+_checks = []
+_checks_by_name = {}
+
+def check(description=None, scope=None, roles=[], stages=[], check_timeout=300, check_backoff=20):
     """Decorator for waiting a check to become true.
        Can receve the following arguments when invoking the check function
        description: used for reporting. if not defined, check
                     function name is used
+       scope: either "cluster" or "node"
        roles: list of node roles this check applies
        stages: list of deployment stages this check applies to (e.g provisioned, joined)
        check_timeout: the timeout for the check
@@ -46,17 +56,17 @@ def check(description=None, roles=[], stages=[], check_timeout=300, check_backof
 
                 time.sleep(backoff)
 
-        _checks_by_name[check.__name__] = wait_condition
+        if scope is None:
+            raise ValueError("scope must be defined: 'cluster' or 'node'")
 
-        for role in roles:
-           role_checks = _checks_by_role.get(role, [])
-           role_checks.append(wait_condition)
-           _checks_by_role[role] = role_checks
-
-        for stage in stages:
-           stage_checks = _checks_by_stage.get(stage, [])
-           stage_checks.append(wait_condition)
-           _checks_by_stage[stage] = stage_checks
+        _check = Check(check.__name__,
+                    description,
+                    wait_condition,
+                    scope,
+                    roles=roles,
+                    stages=stages)
+        _checks.append(_check)
+        _checks_by_name[_check.name] = _check
 
         return wait_condition
 
@@ -72,32 +82,65 @@ class Checker:
         self.platform = platform
 
 
+    def _filter_checks(self, checks, scope=None, stage=None):
+        _filtered = checks
+        if scope:
+            _filtered= [c for c in _filtered if scope == c.scope]
+        if stage:
+            _filtered= [c for c in _filtered if stage in c.stages]
+        return _filtered
+
+    def _filter_by_name(self, names):
+        checks = []
+        for name in names:
+            _check = _checks_by_name.get(name, None)
+            if _check is None:
+                raise ValueError("Check {name} not found")
+            checks.append(_check)
+
+        return checks
+
     def check_node(self, role, node, checks=None, stage=None, timeout=180, backoff=20):
         if checks:
-            check_names = checks
-            checks = []
-            for name in check_names:
-                checks.append(_checks_by_name[name])
+            checks = self._filter_by_name(checks)
+            for check in checks:
+                if check.scope != "node":
+                    raise Exception(f'check {check.name} is not a node check')
         else:
-            checks = _checks_by_role.get(role, [])
-            # filter by stage
-            if stage:
-               checks= [c for c in checks if c in _checks_by_stage.get(stage, [])]
+            if not stage:
+                raise ValueError("stage must be specified")
+            checks = self._filter_checks(_checks, stage=stage, scope="node")
 
         start   = int(time.time())
         for check in checks:
             remaining = timeout-(int(time.time())-start)
-            check(self.conf, self.platform, role, node, check_timeout=remaining, check_backoff=backoff)
+            check.func(self.conf, self.platform, role, node, check_timeout=remaining, check_backoff=backoff)
+
+    def check_cluster(self, checks=None, stage=None, timeout=180, backoff=20):
+        if checks:
+            checks = self._filter_by_name(checks)
+            for check in checks:
+                if check.scope != "cluster":
+                    raise Exception(f'check {check.name} is not a cluster check')
+        else:
+            if not stage:
+                raise ValueError("stage must be specified")
+            checks = self._filter_checks(_checks, stage=stage, scope="cluster")
+
+        start   = int(time.time())
+        for check in checks:
+            remaining = timeout-(int(time.time())-start)
+            check.func(self.conf, self.platform, check_timeout=remaining, check_backoff=backoff)
 
 
-@check(description="apiserver healthz check", roles=['master'])
+@check(description="apiserver healthz check", scope="node", roles=['master'])
 def check_apiserver_healthz(conf, platform, role, node):
      platform = platforms.get_platform(conf, platform)
      cmd =   'curl -Ls --insecure https://localhost:6443/healthz'
      output = platform.ssh_run(role, node, cmd)
      return output.find("ok") > -1
 
-@check(description="etcd health check", roles=['master'])
+@check(description="etcd health check", scope="node", roles=['master'])
 def check_etcd_health(conf, platform, role, node):
     platform = platforms.get_platform(conf, platform)
     cmd = ('sudo curl -Ls --cacert /etc/kubernetes/pki/etcd/ca.crt '
@@ -107,7 +150,7 @@ def check_etcd_health(conf, platform, role, node):
     output = platform.ssh_run(role, node, cmd)
     return output.find("true") > -1
 
-@check(description="check node is ready", roles = ["master", "worker"], stages=["joined"])
+@check(description="check node is ready", scope="node", roles=["master", "worker"], stages=["joined"])
 def check_node_ready(conf, platform, role, node):
     platform = platforms.get_platform(conf, platform)
     node_name = platform.get_nodes_names(role)[node]
