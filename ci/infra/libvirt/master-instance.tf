@@ -14,6 +14,9 @@ data "template_file" "master_register_scc" {
 
   vars = {
     caasp_registry_code = var.caasp_registry_code
+
+    # no need to enable the SLE HA product on this kind of nodes
+    ha_registry_code = ""
   }
 }
 

@@ -33,9 +33,6 @@ ${repositories}
     solver.onlyRequires: "true"
     download.use_deltarpm: "true"
 
-# need to remove the standard docker packages that are pre-installed on the
-# cloud image because they conflict with the kubic- ones that are pulled by
-# the kubernetes packages
 # WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registraion
 # Code is provided. In this case repositories will be added in runcmd module 
 # with SUSEConnect command after packages module is ran

@@ -8,6 +8,34 @@ data "template_file" "lb_repositories" {
   }
 }
 
+data "template_file" "lb_register_scc" {
+  template = file("cloud-init/register-scc.tpl")
+  count    = var.caasp_registry_code == "" ? 0 : 1
+
+  vars = {
+    ha_registry_code    = var.ha_registry_code
+    caasp_registry_code = var.caasp_registry_code
+  }
+}
+
+data "template_file" "lb_register_rmt" {
+  template = file("cloud-init/register-rmt.tpl")
+  count    = var.rmt_server_name == "" ? 0 : 1
+
+  vars = {
+    rmt_server_name = var.rmt_server_name
+  }
+}
+
+data "template_file" "lb_commands" {
+  template = file("cloud-init/commands.tpl")
+  count    = join("", var.packages) == "" ? 0 : 1
+
+  vars = {
+    packages = join(", ", concat(["haproxy"], var.packages))
+  }
+}
+
 data "template_file" "haproxy_apiserver_backends_master" {
   count    = var.masters
   template = "server $${fqdn} $${ip}:6443\n"
@@ -58,11 +86,14 @@ data "template_file" "lb_haproxy_cfg" {
 }
 
 data "template_file" "lb_cloud_init_userdata" {
-  template = file("cloud-init/lb.tpl")
+  template = file("cloud-init/common.tpl")
 
   vars = {
     authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
     repositories    = join("\n", data.template_file.lb_repositories.*.rendered)
+    register_scc    = join("\n", data.template_file.lb_register_scc.*.rendered)
+    register_rmt    = join("\n", data.template_file.lb_register_rmt.*.rendered)
+    commands        = join("\n", data.template_file.lb_commands.*.rendered)
     username        = var.username
     password        = var.password
     ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
@@ -70,6 +101,7 @@ data "template_file" "lb_cloud_init_userdata" {
 }
 
 resource "libvirt_volume" "lb" {
+  count          = var.create_lb ? 1 : 0
   name           = "${var.stack_name}-lb-volume"
   pool           = var.pool
   size           = var.lb_disk_size
@@ -84,6 +116,7 @@ resource "libvirt_cloudinit_disk" "lb" {
 }
 
 resource "libvirt_domain" "lb" {
+  count     = var.create_lb ? 1 : 0
   name      = "${var.stack_name}-lb-domain"
   memory    = var.lb_memory
   vcpu      = var.lb_vcpu
@@ -94,7 +127,10 @@ resource "libvirt_domain" "lb" {
   }
 
   disk {
-    volume_id = libvirt_volume.lb.id
+    volume_id = element(
+      libvirt_volume.lb.*.id,
+      count.index,
+    )
   }
 
   network_interface {
@@ -112,7 +148,7 @@ resource "libvirt_domain" "lb" {
 
 resource "null_resource" "lb_wait_cloudinit" {
   depends_on = [libvirt_domain.lb]
-  count      = var.lbs
+  count      = var.create_lb ? 1 : 0
 
   connection {
     host = element(
@@ -133,7 +169,7 @@ resource "null_resource" "lb_wait_cloudinit" {
 
 resource "null_resource" "lb_push_haproxy_cfg" {
   depends_on = [null_resource.lb_wait_cloudinit]
-  count      = var.lbs
+  count      = var.create_lb ? 1 : 0
 
   triggers = {
     master_count = var.masters

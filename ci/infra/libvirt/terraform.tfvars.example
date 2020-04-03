@@ -20,8 +20,8 @@ stack_name = "my-caasp-cluster"
 # CIDR of the network
 network_cidr = "10.17.0.0/22"
 
-# Number of lb nodes
-lbs = 1
+# Enable creation of LB node
+create_lb = true
 
 # Number of master nodes
 masters = 1

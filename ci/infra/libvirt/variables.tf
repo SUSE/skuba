@@ -95,9 +95,10 @@ variable "network_mode" {
   description = "Network mode used by the cluster"
 }
 
-variable "lbs" {
-  default     = 1
-  description = "Number of load-balancer nodes"
+variable "create_lb" {
+  type        = bool
+  default     = true
+  description = "Create load balancer node exposing master nodes"
 }
 
 variable "lb_memory" {
