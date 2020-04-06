@@ -500,6 +500,9 @@ optional arguments:
                         when you have already bootstrapped the cluster.
                         'deployed' For when you already have a fully deployed
                         cluster.
+  --traceback {long,short,line,no}
+                        level of detail in traceback for test failure
+
 ```
 
 

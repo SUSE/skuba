@@ -92,7 +92,7 @@ def test(options):
     test_driver = TestDriver(options.conf, options.platform)
     test_driver.run(module=options.module, test_suite=options.test_suite, test=options.test,
                     verbose=options.verbose, collect=options.collect, skip_setup=options.skip_setup,
-                    mark=options.mark, junit=options.junit)
+                    mark=options.mark, traceback=options.traceback, junit=options.junit)
 
 
 def ssh(options):
@@ -215,6 +215,8 @@ def main():
                                 "'provisioned' For when you have already provisioned the nodes.\n"
                                 "'bootstrapped' For when you have already bootstrapped the cluster.\n"
                                 "'deployed' For when you already have a fully deployed cluster.")
+    test_args.add_argument("--traceback", default="short", choices=['long', 'short', 'line', 'no'],
+                           help="level of detail in traceback for test failure")
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
@@ -229,11 +231,15 @@ def main():
         Logger.config_logger(conf, level=options.log_level)
         options.conf = conf
         options.func(options)
+    except SystemExit as ex:
+       if ex.code > 0:
+          logger.error(f'Command {options.command} ended with error code {ex.code}')
+          sys.exit(ex.code)
     except Exception as ex:
-        logger.error("Exception executing testrunner command '{}': {}".format(
-            options.command, ex), exc_info=True)
+        logger.error(f'Exception {ex} executing command {options.command}', exc_info=True)
         sys.exit(255)
 
+    sys.exit(0)
 
 if __name__ == '__main__':
     main()
