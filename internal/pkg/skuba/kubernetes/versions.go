@@ -106,7 +106,7 @@ var (
 				Dex:           &AddonVersion{"2.16.0", 6},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
 				MetricsServer: &AddonVersion{"0.3.6", 1},
-				PSP:           &AddonVersion{"", 3},
+				PSP:           &AddonVersion{"", 4},
 			},
 		},
 		"1.16.2": KubernetesVersion{
