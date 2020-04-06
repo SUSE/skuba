@@ -94,11 +94,15 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
+        stage('Provision cluster') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
+            }
+        }
+
         stage('Deploy cluster') {
             steps {
-                sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Provision')
-                sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
-                sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
+                sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
             }
         }
 

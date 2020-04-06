@@ -1,6 +1,5 @@
 import logging
 import os
-import stat
 import time
 
 import platforms
@@ -47,6 +46,17 @@ class Skuba:
 
         Utils.cleanup_files(dirs)
 
+
+    @step
+    def cluster_deploy(self, kubernetes_version=None, cloud_provider=None,
+                       timeout=None):
+        """Deploy a cluster joining all nodes"""
+        self.cluster_bootstrap(kubernetes_version=kubernetes_version,
+                               cloud_provider=cloud_provider,
+                               timeout=timeout)
+        self.join_nodes()
+
+
     @step
     def cluster_init(self, kubernetes_version=None, cloud_provider=None):
         logger.debug("Cleaning up any previous test-cluster dir")
@@ -64,8 +74,16 @@ class Skuba:
         # cluster directory
         self._run_skuba(cmd, cwd=self.conf.workspace)
 
+
     @step
-    def node_bootstrap(self, cloud_provider=None, timeout=180):
+    def cluster_bootstrap(self, kubernetes_version=None,
+                          cloud_provider=None, timeout=None):
+        self.cluster_init(kubernetes_version, cloud_provider)
+        self.node_bootstrap(cloud_provider, timeout=timeout)
+
+
+    @step
+    def node_bootstrap(self, cloud_provider=None, timeout=None):
         self._verify_bootstrap_dependency()
 
         if cloud_provider:
@@ -77,7 +95,8 @@ class Skuba:
                f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
-        self._wait_master_ready(0, timeout=timeout)
+        if timeout:
+            self._wait_master_ready(0, timeout=timeout)
 
 
     @step
@@ -101,6 +120,7 @@ class Skuba:
         except Exception as ex:
             raise Exception("Error executing cmd {}") from ex
 
+
     def join_nodes(self, masters=None, workers=None, timeout=180):
         if masters is None:
             masters = self.platform.get_num_nodes("master")
@@ -110,7 +130,7 @@ class Skuba:
         for node in range(1, masters):
             self.node_join("master", node)
             self._wait_master_ready(node, timeout=timeout)
- 
+
         for node in range(0, workers):
             self.node_join("worker", node)
 
@@ -161,10 +181,10 @@ class Skuba:
         except AssertionError as ex:
             node_name = self.platform.get_nodes_names("master")[node]
             raise Exception(f'Error waiting etcd at {node_name} to become ready') from ex
-        
+
 
     def _wait_condition(self, role, node, command, condition, timeout=60, backoff=10):
-        
+
         deadline = int(time.time()) + timeout
         while True:
             last_error = None
@@ -241,7 +261,7 @@ class Skuba:
     def addon_upgrade(self, action):
         self._verify_bootstrap_dependency()
         if action not in ['plan', 'apply']:
-            raise ValureEror("Invalid action '{}'".format(action))
+            raise ValueError("Invalid action '{}'".format(action))
         return self._run_skuba("addon upgrade {0}".format(action))
 
     @step

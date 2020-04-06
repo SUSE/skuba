@@ -35,17 +35,20 @@ def provision(options):
         num_worker=options.worker_count)
 
 
+def deploy(options):
+    skuba = Skuba(options.conf, options.platform)
+    skuba.cluster_deploy(
+        kubernetes_version=options.kubernetes_version,
+        cloud_provider=options.cloud_provider,
+        timeout=options.timeout)
+
+
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.cluster_init(
+    skuba.cluster_bootstrap(
         kubernetes_version=options.kubernetes_version,
-        cloud_provider=options.cloud_provider
-    )
-    skuba.node_bootstrap(
         cloud_provider=options.cloud_provider,
-        timeout=options.timeout
-    )
-
+        timeout=options.timeout)
 
 
 def cluster_status(options):
@@ -144,15 +147,23 @@ def main():
     cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
                                help='number of workers nodes to be deployed. eg: -w 2')
 
-    cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
-                        deployed nodes in your platform")
-    cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
+    # common parameters for cluster bootstrap
+    bootstrap_args = ArgumentParser(add_help=False)
+    bootstrap_args.add_argument("-k", "--kubernetes-version", help="kubernetes version",
                                dest="kubernetes_version", default=None)
-    cmd_bootstrap.add_argument("-c", "--cloud-provider", action="store_true",
+    bootstrap_args.add_argument("-c", "--cloud-provider", action="store_true",
                                help="Use cloud provider integration")
-    cmd_bootstrap.add_argument("-t", "--timeout", type=int, default=180,
-                                help="timeout for waiting the master node to become ready (seconds)")
+    bootstrap_args.add_argument("-t", "--timeout", type=int, default=300,
+                                help="timeout for waiting a node to become ready (seconds)")
+
+    cmd_bootstrap = commands.add_parser("bootstrap", parents=[bootstrap_args],
+                        help="bootstrap k8s cluster")
     cmd_bootstrap.set_defaults(func=bootstrap)
+
+    cmd_deploy = commands.add_parser("deploy", parents=[bootstrap_args],
+                        help="initializes, bootstrap and join all nodes k8s")
+    cmd_deploy.set_defaults(func=deploy)
+
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)

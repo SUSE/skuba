@@ -31,10 +31,12 @@ pipeline {
             sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
         } }
 
+        stage('Provision  cluster') { steps {
+            sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
+        } }
+
         stage('Deploy cluster') { steps {
-            sh(script: 'make -f skuba/ci/Makefile create_environment', label: 'Deploy')
-            sh(script: 'make -f skuba/ci/Makefile bootstrap', label: 'Bootstrap')
-            sh(script: 'make -f skuba/ci/Makefile join_nodes', label: 'Join Nodes')
+            sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
         } }
 
         stage('Inhibit kured reboots') { steps {

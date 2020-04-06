@@ -379,38 +379,30 @@ usage:
 
        [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,ssh,test}
+       {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
        ...
 
 positional arguments:
-  {info,get_logs,cleanup,provision,bootstrap,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test}
-                          command
-    info                  ip info
-    get_logs              gather logs from nodes
-    cleanup               cleanup created skuba environment
-    provision             provision nodes for cluster in your configured
-                          platform e.g: openstack, vmware.
-    bootstrap             bootstrap k8s cluster with deployed nodes in your
-                          platform
-    status                check K8s cluster status
-    cluster-upgrade-plan  cluster upgrade plan
-    join-node             add node in k8s cluster with the given role.
-    remove-node           remove node from k8s cluster.
-    node-upgrade          plan or apply kubernetes version upgrade in node
-    join-nodes            add multiple provisioned nodes k8s.
-    ssh                   Execute command in node via ssh.
-    test                  execute tests
+  {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
+                        command
+    info                ip info
+    get_logs            gather logs from nodes
+    cleanup             cleanup created skuba environment
+    provision           provision nodes for cluster in your configured
+                        platform e.g: openstack, vmware.
+    bootstrap           bootstrap k8s cluster
+    deploy              initializes, bootstrap and join all nodes k8s
+    status              check K8s cluster status
+    cluster-upgrade-plan
+                        Cluster upgrade plan
+    join-node           add node in k8s cluster with the given role.
+    remove-node         remove node from k8s cluster.
+    node-upgrade        upgrade kubernetes version in node
+    join-nodes          add multiple provisioned nodes k8s.
+    ssh                 Execute command in node via ssh.
+    test                execute tests
     inhibit_kured       Prevent kured to reboot nodes
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -v YAML_PATH, --vars YAML_PATH
-                        path for platform yaml file. Default is vars.yaml. eg:
-                        -v myconfig.yaml
-  -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
-                        The platform you're targeting. Defaults to openstack
-  -l {DEBUG,INFO,WARNING,ERROR}, --log-level {DEBUG,INFO,WARNING,ERROR}
-                        log level
 ```
 
 ### Provision command
@@ -425,16 +417,27 @@ optional arguments:
 ```
 ### Bootstrap
 
- ```
+```
 optional arguments:
   -h, --help            show this help message and exit
   -k KUBERNETES_VERSION, --kubernetes-version KUBERNETES_VERSION
                         kubernetes version
-  -c, --cloud-provider
-                        Use cloud provider integration for the platform
+  -c, --cloud-provider  Use cloud provider integration
   -t TIMEOUT, --timeout TIMEOUT
-                        timeout for waiting the master nodes to become ready (seconds)
+                        timeout for waiting a node to become ready (seconds)
 
+```
+
+### Deploy
+
+```
+optional arguments:
+  -h, --help            show this help message and exit
+  -k KUBERNETES_VERSION, --kubernetes-version KUBERNETES_VERSION
+                        kubernetes version
+  -c, --cloud-provider  Use cloud provider integration
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for waiting a node to become ready (seconds)
 ```
 
 ### Node commands
