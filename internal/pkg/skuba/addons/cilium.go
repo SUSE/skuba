@@ -141,6 +141,23 @@ spec:
     spec:
       serviceAccountName: cilium
       initContainers:
+      # TODO(mrostecki): Using /usr/lib/cni is not recommended anymore as
+      # every project (cri-o, Cilium, other CNI plugins) are moving away to
+      # /opt/cni/bin. The /usr/lib/cni dir is left there only to support old
+      # Cilium 1.5 + cri-o < 1.16.3 for backwards compatibility. As soon as
+      # cri-o < 1.16.3 disappears from CaaSP, /usr/lib/cni can be removed.
+      - name: install-cni-bin
+        image: {{.CiliumImage}}
+        command:
+          - /bin/sh
+          - "-c"
+          - "cp -f /usr/lib/cni/* /host/opt/cni/bin/"
+          - "cp -f /usr/lib/cni/* /host/usr/lib/cni/"
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin/
+        - name: host-usr-cni-bin
+          mountPath: /host/usr/lib/cni/
       - name: install-cni-conf
         image: {{.CiliumImage}}
         command:
@@ -150,15 +167,6 @@ spec:
         volumeMounts:
         - name: host-cni-conf
           mountPath: /host/etc/cni/net.d
-      - name: install-cni-bin
-        image: {{.CiliumImage}}
-        command:
-          - /bin/sh
-          - "-c"
-          - "cp -f /usr/lib/cni/* /host/opt/cni/bin/"
-        volumeMounts:
-        - name: host-cni-bin
-          mountPath: /host/opt/cni/bin/
       - name: clean-cilium-state
         image: {{.CiliumInitImage}}
         imagePullPolicy: IfNotPresent
@@ -282,6 +290,10 @@ spec:
             path: /var/run/crio/crio.sock
           # To install cilium cni plugin in the host
         - name: host-cni-bin
+          hostPath:
+            path: /opt/cni/bin
+          # To install cilium cni plugin in the host
+        - name: host-usr-cni-bin
           hostPath:
             path: /usr/lib/cni
           # To install cilium cni configuration in the host
