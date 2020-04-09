@@ -1,4 +1,3 @@
-import json
 import signal
 import time
 import yaml
@@ -54,22 +53,19 @@ def node_is_upgraded(kubectl, platform, role, nr):
     return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
 
 
-def check_pods_ready(kubectl, namespace=None, pods=[], statuses=['Running', 'Succeeded']):
-    
-    ns = f'{"--namespace="+namespace if namespace else ""}' 
-    kubectl_cmd = f'get pods {" ".join(pods)} {ns} -o json'
+def check_pods_ready(kubectl, namespace=None, node=None, pods=[], statuses=['Running', 'Succeeded']):
 
-    result = json.loads(kubectl.run_kubectl(kubectl_cmd))
-    # get pods can return a list of items or a single pod
-    pod_list =  []
-    if result.get('items'):
-        pod_list = result['items']
-    else:
-        pod_list.append(result)
-    for pod in pod_list:
-        pod_status = pod['status']['phase']
-        pod_name   = pod['metadata']['name']
-        assert pod_status in statuses, f'Pod {pod_name} status {pod_status} not in expected statuses: {", ".join(statuses)}'
+    ns = f'{"--namespace="+namespace if namespace else ""}'
+    node_selector = f'{"--field-selector spec.nodeName="+node if node else ""}'
+    cmd = (f'get pods {" ".join(pods)} {ns} {node_selector} '
+           f'-o jsonpath="{{ range .items[*]}}{{@.metadata.name}}:'
+           f'{{@.status.phase}};"')
+
+    result = kubectl.run_kubectl(cmd)
+    pod_list = result.split(";")
+    for name,status in [pod.split(":") for pod in pod_list if pod != ""]:
+        assert status in statuses, (f'Pod {name} status {status}'
+                                    f'not in expected statuses: {", ".join(statuses)}')
 
 def wait(func, *args, **kwargs):
 
