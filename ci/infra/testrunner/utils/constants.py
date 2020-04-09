@@ -29,6 +29,7 @@ class BaseConfig:
         obj.test = BaseConfig.Test()
         obj.log = BaseConfig.Log()
         obj.packages = BaseConfig.Packages()
+        obj.kubectl = BaseConfig.Kubectl()
 
         config_classes = (
             BaseConfig.Packages,
@@ -38,6 +39,7 @@ class BaseConfig:
             BaseConfig.Openstack,
             BaseConfig.Terraform,
             BaseConfig.Skuba,
+            BaseConfig.Kubectl,
             BaseConfig.VMware,
             BaseConfig.Libvirt
         )
@@ -86,6 +88,12 @@ class BaseConfig:
             self.binpath = None
             self.srcpath = None
             self.verbosity = 5
+
+    class Kubectl:
+        def __init__(self):
+            super().__init__()
+            self.binpath = "/usr/bin/kubectl"
+            self.kubeconfig = None
 
     class Test:
         def __init__(self):
@@ -167,6 +175,9 @@ class BaseConfig:
 
         if not conf.skuba.srcpath:
             conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
+
+        if not conf.kubectl.kubeconfig:
+            conf.kubectl.kubeconfig =  os.path.realpath(os.path.join(conf.workspace, "test-cluster", "admin.conf"))
 
         if not conf.terraform.tfdir:
             conf.terraform.tfdir = os.path.join(conf.skuba.srcpath, "ci/infra/")

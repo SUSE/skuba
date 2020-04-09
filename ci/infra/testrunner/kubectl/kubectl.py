@@ -1,6 +1,3 @@
-import platforms
-
-from skuba.skuba import Skuba
 from utils.utils import (Utils)
 from time import sleep
 
@@ -8,14 +5,12 @@ class Kubectl:
 
     def __init__(self, conf, platform):
         self.conf = conf
+        self.binpath = conf.kubectl.binpath
+        self.kubeconfig = conf.kubectl.kubeconfig
         self.utils = Utils(self.conf)
-        self.platform = platforms.get_platform(conf, platform)
-        self.skuba = Skuba(conf, platform)
 
     def run_kubectl(self, command, stdin=None):
-        kubeconfig = self.skuba.get_kubeconfig()
-
-        shell_cmd = "kubectl --kubeconfig={} {}".format(kubeconfig, command)
+        shell_cmd = f'{self.binpath} --kubeconfig={self.kubeconfig} {command}'
         try:
             return self.utils.runshellcommand(shell_cmd, stdin=stdin)
         except Exception as ex:

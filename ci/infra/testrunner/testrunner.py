@@ -14,6 +14,7 @@ from skuba import Skuba
 from kubectl import Kubectl
 from tests import TestDriver
 from utils import BaseConfig, Logger, Utils
+from checks import Checker
 
 __version__ = "0.0.3"
 
@@ -69,7 +70,7 @@ def get_logs(options):
 
 def join_node(options):
     Skuba(options.conf, options.platform).node_join(
-        role=options.role, nr=options.node)
+        role=options.role, nr=options.node, timeout=options.timeout)
 
 
 def join_nodes(options):
@@ -80,16 +81,18 @@ def join_nodes(options):
         timeout=options.timeout
     )
 
-
 def remove_node(options):
     Skuba(options.conf, options.platform).node_remove(
         role=options.role, nr=options.node)
-
 
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
         action=options.upgrade_action, role=options.role, nr=options.node)
 
+def node_check(options):
+    Checker(options.conf, options.platform).check_node(
+         role=options.role, node=options.node,
+         checks=options.checks, stage=options.stage)
 
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
@@ -178,9 +181,12 @@ def main():
                            help='role of the node to be added or deleted. eg: --role master')
     node_args.add_argument("-n", "--node", dest="node", type=int,
                            help='node to be added or deleted.  eg: -n 0')
+   # End of common parameters
 
     cmd_join_node = commands.add_parser("join-node", parents=[node_args],
                                         help="add node in k8s cluster with the given role.")
+    cmd_join_node.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the node to become ready (seconds)")
     cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
@@ -192,6 +198,14 @@ def main():
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
+
+    cmd_check_node = commands.add_parser("check-node", parents=[node_args],
+                                          help="check node health")
+    cmd_check_node.add_argument("-c", "--check", dest="checks", nargs='+',
+                                help="check to be executed (multiple checks can be specified")
+    cmd_check_node.add_argument("-s", "--stage", dest="stage", 
+                                help="only execute checks that apply to this stage")
+    cmd_check_node.set_defaults(func=node_check)
 
     # Start Join Nodes
     cmd_join_nodes = commands.add_parser("join-nodes",

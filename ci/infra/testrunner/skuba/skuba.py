@@ -3,6 +3,7 @@ import os
 import time
 
 import platforms
+from checks import Checker
 from utils.format import Format
 from utils.utils import (step, Utils)
 
@@ -18,6 +19,7 @@ class Skuba:
         self.platform = platforms.get_platform(conf, platform)
         self.cwd = "{}/test-cluster".format(self.conf.workspace)
         self.utils.setup_ssh()
+        self.checker = Checker(conf, platform)
 
     def _verify_skuba_bin_dependency(self):
         if not os.path.isfile(self.binpath):
@@ -54,7 +56,7 @@ class Skuba:
         self.cluster_bootstrap(kubernetes_version=kubernetes_version,
                                cloud_provider=cloud_provider,
                                timeout=timeout)
-        self.join_nodes()
+        self.join_nodes(timeout=timeout)
 
 
     @step
@@ -95,12 +97,11 @@ class Skuba:
                f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
-        if timeout:
-            self._wait_master_ready(0, timeout=timeout)
+        self.checker.check_node("master", 0, timeout=timeout)
 
 
     @step
-    def node_join(self, role="worker", nr=0):
+    def node_join(self, role="worker", nr=0, timeout=None):
         self._verify_bootstrap_dependency()
 
         ip_addrs = self.platform.get_nodes_ipaddrs(role)
@@ -110,95 +111,30 @@ class Skuba:
             raise ValueError("Node number cannot be negative")
 
         if nr >= len(ip_addrs):
-            raise Exception(Format.alert("Node {role}-{nr} is not deployed in "
-                                         "infrastructure".format(role=role, nr=nr)))
+            raise Exception(f'Node {role}-{nr} is not deployed in '
+                            'infrastructure')
 
         cmd = (f'node join --role {role} --user {self.conf.terraform.nodeuser} '
                f' --sudo --target {ip_addrs[nr]} {node_names[nr]}')
         try:
             self._run_skuba(cmd)
         except Exception as ex:
-            raise Exception("Error executing cmd {}") from ex
+            raise Exception(f'Error joining node {role}-{nr}') from ex
 
+        self.checker.check_node(role, nr, timeout=timeout)
 
-    def join_nodes(self, masters=None, workers=None, timeout=180):
+    def join_nodes(self, masters=None, workers=None, timeout=None):
         if masters is None:
             masters = self.platform.get_num_nodes("master")
         if workers is None:
             workers = self.platform.get_num_nodes("worker")
 
         for node in range(1, masters):
-            self.node_join("master", node)
-            self._wait_master_ready(node, timeout=timeout)
+            self.node_join("master", node, timeout=timeout)
 
         for node in range(0, workers):
-            self.node_join("worker", node)
+            self.node_join("worker", node, timeout=timeout)
 
-
-    def _wait_master_ready(self, node, timeout=180, backoff=20):
-        start = int(time.time())
-        self._wait_etcd_ready(node, timeout=timeout, backoff=backoff)
-        remaining = timeout-(int(time.time())-start)
-        self._wait_apiserver_ready(node, timeout=remaining, backoff=backoff)
-
-
-    def _wait_node_joined(self, role, node, timeout=60, backoff=10):
-        node_name = self.platform.get_nodes_names(role)[node]
-        deadline = int(time.time()) + timeout
-        while True:
-            last_error = None
-            try:
-                status = self.cluster_status()
-                if status.find(node_name) > -1:
-                    return
-            except Exception as ex:
-                last_error = ex
-
-            if int(time.time()) >= deadline:
-                raise Exception((f'Node {node_name} not shown ready after {timeout} seconds'
-                                 f'{". Last error:"+str(last_error) if last_error else ""}'))
-            time.sleep(backoff)
-
-
-    def _wait_apiserver_ready(self, node, timeout=60, backoff=10):
-        apiserver_healthz = 'curl -Ls --insecure https://localhost:6443/healthz'
-
-        try:
-            self._wait_condition("master", node, apiserver_healthz, 'ok', timeout=timeout, backoff=backoff)
-        except AssertionError as ex:
-            node_name = self.platform.get_nodes_names("master")[node]
-            raise Exception(f'Error waiting apiserver at {node_name} to become ready') from ex
-
-
-    def _wait_etcd_ready(self, node, timeout=60, backoff=10):
-        etcd_health_check = ('sudo curl -Ls --cacert /etc/kubernetes/pki/etcd/ca.crt '
-                             '--key /etc/kubernetes/pki/etcd/server.key '
-                             '--cert /etc/kubernetes/pki/etcd/server.crt '
-                             'https://localhost:2379/health')
-
-        try:
-           self._wait_condition("master", node, etcd_health_check, 'true', timeout=timeout, backoff=backoff)
-        except AssertionError as ex:
-            node_name = self.platform.get_nodes_names("master")[node]
-            raise Exception(f'Error waiting etcd at {node_name} to become ready') from ex
-
-
-    def _wait_condition(self, role, node, command, condition, timeout=60, backoff=10):
-
-        deadline = int(time.time()) + timeout
-        while True:
-            last_error = None
-            try:
-                result = self.platform.ssh_run(role, node, command)
-                if result.find(condition) > -1:
-                    return
-            except Exception as ex:
-                last_error = ex
-
-            if int(time.time()) >= deadline:
-                raise AssertionError((f'condition not satisfied after {timeout} seconds'
-                                      f'{". Last error:"+str(last_error) if last_error else ""}'))
-            time.sleep(backoff)
 
     @step
     def node_remove(self, role="worker", nr=0):
@@ -274,11 +210,6 @@ class Skuba:
         cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
         output = self.utils.runshellcommand(cmd)
         return output.count(role)
-
-    @step
-    def get_kubeconfig(self):
-        path = "{cwd}/test-cluster/admin.conf".format(cwd=self.conf.workspace)
-        return path
 
     def _run_skuba(self, cmd, cwd=None, verbosity=None, ignore_errors=False):
         """Running skuba command in cwd.

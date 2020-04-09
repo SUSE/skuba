@@ -22,7 +22,7 @@
   - [Provision](#provision-command)
   - [Node commands](#node-commands)
     - [Node Upgrade](#node-upgrade-command)
-  - [Ssh](#ssh-command)
+    - [Ssh](#ssh-command)
   - [Test](#test-command)
 - [Examples](#examples)
   - [Create K8s Cluster](#create-k8s-cluster)
@@ -182,6 +182,12 @@ skuba:
   srcpath: "/go/src/github.com/SUSE/skuba"
   verbosity: 5
 ```
+
+### Kubectl
+
+The kubectl section defines the configuration of the kubectl tool. 
+* binpath: path to the kubectl binary. Defaults to `/usr/bin/kubectl`
+* kubeconf: path to the kubeconfig file. defaults to `<workspace>/test-cluster/admin.conf`
 
 ### Log
 
@@ -395,6 +401,7 @@ positional arguments:
     status              check K8s cluster status
     cluster-upgrade-plan
                         Cluster upgrade plan
+    check-node          check node health
     join-node           add node in k8s cluster with the given role.
     remove-node         remove node from k8s cluster.
     node-upgrade        upgrade kubernetes version in node
@@ -440,16 +447,6 @@ optional arguments:
                         timeout for waiting a node to become ready (seconds)
 ```
 
-### Node commands
-
-```
-  -h, --help            show this help message and exit
-  -r {master,worker}, --role {master,worker}
-                        role of the node to be added or deleted. eg: --role
-                        master
-  -n NODE, --node NODE  node to be added or deleted. eg: -n 0
-
-```
 ### Join nodes
 
 ```
@@ -461,15 +458,10 @@ optional arguments:
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting the master nodes to become ready (seconds)
 ```
-#### Node Upgrade command
 
-```
-  -h, --help            show this help message and exit
-  -a {plan,apply}, --action {plan,apply}
-                        action: plan or apply upgrade
-```
+### Node commands
 
-### Ssh command
+Common parameters
 
 ```
   -h, --help            show this help message and exit
@@ -477,8 +469,46 @@ optional arguments:
                         role of the node to be added or deleted. eg: --role
                         master
   -n NODE, --node NODE  node to be added or deleted. eg: -n 0
+
+```
+#### Join Node
+
+Joins node to cluster with the given role
+
+```
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout for waiting a node to become ready (seconds)
+```
+
+#### Node Upgrade command
+
+Upgrades node
+
+```
+  -h, --help            show this help message and exit
+  -a {plan,apply}, --action {plan,apply}
+                        action: plan or apply upgrade
+```
+
+#### Ssh command
+
+Executes command in a node
+
+```
   -c ..., --cmd ...     remote command and its arguments. e.g ls -al. Must be
                         last argument for ssh command
+```
+
+#### Check command
+
+Checks the status of a node. If no check is specified, all checks that apply to
+the node's role are executed.
+
+```
+  -c CHECKS [CHECKS ...], --check CHECKS [CHECKS ...]
+                        check to be executed (multiple checks can be specified)
+  -s STAGE, -stage STAGE
+                        only execute checks that apply to this stage
 ```
 
 ### Test command
@@ -507,7 +537,6 @@ optional arguments:
                         level of detail in traceback for test failure
 
 ```
-
 
 ## Examples 
 
