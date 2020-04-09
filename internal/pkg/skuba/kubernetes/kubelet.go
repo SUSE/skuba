@@ -98,6 +98,7 @@ func disarmKubeletJobSpec(node *v1.Node, clusterVersion *version.Version) batchv
 	return batchv1.JobSpec{
 		Template: v1.PodTemplateSpec{
 			Spec: v1.PodSpec{
+				ServiceAccountName: "kube-disarm",
 				Containers: []v1.Container{
 					{
 						Name:  disarmKubeletJobName(node),
