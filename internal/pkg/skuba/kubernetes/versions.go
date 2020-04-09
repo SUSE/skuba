@@ -97,7 +97,7 @@ var (
 				Kured:   &AddonVersion{"1.3.0", 4},
 				Dex:     &AddonVersion{"2.16.0", 5},
 				Gangway: &AddonVersion{"3.1.0-rev4", 4},
-				PSP:     &AddonVersion{"", 2},
+				PSP:     &AddonVersion{"", 3},
 			},
 		},
 		"1.16.2": KubernetesVersion{
