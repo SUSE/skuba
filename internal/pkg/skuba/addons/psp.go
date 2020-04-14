@@ -119,6 +119,25 @@ subjects:
   name: kube-proxy
   namespace: kube-system
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-disarm
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: suse:caasp:psp:kube-disarm
+roleRef:
+  kind: ClusterRole
+  name: suse:caasp:psp:privileged
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: kube-disarm
+  namespace: kube-system
+---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
