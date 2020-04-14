@@ -122,22 +122,6 @@ pipeline {
             archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             junit('skuba/ci/infra/testrunner/*.xml')
         }
-        cleanup {
-            sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
-            dir("${WORKSPACE}@tmp") {
-                deleteDir()
-            }
-            dir("${WORKSPACE}@script") {
-                deleteDir()
-            }
-            dir("${WORKSPACE}@script@tmp") {
-                deleteDir()
-            }
-            dir("${WORKSPACE}") {
-                deleteDir()
-            }
-            sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
-        }
         unstable {
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
