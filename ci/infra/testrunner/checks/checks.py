@@ -73,6 +73,13 @@ class Checker:
 
 
     def check_node(self, role, node, checks=None, stage=None, timeout=180, backoff=20):
+
+        #Prevent defaults to be accidentally overridden by callers with None
+        if timeout is None:
+            timeout = 180
+        if backoff is None:
+            backoff = 20
+
         if checks:
             check_names = checks
             checks = []
