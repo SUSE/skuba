@@ -3,7 +3,7 @@ from time import sleep
 
 class Kubectl:
 
-    def __init__(self, conf, platform):
+    def __init__(self, conf):
         self.conf = conf
         self.binpath = conf.kubectl.binpath
         self.kubeconfig = conf.kubectl.kubeconfig

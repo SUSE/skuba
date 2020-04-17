@@ -81,8 +81,8 @@ def skuba(conf, target):
 
 
 @pytest.fixture
-def kubectl(conf, target):
-    return Kubectl(conf, target)
+def kubectl(conf):
+    return Kubectl(conf)
 
 
 @pytest.fixture
