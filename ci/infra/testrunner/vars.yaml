@@ -35,7 +35,7 @@ terraform:
     cpu: 2
 
 packages:
-  mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
+# mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
   additional_pkgs:
   - "ca-certificates-suse"
 
