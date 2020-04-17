@@ -58,6 +58,8 @@ data "template_file" "worker_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "worker" {
+  depends_on       = [vsphere_folder.folder]
+
   count            = var.workers
   name             = "${var.stack_name}-worker-${count.index}"
   num_cpus         = var.worker_cpus
@@ -68,6 +70,8 @@ resource "vsphere_virtual_machine" "worker" {
   resource_pool_id = data.vsphere_resource_pool.pool.id
   datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
+  folder           = var.setup_cloud_provider == true ? "${var.stack_name}-cluster" : null
+
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -84,6 +88,7 @@ resource "vsphere_virtual_machine" "worker" {
     "guestinfo.userdata"          = base64gzip(data.template_file.worker_cloud_init_userdata.rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
+  enable_disk_uuid = var.setup_cloud_provider == true ? true : false
 
   network_interface {
     network_id = data.vsphere_network.network.id

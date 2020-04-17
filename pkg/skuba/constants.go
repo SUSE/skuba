@@ -123,6 +123,31 @@ func OpenstackConfigRuntimeFile() string {
 	return path.Join(constants.KubernetesDir, "openstack.conf")
 }
 
+// VSphereDir returns the location for the vsphere cloud integrations
+func VSphereDir() string {
+	return path.Join(CloudDir(), "vsphere")
+}
+
+// VSphereReadmeFile returns the location for the vsphere cloud integrations README.md
+func VSphereReadmeFile() string {
+	return path.Join(VSphereDir(), "README.md")
+}
+
+// VSphereCloudConfFile returns the default location of the vsphere cloud integrations .conf file
+func VSphereCloudConfFile() string {
+	return path.Join(VSphereDir(), "vsphere.conf")
+}
+
+// VSphereCloudConfTemplateFile returns the default location of the vsphere cloud integrations .conf.template file
+func VSphereCloudConfTemplateFile() string {
+	return path.Join(VSphereDir(), "vsphere.conf.template")
+}
+
+// VSphereConfigRuntimeFile returns the location the vsphere.conf is stored on nodes in the cluster
+func VSphereConfigRuntimeFile() string {
+	return path.Join(constants.KubernetesDir, "vsphere.conf")
+}
+
 // AWSDir returns the location for the AWS cloud integrations
 func AWSDir() string {
 	return path.Join(CloudDir(), "aws")

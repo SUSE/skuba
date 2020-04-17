@@ -33,141 +33,146 @@ type TestFilesystemContext struct {
 	OldWorkDirectory string
 }
 
-func TestInitAWSCloudProviderEnabled(t *testing.T) {
+func TestInitCloudProvider(t *testing.T) {
+	tests := []struct {
+		name                string
+		cloudProvider       string
+		providerReadmeFiles []string
+	}{
+		{
+			name:          "init with no cloud provider",
+			cloudProvider: "",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+			},
+		},
+		{
+			name:          "init with aws cloud provider",
+			cloudProvider: "aws",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+				constants.AWSReadmeFile(),
+			},
+		},
+		{
+			name:          "init with opendstack cloud provider",
+			cloudProvider: "openstack",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+				constants.OpenstackReadmeFile(),
+			},
+		},
+		{
+			name:          "init with vsphere cloud provider",
+			cloudProvider: "vsphere",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+				constants.VSphereReadmeFile(),
+			},
+		},
+	}
+
 	clusterName := "testCluster"
-
-	initConf, err := NewInitConfiguration(
-		clusterName,
-		"aws",
-		"http://k8s.example.com",
-		"",
-		true)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	ctx, err := switchToTemporaryDirectory()
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	defer switchBackAndCleanFilesystem(ctx)
-
-	if err = Init(initConf); err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	expectedFiles := []string{
-		constants.CloudReadmeFile(),
-		constants.AWSReadmeFile(),
-	}
-	for _, file := range expectedFiles {
-		found, err := doesFileExist(ctx, clusterName, file)
-		if err != nil {
-			t.Errorf("Unexpected error while checking %s presence: %v",
-				file, err)
-		}
-		if !found {
-			t.Errorf("Expected %s to exist", file)
-		}
-	}
-
-	if err := checkInitConfig(ctx, clusterName, "kubeadm-init.conf", "aws"); err != nil {
-		t.Errorf("kubeadm-init.conf: %v", err)
-	}
-
+	controlPlane := "http://k8s.example.com"
+	k8sDesiredVersion := ""
+	strictCapDefaults := true
+	initConfig := "kubeadm-init.conf"
 	joinFiles := []string{
 		filepath.Join("kubeadm-join.conf.d", "master.conf.template"),
 		filepath.Join("kubeadm-join.conf.d", "worker.conf.template"),
 	}
-	for _, f := range joinFiles {
-		if err := checkJoinConfig(ctx, clusterName, f, "aws"); err != nil {
-			t.Errorf("Error while inspecting file %s: %v", f, err)
-		}
-	}
-}
+	for _, tt := range tests {
+		tt := tt // Parallel testing
+		t.Run(tt.name, func(t *testing.T) {
+			initConf, err := NewInitConfiguration(
+				clusterName,
+				tt.cloudProvider,
+				controlPlane,
+				k8sDesiredVersion,
+				strictCapDefaults)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
 
-func TestInitAWSCloudProviderDisabled(t *testing.T) {
-	clusterName := "testCluster"
+			ctx, err := switchToTemporaryDirectory()
+			if err != nil {
+				t.Errorf("unexpect error: %v", err)
+			}
+			defer switchBackAndCleanFilesystem(ctx)
 
-	initConf, err := NewInitConfiguration(
-		clusterName,
-		"",
-		"http://k8s.example.com",
-		"",
-		true)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
+			if err = Init(initConf); err != nil {
+				t.Errorf("unexpect error: %v", err)
+			}
 
-	ctx, err := switchToTemporaryDirectory()
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	defer switchBackAndCleanFilesystem(ctx)
+			switch tt.cloudProvider {
+			case "":
+				for _, file := range tt.providerReadmeFiles {
+					found, err := doesFileExist(ctx, clusterName, file)
+					if err != nil {
+						t.Errorf("unexpected error while checking %s presence: %v",
+							file, err)
+					}
+					if found {
+						t.Errorf("unexpected file %s found", file)
+					}
+				}
+			default:
+				for _, file := range tt.providerReadmeFiles {
+					found, err := doesFileExist(ctx, clusterName, file)
+					if err != nil {
+						t.Errorf("unexpected error while checking %s presence: %v",
+							file, err)
+					}
+					if !found {
+						t.Errorf("expected %s to exist", file)
+					}
+				}
+			}
 
-	if err = Init(initConf); err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
+			if err := checkInitConfig(ctx, clusterName, initConfig, tt.cloudProvider); err != nil {
+				t.Errorf("%s: %v", initConfig, err)
+			}
 
-	notExpectedFiles := []string{
-		constants.CloudReadmeFile(),
-		constants.AWSReadmeFile(),
-	}
-	for _, file := range notExpectedFiles {
-		found, err := doesFileExist(ctx, clusterName, file)
-		if err != nil {
-			t.Errorf("Unexpected error while checking %s presence: %v",
-				file, err)
-		}
-		if found {
-			t.Errorf("Unexpected file %s found", file)
-		}
-	}
-
-	if err := checkInitConfig(ctx, clusterName, "kubeadm-init.conf", ""); err != nil {
-		t.Errorf("kubeadm-init.conf: %v", err)
-	}
-
-	joinFiles := []string{
-		filepath.Join("kubeadm-join.conf.d", "master.conf.template"),
-		filepath.Join("kubeadm-join.conf.d", "worker.conf.template"),
-	}
-	for _, f := range joinFiles {
-		if err := checkJoinConfig(ctx, clusterName, f, ""); err != nil {
-			t.Errorf("Error while inspecting file %s: %v", f, err)
-		}
+			for _, f := range joinFiles {
+				if err := checkJoinConfig(ctx, clusterName, f, tt.cloudProvider); err != nil {
+					t.Errorf("error while inspecting file %s: %v", f, err)
+				}
+			}
+		})
 	}
 }
 
 // check the init configuration hold inside of `file`. Path to file is built starting
 // from the test `ctx` and the `clusterName`, plus the ending name of the `file`.
 // `cloud` holds the name of the CPI - leave empty if CPI is disabled.
-func checkInitConfig(ctx TestFilesystemContext, clusterName, file, cloud string) error {
-	expected := len(cloud) > 0
+func checkInitConfig(ctx TestFilesystemContext, clusterName, file, provider string) error {
+	expected := len(provider) > 0
 	kubeadmInitConfig, err := node.LoadInitConfigurationFromFile(
 		filepath.Join(ctx.WorkDirectory, clusterName, file))
 	if err != nil {
-		return fmt.Errorf("Unexpected error: %v", err)
+		return fmt.Errorf("unexpected error: %v", err)
 	}
 
 	value, found := kubeadmInitConfig.NodeRegistration.KubeletExtraArgs["cloud-provider"]
-	if err := checkMapEntry("aws", value, expected, found); err != nil {
-		return fmt.Errorf("nodeRegistration - %v", err)
+	if err := checkMapEntry(provider, value, expected, found); err != nil {
+		return fmt.Errorf("nodeRegistration  - %v", err)
 	}
 
 	value, found = kubeadmInitConfig.ClusterConfiguration.APIServer.ExtraArgs["cloud-provider"]
-	if err := checkMapEntry("aws", value, expected, found); err != nil {
-		return fmt.Errorf("APIServer extraArgs - %v", err)
+	if err := checkMapEntry(provider, value, expected, found); err != nil {
+		return fmt.Errorf("apiServer.extraArgs - %v", err)
 	}
 
 	value, found = kubeadmInitConfig.ClusterConfiguration.ControllerManager.ExtraArgs["cloud-provider"]
-	if err := checkMapEntry("aws", value, expected, found); err != nil {
-		return fmt.Errorf("ControllerManager extraArgs - %v", err)
+	if err := checkMapEntry(provider, value, expected, found); err != nil {
+		return fmt.Errorf("controllerManager.extraArgs - %v", err)
 	}
 
-	value, found = kubeadmInitConfig.ClusterConfiguration.ControllerManager.ExtraArgs["allocate-node-cidrs"]
-	if err := checkMapEntry("false", value, expected, found); err != nil {
-		return fmt.Errorf("ControllerManager extraArgs - %v", err)
+	if provider == "aws" {
+		value, found = kubeadmInitConfig.ClusterConfiguration.ControllerManager.ExtraArgs["allocate-node-cidrs"]
+		if err := checkMapEntry("false", value, expected, found); err != nil {
+			return fmt.Errorf("controllerManager.extraArgs - %v", err)
+		}
 	}
 
 	return nil
@@ -176,8 +181,8 @@ func checkInitConfig(ctx TestFilesystemContext, clusterName, file, cloud string)
 // check the join configuration hold inside of `file`. Path to file is built starting
 // from the test `ctx` and the `clusterName`, plus the ending name of the `file`.
 // `cloud` holds the name of the CPI - leave empty if CPI is disabled.
-func checkJoinConfig(ctx TestFilesystemContext, clusterName, file, cloud string) error {
-	expected := cloud != ""
+func checkJoinConfig(ctx TestFilesystemContext, clusterName, file, provider string) error {
+	expected := provider != ""
 	kubeadmJoinConfig, err := node.LoadJoinConfigurationFromFile(
 		filepath.Join(ctx.WorkDirectory, clusterName, file))
 	if err != nil {
@@ -185,7 +190,7 @@ func checkJoinConfig(ctx TestFilesystemContext, clusterName, file, cloud string)
 	}
 
 	value, found := kubeadmJoinConfig.NodeRegistration.KubeletExtraArgs["cloud-provider"]
-	return checkMapEntry("aws", value, expected, found)
+	return checkMapEntry(provider, value, expected, found)
 }
 
 // Compares the `value` found inside of a map against its `expectedValue`
