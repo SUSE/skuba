@@ -26,7 +26,6 @@ import (
 )
 
 func setContainerImagesWithClusterVersion(initConfiguration *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
-	initConfiguration.UseHyperKubeImage = true
 	initConfiguration.ImageRepository = skuba.ImageRepository
 	initConfiguration.KubernetesVersion = kubernetes.ComponentVersionForClusterVersion(kubernetes.Hyperkube, clusterVersion)
 	initConfiguration.Etcd.Local = &kubeadmapi.LocalEtcd{
