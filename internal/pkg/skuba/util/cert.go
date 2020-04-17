@@ -94,6 +94,7 @@ func CreateOrUpdateCertToSecret(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      secretName,
 			Namespace: metav1.NamespaceSystem,
+			Labels:    map[string]string{"caasp.suse.com/skuba-addon": "true"},
 		},
 		Type: v1.SecretTypeTLS,
 		Data: map[string][]byte{
