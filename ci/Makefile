@@ -37,6 +37,10 @@ join_nodes:
 deploy:
 	${TEST_RUNNER} --platform ${PLATFORM} deploy
 
+.PHONY: check_cluster
+check_cluster:
+	${TEST_RUNNER} --platform ${PLATFORM} check-cluster -s joined
+
 .PHONY: cleanup
 cleanup:
 	${TEST_RUNNER} --platform ${PLATFORM} cleanup

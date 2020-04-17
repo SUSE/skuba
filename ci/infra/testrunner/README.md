@@ -459,6 +459,18 @@ optional arguments:
                         timeout for waiting the master nodes to become ready (seconds)
 ```
 
+### Check cluster 
+
+Checks the status of the cluster. If no check is specified, all checks that apply to
+the stage are executed.
+
+```
+  -c CHECKS [CHECKS ...], --check CHECKS [CHECKS ...]
+                        check to be executed (multiple checks can be specified)
+  -s STAGE, -stage STAGE
+                        only execute checks that apply to this stage
+```
+
 ### Node commands
 
 Common parameters

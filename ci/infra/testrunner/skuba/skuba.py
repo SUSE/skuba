@@ -97,7 +97,7 @@ class Skuba:
                f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
-        self.checker.check_node("master", 0, timeout=timeout)
+        self.checker.check_node("master", 0, stage="joined", timeout=timeout)
 
 
     @step
@@ -121,7 +121,7 @@ class Skuba:
         except Exception as ex:
             raise Exception(f'Error joining node {role}-{nr}') from ex
 
-        self.checker.check_node(role, nr, timeout=timeout)
+        self.checker.check_node(role, nr, stage="joined", timeout=timeout)
 
     def join_nodes(self, masters=None, workers=None, timeout=None):
         if masters is None:
