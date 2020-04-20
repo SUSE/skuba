@@ -163,13 +163,13 @@ def check_node_ready(conf, platform, role, node):
     node_name = platform.get_nodes_names(role)[node]
     cmd = ("get nodes {} -o jsonpath='{{range @.status.conditions[*]}}"
            "{{@.type}}={{@.status}};{{end}}'").format(node_name)
-    kubectl = Kubectl(conf, platform)
+    kubectl = Kubectl(conf)
     return kubectl.run_kubectl(cmd).find("Ready=True") != -1
 
 
 @check(description="check system pods ready", scope="cluster", stages=["joined"])
 def check_system_pods_ready(conf, platform):
-    kubectl = Kubectl(conf, platform)
+    kubectl = Kubectl(conf)
     return check_pods_ready(kubectl, namespace="kube-system")
 
 

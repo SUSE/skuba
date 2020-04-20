@@ -111,7 +111,7 @@ def ssh(options):
 
 
 def inhibit_kured(options):
-    Kubectl(options.conf, options.platform).inhibit_kured()
+    Kubectl(options.conf).inhibit_kured()
 
 
 def main():
