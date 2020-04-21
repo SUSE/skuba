@@ -21,6 +21,11 @@ variable "vsphere_network" {
 variable "vsphere_resource_pool" {
 }
 
+variable "vsphere_hardware_version" {
+  default     = null
+  description = "Hardware version of the virtual machine."
+}
+
 variable "authorized_keys" {
   type        = list(string)
   default     = []

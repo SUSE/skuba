@@ -142,6 +142,8 @@ resource "vsphere_virtual_machine" "lb" {
     template_uuid = data.vsphere_virtual_machine.template.id
   }
 
+  hardware_version = var.vsphere_hardware_version
+
   disk {
     label = "disk0"
     size  = var.lb_disk_size

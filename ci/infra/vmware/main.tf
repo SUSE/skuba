@@ -1,4 +1,5 @@
 provider "vsphere" {
+  version = "~> 1.17"
 }
 
 data "vsphere_resource_pool" "pool" {
