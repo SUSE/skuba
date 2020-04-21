@@ -64,9 +64,9 @@ func (si StaticVersionInquirer) NodeVersionInfoForClusterVersion(node *v1.Node, 
 		KubeletVersion:          version.MustParseSemantic(ComponentVersionForClusterVersion(Kubelet, clusterVersion)),
 	}
 	if IsControlPlane(node) {
-		res.APIServerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(Hyperkube, clusterVersion))
-		res.ControllerManagerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(Hyperkube, clusterVersion))
-		res.SchedulerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(Hyperkube, clusterVersion))
+		res.APIServerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(APIServer, clusterVersion))
+		res.ControllerManagerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(ControllerManager, clusterVersion))
+		res.SchedulerVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(Scheduler, clusterVersion))
 		res.EtcdVersion = version.MustParseSemantic(ComponentVersionForClusterVersion(Etcd, clusterVersion))
 	}
 	return res

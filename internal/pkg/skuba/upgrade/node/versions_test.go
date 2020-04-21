@@ -47,9 +47,9 @@ func (ti TestVersionInquirer) NodeVersionInfoForClusterVersion(node *corev1.Node
 		KubeletVersion:          version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Kubelet, clusterVersion, ti.AvailableVersions)),
 	}
 	if kubernetes.IsControlPlane(node) {
-		res.APIServerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Hyperkube, clusterVersion, ti.AvailableVersions))
-		res.ControllerManagerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Hyperkube, clusterVersion, ti.AvailableVersions))
-		res.SchedulerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Hyperkube, clusterVersion, ti.AvailableVersions))
+		res.APIServerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.APIServer, clusterVersion, ti.AvailableVersions))
+		res.ControllerManagerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.ControllerManager, clusterVersion, ti.AvailableVersions))
+		res.SchedulerVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Scheduler, clusterVersion, ti.AvailableVersions))
 		res.EtcdVersion = version.MustParseSemantic(kubernetes.ComponentVersionWithAvailableVersions(kubernetes.Etcd, clusterVersion, ti.AvailableVersions))
 	}
 	return res
@@ -219,11 +219,14 @@ func versionInquirer(versions ...string) kubernetes.VersionInquirer {
 				ContainerRuntimeVersion: version,
 			},
 			ComponentContainerVersion: kubernetes.ComponentContainerVersion{
-				kubernetes.Hyperkube: &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
-				kubernetes.Etcd:      &kubernetes.ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
-				kubernetes.CoreDNS:   &kubernetes.ContainerImageTag{Name: "coredns", Tag: "1.2.6"},
-				kubernetes.Pause:     &kubernetes.ContainerImageTag{Name: "pause", Tag: "3.1"},
-				kubernetes.Tooling:   &kubernetes.ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+				kubernetes.APIServer:         &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
+				kubernetes.ControllerManager: &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
+				kubernetes.Scheduler:         &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
+				kubernetes.Proxy:             &kubernetes.ContainerImageTag{Name: "hyperkube", Tag: fmt.Sprintf("v%s", version)},
+				kubernetes.Etcd:              &kubernetes.ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
+				kubernetes.CoreDNS:           &kubernetes.ContainerImageTag{Name: "coredns", Tag: "1.2.6"},
+				kubernetes.Pause:             &kubernetes.ContainerImageTag{Name: "pause", Tag: "3.1"},
+				kubernetes.Tooling:           &kubernetes.ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: kubernetes.AddonsVersion{
 				kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},

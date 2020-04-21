@@ -65,7 +65,7 @@ func getComponentTestData(component Component, version *version.Version, info *K
 	case ContainerRuntime:
 		name = fmt.Sprintf("get %s version when cluster version is %s", component, version)
 		expectVersion = info.ComponentHostVersion.ContainerRuntimeVersion
-	case Hyperkube, Etcd, CoreDNS, Pause, Tooling:
+	case APIServer, ControllerManager, Scheduler, Proxy, Etcd, CoreDNS, Pause, Tooling:
 		name = fmt.Sprintf("get %s image when cluster version is %s", component, version)
 		imageName = info.ComponentContainerVersion[component].Name
 		expectVersion = info.ComponentContainerVersion[component].Tag
@@ -159,7 +159,7 @@ func TestAllComponentContainerImagesForClusterVersion(t *testing.T) {
 			sort.Slice(actual, func(i int, j int) bool {
 				return actual[i] < actual[j]
 			})
-			expect := []Component{Hyperkube, Etcd, CoreDNS, Pause, Tooling}
+			expect := []Component{APIServer, Scheduler, ControllerManager, Proxy, Etcd, CoreDNS, Pause, Tooling}
 			sort.Slice(expect, func(i int, j int) bool {
 				return expect[i] < expect[j]
 			})
