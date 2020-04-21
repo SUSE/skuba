@@ -158,7 +158,10 @@ resource "vsphere_virtual_machine" "lb" {
     network_id = data.vsphere_network.network.id
   }
 
-  depends_on = [vsphere_virtual_machine.master]
+  depends_on = [
+    vsphere_folder.folder,
+    vsphere_virtual_machine.master,
+  ]
 }
 
 resource "null_resource" "lb_wait_cloudinit" {
