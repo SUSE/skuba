@@ -26,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+	kubectldrain "k8s.io/kubectl/pkg/drain"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	kubectldrain "k8s.io/kubernetes/pkg/kubectl/drain"
 )
 
 // GetAllNodes returns the list of nodes

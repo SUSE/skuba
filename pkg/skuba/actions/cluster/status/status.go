@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	kubectlget "k8s.io/kubernetes/pkg/kubectl/cmd/get"
+	kubectlget "k8s.io/kubectl/pkg/cmd/get"
 )
 
 // Status prints the status of the cluster on the standard output by reading the
