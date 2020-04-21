@@ -1,1 +1,2 @@
+  - sed "/^#[ ]*download.max_silent_tries/ s/^#[ ]*//"  -i /etc/zypp/zypp.conf 
   - [ zypper, -n, install, ${packages} ]
