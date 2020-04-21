@@ -86,7 +86,8 @@ resource "libvirt_domain" "worker" {
   }
 
   network_interface {
-    network_id     = libvirt_network.network.id
+    network_name   = var.network_name
+    network_id     = var.network_name == "" ? libvirt_network.network.0.id : null
     hostname       = "${var.stack_name}-worker-${count.index}"
     wait_for_lease = true
   }
