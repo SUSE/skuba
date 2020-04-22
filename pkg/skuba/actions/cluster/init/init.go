@@ -379,7 +379,10 @@ func updateJoinConfigurationWithCloudIntegration(joinCfg *kubeadmapi.JoinConfigu
 	}
 	joinCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
 
-	if initConfiguration.CloudProvider == "openstack" {
+	switch initConfiguration.CloudProvider {
+	case "openstack":
 		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+	case "vsphere":
+		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.VSphereConfigRuntimeFile()
 	}
 }
