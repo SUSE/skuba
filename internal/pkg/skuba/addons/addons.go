@@ -168,6 +168,7 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 				klog.V(1).Infof("%q addon correctly applied", addonName)
 			} else {
 				klog.Errorf("failed to apply %q addon (%v)", addonName, err)
+				return err
 			}
 		} else {
 			klog.V(1).Infof("skipping %q addon apply", addonName)
