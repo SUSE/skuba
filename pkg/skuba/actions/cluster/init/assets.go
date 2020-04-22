@@ -121,9 +121,10 @@ You can find a template named vsphere.conf.template inside this directory.
 
 ~~~
 [Global]
+user = "<VC_USERNAME>"
+password = "<VC_PASSWORD>"
+port = "443"
 insecure-flag = "1"
-user = "<VC_ADMIN_USERNAME>"
-password = "<VC_ADMIN_PASSWORD>"
 [VirtualCenter <VC_IP_OR_FQDN>]
 datacenters = "<VC_DATACENTERS>"
 [Workspace]
@@ -134,6 +135,8 @@ resourcepool-path = "<VC_RESOURCEPOOL_PATH>"
 folder = "<VC_VM_FOLDER>"
 [Disk]
 scsicontrollertype = pvscsi
+[Network]
+public-network = "VM Network"
 ~~~
 
 If this file exists the cloud integration for ~vSphere~ will be automatically
@@ -147,9 +150,10 @@ as these names will be used by services to reconcile node metadata.
 `, "~", "`")
 
 	vSphereCloudConfTemplate = `[Global]
-insecure-flag = "1"
 user = "<VC_USERNAME>"
 password = "<VC_PASSWORD>"
+port = "443"
+insecure-flag = "1"
 [VirtualCenter <VC_IP_OR_FQDN>]
 datacenters = "<VC_DATACENTERS>"
 [Workspace]
@@ -160,5 +164,7 @@ resourcepool-path = "<VC_RESOURCEPOOL_PATH>"
 folder = "<VC_VM_FOLDER>"
 [Disk]
 scsicontrollertype = pvscsi
+[Network]
+public-network = "VM Network"
 `
 )
