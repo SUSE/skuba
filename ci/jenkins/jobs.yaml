@@ -30,7 +30,6 @@
     repo-owner: SUSE
     repo-credentials: github-token
     platform:
-        - openstack
         - vmware
     test:
         - 'test_node_reboot'
