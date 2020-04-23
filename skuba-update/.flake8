@@ -1,0 +1,9 @@
+[flake8]
+# line length is intentionally set to 80 here because:
+# 1) we can use Bugbear.  See for example what black is doing:
+# https://github.com/psf/black/blob/master/README.md#line-length
+# 2) That's very pedantic.
+max-line-length = 80
+select = C,E,F,W,B,B950
+ignore = E203, E501, W503
+
