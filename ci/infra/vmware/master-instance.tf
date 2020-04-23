@@ -70,7 +70,7 @@ resource "vsphere_virtual_machine" "master" {
   resource_pool_id = data.vsphere_resource_pool.pool.id
   datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.setup_cloud_provider == true ? "${var.stack_name}-cluster" : null
+  folder           = var.setup_cloud_provider == true ? vsphere_folder.folder[0].path : null
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
