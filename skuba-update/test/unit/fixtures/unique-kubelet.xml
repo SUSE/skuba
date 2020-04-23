@@ -1,0 +1,56 @@
+<?xml version='1.0'?>
+<stream>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15_update&apos; metadata" done="1"/>
+<progress id="13" name="Building repository &apos;sle15_update&apos; cache"/>
+<progress id="13" name="Building repository &apos;sle15_update&apos; cache" value="0"/>
+<progress id="13" name="Building repository &apos;sle15_update&apos; cache" value="100"/>
+<progress id="13" name="Building repository &apos;sle15_update&apos; cache" value="100"/>
+<progress id="13" name="Building repository &apos;sle15_update&apos; cache" done="1"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata" value="0"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata"/>
+<progress id="raw-refresh" name="Retrieving repository &apos;sle15sp1_update&apos; metadata" done="1"/>
+<progress id="19" name="Building repository &apos;sle15sp1_update&apos; cache"/>
+<progress id="19" name="Building repository &apos;sle15sp1_update&apos; cache" value="0"/>
+<progress id="19" name="Building repository &apos;sle15sp1_update&apos; cache" value="100"/>
+<progress id="19" name="Building repository &apos;sle15sp1_update&apos; cache" value="100"/>
+<progress id="19" name="Building repository &apos;sle15sp1_update&apos; cache" done="1"/>
+<message type="info">Loading repository data...</message>
+<message type="info">Reading installed packages...</message>
+
+<search-result version="0.0">
+<solvable-list>
+<solvable status="installed" name="kubernetes-kubelet" kind="package" edition="1.16.2-1.25" arch="x86_64" repository="caasp_40_devel_sle15sp1"/>
+</solvable-list>
+</search-result>
+</stream>

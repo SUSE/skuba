@@ -18,7 +18,10 @@
 import json
 from collections import namedtuple
 
+from pkg_resources import parse_version
+import pytest
 from mock import patch, call, mock_open, Mock, ANY
+
 from skuba_update.skuba_update import (
     main,
     update,
@@ -41,6 +44,7 @@ from skuba_update.skuba_update import (
     KUBE_DISRUPTIVE_UPDATES_KEY,
     KUBE_CAASP_RELEASE_VERSION_KEY
 )
+import skuba_update.skuba_update as sup
 
 
 @patch('subprocess.Popen')
@@ -72,13 +76,11 @@ def test_main_wrong_version(mock_subprocess, mock_args):
     mock_process.communicate.return_value = (b'zypper 1.13.0', b'stderr')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    exception = False
-    try:
+
+    with pytest.raises(sup.ZypperVersionTooLow) as exc_info:
         main()
-    except Exception as e:
-        exception = True
-        assert 'higher is required' in str(e)
-    assert exception
+    assert "higher is required" in str(
+        exc_info.value)
 
 
 @patch('argparse.ArgumentParser.parse_args')
@@ -88,13 +90,11 @@ def test_main_bad_format_version(mock_subprocess, mock_args):
     mock_process.communicate.return_value = (b'zypper', b'stderr')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    exception = False
-    try:
+
+    with pytest.raises(sup.UnparseableZypperVersion) as exc_info:
         main()
-    except Exception as e:
-        exception = True
-        assert 'Could not parse' in str(e)
-    assert exception
+    assert "Could not parse" in str(
+        exc_info.value)
 
 
 @patch('argparse.ArgumentParser.parse_args')
@@ -104,13 +104,46 @@ def test_main_no_root(mock_subprocess, mock_args):
     mock_process.communicate.return_value = (b'zypper 1.14.15', b'stderr')
     mock_process.returncode = 0
     mock_subprocess.return_value = mock_process
-    exception = False
-    try:
+
+    with pytest.raises(sup.PrivilegesTooLow) as exc_info:
         main()
-    except Exception as e:
-        exception = True
-        assert 'root privileges' in str(e)
-    assert exception
+    assert "root privileges" in str(
+        exc_info.value)
+
+
+@patch('argparse.ArgumentParser.parse_args')
+@patch('os.geteuid')
+@patch('subprocess.Popen')
+def test_main_no_kubelet_installed(mock_subprocess, mock_geteuid, mock_args):
+    """
+    Tests whether zypper search of kubelet fails or
+    doesn't return expected ouput
+    """
+
+    args = Mock()
+    args.annotate_only = False
+    mock_args.return_value = args
+
+    mock_geteuid.return_value = 0
+
+    subprocess_returns = [
+        (b'<xml', b''),
+        (b'refreshed\n', b''),
+        (b'zypper 1.14.15', b'')
+    ]
+
+    def mock_communicate():
+        if len(subprocess_returns) > 1:
+            return subprocess_returns.pop()
+        else:
+            return subprocess_returns[0]
+
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    with pytest.raises(sup.ZypperSearchException):
+        main()
 
 
 @patch('skuba_update.skuba_update.node_name_from_machine_id')
@@ -124,8 +157,13 @@ def test_main(
     mock_subprocess, mock_geteuid, mock_args,
     mock_annotate, mock_annotate_version, mock_name
 ):
+    with open('fixtures/uptodate-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet = fd.read()
+
     return_values = [
         (b'some_service1\nsome_service2', b''),
+        (zyp_search_kubelet, b''),
+        (b'refresh\n', b''),
         (b'zypper 1.14.15', b'')
     ]
 
@@ -150,9 +188,92 @@ def test_main(
             ['zypper', '--userdata', 'skuba-update', 'ref', '-s'],
             stdout=None, stderr=None, env=ANY
         ),
+        call(
+            ['zypper', '--userdata', 'skuba-update', "--non-interactive",
+                "--xmlout", "search", "-s", "kubernetes-kubelet"],
+            stdout=-1, stderr=-1, env=ANY
+        ),
         call([
             'zypper', '--userdata', 'skuba-update', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
+        ], stdout=None, stderr=None, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'ps', '-sss'],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call(
+            ['systemctl', 'restart', 'some_service1'],
+            stdout=None, stderr=None, env=ANY
+        ),
+        call(
+            ['systemctl', 'restart', 'some_service2'],
+            stdout=None, stderr=None, env=ANY
+        ),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'needs-rebooting'],
+            stdout=None, stderr=None, env=ANY
+        ),
+    ]
+
+
+@patch('skuba_update.skuba_update.node_name_from_machine_id')
+@patch('skuba_update.skuba_update.annotate_caasp_release_version')
+@patch('skuba_update.skuba_update.annotate_updates_available')
+@patch('argparse.ArgumentParser.parse_args')
+@patch('os.environ.get', new={}.get, spec_set=True)
+@patch('os.geteuid')
+@patch('subprocess.Popen')
+def test_main_unmaintained(
+    mock_subprocess, mock_geteuid, mock_args,
+    mock_annotate, mock_annotate_version, mock_name
+):
+    with open('fixtures/outdated-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet = fd.read()
+
+    return_values = [
+        (b'some_service1\nsome_service2', b''),
+        (zyp_search_kubelet, b''),
+        (b'refresh\n', b''),
+        (b'zypper 1.14.15', b'')
+    ]
+
+    def mock_communicate():
+        if len(return_values) > 1:
+            return return_values.pop()
+        else:
+            return return_values[0]
+
+    args = Mock()
+    args.annotate_only = False
+    mock_args.return_value = args
+    mock_geteuid.return_value = 0
+    mock_process = Mock()
+    mock_process.communicate.side_effect = mock_communicate
+    mock_process.returncode = 0
+    mock_subprocess.return_value = mock_process
+    main()
+    assert mock_subprocess.call_args_list == [
+        call(['zypper', '--version'], stdout=-1, stderr=-1, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', 'ref', '-s'],
+            stdout=None, stderr=None, env=ANY
+        ),
+        call(
+            ['zypper', '--userdata', 'skuba-update', "--non-interactive",
+                "--xmlout", "search", "-s", "kubernetes-kubelet"],
+            stdout=-1, stderr=-1, env=ANY
+        ),
+        call([
+            'zypper', '--userdata', 'skuba-update',
+            'modifyrepo', '--disable', 'caasp_40_devel_sle15sp1'
+        ], stdout=None, stderr=None, env=ANY),
+        call([
+            'zypper', '--userdata', 'skuba-update', '--non-interactive',
+            '--non-interactive-include-reboot-patches', 'patch'
+        ], stdout=None, stderr=None, env=ANY),
+        call([
+            'zypper', '--userdata', 'skuba-update',
+            'modifyrepo', '--enable', 'caasp_40_devel_sle15sp1'
         ], stdout=None, stderr=None, env=ANY),
         call(
             ['zypper', '--userdata', 'skuba-update', 'ps', '-sss'],
@@ -235,7 +356,15 @@ def test_main_annotate_only(
 def test_main_zypper_returns_100(
         mock_subprocess, mock_geteuid, mock_args, mock_annotate, mock_name
 ):
-    return_values = [(b'', b''), (b'zypper 1.14.15', b'')]
+    with open('fixtures/uptodate-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet = fd.read()
+
+    return_values = [
+        (b'', b''),
+        (zyp_search_kubelet, b''),
+        (b'refresh\n', b''),
+        (b'zypper 1.14.15', b'')
+    ]
 
     def mock_communicate():
         if len(return_values) > 1:
@@ -257,6 +386,11 @@ def test_main_zypper_returns_100(
         call([
             'zypper', '--userdata', 'skuba-update', 'ref', '-s'
         ], stdout=None, stderr=None, env=ANY),
+        call(
+            ['zypper', '--userdata', 'skuba-update', "--non-interactive",
+                "--xmlout", "search", "-s", "kubernetes-kubelet"],
+            stdout=-1, stderr=-1, env=ANY
+        ),
         call([
             'zypper', '--userdata', 'skuba-update', '--non-interactive',
             '--non-interactive-include-reboot-patches', 'patch'
@@ -650,3 +784,179 @@ def test_is_reboot_needed_falsey(mock_subprocess):
 
 def test_get_update_list_bad_xml():
     assert get_update_list('<xml') is None
+
+
+@patch('subprocess.Popen')
+def test_kubeletpkgdetails_badxml(mock_subprocess):
+
+    mock_process = Mock()
+    attrs = {'communicate.return_value': (b"<xml", b""), 'returncode': 0}
+    mock_process.configure_mock(**attrs)
+    mock_subprocess.return_value = mock_process
+
+    assert sup.get_kubelet_packages_details() is None
+
+
+@patch('subprocess.Popen')
+def test_kubeletpkgdetails_nopkgmatch(mock_subprocess):
+    no_pkgmatch_xml = (
+        b"<?xml version='1.0'?>"
+        b"<stream>"
+        b'<message type="info">Loading repository data...</message>'
+        b'<message type="info">Reading installed packages...</message>'
+        b'<message type="info">No matching items found.</message>'
+        b"</stream>"
+    )
+
+    mock_process = Mock()
+    attrs = {'communicate.return_value': (
+        no_pkgmatch_xml, b""), 'returncode': 0}
+    mock_process.configure_mock(**attrs)
+    mock_subprocess.return_value = mock_process
+
+    assert sup.get_kubelet_packages_details() is None
+
+
+def test_parsekubeletpkglist_nokubeletpkg():
+    with pytest.raises(sup.ZypperSearchException) as excinfo:
+        sup.parse_kubelet_pkglist(None)
+    assert "Unparseable package list" in str(excinfo.value)
+
+
+def test_parsekubeletpkglist_kubelet_notinstalled():
+    with open('fixtures/notinstalled-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet_xmldata = fd.read()
+
+    with pytest.raises(sup.ZypperSearchException) as excinfo:
+        sup.parse_kubelet_pkglist(
+            sup.parse_zyppersearch_xml(
+                zyp_search_kubelet_xmldata
+            )
+        )
+    assert "not installed" in str(excinfo.value)
+
+
+def test_parsekubeletpkglist_uptodate_kubelet():
+    """
+    Tests if the kubelet installed is up to date
+    returns the right structure
+    """
+    with open('fixtures/uptodate-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet_xmldata = fd.read()
+
+    expected = dict()
+    expected['repos_containing_upgrades'] = set()
+    expected['latest'] = parse_version('1.18')
+    expected['installed'] = parse_version('1.18')
+
+    assert expected == sup.parse_kubelet_pkglist(
+        sup.parse_zyppersearch_xml(
+            zyp_search_kubelet_xmldata
+        )
+    )
+
+
+def test_parsekubeletpkglist_outdated_kubelet():
+    """
+    Tests if the kubelet installed is not the latest
+    returns the right structure
+    """
+    with open('fixtures/outdated-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet_xmldata = fd.read()
+
+    expected = dict()
+    expected['repos_containing_upgrades'] = set()
+    expected['latest'] = parse_version('1.18')
+    expected['installed'] = parse_version('1.16')
+    expected['repos_containing_upgrades'].add("caasp_40_devel_sle15sp1")
+
+    assert expected == sup.parse_kubelet_pkglist(
+        sup.parse_zyppersearch_xml(
+            zyp_search_kubelet_xmldata
+        )
+    )
+
+
+def test_parsekubeletpkglist_justonepkg():
+    """
+    Test if everything works fine with a unique package
+    """
+    with open('fixtures/unique-kubelet.xml', 'rb') as fd:
+        zyp_search_kubelet_xmldata = fd.read()
+
+    expected = dict()
+    expected['repos_containing_upgrades'] = set()
+    expected['latest'] = parse_version('1.16')
+    expected['installed'] = parse_version('1.16')
+
+    assert expected == sup.parse_kubelet_pkglist(
+        sup.parse_zyppersearch_xml(
+            zyp_search_kubelet_xmldata
+        )
+    )
+    return False
+
+
+def test_is_supported():
+    a = parse_version('1.1')
+    b = parse_version('1.2')
+    c = parse_version('1.1')
+    assert not sup.is_supported(a, b)
+    assert sup.is_supported(a, c)
+
+
+@patch('subprocess.Popen')
+def test_modify_channel_wronginput(mock_subprocesspopen):
+    mock_process = Mock()
+    attrs = {'communicate.return_value': ("", ""), 'returncode': 1}
+    mock_process.configure_mock(**attrs)
+    mock_subprocesspopen.return_value = mock_process
+
+    with pytest.raises(Exception) as excinfo:
+        sup.modify_repos(["a", "b"], commandoption="beepbap")
+    assert "Failed to modify one or more repos" in str(excinfo.value)
+
+
+@patch('subprocess.Popen')
+def test_enable_pkg_channel(mock_subprocesspopen):
+    mock_process = Mock()
+    attrs = {'communicate.return_value': ("", ""), 'returncode': 0}
+    mock_process.configure_mock(**attrs)
+    mock_subprocesspopen.return_value = mock_process
+
+    repos = ["a", "b"]
+
+    sup.modify_repos(repos, commandoption="--enable")
+
+    assert mock_subprocesspopen.call_args_list == [
+        call(
+            ["zypper",  "--userdata", "skuba-update",
+                "modifyrepo", "--enable", "a"],
+            stdout=None, stderr=None, env=ANY
+        ),
+        call(
+            ["zypper",  "--userdata", "skuba-update",
+                "modifyrepo", "--enable", "b"],
+            stdout=None, stderr=None, env=ANY
+        )
+    ]
+
+
+@patch('subprocess.Popen')
+def test_disable_pkg_channel(mock_subprocesspopen):
+    mock_process = Mock()
+    attrs = {'communicate.return_value': ("", ""), 'returncode': 0}
+    mock_process.configure_mock(**attrs)
+    mock_subprocesspopen.return_value = mock_process
+
+    repos = ["a"]
+
+    sup.modify_repos(repos, commandoption="--disable")
+
+    assert mock_subprocesspopen.call_args_list == [
+        call(
+            ["zypper",  "--userdata", "skuba-update",
+                "modifyrepo", "--disable", "a"],
+            stdout=None, stderr=None, env=ANY
+        )
+    ]
