@@ -88,7 +88,7 @@ var (
 		"1.18.0": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.18.0",
-				ContainerRuntimeVersion: "1.17.0",
+				ContainerRuntimeVersion: "1.18.0",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
 				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.18.0"},
