@@ -24,6 +24,7 @@ CLOSEST_TAG   ?= $(shell git describe --tags)
 # VERSION is inferred from CLOSEST_TAG
 # It accepts tags of type `vX.Y.Z`, `vX.Y.Z-(alpha|beta|rc|...)` and produces X.Y.Z
 VERSION       := $(shell echo $(CLOSEST_TAG) | sed -E 's/v(([0-9]\.?)+).*/\1/')
+VERSION_FILE  := $(shell echo $(VERSION) > skuba-update/VERSION)
 TAGS          := development
 PROJECT_PATH  := github.com/SUSE/skuba
 SKUBA_LDFLAGS  = -ldflags "-X=$(PROJECT_PATH)/pkg/skuba.Version=$(VERSION) \
