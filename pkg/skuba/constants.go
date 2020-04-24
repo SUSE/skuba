@@ -80,6 +80,14 @@ func CriDockerDefaultsConfFile() string {
 	return filepath.Join(CriDir(), "default_flags")
 }
 
+func CriConfDir() string {
+	return filepath.Join(AddonsDir(), "cri/conf.d")
+}
+
+func CriDefaultsConfFile() string {
+	return filepath.Join(CriConfDir(), "01-caasp.conf")
+}
+
 func KubeConfigAdminFile() string {
 	return "admin.conf"
 }

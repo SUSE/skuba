@@ -24,7 +24,28 @@ const (
 ## Default        : ""
 ## ServiceRestart : crio
 #
-### BUG [ CRIO v1.18.0rc1 ] - string parsing issue based on comma separators
-CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities CHOWN --default-capabilities DAC_OVERRIDE --default-capabilities FSETID --default-capabilities FOWNER --default-capabilities NET_RAW --default-capabilities SETGID --default-capabilities SETUID --default-capabilities SETPCAP --default-capabilities NET_BIND_SERVICE --default-capabilities SYS_CHROOT --default-capabilities KILL --default-capabilities MKNOD --default-capabilities AUDIT_WRITE --default-capabilities SETFCAP{{end}}
+CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}`
+	criDefaultsConf = `{{if not .StrictCapDefaults}}[crio.runtime]
+
+default_capabilities = [
+	"CHOWN",
+	"DAC_OVERRIDE",
+	"FSETID",
+	"FOWNER",
+	"NET_RAW",
+	"SETGID",
+	"SETUID",
+	"SETPCAP",
+	"NET_BIND_SERVICE",
+	"SYS_CHROOT",
+	"KILL",
+	"MKNOD",
+	"AUDIT_WRITE",
+	"SETFCAP",
+]{{end}}
+
+[crio.image]
+
+pause_image = "{{.PauseImage}}"
 `
 )

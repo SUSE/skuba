@@ -28,10 +28,18 @@ type ScaffoldFile struct {
 }
 
 var (
-	scaffoldFiles = []ScaffoldFile{
-		{
-			Location: skuba.CriDockerDefaultsConfFile(),
-			Content:  criDockerDefaultsConf,
+	criScaffoldFiles = map[string][]ScaffoldFile{
+		"sysconfig": {
+			{
+				Location: skuba.CriDockerDefaultsConfFile(),
+				Content:  criDockerDefaultsConf,
+			},
+		},
+		"criconfig": {
+			{
+				Location: skuba.CriDefaultsConfFile(),
+				Content:  criDefaultsConf,
+			},
 		},
 	}
 
