@@ -7,13 +7,16 @@ JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
 ifdef SUITE
-SUITE_CMD=--suite ${SUITE}.py
+SUITE_OPT=--suite ${SUITE}.py
 endif
 ifdef TEST
 ifndef SUITE
 $(error SUITE is required for selecting a test )
 endif
-TEST_CMD=--test ${TEST}
+TEST_OPT=--test ${TEST}
+endif
+ifdef SKIP_SETUP
+SKIP_SETUP_OPT=--skip-setup ${SKIP_SETUP}
 endif
 
 .PHONY: all
@@ -82,7 +85,7 @@ post_run: gather_logs cleanup
 # e2e Tests
 .PHONY: test
 test:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD}
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_OPT} ${TEST_OPT} ${SKIP_SETUP_OPT}
 
 .PHONY: test_pr
 test_pr:
