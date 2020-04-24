@@ -115,7 +115,7 @@ variable "master_disk_size" {
   description = "Size of the root disk in GB on master node"
 }
 
-variable "setup_cloud_provider" {
+variable "cpi_enable" {
   default     = false
-  description = "Setup for vSphere cloud provider"
+  description = "Enable CPI integration with vSphere"
 }

@@ -39,5 +39,5 @@
         "2.novell.pool.ntp.org",
         "3.novell.pool.ntp.org"
     ],
-    "setup_cloud_provider": false
+    "cpi_enable": false
 }

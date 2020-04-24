@@ -34,7 +34,7 @@ data "vsphere_virtual_machine" "template" {
 }
 
 resource "vsphere_folder" "folder" {
-  count         = var.setup_cloud_provider == true ? 1 : 0
+  count         = var.cpi_enable == true ? 1 : 0
   path          = "${var.stack_name}-cluster"
   type          = "vm"
   datacenter_id = data.vsphere_datacenter.dc.id
