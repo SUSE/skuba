@@ -60,5 +60,19 @@ var (
 				Content:  awsReadme,
 			},
 		},
+		"vsphere": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.VSphereCloudConfTemplateFile(),
+				Content:  vSphereCloudConfTemplate,
+			},
+			{
+				Location: skuba.VSphereReadmeFile(),
+				Content:  vSphereReadme,
+			},
+		},
 	}
 )

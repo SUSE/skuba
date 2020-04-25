@@ -162,6 +162,13 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		if _, _, err = t.ssh("chmod", "0400", skuba.OpenstackConfigRuntimeFile()); err != nil {
 			return err
 		}
+	} else if _, err := os.Stat(skuba.VSphereCloudConfFile()); err == nil {
+		if err := t.target.UploadFile(skuba.VSphereCloudConfFile(), skuba.VSphereConfigRuntimeFile()); err != nil {
+			return err
+		}
+		if _, _, err = t.ssh("chmod", "0400", skuba.VSphereConfigRuntimeFile()); err != nil {
+			return err
+		}
 	}
 
 	_, _, err = t.ssh("systemctl", "daemon-reload")

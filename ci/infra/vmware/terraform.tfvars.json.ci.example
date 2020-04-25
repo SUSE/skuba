@@ -38,5 +38,6 @@
         "1.novell.pool.ntp.org",
         "2.novell.pool.ntp.org",
         "3.novell.pool.ntp.org"
-    ]
+    ],
+    "cpi_enable": false
 }

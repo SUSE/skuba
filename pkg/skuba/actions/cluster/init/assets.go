@@ -29,9 +29,10 @@ and instructions.
  
 - [~Openstack~](openstack/README.md)
 - [~AWS~](aws/README.md)
- 
+- [~vSphere~](vsphere/README.md)
+
 ## Important
- 
+
 If you don't make any change on this directories the cluster will be deployed
 with no specific cloud provider integration.
  
@@ -73,7 +74,7 @@ trust-device-path=false
 bs-version=v2
 ignore-volume-az=true
 ~~~
- 
+
 If this file exists the cloud integration for ~Openstack~ will be automatically
 enabled when you bootstrap the cluster.
 
@@ -111,4 +112,59 @@ ignore-volume-az=true
 No special operation needs to be performed if you deployed the whole
 infrastructure using the terraform state files provided by SUSE.
 `, "~", "`")
+
+	vSphereReadme = strings.ReplaceAll(`# ~vSphere~ integration
+
+Create a file inside this directory named ~vsphere.conf~, with the [supported contents](https://github.com/kubernetes/cloud-provider-vsphere/blob/master/docs/book/cloud_config.md):
+
+You can find a template named vsphere.conf.template inside this directory.
+
+~~~
+[Global]
+user = "<VC_USERNAME>"
+password = "<VC_PASSWORD>"
+port = "443"
+insecure-flag = "1"
+[VirtualCenter <VC_IP_OR_FQDN>]
+datacenters = "<VC_DATACENTERS>"
+[Workspace]
+server = "<VC_IP_OR_FQDN>"
+datacenter = "<VC_DATACENTER>"
+default-datastore = "<VC_DATASTORE>"
+resourcepool-path = "<VC_RESOURCEPOOL_PATH>"
+folder = "<VC_VM_FOLDER>"
+[Disk]
+scsicontrollertype = pvscsi
+[Network]
+public-network = "VM Network"
+~~~
+
+If this file exists the cloud integration for ~vSphere~ will be automatically
+enabled when you bootstrap the cluster.
+
+## Important
+
+When the cloud provider integration is enabled, it's very important to bootstrap
+and join nodes with the node names same as ~vSphere~ virtual machine's hostnames,
+as these names will be used by services to reconcile node metadata.
+`, "~", "`")
+
+	vSphereCloudConfTemplate = `[Global]
+user = "<VC_USERNAME>"
+password = "<VC_PASSWORD>"
+port = "443"
+insecure-flag = "1"
+[VirtualCenter <VC_IP_OR_FQDN>]
+datacenters = "<VC_DATACENTERS>"
+[Workspace]
+server = "<VC_IP_OR_FQDN>"
+datacenter = "<VC_DATACENTER>"
+default-datastore = "<VC_DATASTORE>"
+resourcepool-path = "<VC_RESOURCEPOOL_PATH>"
+folder = "<VC_VM_FOLDER>"
+[Disk]
+scsicontrollertype = pvscsi
+[Network]
+public-network = "VM Network"
+`
 )

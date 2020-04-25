@@ -352,6 +352,24 @@ func updateInitConfigurationWithCloudIntegration(initCfg *kubeadmapi.InitConfigu
 			PathType:  v1.HostPathFileOrCreate,
 		})
 		initCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+	case "vsphere":
+		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.VSphereConfigRuntimeFile()
+		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.VSphereConfigRuntimeFile(),
+			MountPath: skuba.VSphereConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.ControllerManager.ExtraArgs["cloud-config"] = skuba.VSphereConfigRuntimeFile()
+		initCfg.ControllerManager.ExtraVolumes = append(initCfg.ControllerManager.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.VSphereConfigRuntimeFile(),
+			MountPath: skuba.VSphereConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.VSphereConfigRuntimeFile()
 	}
 }
 
@@ -361,7 +379,10 @@ func updateJoinConfigurationWithCloudIntegration(joinCfg *kubeadmapi.JoinConfigu
 	}
 	joinCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
 
-	if initConfiguration.CloudProvider == "openstack" {
+	switch initConfiguration.CloudProvider {
+	case "openstack":
 		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
+	case "vsphere":
+		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.VSphereConfigRuntimeFile()
 	}
 }
