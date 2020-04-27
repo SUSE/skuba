@@ -17,12 +17,12 @@ def check_node_is_ready(platform, kubectl, role, nr):
 
 @pytest.mark.pr
 @pytest.mark.parametrize('role,node', [('master', 1), ('worker', 0)])
-def test_hard_reboot(deployment, platform, skuba, kubectl, role, node):
+def test_hard_reboot(deployment, platform, kubectl, role, node):
     """ Reboots master and worker nodes and checks they are back ready.
     For masters, reboot master 1, as master 0 is expected to be the
     cluster leader and rebooting it may introduce transient etcd errors.
     """
-    assert skuba.num_of_nodes(role) > node
+    assert kubectl.get_num_nodes_by_role(role) > node
 
     platform.ssh_run(role, node, 'sudo reboot &')
 
