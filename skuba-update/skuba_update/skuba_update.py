@@ -110,10 +110,10 @@ def update():
     Performs an update operation.
     """
 
-    code = run_zypper_patch()
-    if is_restart_needed(code):
-        code = run_zypper_patch()
-    return code
+    returncode = run_zypper_patch()
+    if zypper_needs_transaction_restart(returncode):
+        returncode = run_zypper_patch()
+    return returncode
 
 
 def annotate_node():
@@ -249,10 +249,10 @@ def is_zypper_error(code):
     return code != 0 and code < ZYPPER_EXIT_INF_UPDATE_NEEDED
 
 
-def is_restart_needed(code):
+def zypper_needs_transaction_restart(code):
     """
-    Returns true of the given code is defined by zypper to mean that restart is
-    needed (zypper itself has been updated).
+    Returns true if the given return code by zypper means a restart
+    of zypper is needed (zypper itself has been updated).
     """
 
     return code == ZYPPER_EXIT_INF_RESTART_NEEDED
@@ -315,8 +315,8 @@ def run_zypper_command(command, needsOutput=False):
 
 def run_zypper_patch():
     """
-    Run patch updates without --with-optional. --with-optional can cause
-    conflicts with K8s upgrade scenario.
+    Install patch updates (zypper patch) without '--with-optional' flag.
+    --with-optional can cause conflicts with K8s upgrade scenario.
     """
     return run_zypper_command([
         '--non-interactive', '--non-interactive-include-reboot-patches',
