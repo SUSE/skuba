@@ -43,7 +43,6 @@ ZYPPER_REBOOT_NEEDED_PATH = "/var/run/reboot-needed"
 REBOOT_REQUIRED_PATH = "/var/run/reboot-required"
 
 # Exit codes as defined by zypper.
-
 ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
 ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
@@ -95,25 +94,16 @@ def parse_args():
     annotate_only_msg = (
         "Do not install any update, just annotate there are available updates"
     )
-    version_msg = "%(prog)s {0}".format(version())
 
     parser = argparse.ArgumentParser(description="Updates a CaaSP node")
     parser.add_argument("--annotate-only", action="store_true", help=annotate_only_msg)
     parser.add_argument(
         "--version",
         action="version",
-        version=version_msg,
+        version="%(prog)s {0}".format(pkg_resources.require("skuba-update")[0].version),
     )
 
     return parser.parse_args()
-
-
-def version():
-    """
-    Returns the version of the current skuba-update
-    """
-
-    return pkg_resources.require("skuba-update")[0].version
 
 
 def update():
