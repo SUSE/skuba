@@ -42,7 +42,7 @@ data "template_file" "haproxy_apiserver_backends_master" {
 
   vars = {
     fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    ip   = libvirt_domain.master[count.index].network_interface.0.addresses.0,
   }
 }
 
@@ -52,7 +52,7 @@ data "template_file" "haproxy_gangway_backends_master" {
 
   vars = {
     fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    ip   = libvirt_domain.master[count.index].network_interface.0.addresses.0,
   }
 }
 
@@ -62,7 +62,7 @@ data "template_file" "haproxy_dex_backends_master" {
 
   vars = {
     fqdn = "${var.stack_name}-master-${count.index}.${var.dns_domain}"
-    ip   = cidrhost(var.network_cidr, 512 + count.index)
+    ip   = libvirt_domain.master[count.index].network_interface.0.addresses.0,
   }
 }
 
@@ -136,7 +136,6 @@ resource "libvirt_domain" "lb" {
   network_interface {
     network_id     = libvirt_network.network.id
     hostname       = "${var.stack_name}-lb"
-    addresses      = [cidrhost(var.network_cidr, 256)]
     wait_for_lease = true
   }
 
@@ -153,7 +152,7 @@ resource "null_resource" "lb_wait_cloudinit" {
   connection {
     host = element(
       libvirt_domain.lb.*.network_interface.0.addresses.0,
-      count.index,
+      count.index
     )
     user     = var.username
     password = var.password
@@ -178,7 +177,7 @@ resource "null_resource" "lb_push_haproxy_cfg" {
   connection {
     host = element(
       libvirt_domain.lb.*.network_interface.0.addresses.0,
-      count.index,
+      count.index
     )
     user  = var.username
     type  = "ssh"
