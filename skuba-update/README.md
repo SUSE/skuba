@@ -18,20 +18,14 @@ To set the development environment consider the following commands:
 # Get into the repository folder
 $ cd skuba-update
 
-# Initiate the python3 virtualenv
-$ python3 -m venv .env3
+# Ensure you have Shellcheck (haskell) and tox (python)
+$ sudo zypper install ShellCheck python-tox
 
-# Activate the virutalenv
-$ source .env3/bin/activate
+# Alternatively: You can also install tox in user space (shellcheck still
+# needs installing through your package manager)
+$ pip install --user tox
 
-# Install development dependencies
-$ pip install -r dev-requirements.txt
-
-# We need the shellcheck utility. You can install it from the package manager
-# you might be using.
-$ sudo zypper install ShellCheck
-
-# Run tests and code style checks
+# Run tests and code style checks without containers
 $ make test
 
 # Run tests and code style checks inside of a Docker container
