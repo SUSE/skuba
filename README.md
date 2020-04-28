@@ -34,16 +34,7 @@ keys to the SSH agent on this machine, e.g:
 ssh-add ~/.ssh/id_rsa
 ```
 
-If you want to perform an HA deployment you also need to set up a load balancer,
-depending on your needs this setup can be as advanced as required.
-
-The target nodes must have some packages already preinstalled:
-
-  * cri-o
-  * kubelet
-  * kubeadm
-
-The terraform based deployments are taking care of fulfilling these requirements.
+The system running `skuba` must have `kubectl` available.
 
 ## Installation
 
