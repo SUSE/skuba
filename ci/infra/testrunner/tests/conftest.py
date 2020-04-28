@@ -48,9 +48,10 @@ def bootstrap(request, provision, skuba):
 
 @pytest.fixture
 def deployment(request, bootstrap, skuba, kubectl):
-    if request.config.getoption("skip_setup") != 'deployed':
-        skuba.join_nodes()
+    if request.config.getoption("skip_setup") == 'deployed':
+        return
 
+    skuba.join_nodes()
     wait(check_pods_ready,
          kubectl,
          namespace="kube-system",
