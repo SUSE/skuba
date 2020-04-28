@@ -46,6 +46,7 @@ data "template_file" "worker_cloud_init_metadata" {
 
 data "template_file" "worker_cloud_init_userdata" {
   template = file("cloud-init/common.tpl")
+  count    = var.workers
 
   vars = {
     authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
@@ -54,6 +55,7 @@ data "template_file" "worker_cloud_init_userdata" {
     register_rmt    = join("\n", data.template_file.worker_register_rmt.*.rendered)
     commands        = join("\n", data.template_file.worker_commands.*.rendered)
     ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname        = "${var.stack_name}-worker-${count.index}"
   }
 }
 
@@ -87,7 +89,7 @@ resource "vsphere_virtual_machine" "worker" {
   extra_config = {
     "guestinfo.metadata"          = base64gzip(data.template_file.worker_cloud_init_metadata.rendered)
     "guestinfo.metadata.encoding" = "gzip+base64"
-    "guestinfo.userdata"          = base64gzip(data.template_file.worker_cloud_init_userdata.rendered)
+    "guestinfo.userdata"          = base64gzip(data.template_file.worker_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
   enable_disk_uuid = var.cpi_enable == true ? true : false

@@ -116,12 +116,14 @@ data "template_file" "lb_haproxy_cfg" {
 
 data "template_file" "lb_cloud_init_userdata" {
   template = file("cloud-init/lb.tpl")
+  count    = var.lbs
 
   vars = {
     authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
     repositories    = join("\n", data.template_file.lb_repositories_template.*.rendered)
     packages        = join("\n", formatlist("  - %s", var.packages))
     ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname        = "${var.stack_name}-lb-${count.index}"
   }
 }
 
@@ -152,7 +154,7 @@ resource "vsphere_virtual_machine" "lb" {
   extra_config = {
     "guestinfo.metadata"          = base64gzip(data.template_file.lb_cloud_init_metadata.rendered)
     "guestinfo.metadata.encoding" = "gzip+base64"
-    "guestinfo.userdata"          = base64gzip(data.template_file.lb_cloud_init_userdata.rendered)
+    "guestinfo.userdata"          = base64gzip(data.template_file.lb_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
