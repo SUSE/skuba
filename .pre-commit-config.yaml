@@ -27,6 +27,10 @@ repos:
         entry: ./scripts/go-imports.sh
         files: '\.go$'
         language: script
+    -   id: python-version
+        name: python version
+        entry: ./scripts/check-python-versionfile.sh
+        language: script
 -   repo: https://github.com/golangci/golangci-lint
     rev: v1.21.0
     hooks:
