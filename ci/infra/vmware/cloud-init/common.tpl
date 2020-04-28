@@ -57,5 +57,6 @@ ${commands}
 bootcmd:
   # Hostnames from DHCP - otherwise `localhost` will be used
   - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"no\"#DHCLIENT_SET_HOSTNAME=\"yes\"#" /etc/sysconfig/network/dhcp
+  - /usr/bin/hostnamectl set-hostname ${hostname}
 
 final_message: "The system is finally up, after $UPTIME seconds"

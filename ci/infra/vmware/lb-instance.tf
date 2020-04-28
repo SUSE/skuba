@@ -128,17 +128,17 @@ data "template_file" "lb_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "lb" {
-  count            = var.lbs
-  name             = "${var.stack_name}-lb-${count.index}"
-  num_cpus         = var.lb_cpus
-  memory           = var.lb_memory
-  guest_id         = var.guest_id
-  firmware         = var.firmware
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  count                = var.lbs
+  name                 = "${var.stack_name}-lb-${count.index}"
+  num_cpus             = var.lb_cpus
+  memory               = var.lb_memory
+  guest_id             = var.guest_id
+  firmware             = var.firmware
+  scsi_type            = data.vsphere_virtual_machine.template.scsi_type
+  resource_pool_id     = data.vsphere_resource_pool.pool.id
+  datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
+  folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -219,4 +219,3 @@ resource "null_resource" "lb_push_haproxy_cfg" {
     ]
   }
 }
-

@@ -60,19 +60,19 @@ data "template_file" "worker_cloud_init_userdata" {
 }
 
 resource "vsphere_virtual_machine" "worker" {
-  depends_on       = [vsphere_folder.folder]
+  depends_on = [vsphere_folder.folder]
 
-  count            = var.workers
-  name             = "${var.stack_name}-worker-${count.index}"
-  num_cpus         = var.worker_cpus
-  memory           = var.worker_memory
-  guest_id         = var.guest_id
-  firmware         = var.firmware
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  count                = var.workers
+  name                 = "${var.stack_name}-worker-${count.index}"
+  num_cpus             = var.worker_cpus
+  memory               = var.worker_memory
+  guest_id             = var.guest_id
+  firmware             = var.firmware
+  scsi_type            = data.vsphere_virtual_machine.template.scsi_type
+  resource_pool_id     = data.vsphere_resource_pool.pool.id
+  datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
+  folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
 
 
   clone {
@@ -101,7 +101,7 @@ resource "vsphere_virtual_machine" "worker" {
 
 resource "null_resource" "worker_wait_cloudinit" {
   depends_on = [vsphere_virtual_machine.worker]
-  count = var.workers
+  count      = var.workers
 
   connection {
     host = element(
@@ -119,4 +119,3 @@ resource "null_resource" "worker_wait_cloudinit" {
     ]
   }
 }
-
