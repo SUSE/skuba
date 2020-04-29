@@ -19,7 +19,7 @@ class Platform:
         self.logs = {
             "files": [],
             "dirs": ["/var/log/pods"],
-            "services": ["kubelet"]
+            "services": ["kubelet", "crio"]
         }
 
         # Files that will be deleted during the cleanup stage
