@@ -115,7 +115,12 @@ func Init(initConfiguration InitConfiguration) error {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
 
-	scaffoldFilesToWrite := scaffoldFiles
+	scaffoldFilesToWrite := criScaffoldFiles["criconfig"]
+	kubernetesVersion := initConfiguration.KubernetesVersion
+	if kubernetesVersion.Minor() < 18 {
+		scaffoldFilesToWrite = criScaffoldFiles["sysconfig"]
+	}
+
 	if len(initConfiguration.CloudProvider) > 0 {
 		if cloudScaffoldFiles, found := cloudScaffoldFiles[initConfiguration.CloudProvider]; found {
 			scaffoldFilesToWrite = append(scaffoldFilesToWrite, cloudScaffoldFiles...)

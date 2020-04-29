@@ -58,9 +58,11 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
-	var criConfigure string
-	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
-		criConfigure = "cri.configure"
+	var criSetup string
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
+		criSetup = "cri.configure"
+	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		criSetup = "cri.sysconfig"
 	}
 
 	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
@@ -82,7 +84,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		"kernel.configure-parameters",
 		"firewalld.disable",
 		"apparmor.start",
-		criConfigure,
+		criSetup,
 		"cri.start",
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
