@@ -7,11 +7,11 @@ resource "aws_instance" "control_plane" {
   source_dest_check           = false
   subnet_id                   = aws_subnet.public.id
   user_data                   = data.template_cloudinit_config.cfg.rendered
-  iam_instance_profile        = length(var.iam_profile_master) == 0 ? local.aws_iam_policy_master_terraform : var.iam_profile_master
+  iam_instance_profile        = length(var.iam_profile_master) == 0 ? local.aws_iam_instance_profile_master_terraform : var.iam_profile_master
 
   depends_on = [
     aws_internet_gateway.platform,
-    aws_iam_policy.master,
+    aws_iam_instance_profile.master,
   ]
 
   tags = merge(
