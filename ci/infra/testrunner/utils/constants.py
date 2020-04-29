@@ -18,9 +18,8 @@ class BaseConfig:
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
         obj.yaml_path = yaml_path
-        obj.workspace = None
-        obj.username = None
-        obj.log_dir = None
+        obj.workspace = "$HOME/workspace"
+        obj.log_dir = "$WORKSPACE/platform_logs"
 
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
@@ -73,11 +72,11 @@ class BaseConfig:
             super().__init__()
             self.retries = 5
             self.internal_net = None
-            self.stack_name = None
-            self.tfdir = None
+            self.stack_name = "$USER"
+            self.tfdir = "$WORKSPACE/skuba/ci/infra"
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
-            self.ssh_key = None
+            self.ssh_key = "$HOME/.ssh/id_rsa"
             self.nodeuser = None
             self.lb = BaseConfig.NodeConfig()
             self.master = BaseConfig.NodeConfig()
@@ -86,15 +85,14 @@ class BaseConfig:
     class Skuba:
         def __init__(self):
             super().__init__()
-            self.binpath = None
-            self.srcpath = None
+            self.binpath = "$WORKSPACE/go/bin/skuba"
             self.verbosity = 5
 
     class Kubectl:
         def __init__(self):
             super().__init__()
             self.binpath = "/usr/bin/kubectl"
-            self.kubeconfig = None
+            self.kubeconfig = "$WORKSPACE/test-cluster/admin.conf"
 
     class Test:
         def __init__(self):
@@ -151,8 +149,8 @@ class BaseConfig:
         - The attribute from vars
         - default value for configuration
 
-        After the value is set, a environement variables in the value of the
-        attribute are subtituted.
+        After the attribute's value is set, a environement variables in the
+        value are expanded.
         """
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
@@ -179,38 +177,9 @@ class BaseConfig:
 
     @staticmethod
     def finalize(conf):
-        conf.workspace = os.path.expanduser(conf.workspace)
-
-        if not conf.log_dir:
-            conf.log_dir = os.path.join(conf.workspace, 'platform_logs')
-        elif not os.path.isabs(conf.log_dir):
-            conf.log_dir = os.path.join(conf.workspace, conf.log_dir)
-
-        if not conf.skuba.binpath:
-            conf.skuba.binpath = os.path.join(conf.workspace, 'go/bin/skuba')
-
-        if not conf.skuba.srcpath:
-            conf.skuba.srcpath = os.path.realpath(os.path.join(conf.workspace, "skuba"))
-
-        if not conf.kubectl.kubeconfig:
-            conf.kubectl.kubeconfig =  os.path.realpath(os.path.join(conf.workspace, "test-cluster", "admin.conf"))
-
-        if not conf.terraform.tfdir:
-            conf.terraform.tfdir = os.path.join(conf.skuba.srcpath, "ci/infra/")
-
-        if not conf.terraform.stack_name:
-            conf.terraform.stack_name = conf.username
-
-        # TODO: This variable should be in openstack configuration but due to
-        # the way variables are processed in Terraform class, must be here for know.
-        if not conf.terraform.internal_net:
-            conf.terraform.internal_net = conf.terraform.stack_name
-
-        if not conf.terraform.ssh_key:
-            conf.terraform.ssh_key = os.path.join(os.path.expanduser("~"), ".ssh/id_rsa")
-        else:
-            conf.terraform.ssh_key = os.path.expandvars(conf.terraform.ssh_key)
-
+        """ Finalize configuration.
+            Deprecated. Will be removed
+        """
         return conf
 
     @staticmethod

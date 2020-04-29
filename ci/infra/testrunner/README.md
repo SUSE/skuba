@@ -98,13 +98,12 @@ The following sections document the configuration options. The CLI arguments are
 
 This section configures the working environment and is generally specific of each user of CI job-
 
-- workspace: path to the testrunner's working directory 
-- username: user name for the user. It's optional. If `platform.stack_name` is not set, `username` is used.
-- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/platform_logs`
+- workspace: path to the testrunner's working directory. Defaults to `$HOME/workspace`
+- log_dir: path to the directory where platform logs are collected. Defaults to `$WORKSPACE/platform_logs`
 
 ```
 workspace: "/path/to/your/workspace" 
-username: "username"
+log_dir: "/path/to/log/dir/
 ```
 
 #### Packages
@@ -133,8 +132,8 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * internal_net: name of the network used when provisioning the platform. Defaults to `stack_name`
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
-* stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. If not specified, the `username` is used.
-* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `skuba.srcpath/ci/infra`.
+* stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
+* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
 - nodeuser: the user name used to login into the platform nodes. Optional.
 - ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
@@ -170,16 +169,14 @@ vmware:
 
 ### Skuba
 
-The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of both the source and the binary. Please notice that the source location is used as default location for other configuration elements, such as terraform files, even if the `skuba` binary is specified. 
+The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of the binary.
 
 * binpath: path to skuba binary
-* srcpath: path to skuba source. Used to locate other resources, like terraform configuration.
 * verbosity: verbosity level for skuba command execution
 
 ```
 skuba:
   binpath: "/usr/bin/"
-  srcpath: "/go/src/github.com/SUSE/skuba"
   verbosity: 5
 ```
 
@@ -227,7 +224,6 @@ Copy `vars.yaml` to `/path/to/myvars.yaml`, set the variables according to your 
 
 ```
 workspace: "/path/to/workspace"
-username:  "my-user-test"
 ```
 
 
@@ -237,27 +233,35 @@ Set the `skuba` and `terraform parameters depending on how you are testing `skub
 * If testing from local source:
 ```
   skuba:
-    srcpath: "/path/to/local/skuba/repo"
     binpath: "path/to/go/bin/directory"
 ```
 
-Be sure you don't specify the `terraform.tfdir` directory, so terraform configuration from the local `skuba` repo are used.
+Be sure you `terraform.tfdir` directory to point to the `ci/infra` directory in the local `skuba` repo:
+```
+  terraform:
+    tfdir: "/path/to/local/skuba/repo/ci/infra"
+```
 
 
 * If testing from installed package
 
+Use skuba binary installed from the package
 ```
   skuba:
     binpath: "/usr/bin/"
+```
 
+You must copy the terraform files installed from the package to a work directory and set the `tfdir` directory accordingly:
+```
   terraform:
     tfdir: "/path/to/terraform/files"
 ```
 
-You use your `id_rsa` keys to connect to the cluster nodes, as the `shared_id` is not available.
+You must provide the ssh key to connect to the cluster nodes, as the `shared_id` key used in development is not available. By default, your `id_rsa` key will be used, but you can provide any key:
 
 ```
-ssh_key: "path/to/id_rsa"
+  terraform:
+    ssh_key: "path/to/id_rsa"
 ```
 
 #### Open Stack
@@ -334,7 +338,6 @@ Jenkins checks out the `skuba` repository under the `workspace` directory and ge
 
 ```
 skuba:
-  srcpath: ""
   binpath: ""
 ``` 
  
