@@ -164,11 +164,11 @@ func kubeletConfigure(t *Target, data interface{}) error {
 	}
 	switch cloudProvider {
 	case "openstack":
-		if err := setCloudProvider(t, cloudProvider); err != nil {
+		if err := uploadCloudProvider(t, cloudProvider); err != nil {
 			return err
 		}
 	case "vsphere":
-		if err := setCloudProvider(t, cloudProvider); err != nil {
+		if err := uploadCloudProvider(t, cloudProvider); err != nil {
 			return err
 		}
 	}
@@ -201,7 +201,7 @@ func getCloudProvider() (string, error) {
 	return c.NodeRegistration.KubeletExtraArgs.CloudProvider, nil
 }
 
-func setCloudProvider(t *Target, cloudProvider string) error {
+func uploadCloudProvider(t *Target, cloudProvider string) error {
 	cloudConfigFile := cloudProvider + ".conf"
 	cloudConfigFilePath := filepath.Join(skuba.CloudDir(), cloudProvider, cloudConfigFile)
 	if _, err := os.Stat(cloudConfigFilePath); os.IsNotExist(err) {
