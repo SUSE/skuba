@@ -1,4 +1,5 @@
 import os
+import string
 
 import yaml
 
@@ -143,6 +144,16 @@ class BaseConfig:
 
     @staticmethod
     def inject_attrs_from_yaml(obj, vars, config_classes):
+        """ Set values for configuration attributes
+        The order of precedence is:
+        - An environment variable exists with the fully qualified name of the
+          attribute
+        - The attribute from vars
+        - default value for configuration
+
+        After the value is set, a environement variables in the value of the
+        attribute are subtituted.
+        """
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
                 config_class = obj.__dict__[key]
@@ -152,12 +163,17 @@ class BaseConfig:
             env_key = key.upper()
             env_value = os.getenv(env_key)
 
-            # if env variable exist but is not 'username' use env_value
-            # username must get from config file
-            if env_value and env_key != "USERNAME":
-                obj.__dict__[key] = env_value
+            # If env variable exists, use it. If not, use value fom vars, if
+            # it exists (otherwise, default value from BaseConfig class will be
+            # used)
+            if env_value:
+                value = env_value
             elif key in vars:
-                obj.__dict__[key] = vars[key]
+                value = vars[key]
+
+            # subtitute environment variables in the value of the attribute
+            if value is not None:
+                obj.__dict__[key] = string.Template(value).substitute(os.environ)
 
         return obj
 
