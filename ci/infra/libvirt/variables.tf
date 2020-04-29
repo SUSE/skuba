@@ -95,6 +95,11 @@ variable "network_mode" {
   description = "Network mode used by the cluster"
 }
 
+variable "network_name" {
+  default     = ""
+  description = "The virtual network name to use. If provided just use the given one (not managed by terraform), otherwise terraform creates a new virtual network resource"
+}
+
 variable "create_lb" {
   type        = bool
   default     = true

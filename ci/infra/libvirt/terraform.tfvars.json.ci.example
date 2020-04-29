@@ -1,6 +1,7 @@
 {
     "libvirt_uri": "qemu:///system",
     "libvirt_keyfile": "",
+    "network_name": "",
     "pool": "default",
     "image_uri": "",
     "stack_name": "testing",
