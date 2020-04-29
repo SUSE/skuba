@@ -163,11 +163,7 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		return err
 	}
 	switch cloudProvider {
-	case "openstack":
-		if err := uploadCloudProvider(t, cloudProvider); err != nil {
-			return err
-		}
-	case "vsphere":
+	case "openstack", "vsphere":
 		if err := uploadCloudProvider(t, cloudProvider); err != nil {
 			return err
 		}
