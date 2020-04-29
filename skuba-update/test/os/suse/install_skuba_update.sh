@@ -19,8 +19,8 @@ set -xe
 release=$(head -n 1 /etc/os-release)
 if [ "$release" = "NAME=\"SLES\"" ]; then
     rpm -e container-suseconnect
-    zypper ar --no-gpgcheck http://download.opensuse.org/distribution/leap/15.1/repo/oss/ leap15.1
-    zypper ar --no-gpgcheck http://download.opensuse.org/update/leap/15.1/oss updates
+    zypper ar --no-gpgcheck https://download.opensuse.org/distribution/leap/15.1/repo/oss/ leap15.1
+    zypper ar --no-gpgcheck https://download.opensuse.org/update/leap/15.1/oss updates
     zypper ref
 fi
 
