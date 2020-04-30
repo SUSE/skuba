@@ -19,8 +19,7 @@ class BaseConfig:
         obj = super().__new__(cls, *args, **kwargs)
         obj.yaml_path = yaml_path
         obj.workspace = "$HOME/workspace"
-        obj.log_dir = "$WORKSPACE/platform_logs"
-
+        obj.platform  = BaseConfig.Platform()
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
@@ -32,6 +31,7 @@ class BaseConfig:
         obj.kubectl = BaseConfig.Kubectl()
 
         config_classes = (
+            BaseConfig.Platform,
             BaseConfig.Packages,
             BaseConfig.NodeConfig,
             BaseConfig.Test,
@@ -61,6 +61,10 @@ class BaseConfig:
             self.cpu = cpu
             self.ips = []
             self.external_ips = []
+
+    class Platform:
+        def __init__(self):
+            self.log_dir = "$WORKSPACE/platform_logs"
 
     class Openstack:
         def __init__(self):

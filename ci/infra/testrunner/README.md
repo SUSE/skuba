@@ -99,11 +99,9 @@ The following sections document the configuration options. The CLI arguments are
 This section configures the working environment and is generally specific of each user of CI job-
 
 - workspace: path to the testrunner's working directory. Defaults to `$HOME/workspace`
-- log_dir: path to the directory where platform logs are collected. Defaults to `$WORKSPACE/platform_logs`
 
 ```
 workspace: "/path/to/your/workspace" 
-log_dir: "/path/to/log/dir/
 ```
 
 #### Packages
@@ -124,6 +122,16 @@ packages:
 ```
 * mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 * registry_code: code use for registering CaaSP product. If specified, the registries from the tfvars are ignored. Additional repositories can still be defined using the `maintenance` configuration parameter.
+
+### Platform
+
+This section configures general platform-independent parameters. Platform dependent parameters are defined in the corresponding sections (Terraform, Openstack, VMware)
+
+- log_dir: path to the directory where platform logs are collected. Defaults to `$WORKSPACE/platform_logs`
+
+```
+log_dir: "/path/to/log/dir/
+```
 
 #### Terraform
 
