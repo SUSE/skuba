@@ -193,12 +193,6 @@ class Terraform(Platform):
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
         cmd = f'{self._env_setup_cmd()}; terraform {cmd}'
-
-        # Terraform needs PATH and SSH_AUTH_SOCK
-        sock_fn = self.utils.ssh_sock_fn()
-        env["SSH_AUTH_SOCK"] = sock_fn
-        env["PATH"] = os.environ['PATH']
-
         self.utils.runshellcommand(cmd, cwd=self.tfdir, env=env)
 
     def _check_tf_deployed(self):

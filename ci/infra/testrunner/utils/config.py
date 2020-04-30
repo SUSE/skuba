@@ -29,6 +29,7 @@ class BaseConfig:
         obj.log = BaseConfig.Log()
         obj.packages = BaseConfig.Packages()
         obj.kubectl = BaseConfig.Kubectl()
+        obj.utils = BaseConfig.Utils()
 
         config_classes = (
             BaseConfig.Platform,
@@ -41,7 +42,8 @@ class BaseConfig:
             BaseConfig.Skuba,
             BaseConfig.Kubectl,
             BaseConfig.VMware,
-            BaseConfig.Libvirt
+            BaseConfig.Libvirt,
+            BaseConfig.Utils
         )
 
         # vars get the values from yaml file
@@ -61,6 +63,10 @@ class BaseConfig:
             self.cpu = cpu
             self.ips = []
             self.external_ips = []
+
+    class Utils:
+        def __init__(self):
+            self.ssh_sock =  "/tmp/testrunner_ssh_sock"
 
     class Platform:
         def __init__(self):

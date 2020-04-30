@@ -7,6 +7,7 @@
 - [Configuration](#configuration-parameters)
   - [Work Environment](#work-environment)
   - [Packages](#packages)
+  - [Utils](#utils)
   - [Platform](#platform)
     - [Terraform](#terraform)
     - [Openstack](#openstack)
@@ -123,6 +124,18 @@ packages:
 * mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 * registry_code: code use for registering CaaSP product. If specified, the registries from the tfvars are ignored. Additional repositories can still be defined using the `maintenance` configuration parameter.
 
+
+### Utils
+
+This section configures the utils module used for executing commands.
+
+* ssh_sock: name of the socket used to communicate with the ssh-agent. Default is /tmp/testrunner_ssh_sock'
+
+Example:
+```
+utils:
+  ssh_sock: "/path/to/ssh-agent/socket"
+```
 ### Platform
 
 This section configures general platform-independent parameters. Platform dependent parameters are defined in the corresponding sections (Terraform, Openstack, VMware)
