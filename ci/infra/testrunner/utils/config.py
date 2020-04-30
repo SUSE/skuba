@@ -178,7 +178,7 @@ class BaseConfig:
     @staticmethod
     def finalize(conf):
         """ Finalize configuration.
-            Deprecated. Will be removed
+        Deprecated. Will be removed
         """
         return conf
 
