@@ -187,8 +187,6 @@ class BaseConfig:
         if not conf.workspace and conf.workspace == "":
             raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
                                           " or set env var WORKSPACE before using testrunner)"))
-        if not conf.terraform.stack_name:
-            raise ValueError(Format.alert("Either a terraform stack name or an user name must be specified"))
 
         if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
             raise ValueError(Format.alert("workspace should not be your home directory"))

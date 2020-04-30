@@ -14,6 +14,9 @@ logger = logging.getLogger('testrunner')
 class Terraform(Platform):
     def __init__(self, conf, platform):
         super().__init__(conf)
+        if not conf.terraform.stack_name:
+            raise ValueError("a terraform stack name must be specified")
+
         self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
         self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
         self.tfout_path = os.path.join(self.conf.workspace, "tfout")
@@ -86,7 +89,7 @@ class Terraform(Platform):
 
     def get_nodes_names(self, role):
         stack_name = self.stack_name()
-        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))] 
+        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))]
 
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
@@ -131,7 +134,7 @@ class Terraform(Platform):
          stack_name = stack_name.replace("_","-").replace("/","-")
          stack_name = stack_name.strip("-.")
          stack_name = stack_name.lower()
-   
+
          return stack_name
 
     def _update_tfvars(self, tfvars):
@@ -178,7 +181,7 @@ class Terraform(Platform):
                 url_parsed = urlparse(url)
                 url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
                 tfvars["repositories"][name] = url_updated.geturl()
-	
+
         if self.conf.packages.additional_pkgs:
             tfvars["packages"].extend(self.conf.packages.additional_pkgs)
 

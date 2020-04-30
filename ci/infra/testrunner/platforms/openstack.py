@@ -16,6 +16,7 @@ class Openstack(Terraform):
         if not self.conf.terraform.internal_net:
             self.conf.terraform.internal_net = self.conf.terraform.stack_name
 
+
     def _env_setup_cmd(self):
         return f"source {self.conf.openstack.openrc}"
 
