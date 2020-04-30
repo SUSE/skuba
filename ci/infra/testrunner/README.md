@@ -179,13 +179,16 @@ vmware:
 
 The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of the binary.
 
-* binpath: path to skuba binary
+* binpath: path to skuba binary. Default is "$WORKSPACE/go/bin/skuba"
+* cluster: name of the cluster. Default is "test-cluster"
 * verbosity: verbosity level for skuba command execution
+* workdir: working directory on which cluster is initialized. Default is "$WORKSPACE"
 
+Example:
 ```
 skuba:
-  binpath: "/usr/bin/"
-  verbosity: 5
+  binpath: "/usr/bin/skuba"
+  verbosity: 10
 ```
 
 ### Kubectl

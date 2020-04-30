@@ -95,6 +95,8 @@ class BaseConfig:
     class Kubectl:
         def __init__(self):
             super().__init__()
+            self.workdir = "$WORKSPACE"
+            self.cluster = "test-cluster"
             self.binpath = "/usr/bin/kubectl"
             self.kubeconfig = "$WORKSPACE/test-cluster/admin.conf"
 

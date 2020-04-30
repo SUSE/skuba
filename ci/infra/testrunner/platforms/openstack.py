@@ -27,9 +27,9 @@ class Openstack(Terraform):
 
         self.destroy(variables)
 
-    def setup_cloud_provider(self):
+    def setup_cloud_provider(self,config_dir):
         openstack_conf_template = ""
-        for root, dirs, files in os.walk(self.conf.workspace):
+        for root, dirs, files in os.walk(config_dir):
             for f in files:
                 if f == "openstack.conf.template":
                     openstack_conf_template = os.path.join(root, f)
