@@ -5,7 +5,6 @@
 - [Summary](#summary)
 - [Design](#design)
 - [Configuration](#configuration-parameters)
-  - [Work Environment](#work-environment)
   - [Packages](#packages)
   - [Utils](#utils)
   - [Platform](#platform)
@@ -90,20 +89,10 @@ It is worth noticing that tests can be executed directly using pytest, but it is
 Testrunner provides configuration by means of:
  
 - A yaml configuration file (defaults to `vars.yaml` in current directory)
-- Environment variables that override the configuration. Every configuration option of the form `<section>.<variable>' can be subtituted by an environment variable `SECTION_VARIABLE. Notice that some variables are defined in the "root" section (e.g `workspace`). For example `skuba.binpath` is overriden by `SKUBA_BINPATH` and `workspace` by `WORKSPACE`
+- Environment variables that override the configuration. Every configuration option of the form `<section>.<variable>' can be subtituted by an environment variable `SECTION_VARIABLE. For example `skuba.binpath` is overriden by `SKUBA_BINPATH`.
 - CLI options which override configuration parameters such as the logging level (see [Usage](#usage))
 
 The following sections document the configuration options. The CLI arguments are described in the [Usage section](#usage).
-
-### Work Environment
-
-This section configures the working environment and is generally specific of each user of CI job-
-
-- workspace: path to the testrunner's working directory. Defaults to `$HOME/workspace`
-
-```
-workspace: "/path/to/your/workspace" 
-```
 
 #### Packages
 The `packages` section configures the source of the packages to be installed in the nodes:
@@ -160,7 +149,7 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
 * tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
-* workdir: working directory on which tfout file will be generated
+* workdir: working directory on which tfout file will be generated. Default is `$WORKSPACE`
 * worker: specifications for the worker(s)
 
 Example
@@ -244,11 +233,10 @@ Copy `vars.yaml` to `/path/to/myvars.yaml`, set the variables according to your 
 
 #### Work Environment
 
-`testrunner` requires a working directory, which is specified in the `workspace` configuration parameter. The content of this directory can be erased or overwritten by `testrunner`. Be sure you create a directory to be used as workspace which is not located under your local working copy of the `skuba` project.
-
+Different components of `testrunner` requires a working directory. In particular, skuba for maintaining the test cluster configuration. The content of this directory can be erased or overwritten by `testrunner`. Be sure you create a directory to be used as workspace which is NOT located under your local working copy of the `skuba` project. By default, the working directory is taken from environment variable `WORKSPACE`:
 
 ```
-workspace: "/path/to/workspace"
+export WORKSPACE="/path/to/workspace"
 ```
 
 
@@ -258,7 +246,7 @@ Set the `skuba` and `terraform parameters depending on how you are testing `skub
 * If testing from local source:
 ```
   skuba:
-    binpath: "path/to/go/bin/directory"
+    binpath: "/path/to/go/bin/directory"
 ```
 
 Be sure you `terraform.tfdir` directory to point to the `ci/infra` directory in the local `skuba` repo:

@@ -18,7 +18,6 @@ class BaseConfig:
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
         obj.yaml_path = yaml_path
-        obj.workspace = "$HOME/workspace"
         obj.platform  = BaseConfig.Platform()
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
@@ -96,6 +95,8 @@ class BaseConfig:
     class Skuba:
         def __init__(self):
             super().__init__()
+            self.workdir = "$WORKSPACE"
+            self.cluster = "test-cluster"
             self.binpath = "$WORKSPACE/go/bin/skuba"
             self.verbosity = 5
 
@@ -165,6 +166,10 @@ class BaseConfig:
         After the attribute's value is set, a environement variables in the
         value are expanded.
         """
+
+        if not vars:
+            return obj
+
         for key, value in obj.__dict__.items():
             if isinstance(value, config_classes):
                 config_class = obj.__dict__[key]
@@ -197,13 +202,9 @@ class BaseConfig:
 
     @staticmethod
     def verify(conf):
-        if not conf.workspace and conf.workspace == "":
-            raise ValueError(Format.alert("You should set the workspace value in a configured yaml file e.g. vars.yaml"
-                                          " or set env var WORKSPACE before using testrunner)"))
-
-        if os.path.normpath(conf.workspace) == os.path.normpath((os.getenv("HOME"))):
-            raise ValueError(Format.alert("workspace should not be your home directory"))
-
+        """ Validates configuration.
+        Deprecated. Will be removed
+        """
         return conf
 
     @staticmethod
