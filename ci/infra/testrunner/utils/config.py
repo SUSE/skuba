@@ -77,6 +77,7 @@ class BaseConfig:
             self.retries = 5
             self.internal_net = None
             self.stack_name = "$USER"
+            self.workdir = "$WORKSPACE"
             self.tfdir = "$WORKSPACE/skuba/ci/infra"
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None

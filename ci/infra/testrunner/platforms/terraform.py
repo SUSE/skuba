@@ -18,8 +18,8 @@ class Terraform(Platform):
             raise ValueError("a terraform stack name must be specified")
 
         self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
-        self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
-        self.tfout_path = os.path.join(self.conf.workspace, "tfout")
+        self.tfjson_path = os.path.join(self.conf.terraform.workdir, "tfout.json")
+        self.tfout_path = os.path.join(self.conf.terraform.workdir, "tfout")
         self.state = None
 
         self.logs["files"] += ["/var/run/cloud-init/status.json",

@@ -138,16 +138,17 @@ log_dir: "/path/to/log/dir/
 General setting for terraform-based platforms such as [Openstack](#openstack) and [VMware](#vmware). 
 
 * internal_net: name of the network used when provisioning the platform. Defaults to `stack_name`
+* lb: specifications for the load balancer(s)
+* nodeuser: the user name used to login into the platform nodes. Optional.
+* master: specifications for the master(s)
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
+* ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
 * tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
-- nodeuser: the user name used to login into the platform nodes. Optional.
-- ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
-- lb: specifications for the load balancer(s)
-- master: specifications for the master(s)
-- worker: specifications for the worker(s)
+* workdir: working directory on which tfout file will be generated
+* worker: specifications for the worker(s)
 
 Example
 ```
