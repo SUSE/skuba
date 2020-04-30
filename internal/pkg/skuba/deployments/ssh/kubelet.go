@@ -19,6 +19,7 @@ package ssh
 
 import (
 	"crypto/x509"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -26,7 +27,9 @@ import (
 
 	"github.com/pkg/errors"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
+	"sigs.k8s.io/yaml"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments/ssh/assets"
@@ -155,18 +158,13 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		}
 	}
 
-	if _, err := os.Stat(skuba.OpenstackCloudConfFile()); err == nil {
-		if err := t.target.UploadFile(skuba.OpenstackCloudConfFile(), skuba.OpenstackConfigRuntimeFile()); err != nil {
-			return err
-		}
-		if _, _, err = t.ssh("chmod", "0400", skuba.OpenstackConfigRuntimeFile()); err != nil {
-			return err
-		}
-	} else if _, err := os.Stat(skuba.VSphereCloudConfFile()); err == nil {
-		if err := t.target.UploadFile(skuba.VSphereCloudConfFile(), skuba.VSphereConfigRuntimeFile()); err != nil {
-			return err
-		}
-		if _, _, err = t.ssh("chmod", "0400", skuba.VSphereConfigRuntimeFile()); err != nil {
+	cloudProvider, err := getCloudProvider()
+	if err != nil {
+		return err
+	}
+	switch cloudProvider {
+	case "openstack", "vsphere":
+		if err := uploadCloudProvider(t, cloudProvider); err != nil {
 			return err
 		}
 	}
@@ -178,4 +176,39 @@ func kubeletConfigure(t *Target, data interface{}) error {
 func kubeletEnable(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "enable", "kubelet")
 	return err
+}
+
+func getCloudProvider() (string, error) {
+	data, err := ioutil.ReadFile(skuba.KubeadmInitConfFile())
+	if err != nil {
+		return "", err
+	}
+	type config struct {
+		NodeRegistration struct {
+			KubeletExtraArgs struct {
+				CloudProvider string `json:"cloud-provider"`
+			} `json:"kubeletExtraArgs"`
+		} `json:"nodeRegistration"`
+	}
+	c := config{}
+	if err := yaml.Unmarshal(data, &c); err != nil {
+		return "", err
+	}
+	return c.NodeRegistration.KubeletExtraArgs.CloudProvider, nil
+}
+
+func uploadCloudProvider(t *Target, cloudProvider string) error {
+	cloudConfigFile := cloudProvider + ".conf"
+	cloudConfigFilePath := filepath.Join(skuba.CloudDir(), cloudProvider, cloudConfigFile)
+	if _, err := os.Stat(cloudConfigFilePath); os.IsNotExist(err) {
+		return err
+	}
+	cloudConfigRuntimeFilePath := filepath.Join(constants.KubernetesDir, cloudConfigFile)
+	if err := t.target.UploadFile(cloudConfigFilePath, cloudConfigRuntimeFilePath); err != nil {
+		return err
+	}
+	if _, _, err := t.ssh("chmod", "0400", cloudConfigRuntimeFilePath); err != nil {
+		return err
+	}
+	return nil
 }
