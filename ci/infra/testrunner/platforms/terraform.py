@@ -37,8 +37,13 @@ class Terraform(Platform):
 
         self._run_terraform_command(cmd)
 
-    def _provision_platform(self):
-        """ Create and apply terraform plan"""
+    def _provision_platform(self, masters=-1, workers=-1):
+
+        if masters > -1:
+            self.conf.terraform.master.count = masters
+        if workers > -1:
+            self.conf.terraform.worker.count = workers
+
         exception = None
         self._check_tf_deployed()
 

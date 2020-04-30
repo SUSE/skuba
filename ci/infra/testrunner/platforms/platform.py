@@ -103,14 +103,12 @@ class Platform:
         if num_master > -1 or num_worker > -1:
             logger.warning("Overriding number of nodes")
             if num_master > -1:
-                self.conf.terraform.master.count = num_master
                 logger.warning("   Masters:{} ".format(num_master))
 
             if num_worker > -1:
-                self.conf.terraform.worker.count = num_worker
                 logger.warning("   Workers:{} ".format(num_worker))
 
-        self._provision_platform()
+        self._provision_platform(num_master, num_worker)
 
     def ssh_run(self, role, nr, cmd):
         ip_addrs = self.get_nodes_ipaddrs(role)
