@@ -30,29 +30,14 @@ class BaseConfig:
         obj.kubectl = BaseConfig.Kubectl()
         obj.utils = BaseConfig.Utils()
 
-        config_classes = (
-            BaseConfig.Platform,
-            BaseConfig.Packages,
-            BaseConfig.NodeConfig,
-            BaseConfig.Test,
-            BaseConfig.Log,
-            BaseConfig.Openstack,
-            BaseConfig.Terraform,
-            BaseConfig.Skuba,
-            BaseConfig.Kubectl,
-            BaseConfig.VMware,
-            BaseConfig.Libvirt,
-            BaseConfig.Utils
-        )
-
         # vars get the values from yaml file
         vars = BaseConfig.get_var_dict(yaml_path)
         # conf.objects will be overriden by the values from vars and matching ENV variables
-        conf = BaseConfig.inject_attrs_from_yaml(obj, vars, config_classes)
+        BaseConfig.inject_attrs_from_yaml(obj, vars, "")
         # Final modification for conf variables
-        conf = BaseConfig.finalize(conf)
-        conf = BaseConfig.verify(conf)
-        return conf
+        BaseConfig.finalize(obj)
+        BaseConfig.verify(obj)
+        return obj
 
     class NodeConfig:
         def __init__(self, count=1, memory=4096, cpu=4):
@@ -155,7 +140,7 @@ class BaseConfig:
         return _conf
 
     @staticmethod
-    def inject_attrs_from_yaml(obj, vars, config_classes):
+    def inject_attrs_from_yaml(config, vars, ctx):
         """ Set values for configuration attributes
         The order of precedence is:
         - An environment variable exists with the fully qualified name of the
@@ -167,16 +152,15 @@ class BaseConfig:
         value are expanded.
         """
 
-        if not vars:
-            return obj
-
-        for key, value in obj.__dict__.items():
-            if isinstance(value, config_classes):
-                config_class = obj.__dict__[key]
-                BaseConfig._set_config_class_attrs(config_class, key, vars, config_classes)
+        for key, value in config.__dict__.items():
+            if isinstance(value, BaseConfig.config_classes):
+                sub_ctx = "{}{}".format(ctx+"_" if ctx else "", key)
+                sub_config = value
+                sub_vars = vars.get(key) if vars else None
+                BaseConfig.inject_attrs_from_yaml(sub_config, sub_vars, sub_ctx)
                 continue
 
-            env_key = key.upper()
+            env_key = "{}{}".format(ctx+"_" if ctx else "", key).upper()
             env_value = os.getenv(env_key)
 
             # If env variable exists, use it. If not, use value fom vars, if
@@ -184,40 +168,45 @@ class BaseConfig:
             # used)
             if env_value:
                 value = env_value
-            elif key in vars:
+            elif vars and key in vars:
                 value = vars[key]
 
             # subtitute environment variables in the value of the attribute
-            if value is not None:
-                obj.__dict__[key] = string.Template(value).substitute(os.environ)
+            if value is not None and type(value) == str:
+                config.__dict__[key] = string.Template(value).safe_substitute(os.environ)
+            else:
+                config.__dict__[key] = value
 
-        return obj
+        return
 
     @staticmethod
     def finalize(conf):
         """ Finalize configuration.
         Deprecated. Will be removed
         """
-        return conf
+        return
 
     @staticmethod
     def verify(conf):
         """ Validates configuration.
         Deprecated. Will be removed
         """
-        return conf
+        return
 
-    @staticmethod
-    def _set_config_class_attrs(config_class, class_name, variables, config_classes):
-        config_obj = variables.get(class_name)
 
-        if config_obj is not None:
-            for k, v in config_obj.items():
-                env_var = os.getenv(f"{class_name.upper()}_{k.upper()}")
-                if env_var is not None:
-                    config_class.__dict__[k] = env_var
-                elif v:
-                    if isinstance(config_class.__dict__[k], config_classes):
-                        BaseConfig._set_config_class_attrs(config_class.__dict__[k], k, config_obj, config_classes)
-                    else:
-                        config_class.__dict__[k] = v
+    config_classes = (
+        Platform,
+        Packages,
+        NodeConfig,
+        Test,
+        Log,
+        Openstack,
+        Terraform,
+        Skuba,
+        Kubectl,
+        VMware,
+        Libvirt,
+        Utils
+    )
+
+
