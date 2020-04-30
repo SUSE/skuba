@@ -32,6 +32,9 @@ ${repositories}
 packages:
   - haproxy
 
+# set hostname
+hostname: ${hostname}
+
 runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
   # start another service by either `enable --now` or `start` will create a
@@ -44,11 +47,8 @@ runcmd:
   - [ systemctl, restart, systemd-journald ]
   # LB firewall is not disabled via skuba, so we need to manually disable it
   - [ systemctl, disable, firewalld, --now ]
-
-
-bootcmd:
-  # Hostnames from DHCP - otherwise localhost will be used
+  # Disable hostname from DHCP
   - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"yes\"#DHCLIENT_SET_HOSTNAME=\"no\"#" /etc/sysconfig/network/dhcp
-  - /usr/bin/hostnamectl set-hostname ${hostname}
+  - systemctl restart wicked
 
 final_message: "The system is finally up, after $UPTIME seconds"

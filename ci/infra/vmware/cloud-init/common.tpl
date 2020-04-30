@@ -34,6 +34,9 @@ ${repositories}
 # with SUSEConnect command after packages module is ran
 #packages:
 
+# set hostname
+hostname: ${hostname}
+
 runcmd:
   # Since we are currently inside of the cloud-init systemd unit, trying to
   # start another service by either `enable --now` or `start` will create a
@@ -50,13 +53,11 @@ runcmd:
   - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
   - sshd -t || echo "ssh syntax failure"
   - systemctl restart sshd
+  # Disable hostname from DHCP
+  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"yes\"#DHCLIENT_SET_HOSTNAME=\"no\"#" /etc/sysconfig/network/dhcp
+  - systemctl restart wicked
 ${register_scc}
 ${register_rmt}
 ${commands}
-
-bootcmd:
-  # Hostnames from DHCP - otherwise `localhost` will be used
-  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"yes\"#DHCLIENT_SET_HOSTNAME=\"no\"#" /etc/sysconfig/network/dhcp
-  - /usr/bin/hostnamectl set-hostname ${hostname}
 
 final_message: "The system is finally up, after $UPTIME seconds"
