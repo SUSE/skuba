@@ -215,7 +215,7 @@ The kubectl section defines the configuration of the kubectl tool.
 
 Testrunner sends output to both a console and file logger handlers, configured using the following `log` variables:
 
-* file: name of the file used to send a copy of the log with verbosity `DEBUG`. This file is located under the `workspace` directory.
+* file: path to the file used to send a copy of the log with verbosity `DEBUG`. Default is "$WORKSPACE/testrunner.log"
 * level: debug verbosity level to console. Can be any of `DEBUG`, `INFO`, `WARNING`, `ERROR`. Defaults to `INFO`.
 * overwrite: boolean that indicates if the content of the log file must be overwritten (`True`) or log entries must be appended at the end of the file if it exists. Defaults to `False` (do not overwrite) 
 * quiet: boolean that indicates if `testrunner` will send any output to console (`False`) or not will execute silently (`True`). Quiet mode is useful when `testrunner` is used as a library. Defaults to `False`.

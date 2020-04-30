@@ -117,7 +117,7 @@ class BaseConfig:
             super().__init__()
             self.level = "INFO"
             self.quiet = False
-            self.file = "testrunner.log"
+            self.file = "$WORKSPACE/testrunner.log"
             self.overwrite = False
 
     class VMware:
