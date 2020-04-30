@@ -7,7 +7,7 @@ libvirt_uri = ""
 # Note this value will be appended to the libvirt_uri as a 'keyfile' query: <libvirt_uri>?keyfile=<libvirt_keyfile>
 # EXAMPLE:
 # libvirt_keyfile = "~/.ssh/custom_id"
-libvirt_uri = ""
+libvirt_keyfile = ""
 
 # URL of the image to use
 # EXAMPLE:
