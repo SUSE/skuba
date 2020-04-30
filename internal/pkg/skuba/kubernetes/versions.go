@@ -85,30 +85,6 @@ type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVe
 
 var (
 	supportedVersions = KubernetesVersions{
-		"1.18.0": KubernetesVersion{
-			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.18.0",
-				ContainerRuntimeVersion: "1.18.0",
-			},
-			ComponentContainerVersion: ComponentContainerVersion{
-				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.18.0"},
-				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.18.0"},
-				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.18.0"},
-				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.18.0"},
-				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
-				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
-				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
-				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
-			},
-			AddonsVersion: AddonsVersion{
-				Cilium:        &AddonVersion{"1.6.6", 3},
-				Kured:         &AddonVersion{"1.3.0", 4},
-				Dex:           &AddonVersion{"2.23.0", 6},
-				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
-				MetricsServer: &AddonVersion{"0.3.6", 0},
-				PSP:           &AddonVersion{"", 2},
-			},
-		},
 		"1.17.4": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.17.4",
