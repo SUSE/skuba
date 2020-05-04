@@ -31,7 +31,7 @@ pipeline {
 
         stage('Deploy cluster') {
             steps {
-                sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
+                sh(script: 'make -f skuba/ci/Makefile deploy KUBERNETES_VERSION=${KUBERNETES_VERSION}', label: 'Deploy')
                 sh(script: 'make -f skuba/ci/Makefile check_cluster', label: 'Check cluster')
             }
         }
