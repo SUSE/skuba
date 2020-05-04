@@ -10,23 +10,23 @@
 #  path: #path to kubectl binary (defaults to /usr/bin/kubectl)
 #
 #
-#terraform:
+terraform:
 #  internal_net: "" # name of the internal network
 #  plugin_dir: "" # path to the terraform plugin dir
 #  stack_name: "" # name of the stack
 #  tfdir: ""  # path to terraform templates
 #  tfvars: "" # terraform vars
 #  nodeuser: "sles"  # Default node username
-#  lb:
-#    count: 1
+  lb:
+    count: 1
 #    memory: 8192
 #    cpu: 4
-#  master:
-#    count: 3
+  master:
+    count: 3
 #    memory: 4096
 #    cpu: 4
-#  worker:
-#    count: 3
+  worker:
+    count: 3
 #    memory: 4096
 #    cpu: 2
 
@@ -37,7 +37,8 @@ packages:
 
 utils:
   ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" 
-  ssh_sock: "/tmp/
+  ssh_user: "sles"
+  ssh_sock: "$WORKSPACE/agent.sock"
 
 #openstack:
 #  openrc: "" #os.getenv("OPENSTACK_OPENRC")
