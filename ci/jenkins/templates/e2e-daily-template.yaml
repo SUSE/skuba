@@ -23,6 +23,10 @@
             name: E2E_MAKE_TARGET_NAME
             default: '{test}'
             description: The make target to run (only e2e tests)
+        - string:
+              name: KUBERNETES_VERSION 
+              default: '{kubernetes_version}'
+              description: version of kubernetes to install
     pipeline-scm:
         scm:
             - git:

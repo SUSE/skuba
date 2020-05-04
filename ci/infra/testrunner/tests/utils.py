@@ -119,25 +119,6 @@ def wait(func, *args, **kwargs):
     raise Exception("Failed waiting for function {} after {} attemps due to {}".format(func.__name__, attempts, reason))
 
 
-def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
-    """
-    Initialize the cluster with the given kubernetes_version, bootstrap it and
-    join nodes.
-    """
-
-    skuba.cluster_init(kubernetes_version)
-    skuba.node_bootstrap()
-
-    skuba.join_nodes()
-
-    wait(check_nodes_ready,
-         kubectl,
-         wait_delay=60,
-         wait_backoff=30,
-         wait_elapsed=60*10,
-         wait_allow=(AssertionError))
-
-
 def create_skuba_config(kubectl, configmap_data, dry_run=False):
     return kubectl.run_kubectl(
         'create configmap skuba-config --from-literal {0} -o yaml --namespace kube-system {1}'.format(
