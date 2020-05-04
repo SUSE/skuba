@@ -118,6 +118,7 @@ packages:
 
 This section configures the utils module used for executing commands.
 
+* ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`.
 * ssh_sock: name of the socket used to communicate with the ssh-agent. Default is /tmp/testrunner_ssh_sock'
 
 Example:
@@ -145,7 +146,6 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * master: specifications for the master(s)
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
-* ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
 * tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
@@ -273,7 +273,7 @@ You must copy the terraform files installed from the package to a work directory
 You must provide the ssh key to connect to the cluster nodes, as the `shared_id` key used in development is not available. By default, your `id_rsa` key will be used, but you can provide any key:
 
 ```
-  terraform:
+  utils:
     ssh_key: "path/to/id_rsa"
 ```
 

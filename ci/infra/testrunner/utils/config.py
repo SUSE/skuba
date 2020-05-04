@@ -51,6 +51,8 @@ class BaseConfig:
     class Utils:
         def __init__(self):
             self.ssh_sock =  "/tmp/testrunner_ssh_sock"
+            self.ssh_key = "$HOME/.ssh/id_rsa"
+            self.ssh_user = "sles"
 
     class Platform:
         def __init__(self):
@@ -71,8 +73,6 @@ class BaseConfig:
             self.tfdir = "$WORKSPACE/skuba/ci/infra"
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
-            self.ssh_key = "$HOME/.ssh/id_rsa"
-            self.nodeuser = None
             self.lb = BaseConfig.NodeConfig()
             self.master = BaseConfig.NodeConfig()
             self.worker = BaseConfig.NodeConfig()
@@ -144,7 +144,7 @@ class BaseConfig:
         """ Set values for configuration attributes
         The order of precedence is:
         - An environment variable exists with the fully qualified name of the
-          attribute
+          attribute (e.g SKUBA_BINPATH)
         - The attribute from vars
         - default value for configuration
 

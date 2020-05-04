@@ -28,10 +28,10 @@ def test_defaults():
         assert config.skuba.binpath == os.path.join(workspace,skuba_binpath)
         assert config.skuba.cluster == "test-cluster"
         assert config.terraform.tfdir == os.path.join(workspace,terraform_tfdir)
-        assert config.terraform.ssh_key == os.path.join(home, ssh_key)
         assert config.terraform.stack_name == user
         assert config.terraform.workdir ==  workspace
         assert config.terraform.tfvars ==  tfvars
         assert config.terraform.plugin_dir == None
+        assert config.utils.ssh_key == os.path.join(home, ssh_key)
 
 

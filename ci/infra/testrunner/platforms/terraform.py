@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import hcl
 
 from platforms.platform import Platform
-from utils import (Format, step)
+from utils import (Format, step, Utils)
 
 logger = logging.getLogger('testrunner')
 
@@ -20,6 +20,7 @@ class Terraform(Platform):
         self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
         self.tfjson_path = os.path.join(self.conf.terraform.workdir, "tfout.json")
         self.tfout_path = os.path.join(self.conf.terraform.workdir, "tfout")
+        self.utils = Utils(conf)
         self.state = None
 
         self.logs["files"] += ["/var/run/cloud-init/status.json",
@@ -146,7 +147,7 @@ class Terraform(Platform):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
             "stack_name": self.stack_name(),
-            "username": self.conf.terraform.nodeuser,
+            "username": self.utils.ssh_user(),
             "masters": self.conf.terraform.master.count,
             "master_memory": self.conf.terraform.master.memory,
             "master_vcpu": self.conf.terraform.master.cpu,
