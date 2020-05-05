@@ -122,5 +122,5 @@ variable "cpi_enable" {
 
 variable "hostname_from_dhcp" {
   default     = false
-  description = "Set node's hostname from DHCP server"
+  description = "Enable node's hostname from DHCP server"
 }

@@ -53,7 +53,7 @@ runcmd:
   - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
   - sshd -t || echo "ssh syntax failure"
   - systemctl restart sshd
-  # Disable hostname from DHCP
+  # Enable/Disable hostname from DHCP
   - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"yes\"#DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"#" /etc/sysconfig/network/dhcp
   - systemctl restart wicked
 ${register_scc}
