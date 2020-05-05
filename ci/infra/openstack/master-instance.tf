@@ -37,15 +37,18 @@ data "template_file" "master_commands" {
 
 data "template_file" "master-cloud-init" {
   template = file("cloud-init/common.tpl")
+  count    = var.masters
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.master_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.master_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.master_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.master_commands.*.rendered)
-    username        = var.username
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.master_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.master_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.master_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.master_commands.*.rendered)
+    username           = var.username
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "caasp-master-${var.stack_name}-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
@@ -71,7 +74,7 @@ resource "openstack_compute_instance_v2" "master" {
     openstack_networking_secgroup_v2.master_nodes.name,
   ]
 
-  user_data = data.template_file.master-cloud-init.rendered
+  user_data = data.template_file.master-cloud-init[count.index].rendered
 }
 
 resource "openstack_networking_floatingip_v2" "master_ext" {
@@ -81,7 +84,7 @@ resource "openstack_networking_floatingip_v2" "master_ext" {
 
 resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
   depends_on = [openstack_compute_instance_v2.master]
-  count = var.masters
+  count      = var.masters
   floating_ip = element(
     openstack_networking_floatingip_v2.master_ext.*.address,
     count.index,
@@ -94,7 +97,7 @@ resource "null_resource" "master_wait_cloudinit" {
     openstack_compute_instance_v2.master,
     openstack_compute_floatingip_associate_v2.master_ext_ip
   ]
-  count      = var.masters
+  count = var.masters
 
   connection {
     host = element(
@@ -133,4 +136,3 @@ EOT
 
   }
 }
-
