@@ -119,11 +119,12 @@ data "template_file" "lb_cloud_init_userdata" {
   count    = var.lbs
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.lb_repositories_template.*.rendered)
-    packages        = join("\n", formatlist("  - %s", var.packages))
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
-    hostname        = "${var.stack_name}-lb-${count.index}"
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.lb_repositories_template.*.rendered)
+    packages           = join("\n", formatlist("  - %s", var.packages))
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-lb-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
