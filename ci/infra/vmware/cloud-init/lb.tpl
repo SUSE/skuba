@@ -48,7 +48,7 @@ runcmd:
   # LB firewall is not disabled via skuba, so we need to manually disable it
   - [ systemctl, disable, firewalld, --now ]
   # Enable/Disable hostname from DHCP
-  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"yes\"#DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"#" /etc/sysconfig/network/dhcp
+  - sed -i -e '/^DHCLIENT_SET_HOSTNAME/s/^.*$/DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"/' /etc/sysconfig/network/dhcp
   - systemctl restart wicked
 
 final_message: "The system is finally up, after $UPTIME seconds"
