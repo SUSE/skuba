@@ -16,7 +16,7 @@ def test_upgrade_plan_from_previous(deployment, skuba, kubectl, platform):
     assert out.find("Latest Kubernetes version: {cv}".format(
         cv=CURRENT_VERSION)) != -1
     assert out.find(
-        "Upgrade path to update from {pv} to {cv}:\n - {pv} -> {cv}".format(
+        "Upgrade path to update from {pv} to {cv}:\n  - {pv} -> {cv}".format(
             pv=PREVIOUS_VERSION, cv=CURRENT_VERSION)
     ) != -1
 
