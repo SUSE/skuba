@@ -7,19 +7,13 @@ JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
 ifdef SUITE
-SUITE_OPT=--suite ${SUITE}.py
+SUITE_CMD=--suite ${SUITE}.py
 endif
 ifdef TEST
 ifndef SUITE
 $(error SUITE is required for selecting a test )
 endif
-TEST_OPT=--test ${TEST}
-endif
-ifdef SKIP_SETUP
-SKIP_SETUP_OPT=--skip-setup ${SKIP_SETUP}
-endif
-ifdef KUBERNETES_VERSION
-K8S_VERSION_OPT=--kubernetes-version ${KUBERNETES_VERSION}
+TEST_CMD=--test ${TEST}
 endif
 
 .PHONY: all
@@ -33,7 +27,7 @@ provision:
 
 .PHONY: bootstrap
 bootstrap:
-	${TEST_RUNNER} --platform ${PLATFORM} bootstrap ${K8S_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} bootstrap
 
 .PHONY: join_nodes 
 join_nodes:
@@ -41,7 +35,7 @@ join_nodes:
 
 .PHONY: deploy 
 deploy:
-	${TEST_RUNNER} --platform ${PLATFORM} deploy ${K8s_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} deploy
 
 .PHONY: check_cluster
 check_cluster:
@@ -88,7 +82,7 @@ post_run: gather_logs cleanup
 # e2e Tests
 .PHONY: test
 test:
-	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_OPT} ${TEST_OPT} ${SKIP_SETUP_OPT}
+	${TEST_RUNNER} -v vars.yaml -p ${PLATFORM} test --verbose ${SUITE_CMD} ${TEST_CMD}
 
 .PHONY: test_pr
 test_pr:
