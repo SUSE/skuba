@@ -46,32 +46,34 @@ data "template_file" "worker_cloud_init_metadata" {
 
 data "template_file" "worker_cloud_init_userdata" {
   template = file("cloud-init/common.tpl")
+  count    = var.workers
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.worker_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.worker_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.worker_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.worker_commands.*.rendered)
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.worker_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.worker_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.worker_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.worker_commands.*.rendered)
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-worker-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
 resource "vsphere_virtual_machine" "worker" {
-  depends_on       = [vsphere_folder.folder]
+  depends_on = [vsphere_folder.folder]
 
-  count            = var.workers
-  name             = "${var.stack_name}-worker-${count.index}"
-  num_cpus         = var.worker_cpus
-  memory           = var.worker_memory
-  guest_id         = var.guest_id
-  firmware         = var.firmware
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  count                = var.workers
+  name                 = "${var.stack_name}-worker-${count.index}"
+  num_cpus             = var.worker_cpus
+  memory               = var.worker_memory
+  guest_id             = var.guest_id
+  firmware             = var.firmware
+  scsi_type            = data.vsphere_virtual_machine.template.scsi_type
+  resource_pool_id     = data.vsphere_resource_pool.pool.id
+  datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
-
+  folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -87,7 +89,7 @@ resource "vsphere_virtual_machine" "worker" {
   extra_config = {
     "guestinfo.metadata"          = base64gzip(data.template_file.worker_cloud_init_metadata.rendered)
     "guestinfo.metadata.encoding" = "gzip+base64"
-    "guestinfo.userdata"          = base64gzip(data.template_file.worker_cloud_init_userdata.rendered)
+    "guestinfo.userdata"          = base64gzip(data.template_file.worker_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
   enable_disk_uuid = var.cpi_enable == true ? true : false
@@ -99,7 +101,7 @@ resource "vsphere_virtual_machine" "worker" {
 
 resource "null_resource" "worker_wait_cloudinit" {
   depends_on = [vsphere_virtual_machine.worker]
-  count = var.workers
+  count      = var.workers
 
   connection {
     host = element(
@@ -117,4 +119,3 @@ resource "null_resource" "worker_wait_cloudinit" {
     ]
   }
 }
-

@@ -68,3 +68,6 @@ ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.
 
 # Enable CPI integration with vSphere
 #cpi_enable = true
+
+# Set node's hostname from DHCP server
+#hostname_from_dhcp = false

@@ -116,27 +116,30 @@ data "template_file" "lb_haproxy_cfg" {
 
 data "template_file" "lb_cloud_init_userdata" {
   template = file("cloud-init/lb.tpl")
+  count    = var.lbs
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.lb_repositories_template.*.rendered)
-    packages        = join("\n", formatlist("  - %s", var.packages))
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.lb_repositories_template.*.rendered)
+    packages           = join("\n", formatlist("  - %s", var.packages))
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-lb-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
 resource "vsphere_virtual_machine" "lb" {
-  count            = var.lbs
-  name             = "${var.stack_name}-lb-${count.index}"
-  num_cpus         = var.lb_cpus
-  memory           = var.lb_memory
-  guest_id         = var.guest_id
-  firmware         = var.firmware
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  count                = var.lbs
+  name                 = "${var.stack_name}-lb-${count.index}"
+  num_cpus             = var.lb_cpus
+  memory               = var.lb_memory
+  guest_id             = var.guest_id
+  firmware             = var.firmware
+  scsi_type            = data.vsphere_virtual_machine.template.scsi_type
+  resource_pool_id     = data.vsphere_resource_pool.pool.id
+  datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
+  folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -152,7 +155,7 @@ resource "vsphere_virtual_machine" "lb" {
   extra_config = {
     "guestinfo.metadata"          = base64gzip(data.template_file.lb_cloud_init_metadata.rendered)
     "guestinfo.metadata.encoding" = "gzip+base64"
-    "guestinfo.userdata"          = base64gzip(data.template_file.lb_cloud_init_userdata.rendered)
+    "guestinfo.userdata"          = base64gzip(data.template_file.lb_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
 
@@ -217,4 +220,3 @@ resource "null_resource" "lb_push_haproxy_cfg" {
     ]
   }
 }
-

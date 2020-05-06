@@ -119,3 +119,8 @@ variable "cpi_enable" {
   default     = false
   description = "Enable CPI integration with vSphere"
 }
+
+variable "hostname_from_dhcp" {
+  default     = true
+  description = "Set node's hostname from DHCP server"
+}

@@ -46,31 +46,34 @@ data "template_file" "master_cloud_init_metadata" {
 
 data "template_file" "master_cloud_init_userdata" {
   template = file("cloud-init/common.tpl")
+  count    = var.masters
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.master_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.master_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.master_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.master_commands.*.rendered)
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.master_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.master_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.master_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.master_commands.*.rendered)
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-master-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
 resource "vsphere_virtual_machine" "master" {
-  depends_on       = [vsphere_folder.folder]
+  depends_on = [vsphere_folder.folder]
 
-  count            = var.masters
-  name             = "${var.stack_name}-master-${count.index}"
-  num_cpus         = var.master_cpus
-  memory           = var.master_memory
-  guest_id         = var.guest_id
-  firmware         = var.firmware
-  scsi_type        = data.vsphere_virtual_machine.template.scsi_type
-  resource_pool_id = data.vsphere_resource_pool.pool.id
-  datastore_id     = (var.vsphere_datastore == null ? null: data.vsphere_datastore.datastore[0].id)
+  count                = var.masters
+  name                 = "${var.stack_name}-master-${count.index}"
+  num_cpus             = var.master_cpus
+  memory               = var.master_memory
+  guest_id             = var.guest_id
+  firmware             = var.firmware
+  scsi_type            = data.vsphere_virtual_machine.template.scsi_type
+  resource_pool_id     = data.vsphere_resource_pool.pool.id
+  datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
-  folder           = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
+  folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -86,7 +89,7 @@ resource "vsphere_virtual_machine" "master" {
   extra_config = {
     "guestinfo.metadata"          = base64gzip(data.template_file.master_cloud_init_metadata.rendered)
     "guestinfo.metadata.encoding" = "gzip+base64"
-    "guestinfo.userdata"          = base64gzip(data.template_file.master_cloud_init_userdata.rendered)
+    "guestinfo.userdata"          = base64gzip(data.template_file.master_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
   enable_disk_uuid = var.cpi_enable == true ? true : false
@@ -98,7 +101,7 @@ resource "vsphere_virtual_machine" "master" {
 
 resource "null_resource" "master_wait_cloudinit" {
   depends_on = [vsphere_virtual_machine.master]
-  count = var.masters
+  count      = var.masters
 
   connection {
     host = element(
@@ -116,4 +119,3 @@ resource "null_resource" "master_wait_cloudinit" {
     ]
   }
 }
-
