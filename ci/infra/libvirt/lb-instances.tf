@@ -113,7 +113,7 @@ resource "libvirt_cloudinit_disk" "lb" {
   name = "${var.stack_name}-lb-cloudinit-disk"
   pool = var.pool
 
-  user_data = data.template_file.lb_cloud_init_userdata[count.index].rendered
+  user_data = data.template_file.lb_cloud_init_userdata.rendered
 }
 
 resource "libvirt_domain" "lb" {
