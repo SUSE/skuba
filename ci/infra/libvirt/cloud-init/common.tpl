@@ -45,7 +45,7 @@ bootcmd:
   - ip link set dev eth0 mtu 1400
 
 runcmd:
-  # Enable/Disable hostname from DHCP
+  # Set node's hostname from DHCP server
   - sed -i -e '/^DHCLIENT_SET_HOSTNAME/s/^.*$/DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"/' /etc/sysconfig/network/dhcp
   - systemctl restart wicked
 ${register_scc}
