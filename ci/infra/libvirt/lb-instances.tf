@@ -97,6 +97,7 @@ data "template_file" "lb_cloud_init_userdata" {
     username           = var.username
     password           = var.password
     ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-lb"
     hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }

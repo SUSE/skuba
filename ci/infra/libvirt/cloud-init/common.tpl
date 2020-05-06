@@ -38,6 +38,9 @@ ${repositories}
 # with SUSEConnect command after packages module is ran
 #packages:
 
+# set hostname
+hostname: ${hostname}
+
 bootcmd:
   - ip link set dev eth0 mtu 1400
 
