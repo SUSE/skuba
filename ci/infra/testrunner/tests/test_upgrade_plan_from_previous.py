@@ -1,15 +1,13 @@
 import pytest
 
-from tests.utils import setup_kubernetes_version, PREVIOUS_VERSION, CURRENT_VERSION
+from tests.utils import PREVIOUS_VERSION, CURRENT_VERSION
 
 
 @pytest.mark.disruptive
-def test_upgrade_plan_from_previous(provision, skuba, kubectl, platform):
+def test_upgrade_plan_from_previous(deployment, skuba, kubectl, platform):
     """
     Starting from an outdated cluster, check what cluster/node plan report.
     """
-
-    setup_kubernetes_version(skuba, kubectl, PREVIOUS_VERSION)
 
     # cluster upgrade plan
     out = skuba.cluster_upgrade_plan()
