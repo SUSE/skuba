@@ -19,6 +19,7 @@ package upgrade
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,6 +34,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func Apply(client clientset.Interface, target *deployments.Target) error {
@@ -128,6 +130,29 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			return err
 		}
 	}
+
+	/*
+		Always upload crio files, regardless of the version (allows to
+		enforce user behavior during patch updates).
+		During the upgrade from 1.16 to 1.18 crio, the cri-o package will
+		handle overriding the old crio sysconfig to an "empty" sysconfig,
+		and the cri.configure action will be enough.
+		We can remove the conditionals and only
+		keep the cri.configure action when caasp 4.2.0 is not supported
+		anymore (everyone has updated crio to 1.18)
+	*/
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
+		err = target.Apply(nil, "cri.configure")
+		if err != nil {
+			return err
+		}
+	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		err = target.Apply(nil, "cri.sysconfig")
+		if err != nil {
+			return err
+		}
+	}
+
 	if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
 		err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 			UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
