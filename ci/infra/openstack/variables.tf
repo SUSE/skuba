@@ -138,6 +138,6 @@ variable "ca_file" {
 }
 
 variable "hostname_from_dhcp" {
-  default     = false
-  description = "Enable node's hostname from DHCP server"
+  default     = true
+  description = "Set node's hostname from DHCP server"
 }
