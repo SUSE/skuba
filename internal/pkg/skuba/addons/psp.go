@@ -300,9 +300,6 @@ spec:
   hostPID: false
   hostIPC: false
   hostNetwork: false
-  hostPorts:
-  - min: 0
-    max: 65535
   # SELinux
   seLinux:
     # SELinux is unused in CaaSP
