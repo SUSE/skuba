@@ -220,11 +220,13 @@ func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
 				CertSANs: []string{initConfiguration.ControlPlaneHost()},
 				ControlPlaneComponent: kubeadmapi.ControlPlaneComponent{
 					ExtraArgs: map[string]string{
-						"oidc-issuer-url":     fmt.Sprintf("https://%s:32000", initConfiguration.ControlPlaneHost()),
-						"oidc-client-id":      "oidc",
-						"oidc-ca-file":        "/etc/kubernetes/pki/ca.crt",
-						"oidc-username-claim": "email",
-						"oidc-groups-claim":   "groups",
+						"oidc-issuer-url":                  fmt.Sprintf("https://%s:32000", initConfiguration.ControlPlaneHost()),
+						"oidc-client-id":                   "oidc",
+						"oidc-ca-file":                     "/etc/kubernetes/pki/ca.crt",
+						"oidc-username-claim":              "email",
+						"oidc-groups-claim":                "groups",
+						"service-account-issuer":           "kubernetes.default.svc",
+						"service-account-signing-key-file": "/etc/kubernetes/pki/sa.key",
 					},
 				},
 			},

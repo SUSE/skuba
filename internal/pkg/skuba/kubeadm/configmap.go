@@ -124,6 +124,7 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *corev1.Nod
 func UpdateClusterConfigurationWithClusterVersion(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
 	setApiserverAdmissionPlugins(initCfg, clusterVersion)
 	setContainerImagesWithClusterVersion(initCfg, clusterVersion)
+	setApiserverArgs(initCfg)
 }
 
 func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
@@ -158,4 +159,9 @@ func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, cluster
 	admissionPlugins = append(admissionPlugins, "PodSecurityPolicy")
 	admissionPlugins = skubautil.UniqueStringSlice(admissionPlugins)
 	initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
+}
+
+func setApiserverArgs(initCfg *kubeadmapi.InitConfiguration) {
+	initCfg.APIServer.ExtraArgs["service-account-issuer"] = "kubernetes.default.svc"
+	initCfg.APIServer.ExtraArgs["service-account-signing-key-file"] = "/etc/kubernetes/pki/sa.key"
 }
