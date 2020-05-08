@@ -29,6 +29,7 @@ import (
 func init() {
 	stateMap["cri.configure"] = criConfigure
 	stateMap["cri.sysconfig"] = criSysconfig
+	stateMap["cri.update"] = criUpdate
 	stateMap["cri.start"] = criStart
 }
 
@@ -80,6 +81,11 @@ func criSysconfig(t *Target, data interface{}) error {
 		return err
 	}
 	_, _, err = t.ssh("mv -f /tmp/cri.d/default_flags /etc/sysconfig/crio")
+	return err
+}
+
+func criUpdate(t *Target, data interface{}) error {
+	_, _, err := t.ssh("sed -i 's/CRIO_OPTIONS=.*/CRIO_OPTIONS=/' /etc/sysconfig/crio")
 	return err
 }
 

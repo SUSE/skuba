@@ -132,24 +132,23 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 
 	/*
-		Always upload crio files, regardless of the version (allows to
-		enforce user behavior during patch updates).
-		During the upgrade from 1.16 to 1.18 crio, the cri-o package will
-		handle overriding the old crio sysconfig to an "empty" sysconfig,
-		and the cri.configure action will be enough.
+		Upload crio.conf.d files only when Kubernetes target version 
+		is v1.18. For cri-o package v1.18.0 we are migrating CaaSP 
+		configuration from /etc/sysconfig/crio to /etc/crio/crio.conf.d/01-caasp.conf
+		During the upgrade to 1.18 crio, skuba has to clean /etc/sysconfig/crio.
 		We can remove the conditionals and only
 		keep the cri.configure action when caasp 4.2.0 is not supported
 		anymore (everyone has updated crio to 1.18)
 	*/
-	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
-		err = target.Apply(nil, "cri.configure")
-		if err != nil {
-			return err
-		}
-	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
-		err = target.Apply(nil, "cri.sysconfig")
-		if err != nil {
-			return err
+	if kubernetes.LatestVersion().Minor() == 18 {
+		if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
+			err = target.Apply(nil,
+				"cri.update",
+				"cri.configure",
+			)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
