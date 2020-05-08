@@ -24,8 +24,9 @@
             - git:
                 url: 'https://github.com/{repo-owner}/{repo-name}.git'
                 credentials-id: '{repo-credentials}'
+                refspec: '+refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*'
                 branches:
-                    - '{branch}'
+                    - '$BRANCH'
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: skuba
