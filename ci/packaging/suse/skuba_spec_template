@@ -30,6 +30,7 @@ URL:            https://github.com/SUSE/skuba
 Source0:        %{name}.tar.gz
 Source1:        vendor.tar.gz
 Patch0:         0001-Patch-out-load-balancer.patch
+BuildRequires:  git
 BuildRequires:  go-go-md2man
 BuildRequires:  golang-packaging
 BuildRequires:  golang(API) >= 1.12
@@ -70,6 +71,7 @@ including patches requiring reboot.
 
 %prep
 %setup -q -n %{name}
+%setup -D -a 1 -n %{name}
 %patch0 -p1
 
 %build
