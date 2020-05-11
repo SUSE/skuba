@@ -15,7 +15,7 @@ vsphere_network = ""
 
 # resource pool the machines will be running in
 # EXAMPLE:
-# vsphere_resource_pool = "CaaSP_RP"
+# vsphere_resource_pool = "esxi1/Resources"
 vsphere_resource_pool = ""
 
 # template name the machines will be copied from
