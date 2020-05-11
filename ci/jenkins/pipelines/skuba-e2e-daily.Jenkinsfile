@@ -23,9 +23,22 @@ pipeline {
             sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
         } }
 
+        stage('Provision cluster') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
+            }
+        }
+
+        stage('Deploy cluster') {
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile deploy KUBERNETES_VERSION=${KUBERNETES_VERSION}', label: 'Deploy')
+                sh(script: 'make -f skuba/ci/Makefile check_cluster', label: 'Check cluster')
+            }
+        }
+
         stage('Run Skuba e2e Test') {
             steps {
-                sh(script: "make -f skuba/ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME}", label: "${E2E_MAKE_TARGET_NAME}")
+                sh(script: "make -f skuba/ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
             }
         }
    }
