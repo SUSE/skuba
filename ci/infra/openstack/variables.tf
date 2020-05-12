@@ -137,3 +137,7 @@ variable "ca_file" {
   description = "Used to specify the path to your custom CA file"
 }
 
+variable "hostname_from_dhcp" {
+  default     = true
+  description = "Set node's hostname from DHCP server"
+}

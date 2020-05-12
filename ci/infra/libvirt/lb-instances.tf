@@ -89,14 +89,16 @@ data "template_file" "lb_cloud_init_userdata" {
   template = file("cloud-init/common.tpl")
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.lb_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.lb_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.lb_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.lb_commands.*.rendered)
-    username        = var.username
-    password        = var.password
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.lb_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.lb_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.lb_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.lb_commands.*.rendered)
+    username           = var.username
+    password           = var.password
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-lb"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
@@ -197,4 +199,3 @@ resource "null_resource" "lb_push_haproxy_cfg" {
     ]
   }
 }
-

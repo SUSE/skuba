@@ -40,16 +40,19 @@ data "template_file" "master_commands" {
 
 data "template_file" "master-cloud-init" {
   template = file("cloud-init/common.tpl")
+  count    = var.masters
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.master_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.master_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.master_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.master_commands.*.rendered)
-    username        = var.username
-    password        = var.password
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.master_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.master_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.master_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.master_commands.*.rendered)
+    username           = var.username
+    password           = var.password
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-master-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
@@ -66,7 +69,7 @@ resource "libvirt_cloudinit_disk" "master" {
   count     = var.masters
   name      = "${var.stack_name}-master-cloudinit-disk-${count.index}"
   pool      = var.pool
-  user_data = data.template_file.master-cloud-init.rendered
+  user_data = data.template_file.master-cloud-init[count.index].rendered
 }
 
 resource "libvirt_domain" "master" {
@@ -141,4 +144,3 @@ EOT
 
   }
 }
-

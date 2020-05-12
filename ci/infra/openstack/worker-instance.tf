@@ -37,15 +37,18 @@ data "template_file" "worker_commands" {
 
 data "template_file" "worker-cloud-init" {
   template = file("cloud-init/common.tpl")
+  count    = var.workers
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.worker_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.worker_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.worker_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.worker_commands.*.rendered)
-    username        = var.username
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.worker_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.worker_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.worker_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.worker_commands.*.rendered)
+    username           = var.username
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "caasp-worker-${var.stack_name}-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
@@ -85,7 +88,7 @@ resource "openstack_compute_instance_v2" "worker" {
     openstack_networking_secgroup_v2.common.name,
   ]
 
-  user_data = data.template_file.worker-cloud-init.rendered
+  user_data = data.template_file.worker-cloud-init[count.index].rendered
 }
 
 resource "openstack_networking_floatingip_v2" "worker_ext" {
@@ -95,7 +98,7 @@ resource "openstack_networking_floatingip_v2" "worker_ext" {
 
 resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
   depends_on = [openstack_compute_instance_v2.worker]
-  count = var.workers
+  count      = var.workers
   floating_ip = element(
     openstack_networking_floatingip_v2.worker_ext.*.address,
     count.index,
@@ -108,7 +111,7 @@ resource "null_resource" "worker_wait_cloudinit" {
     openstack_compute_instance_v2.worker,
     openstack_compute_floatingip_associate_v2.worker_ext_ip,
   ]
-  count      = var.workers
+  count = var.workers
 
   connection {
     host = element(
@@ -147,4 +150,3 @@ EOT
 
   }
 }
-

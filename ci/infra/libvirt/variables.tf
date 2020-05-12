@@ -173,3 +173,8 @@ variable "worker_disk_size" {
   default     = "25769803776"
   description = "Disk size (in bytes)"
 }
+
+variable "hostname_from_dhcp" {
+  default     = true
+  description = "Set node's hostname from DHCP server"
+}

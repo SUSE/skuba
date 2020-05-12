@@ -31,9 +31,12 @@ ${repositories}
 # cloud image because they conflict with the kubic- ones that are pulled by
 # the kubernetes packages
 # WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registraion
-# Code is provided. In this case repositories will be added in runcmd module 
+# Code is provided. In this case repositories will be added in runcmd module
 # with SUSEConnect command after packages module is ran
 #packages:
+
+# set hostname
+hostname: ${hostname}
 
 bootcmd:
   - ip link set dev eth0 mtu 1400
@@ -47,6 +50,9 @@ runcmd:
   - sed -i -e '/^#PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
   - sshd -t || echo "ssh syntax failure"
   - systemctl restart sshd
+  # Set node's hostname from DHCP server
+  - sed -i -e '/^DHCLIENT_SET_HOSTNAME/s/^.*$/DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"/' /etc/sysconfig/network/dhcp
+  - systemctl restart wicked
 ${register_scc}
 ${register_rmt}
 ${commands}
