@@ -23,6 +23,7 @@ Description=kubelet: The Kubernetes Node Agent
 Documentation=http://kubernetes.io/docs/
 
 [Service]
+ExecStartPre=/bin/bash -c "findmnt -t bpf --mountpoint /sys/fs/bpf > /dev/null || mount bpffs /sys/fs/bpf -t bpf"
 ExecStart=/usr/bin/kubelet
 Restart=always
 StartLimitInterval=0
@@ -40,6 +41,7 @@ EnvironmentFile=-/var/lib/kubelet/kubeadm-flags.env
 # This is a file that the user can use for overrides of the kubelet args as a last resort. Preferably, the user should use
 # the .NodeRegistration.KubeletExtraArgs object in the configuration files instead. KUBELET_EXTRA_ARGS should be sourced from this file.
 EnvironmentFile=-/etc/sysconfig/kubelet
+ExecStartPre=/bin/bash -c "findmnt -t bpf --mountpoint /sys/fs/bpf > /dev/null || mount bpffs /sys/fs/bpf -t bpf"
 ExecStart=
 ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS`
 )
