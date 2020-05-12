@@ -88,6 +88,10 @@ func CriDefaultsConfFile() string {
 	return filepath.Join(CriConfDir(), "01-caasp.conf")
 }
 
+func CriConfFolderReadmeFile() string {
+	return filepath.Join(CriConfDir(), "README")
+}
+
 func KubeConfigAdminFile() string {
 	return "admin.conf"
 }

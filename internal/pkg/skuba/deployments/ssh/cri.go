@@ -52,7 +52,10 @@ func criConfigure(t *Target, data interface{}) error {
 		}
 	}
 
-	_, _, err = t.ssh("mv -f /tmp/crio.conf.d/01-caasp.conf /etc/crio/crio.conf.d/01-caasp.conf")
+	if _, _, err = t.ssh("mkdir -p /etc/crio/crio.conf.d"); err != nil {
+		return err
+	}
+	_, _, err = t.ssh("cp -r /tmp/crio.conf.d/*.conf /etc/crio/crio.conf.d")
 	return err
 }
 

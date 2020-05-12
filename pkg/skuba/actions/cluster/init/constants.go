@@ -40,6 +40,10 @@ var (
 				Location: skuba.CriDefaultsConfFile(),
 				Content:  criDefaultsConf,
 			},
+			{
+				Location: skuba.CriConfFolderReadmeFile(),
+				Content:  CriConfFolderReadme,
+			},
 		},
 	}
 
