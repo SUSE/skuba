@@ -1,5 +1,6 @@
 import os
 import string
+import sys
 
 import yaml
 
@@ -124,6 +125,18 @@ class BaseConfig:
             self.registry_code = None
             self.additional_repos = None
             self.additional_pkgs = None
+
+    @staticmethod
+    def print(config, level=0, out=sys.stdout):
+        """ Prints the configuration
+        """
+        print(f'{"  "*level}{config.__class__.__name__}:', file=out)
+        for key, value in config.__dict__.items():
+            if isinstance(value, BaseConfig.config_classes):
+                BaseConfig.print(value, level=level+1, out=out)
+                continue
+
+            print(f'{"  "*(level+1)}{key}: {value}', file=out)
 
     @staticmethod
     def get_yaml_path(yaml_path):

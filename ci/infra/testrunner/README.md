@@ -399,15 +399,16 @@ usage:
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
 
-       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
+       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}] [-c]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
+       {info,config,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
        ...
 
 positional arguments:
   {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
                         command
     info                ip info
+    config              print configuration 
     get_logs            gather logs from nodes
     cleanup             cleanup created skuba environment
     provision           provision nodes for cluster in your configured
@@ -425,6 +426,18 @@ positional arguments:
     ssh                 Execute command in node via ssh.
     test                execute tests
     inhibit_kured       Prevent kured to reboot nodes
+
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v YAML_PATH, --vars YAML_PATH
+                        path for platform yaml file. Default is vars.yaml. eg:
+                        -v myconfig.yaml
+  -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
+                        The platform you're targeting. Default is openstack
+  -l {DEBUG,INFO,WARNING,ERROR}, --log-level {DEBUG,INFO,WARNING,ERROR}
+                        log level
+  -c, --print-conf      prints the configuration
 
 ```
 
