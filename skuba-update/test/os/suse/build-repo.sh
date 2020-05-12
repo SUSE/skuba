@@ -26,6 +26,7 @@ populate_repo() {
     case "$REPONAME" in
         base)
             cp /suse/artifacts/caasp-test-1-1.noarch.rpm "$REPOPATH"
+            cp /suse/artifacts/kubernetes-kubelet-1-1.noarch.rpm "$REPOPATH"
             ;;
         update-*)
             cp /suse/artifacts/caasp-test-2-1.noarch.rpm "$REPOPATH"

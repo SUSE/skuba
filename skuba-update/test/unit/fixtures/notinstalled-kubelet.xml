@@ -1,0 +1,12 @@
+<?xml version='1.0'?>
+<stream>
+<message type="info">Loading repository data...</message>
+<message type="info">Reading installed packages...</message>
+
+<search-result version="0.0">
+<solvable-list>
+<solvable status="not-installed" name="kubernetes-kubelet" kind="srcpackage" edition="1.18.0-1.6" arch="noarch" repository="caasp_40_devel_sle15sp1"/>
+<solvable status="not-installed" name="kubernetes-kubelet" kind="package" edition="1.18.0-1.6" arch="noarch" repository="caasp_40_devel_sle15sp1"/>
+</solvable-list>
+</search-result>
+</stream>

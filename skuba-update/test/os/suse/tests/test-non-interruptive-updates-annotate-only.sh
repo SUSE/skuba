@@ -23,6 +23,7 @@ force_machine_id_file
 install_fixtures
 
 add_repository "base"
+install_package "base" "kubernetes-kubelet"
 install_package "base" "caasp-test"
 
 check_test_package_version "1"

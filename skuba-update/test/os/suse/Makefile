@@ -27,7 +27,7 @@ rpm-builder-image:
 	docker build -t $(BUILDER_IMAGE) -f $(PWD)/Dockerfile.builder $(PWD)
 
 .PHONY: rpms
-rpms: artifacts/caasp-test-1-1.noarch.rpm artifacts/caasp-test-2-1.noarch.rpm
+rpms: artifacts/caasp-test-1-1.noarch.rpm artifacts/caasp-test-2-1.noarch.rpm artifacts/kubernetes-kubelet-1-1.noarch.rpm
 
 artifacts/%.rpm: rpm-builder-image
 	docker run --rm -v $(PWD):/suse $(BUILDER_IMAGE) /suse/build-rpm.sh $*
