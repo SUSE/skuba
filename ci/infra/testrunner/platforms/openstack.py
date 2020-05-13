@@ -13,6 +13,8 @@ class Openstack(Terraform):
             raise ValueError(Format.alert(f"Your openrc file path \"{conf.openstack.openrc}\" does not exist.\n\t    "
                                           "Check your openrc file path in a configured yaml file"))
         self.platform_new_vars = {}
+        if not self.conf.terraform.internal_net:
+            self.conf.terraform.internal_net = self.conf.terraform.stack_name
 
 
     def _env_setup_cmd(self):
@@ -25,9 +27,9 @@ class Openstack(Terraform):
 
         self.destroy(variables)
 
-    def setup_cloud_provider(self):
+    def setup_cloud_provider(self,config_dir):
         openstack_conf_template = ""
-        for root, dirs, files in os.walk(self.conf.workspace):
+        for root, dirs, files in os.walk(config_dir):
             for f in files:
                 if f == "openstack.conf.template":
                     openstack_conf_template = os.path.join(root, f)

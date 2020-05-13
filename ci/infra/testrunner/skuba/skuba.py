@@ -17,7 +17,9 @@ class Skuba:
         self.binpath = self.conf.skuba.binpath
         self.utils = Utils(self.conf)
         self.platform = platforms.get_platform(conf, platform)
-        self.cwd = "{}/test-cluster".format(self.conf.workspace)
+        self.workdir = self.conf.skuba.workdir
+        self.cluster = self.conf.skuba.cluster
+        self.cluster_dir =os.path.join(self.workdir, self.cluster)
         self.utils.setup_ssh()
         self.checker = Checker(conf, platform)
 
@@ -26,28 +28,16 @@ class Skuba:
             raise FileNotFoundError("skuba not found at {}".format(self.binpath))
 
     def _verify_bootstrap_dependency(self):
-        if not os.path.exists(os.path.join(self.conf.workspace, "test-cluster")):
-            raise ValueError("test-cluster not found. Please run bootstrap and try again")
+        if not os.path.exists(self.cluster_dir):
+            raise ValueError(f'cluster {self.cluster} not found at {self.workdir}.'
+                             ' Please run bootstrap and try again')
 
     @staticmethod
     @step
     def cleanup(conf):
         """Cleanup skuba working environment"""
-
-        # TODO: check why (and if) the following command is needed
-        # This is pretty aggressive but modules are also present
-        # in workspace and they lack the 'w' bit so just set
-        # everything so we can do whatever we want during cleanup
-        Utils.chmod_recursive(conf.workspace, 0o777)
-
-        dirs = [
-            os.path.join(conf.workspace, "test-cluster"),
-            os.path.join(conf.workspace, "go"),
-            os.path.join(conf.workspace, "logs"),
-        ]
-
-        Utils.cleanup_files(dirs)
-
+        cluster_dir = os.path.join(conf.skuba.workdir, conf.skuba.cluster)
+        Utils.cleanup_file(cluster_dir)
 
     @step
     def cluster_deploy(self, kubernetes_version=None, cloud_provider=None,
@@ -61,8 +51,8 @@ class Skuba:
 
     @step
     def cluster_init(self, kubernetes_version=None, cloud_provider=None):
-        logger.debug("Cleaning up any previous test-cluster dir")
-        self.utils.cleanup_file(self.cwd)
+        logger.debug("Cleaning up any previous cluster dir")
+        self.utils.cleanup_file(self.cluster_dir)
 
         k8s_version_option, cloud_provider_option = "", ""
         if kubernetes_version:
@@ -74,7 +64,7 @@ class Skuba:
                                                                           k8s_version_option, cloud_provider_option)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
-        self._run_skuba(cmd, cwd=self.conf.workspace)
+        self._run_skuba(cmd, cwd=self.workdir)
 
 
     @step
@@ -89,11 +79,11 @@ class Skuba:
         self._verify_bootstrap_dependency()
 
         if cloud_provider:
-            self.platform.setup_cloud_provider()
+            self.platform.setup_cloud_provider(self.workdir)
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         master0_name = self.platform.get_nodes_names("master")[0]
-        cmd = (f'node bootstrap --user {self.conf.terraform.nodeuser} --sudo --target '
+        cmd = (f'node bootstrap --user {self.utils.ssh_user()} --sudo --target '
                f'{master0_ip} {master0_name}')
         self._run_skuba(cmd)
 
@@ -114,7 +104,7 @@ class Skuba:
             raise Exception(f'Node {role}-{nr} is not deployed in '
                             'infrastructure')
 
-        cmd = (f'node join --role {role} --user {self.conf.terraform.nodeuser} '
+        cmd = (f'node join --role {role} --user {self.utils.ssh_user()} '
                f' --sudo --target {ip_addrs[nr]} {node_names[nr]}')
         try:
             self._run_skuba(cmd)
@@ -176,7 +166,7 @@ class Skuba:
             cmd = f'node upgrade plan {node_names[nr]}'
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
-            cmd = (f'node upgrade apply --user {self.conf.terraform.nodeuser} --sudo'
+            cmd = (f'node upgrade apply --user {self.utils.ssh_user()} --sudo'
                    f' --target {ip_addrs[nr]}')
         else:
             raise ValueError("Invalid action '{}'".format(action))
@@ -206,20 +196,19 @@ class Skuba:
         if role not in ("master", "worker"):
             raise ValueError("Invalid role '{}'".format(role))
 
-        test_cluster = os.path.join(self.conf.workspace, "test-cluster")
-        cmd = "cd " + test_cluster + "; " + self.binpath + " cluster status"
-        output = self.utils.runshellcommand(cmd)
+        cmd = "cluster status"
+        output = self._run_skuba(cmd)
         return output.count(role)
 
     def _run_skuba(self, cmd, cwd=None, verbosity=None, ignore_errors=False):
-        """Running skuba command in cwd.
-        The cwd defautls to {workspace}/test-cluster but can be overrided
+        """Running skuba command.
+        The cwd defautls to cluster_dir but can be overrided
         for example, for the init command that must run in {workspace}
         """
         self._verify_skuba_bin_dependency()
 
         if cwd is None:
-            cwd = self.cwd
+            cwd = self.cluster_dir
 
         if verbosity is None:
             verbosity = self.conf.skuba.verbosity
@@ -229,14 +218,8 @@ class Skuba:
             raise ValueError(f"verbosity '{verbosity}' is not an int")
         verbosity = v
 
-        env = {
-            "SSH_AUTH_SOCK": self.utils.ssh_sock_fn(),
-            "PATH": os.environ['PATH']
-        }
-
         return self.utils.runshellcommand(
             f"{self.binpath} -v {verbosity} {cmd}",
             cwd=cwd,
-            env=env,
             ignore_errors=ignore_errors,
         )

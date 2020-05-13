@@ -29,7 +29,7 @@ all: provision deploy
 
 .PHONY: provision 
 provision:
-	${TEST_RUNNER} --platform ${PLATFORM} provision
+	${TEST_RUNNER} --platform ${PLATFORM} -c provision
 
 .PHONY: bootstrap
 bootstrap:

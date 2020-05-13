@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import hcl
 
 from platforms.platform import Platform
-from utils import (Format, step)
+from utils import (Format, step, Utils)
 
 logger = logging.getLogger('testrunner')
 
@@ -14,9 +14,13 @@ logger = logging.getLogger('testrunner')
 class Terraform(Platform):
     def __init__(self, conf, platform):
         super().__init__(conf)
+        if not conf.terraform.stack_name:
+            raise ValueError("a terraform stack name must be specified")
+
         self.tfdir = os.path.join(self.conf.terraform.tfdir, platform)
-        self.tfjson_path = os.path.join(conf.workspace, "tfout.json")
-        self.tfout_path = os.path.join(self.conf.workspace, "tfout")
+        self.tfjson_path = os.path.join(self.conf.terraform.workdir, "tfout.json")
+        self.tfout_path = os.path.join(self.conf.terraform.workdir, "tfout")
+        self.utils = Utils(conf)
         self.state = None
 
         self.logs["files"] += ["/var/run/cloud-init/status.json",
@@ -34,8 +38,13 @@ class Terraform(Platform):
 
         self._run_terraform_command(cmd)
 
-    def _provision_platform(self):
-        """ Create and apply terraform plan"""
+    def _provision_platform(self, masters=-1, workers=-1):
+
+        if masters > -1:
+            self.conf.terraform.master.count = masters
+        if workers > -1:
+            self.conf.terraform.worker.count = workers
+
         exception = None
         self._check_tf_deployed()
 
@@ -86,7 +95,7 @@ class Terraform(Platform):
 
     def get_nodes_names(self, role):
         stack_name = self.stack_name()
-        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))] 
+        return [f'caasp-{role}-{stack_name}-{i}' for i in range(self.get_num_nodes(role))]
 
     def get_nodes_ipaddrs(self, role):
         self._load_tfstate()
@@ -131,14 +140,14 @@ class Terraform(Platform):
          stack_name = stack_name.replace("_","-").replace("/","-")
          stack_name = stack_name.strip("-.")
          stack_name = stack_name.lower()
-   
+
          return stack_name
 
     def _update_tfvars(self, tfvars):
         new_vars = {
             "internal_net": self.conf.terraform.internal_net,
             "stack_name": self.stack_name(),
-            "username": self.conf.terraform.nodeuser,
+            "username": self.utils.ssh_user(),
             "masters": self.conf.terraform.master.count,
             "master_memory": self.conf.terraform.master.memory,
             "master_vcpu": self.conf.terraform.master.cpu,
@@ -178,19 +187,13 @@ class Terraform(Platform):
                 url_parsed = urlparse(url)
                 url_updated = url_parsed._replace(netloc=self.conf.packages.mirror)
                 tfvars["repositories"][name] = url_updated.geturl()
-	
+
         if self.conf.packages.additional_pkgs:
             tfvars["packages"].extend(self.conf.packages.additional_pkgs)
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
         cmd = f'{self._env_setup_cmd()}; terraform {cmd}'
-
-        # Terraform needs PATH and SSH_AUTH_SOCK
-        sock_fn = self.utils.ssh_sock_fn()
-        env["SSH_AUTH_SOCK"] = sock_fn
-        env["PATH"] = os.environ['PATH']
-
         self.utils.runshellcommand(cmd, cwd=self.tfdir, env=env)
 
     def _check_tf_deployed(self):

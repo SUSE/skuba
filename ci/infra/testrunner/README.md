@@ -5,8 +5,8 @@
 - [Summary](#summary)
 - [Design](#design)
 - [Configuration](#configuration-parameters)
-  - [Work Environment](#work-environment)
   - [Packages](#packages)
+  - [Utils](#utils)
   - [Platform](#platform)
     - [Terraform](#terraform)
     - [Openstack](#openstack)
@@ -89,23 +89,10 @@ It is worth noticing that tests can be executed directly using pytest, but it is
 Testrunner provides configuration by means of:
  
 - A yaml configuration file (defaults to `vars.yaml` in current directory)
-- Environment variables that override the configuration. Every configuration option of the form `<section>.<variable>' can be subtituted by an environment variable `SECTION_VARIABLE. Notice that some variables are defined in the "root" section (e.g `workspace`). For example `skuba.binpath` is overriden by `SKUBA_BINPATH` and `workspace` by `WORKSPACE`
+- Environment variables that override the configuration. Every configuration option of the form `<section>.<variable>' can be subtituted by an environment variable `SECTION_VARIABLE. For example `skuba.binpath` is overriden by `SKUBA_BINPATH`.
 - CLI options which override configuration parameters such as the logging level (see [Usage](#usage))
 
 The following sections document the configuration options. The CLI arguments are described in the [Usage section](#usage).
-
-### Work Environment
-
-This section configures the working environment and is generally specific of each user of CI job-
-
-- workspace: path to the testrunner's working directory 
-- username: user name for the user. It's optional. If `platform.stack_name` is not set, `username` is used.
-- log_dir: path to the directory where platform logs are collected. Defaults to `<workspace>/platform_logs`
-
-```
-workspace: "/path/to/your/workspace" 
-username: "username"
-```
 
 #### Packages
 The `packages` section configures the source of the packages to be installed in the nodes:
@@ -126,21 +113,44 @@ packages:
 * mirror: URL for the repository mirrors to be used when setting up the skuba nodes, replacing the URL of the repositories defined in terraform. Used, for instance, to switch to development repositories or internal repositories when running in the CI pipeline.
 * registry_code: code use for registering CaaSP product. If specified, the registries from the tfvars are ignored. Additional repositories can still be defined using the `maintenance` configuration parameter.
 
+
+### Utils
+
+This section configures the utils module used for executing commands.
+
+* ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`.
+* ssh_sock: name of the socket used to communicate with the ssh-agent. Default is /tmp/testrunner_ssh_sock'
+
+Example:
+```
+utils:
+  ssh_sock: "/path/to/ssh-agent/socket"
+```
+### Platform
+
+This section configures general platform-independent parameters. Platform dependent parameters are defined in the corresponding sections (Terraform, Openstack, VMware)
+
+- log_dir: path to the directory where platform logs are collected. Defaults to `$WORKSPACE/platform_logs`
+
+```
+log_dir: "/path/to/log/dir/
+```
+
 #### Terraform
 
 General setting for terraform-based platforms such as [Openstack](#openstack) and [VMware](#vmware). 
 
 * internal_net: name of the network used when provisioning the platform. Defaults to `stack_name`
+* lb: specifications for the load balancer(s)
+* nodeuser: the user name used to login into the platform nodes. Optional.
+* master: specifications for the master(s)
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
-* stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. If not specified, the `username` is used.
-* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `skuba.srcpath/ci/infra`.
+* stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
+* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
-- nodeuser: the user name used to login into the platform nodes. Optional.
-- ssh_key: specifies the location of the key used to access nodes. The default is to use the user's key located at `$HOME/.ssh/id_rsa`
-- lb: specifications for the load balancer(s)
-- master: specifications for the master(s)
-- worker: specifications for the worker(s)
+* workdir: working directory on which tfout file will be generated. Default is `$WORKSPACE`
+* worker: specifications for the worker(s)
 
 Example
 ```
@@ -170,17 +180,18 @@ vmware:
 
 ### Skuba
 
-The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of both the source and the binary. Please notice that the source location is used as default location for other configuration elements, such as terraform files, even if the `skuba` binary is specified. 
+The Skuba section defines the location and execution options for the `skuba` command. As `testrunner` can be used either from a local development or testing environment or a CI pipeline, the configuration allows to define the location of the binary.
 
-* binpath: path to skuba binary
-* srcpath: path to skuba source. Used to locate other resources, like terraform configuration.
+* binpath: path to skuba binary. Default is "$WORKSPACE/go/bin/skuba"
+* cluster: name of the cluster. Default is "test-cluster"
 * verbosity: verbosity level for skuba command execution
+* workdir: working directory on which cluster is initialized. Default is "$WORKSPACE"
 
+Example:
 ```
 skuba:
-  binpath: "/usr/bin/"
-  srcpath: "/go/src/github.com/SUSE/skuba"
-  verbosity: 5
+  binpath: "/usr/bin/skuba"
+  verbosity: 10
 ```
 
 ### Kubectl
@@ -193,7 +204,7 @@ The kubectl section defines the configuration of the kubectl tool.
 
 Testrunner sends output to both a console and file logger handlers, configured using the following `log` variables:
 
-* file: name of the file used to send a copy of the log with verbosity `DEBUG`. This file is located under the `workspace` directory.
+* file: path to the file used to send a copy of the log with verbosity `DEBUG`. Default is "$WORKSPACE/testrunner.log"
 * level: debug verbosity level to console. Can be any of `DEBUG`, `INFO`, `WARNING`, `ERROR`. Defaults to `INFO`.
 * overwrite: boolean that indicates if the content of the log file must be overwritten (`True`) or log entries must be appended at the end of the file if it exists. Defaults to `False` (do not overwrite) 
 * quiet: boolean that indicates if `testrunner` will send any output to console (`False`) or not will execute silently (`True`). Quiet mode is useful when `testrunner` is used as a library. Defaults to `False`.
@@ -222,12 +233,10 @@ Copy `vars.yaml` to `/path/to/myvars.yaml`, set the variables according to your 
 
 #### Work Environment
 
-`testrunner` requires a working directory, which is specified in the `workspace` configuration parameter. The content of this directory can be erased or overwritten by `testrunner`. Be sure you create a directory to be used as workspace which is not located under your local working copy of the `skuba` project.
-
+Different components of `testrunner` requires a working directory. In particular, skuba for maintaining the test cluster configuration. The content of this directory can be erased or overwritten by `testrunner`. Be sure you create a directory to be used as workspace which is NOT located under your local working copy of the `skuba` project. By default, the working directory is taken from environment variable `WORKSPACE`:
 
 ```
-workspace: "/path/to/workspace"
-username:  "my-user-test"
+export WORKSPACE="/path/to/workspace"
 ```
 
 
@@ -237,27 +246,35 @@ Set the `skuba` and `terraform parameters depending on how you are testing `skub
 * If testing from local source:
 ```
   skuba:
-    srcpath: "/path/to/local/skuba/repo"
-    binpath: "path/to/go/bin/directory"
+    binpath: "/path/to/go/bin/directory"
 ```
 
-Be sure you don't specify the `terraform.tfdir` directory, so terraform configuration from the local `skuba` repo are used.
+Be sure you `terraform.tfdir` directory to point to the `ci/infra` directory in the local `skuba` repo:
+```
+  terraform:
+    tfdir: "/path/to/local/skuba/repo/ci/infra"
+```
 
 
 * If testing from installed package
 
+Use skuba binary installed from the package
 ```
   skuba:
     binpath: "/usr/bin/"
+```
 
+You must copy the terraform files installed from the package to a work directory and set the `tfdir` directory accordingly:
+```
   terraform:
     tfdir: "/path/to/terraform/files"
 ```
 
-You use your `id_rsa` keys to connect to the cluster nodes, as the `shared_id` is not available.
+You must provide the ssh key to connect to the cluster nodes, as the `shared_id` key used in development is not available. By default, your `id_rsa` key will be used, but you can provide any key:
 
 ```
-ssh_key: "path/to/id_rsa"
+  utils:
+    ssh_key: "path/to/id_rsa"
 ```
 
 #### Open Stack
@@ -334,7 +351,6 @@ Jenkins checks out the `skuba` repository under the `workspace` directory and ge
 
 ```
 skuba:
-  srcpath: ""
   binpath: ""
 ``` 
  
@@ -383,15 +399,16 @@ usage:
     This script supposed to run on python virtualenv from testrunner. Requires root privileges.
     Warning: it removes docker containers, VMs, images, and network configuration.
 
-       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}]
+       [-h] [-v YAML_PATH] [-p {openstack,vmware,bare-metal,libvirt}] [-c]
        [-l {DEBUG,INFO,WARNING,ERROR}]
-       {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
+       {info,config,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
        ...
 
 positional arguments:
   {info,get_logs,cleanup,provision,bootstrap,deploy,status,cluster-upgrade-plan,join-node,remove-node,node-upgrade,join-nodes,ssh,test,inhibit_kured}
                         command
     info                ip info
+    config              print configuration 
     get_logs            gather logs from nodes
     cleanup             cleanup created skuba environment
     provision           provision nodes for cluster in your configured
@@ -409,6 +426,18 @@ positional arguments:
     ssh                 Execute command in node via ssh.
     test                execute tests
     inhibit_kured       Prevent kured to reboot nodes
+
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v YAML_PATH, --vars YAML_PATH
+                        path for platform yaml file. Default is vars.yaml. eg:
+                        -v myconfig.yaml
+  -p {openstack,vmware,bare-metal,libvirt}, --platform {openstack,vmware,bare-metal,libvirt}
+                        The platform you're targeting. Default is openstack
+  -l {DEBUG,INFO,WARNING,ERROR}, --log-level {DEBUG,INFO,WARNING,ERROR}
+                        log level
+  -c, --print-conf      prints the configuration
 
 ```
 
