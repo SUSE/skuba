@@ -146,9 +146,7 @@ spec:
     type: "RollingUpdate"
     rollingUpdate:
       # Specifies the maximum number of Pods that can be unavailable during the update process.
-      # The current default value is 1 or 100% for daemonsets; Adding an explicit value here
-      # to avoid confusion, as the default value is specific to the type (daemonset/deployment).
-      maxUnavailable: "100%"
+      maxUnavailable: 1
   selector:
     matchLabels:
       k8s-app: cilium
@@ -1017,7 +1015,7 @@ spec:
         name: cilium-config-path
   updateStrategy:
     rollingUpdate:
-      maxUnavailable: 2
+      maxUnavailable: 1
     type: RollingUpdate
 ---
 # Source: cilium/charts/operator/templates/deployment.yaml
