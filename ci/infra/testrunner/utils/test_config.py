@@ -34,4 +34,25 @@ def test_defaults():
         assert config.terraform.plugin_dir == None
         assert config.utils.ssh_key == os.path.join(home, ssh_key)
 
+subs_yaml ="""
+packages:
+  additional_pkgs:
+  - $MYPACKAGE
+  additional_repos:
+    my_repo: $MYREPO
+"""
+my_package = "my-repo"
+my_repo = "http://url/to/my/repo"
 
+def test_substitutions():
+    """Test substitution of environment variables in lists and  maps
+    """
+    with mock.patch("builtins.open", mock.mock_open(read_data=subs_yaml)), \
+         mock.patch.dict("os.environ", clear=True,
+                         values={"MYPACKAGE": my_package,
+                                 "MYREPO": my_repo,
+                         }):
+        config = BaseConfig("vars.yaml")
+        assert len(config.packages.additional_pkgs) == 1
+        assert config.packages.additional_pkgs[0] == my_package
+        assert config.packages.additional_repos["my_repo"] == my_repo
