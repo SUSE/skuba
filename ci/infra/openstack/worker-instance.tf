@@ -85,7 +85,7 @@ resource "openstack_compute_instance_v2" "worker" {
   }
 
   security_groups = [
-    openstack_networking_secgroup_v2.common.name,
+    openstack_networking_secgroup_v2.common.id,
   ]
 
   user_data = data.template_file.worker-cloud-init[count.index].rendered
