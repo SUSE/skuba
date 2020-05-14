@@ -25,7 +25,6 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 
-
 import pkg_resources
 
 # Since zypper 1.14.0, it will automatically create a `/var/run/reboot-needed`
@@ -44,6 +43,7 @@ ZYPPER_REBOOT_NEEDED_PATH = '/var/run/reboot-needed'
 REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 # Exit codes as defined by zypper.
+
 ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
 ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
@@ -59,26 +59,6 @@ KUBE_DISRUPTIVE_UPDATES_KEY = 'caasp.suse.com/has-disruptive-updates'
 KUBE_CAASP_RELEASE_VERSION_KEY = 'caasp.suse.com/caasp-release-version'
 
 
-class ZypperSearchException(Exception):
-    pass
-
-
-class ZypperVersionTooLow(Exception):
-    pass
-
-
-class UnparseableZypperVersion(Exception):
-    pass
-
-
-class PrivilegesTooLow(Exception):
-    pass
-
-
-class ZypperRunError(Exception):
-    pass
-
-
 def main():
     """
     main-entry point for program.
@@ -88,39 +68,19 @@ def main():
 
     # Check that we have the proper zypper version.
     if not check_version('zypper', REQUIRED_ZYPPER_VERSION):
-        raise ZypperVersionTooLow(
-            'zypper version {0} or higher is required'.format(
-                '.'.join([str(x) for x in REQUIRED_ZYPPER_VERSION])
-            )
-        )
+        raise Exception('zypper version {0} or higher is required'.format(
+            '.'.join([str(x) for x in REQUIRED_ZYPPER_VERSION])
+        ))
 
     if os.geteuid() != 0:
-        raise PrivilegesTooLow('root privileges are required to run this tool')
+        raise Exception('root privileges are required to run this tool')
 
     run_zypper_command(['ref', '-s'])
-
     if not args.annotate_only:
-        pkgs = parse_kubelet_pkglist(get_kubelet_packages_details())
-        # Disable the update channels during the time we do the updates
-        # and re-enable update channels, whatever happened.
-        try:
-            if not is_supported(pkgs['installed'], pkgs['latest']):
-                modify_repos(
-                    pkgs['repos_containing_upgrades'],
-                    commandoption="--disable"
-                )
-                log("Warning! This kubernetes cluster node is"
-                    "in an unsupported state and needs upgrading.")
-                log("CaaSP update channels will be disabled during"
-                    "the update of non-CaaSP packages")
-            update_result_returncode = update()
-        finally:
-            # Noop if up to date
-            modify_repos(
-                pkgs['repos_containing_upgrades'], commandoption="--enable")
+        code = update()
         restart_services()
         annotate_node()
-        reboot_sentinel_file(update_result_returncode)
+        reboot_sentinel_file(code)
     else:
         annotate_node()
 
@@ -151,107 +111,6 @@ def version():
     """
 
     return pkg_resources.require('skuba-update')[0].version
-
-
-def get_kubelet_packages_details():
-    """
-    Ask zypper to build a report of all the available packages
-    named kubernetes-kubelet. It's faster than doing two queries
-    (for installed/uninstalled) kubelet packages.
-    Returns None in case of failure or no packages
-    """
-
-    kubelet_search_xml_results = run_zypper_command(
-        ["--non-interactive", "--xmlout", "search",
-         "-s", "kubernetes-kubelet"], needsOutput=True).output
-    return parse_zyppersearch_xml(kubelet_search_xml_results)
-
-
-def parse_zyppersearch_xml(xmldata):
-    """
-    Parses XML data from zypper search to return
-    a subtree of packages attributes
-    """
-    try:
-        tree = ElementTree.fromstring(xmldata)
-    except ElementTree.ParseError:
-        return None
-    # Returns none if no solvable list found
-    return tree.find('./search-result/solvable-list')
-
-
-def parse_kubelet_pkglist(pkgTreeElement):
-    """
-    Extract relevant data (versions/repos) from a pkgTreeElement
-    (which is a subtree element containing solvable packages
-    from zypper search xml)
-    """
-    if pkgTreeElement is None:
-        raise ZypperSearchException(
-            "Unparseable package list or kubelet not found")
-
-    pkg_details = dict()
-    pkg_details['repos_containing_upgrades'] = set()
-
-    # Find installed version.
-    # pkg.attrib['edition'] is a full number from zypper, like 1.14.1-1.57
-    # which is not easily parseable. Taking the major and minor version
-    # is enough for our use case, as patch updates shouldn't break things.
-    installed = pkgTreeElement.findall("*[@status='installed']")
-    if len(installed) == 0:
-        raise ZypperSearchException("Kubelet not installed")
-    pkg_details['installed'] = pkg_resources.parse_version(
-        ".".join(installed[0].attrib['edition'].split('.')[:2])
-    )
-    pkg_details['latest'] = pkg_details['installed']
-
-    for pkg in pkgTreeElement:
-        pkgver = pkg_resources.parse_version(
-            ".".join(pkg.attrib['edition'].split('.')[:2])
-        )
-        if pkgver > pkg_details['latest']:
-            pkg_details['latest'] = pkgver
-        if pkgver > pkg_details['installed']:
-            pkg_details['repos_containing_upgrades'].add(
-                pkg.attrib['repository']
-            )
-    return pkg_details
-
-
-def is_supported(installed_package, latest_package):
-    """
-    Reports whether the node is supported (or otherwise needs upgrading)
-    based on a the comparison of the truncated package versions
-    """
-
-    return True if installed_package == latest_package else False
-
-
-def modify_repos(repos, commandoption='--enable'):
-    """
-    Modify the package repositories.
-    If multiple repos need to be modified in one go,
-    operate as a transaction, and try the multiple repositories
-
-    """
-
-    failed = False
-    errors = []
-
-    for repo in repos:
-        command = ["modifyrepo", commandoption, repo]
-        try:
-            run_zypper_command(command, needsOutput=False)
-        except ZypperRunError as errtext:
-            failed = True
-            errors.append(str(errtext))
-            pass
-    # We fail at all times at the end, whether it was for
-    # disabling or enabling the repos.
-    if failed:
-        raise Exception(
-            "Failed to modify one or more repos.\n{}".format(
-                "\n".join(errors)))
 
 
 def update():
@@ -456,7 +315,7 @@ def run_zypper_command(command, needsOutput=False):
 
     process = run_command(zypperCommand, needsOutput)
     if is_zypper_error(process.returncode):
-        raise ZypperRunError('"{0}" failed'.format(' '.join(zypperCommand)))
+        raise Exception('"{0}" failed'.format(' '.join(zypperCommand)))
     if needsOutput:
         return process
     return process.returncode
@@ -523,10 +382,10 @@ def check_version(call, version_waterline):
                 )
                 break
         if version_info is None:
-            raise UnparseableZypperVersion
-    except UnparseableZypperVersion:
+            raise Exception
+    except Exception:
         message = 'Could not parse {0} version'.format(call)
-        raise UnparseableZypperVersion(message)
+        raise Exception(message)
     return version_info >= version_waterline
 
 
