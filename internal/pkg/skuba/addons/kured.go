@@ -134,6 +134,8 @@ spec:
       name: kured
   revisionHistoryLimit: 3
   updateStrategy:
+    rollingUpdate:
+      maxUnavailable: "5%"
     type: RollingUpdate
   template:
     metadata:
