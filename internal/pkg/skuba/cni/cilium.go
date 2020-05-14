@@ -90,7 +90,10 @@ func CreateCiliumSecret(client clientset.Interface, ciliumVersion string) error 
 	if err != nil {
 		return errors.Errorf("etcd generation retrieval failed %v", err)
 	}
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &ciliumCertConfig)
+	cfg := pkiutil.CertConfig{
+		Config: ciliumCertConfig,
+	}
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &cfg)
 	if err != nil {
 		return errors.Errorf("error when creating etcd client certificate for cilium %v", err)
 	}

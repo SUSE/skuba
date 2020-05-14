@@ -30,13 +30,15 @@ import (
 
 func Test_NewServerCertAndKey(t *testing.T) {
 	// generate test root CA
-	caCert, caKey, err := pkiutil.NewCertificateAuthority(&certutil.Config{
-		CommonName:   "unit-test",
-		Organization: []string{"suse.com"},
-		AltNames: certutil.AltNames{
-			DNSNames: []string{"unit.test"},
-		},
-	})
+	caCert, caKey, err := pkiutil.NewCertificateAuthority(&pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   "unit-test",
+			Organization: []string{"suse.com"},
+			AltNames: certutil.AltNames{
+				DNSNames: []string{"unit.test"},
+			},
+		}},
+	)
 	if err != nil {
 		t.Errorf("generate root CA failed: %v", err)
 	}
@@ -138,13 +140,15 @@ func Test_NewServerCertAndKey(t *testing.T) {
 
 func Test_CreateOrUpdateCertToSecret(t *testing.T) {
 	// generate test root CA
-	caCert, caKey, err := pkiutil.NewCertificateAuthority(&certutil.Config{
-		CommonName:   "unit-test",
-		Organization: []string{"suse.com"},
-		AltNames: certutil.AltNames{
-			DNSNames: []string{"unit.test"},
-		},
-	})
+	caCert, caKey, err := pkiutil.NewCertificateAuthority(&pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   "unit-test",
+			Organization: []string{"suse.com"},
+			AltNames: certutil.AltNames{
+				DNSNames: []string{"unit.test"},
+			},
+		}},
+	)
 	if err != nil {
 		t.Errorf("generate root CA failed: %v", err)
 	}
