@@ -184,13 +184,21 @@ class BaseConfig:
             elif vars and key in vars:
                 value = vars[key]
 
-            # subtitute environment variables in the value of the attribute
-            if value is not None and type(value) == str:
-                config.__dict__[key] = string.Template(value).safe_substitute(os.environ)
-            else:
-                config.__dict__[key] = value
+            config.__dict__[key] = BaseConfig.substitute(value)
 
-        return
+    @staticmethod
+    def substitute(value):
+        """subtitute environment variables in the value of the attribute
+           recursively substitute values in list or maps
+        """
+        if value is not None:
+            if type(value) == str:
+                value = string.Template(value).safe_substitute(os.environ)
+            elif type(value) == list:
+                value = [BaseConfig.substitute(e) for e in value]
+            elif type(value) == dict:
+                value = { k: BaseConfig.substitute(v) for k,v in value.items()}
+        return value
 
     @staticmethod
     def finalize(conf):
