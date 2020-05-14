@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -32,20 +33,22 @@ import (
 
 // GetAllNodes returns the list of nodes
 func GetAllNodes(client clientset.Interface) (*corev1.NodeList, error) {
-	return client.CoreV1().Nodes().List(metav1.ListOptions{})
+	return client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 }
 
 // GetControlPlaneNodes returns the list of master nodes by matching
 // "node-role.kubernetes.io/master" label.
 func GetControlPlaneNodes(client clientset.Interface) (*corev1.NodeList, error) {
-	return client.CoreV1().Nodes().List(metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
-	})
+	return client.CoreV1().Nodes().List(
+		context.TODO(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
+		})
 }
 
 // GetNodeWithMachineID returns the node matching machine ID.
 func GetNodeWithMachineID(client clientset.Interface, machineID string) (*corev1.Node, error) {
-	nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodes, err := client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +75,7 @@ func DrainNode(client clientset.Interface, node *corev1.Node, drainTimeout time.
 
 	newCordon := kubectldrain.NewCordonHelper(node)
 	newCordon.UpdateIfRequired(true)
-	err, patchErr := newCordon.PatchOrReplace(client)
+	err, patchErr := newCordon.PatchOrReplace(client, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to update node status")
 	}

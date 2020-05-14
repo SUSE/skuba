@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -35,18 +36,21 @@ const (
 
 // CreateJob creates job in namespace kube-system. Returns job and error
 func CreateJob(client clientset.Interface, name string, spec batchv1.JobSpec) (*batchv1.Job, error) {
-	return client.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: metav1.NamespaceSystem,
+	return client.BatchV1().Jobs(metav1.NamespaceSystem).Create(
+		context.TODO(),
+		&batchv1.Job{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: metav1.NamespaceSystem,
+			},
+			Spec: spec,
 		},
-		Spec: spec,
-	})
+		metav1.CreateOptions{})
 }
 
 // DeleteJob deletes job with given name. Returns error
 func DeleteJob(client clientset.Interface, name string) error {
-	return client.BatchV1().Jobs(metav1.NamespaceSystem).Delete(name, &metav1.DeleteOptions{})
+	return client.BatchV1().Jobs(metav1.NamespaceSystem).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
 // CreateAndWaitForJob creates job and wait until discover job status active, succeeded or timeout
@@ -62,7 +66,7 @@ func CreateAndWaitForJob(client clientset.Interface, name string, spec batchv1.J
 		}
 	}()
 	for i := 0; i < timeout; i++ {
-		job, err := client.BatchV1().Jobs(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
+		job, err := client.BatchV1().Jobs(metav1.NamespaceSystem).Get(context.TODO(), name, metav1.GetOptions{})
 
 		if err != nil {
 			klog.V(1).Infof("failed to get status for job %s, continuing...", name)

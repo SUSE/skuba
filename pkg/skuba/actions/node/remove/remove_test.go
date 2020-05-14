@@ -18,6 +18,7 @@
 package remove
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"testing"
@@ -137,30 +138,36 @@ apiServer:
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			//nolint:errcheck
-			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(cm)
+			tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(context.TODO(), cm, metav1.CreateOptions{})
 
 			shaTarget := fmt.Sprintf("%x", sha1.Sum([]byte(tt.target)))
 			shaExecuter := ""
 			for _, executer := range tt.executer {
 				shaExecuter = fmt.Sprintf("%x", sha1.Sum([]byte(executer)))
 				//nolint:errcheck
-				tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter),
-						Namespace: metav1.NamespaceSystem,
+				tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(
+					context.TODO(),
+					&batchv1.Job{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", shaTarget, shaExecuter),
+							Namespace: metav1.NamespaceSystem,
+						},
+						Spec:   jobSpec,
+						Status: batchv1.JobStatus{Active: 1},
 					},
-					Spec:   jobSpec,
-					Status: batchv1.JobStatus{Active: 1},
-				})
+					metav1.CreateOptions{})
 			}
 			//nolint:errcheck
-			tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget),
-					Namespace: metav1.NamespaceSystem,
+			tt.clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(
+				context.TODO(),
+				&batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("caasp-kubelet-disarm-%s", shaTarget),
+						Namespace: metav1.NamespaceSystem,
+					},
+					Spec: jobSpec,
 				},
-				Spec: jobSpec,
-			})
+				metav1.CreateOptions{})
 
 			err := Remove(tt.clientset, tt.target, 0)
 			if tt.errorExpected && err == nil {

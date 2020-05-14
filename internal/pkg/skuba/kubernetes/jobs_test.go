@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"testing"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -121,7 +122,7 @@ func TestCreateJob(t *testing.T) {
 					t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
 					return
 				}
-				_, err = tt.fakeClientset.BatchV1().Jobs(metav1.NamespaceSystem).Get(tt.jobName, metav1.GetOptions{})
+				_, err = tt.fakeClientset.BatchV1().Jobs(metav1.NamespaceSystem).Get(context.TODO(), tt.jobName, metav1.GetOptions{})
 				if err != nil {
 					t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
 					return

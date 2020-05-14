@@ -18,6 +18,7 @@
 package dex
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 
@@ -84,11 +85,11 @@ func GenerateClientSecret() string {
 }
 
 func DexCertExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), secretCertName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
 func RestartPods(client clientset.Interface) error {
 	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
-	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
+	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(context.TODO(), metav1.DeleteOptions{}, listOptions)
 }

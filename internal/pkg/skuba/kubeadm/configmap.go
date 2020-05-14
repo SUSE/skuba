@@ -18,6 +18,7 @@
 package kubeadm
 
 import (
+	"context"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -37,7 +38,11 @@ import (
 // GetClusterConfiguration returns the cluster configuration from the `kubeadm-config` ConfigMap
 func GetClusterConfiguration(client clientset.Interface) (*kubeadmapi.InitConfiguration, error) {
 	initCfg := &kubeadmapi.InitConfiguration{}
-	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(
+		context.TODO(),
+		kubeadmconstants.KubeadmConfigConfigMap,
+		metav1.GetOptions{},
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config ConfigMap")
 	}
@@ -72,7 +77,7 @@ func GetKubeadmApisVersion(kubernetesVersion *version.Version) string {
 // GetAPIEndpointsFromConfigMap returns the api endpoint held in the config map
 func GetAPIEndpointsFromConfigMap(client clientset.Interface) ([]string, error) {
 	apiEndpoints := []string{}
-	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve the kubeadm-config configmap to get apiEndpoints")
 	}
@@ -90,7 +95,7 @@ func GetAPIEndpointsFromConfigMap(client clientset.Interface) ([]string, error) 
 
 // RemoveAPIEndpointFromConfigMap removes api endpoints from the config map
 func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *corev1.Node) error {
-	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
+	kubeadmConfig, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), kubeadmconstants.KubeadmConfigConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve the kubeadm-config configmap to change the apiEndpoints")
 	}
@@ -103,16 +108,20 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *corev1.Nod
 	if err != nil {
 		return errors.Wrap(err, "could not marshal modified cluster status")
 	}
-	_, err = client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      kubeadmconstants.KubeadmConfigConfigMap,
-			Namespace: metav1.NamespaceSystem,
+	_, err = client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(
+		context.TODO(),
+		&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      kubeadmconstants.KubeadmConfigConfigMap,
+				Namespace: metav1.NamespaceSystem,
+			},
+			Data: map[string]string{
+				kubeadmconstants.ClusterConfigurationConfigMapKey: kubeadmConfig.Data[kubeadmconstants.ClusterConfigurationConfigMapKey],
+				kubeadmconstants.ClusterStatusConfigMapKey:        string(clusterStatusYaml),
+			},
 		},
-		Data: map[string]string{
-			kubeadmconstants.ClusterConfigurationConfigMapKey: kubeadmConfig.Data[kubeadmconstants.ClusterConfigurationConfigMapKey],
-			kubeadmconstants.ClusterStatusConfigMapKey:        string(clusterStatusYaml),
-		},
-	})
+		metav1.UpdateOptions{},
+	)
 	if err != nil {
 		return errors.Wrap(err, "could not update kubeadm-config configmap")
 	}

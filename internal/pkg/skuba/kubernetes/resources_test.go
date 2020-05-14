@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -94,7 +95,7 @@ func TestDoesResourceExistWithError(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := fakeClientset.CoreV1().Secrets(tt.searchNamespace).Get(tt.searchSecret, metav1.GetOptions{})
+			_, err := fakeClientset.CoreV1().Secrets(tt.searchNamespace).Get(context.TODO(), tt.searchSecret, metav1.GetOptions{})
 			actualReturn, actualErrMessage := DoesResourceExistWithError(err)
 			if actualReturn != tt.expectReturn {
 				t.Errorf("returned (%v) does not match the expected one (%v)", actualReturn, tt.expectReturn)

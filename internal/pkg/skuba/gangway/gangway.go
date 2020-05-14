@@ -18,6 +18,7 @@
 package gangway
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -110,7 +111,7 @@ func getClientSecretFromConfigMap(client clientset.Interface) (string, error) {
 		ClientSecret string `yaml:"clientSecret"`
 	}
 
-	cm, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(configmapName, metav1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), configmapName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return "", nil
@@ -161,16 +162,16 @@ func CreateCert(client clientset.Interface, pkiPath, kubeadmInitConfPath string)
 }
 
 func GangwaySecretExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretKeyName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), secretKeyName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
 func GangwayCertExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), secretCertName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
 func RestartPods(client clientset.Interface) error {
 	listOptions := metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", certCommonName)}
-	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(&metav1.DeleteOptions{}, listOptions)
+	return client.CoreV1().Pods(metav1.NamespaceSystem).DeleteCollection(context.TODO(), metav1.DeleteOptions{}, listOptions)
 }
