@@ -20,6 +20,7 @@ package cni
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/x509"
 	"fmt"
 	"path/filepath"
@@ -134,7 +135,7 @@ func CreateCiliumSecret(client clientset.Interface, ciliumVersion string) error 
 }
 
 func CiliumSecretExists(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(ciliumSecretName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), ciliumSecretName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }
 
@@ -151,7 +152,10 @@ func NeedsEtcdToCrdMigration(client clientset.Interface, ciliumVersion string) (
 	}
 	configMap, err := client.CoreV1().ConfigMaps(
 		metav1.NamespaceSystem).Get(
-		ciliumConfigMapName, metav1.GetOptions{})
+		context.TODO(),
+		ciliumConfigMapName,
+		metav1.GetOptions{},
+	)
 	if err != nil {
 		// If the old config map is not found, etcd config and migration
 		// to CRD are not needed.
@@ -269,9 +273,12 @@ func waitForCiliumPod(client clientset.Interface) (string, error) {
 		time.Sleep(timeoutPreflightPod)
 		klog.V(4).Infof("waiting for cilium preflight pod - %d iteration", i)
 
-		pods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{
-			LabelSelector: "k8s-app=cilium-pre-flight-check",
-		})
+		pods, err := client.CoreV1().Pods(metav1.NamespaceSystem).List(
+			context.TODO(),
+			metav1.ListOptions{
+				LabelSelector: "k8s-app=cilium-pre-flight-check",
+			},
+		)
 		if err != nil {
 			klog.Error("api call failed")
 			return "", errors.Wrap(err, "api call for getting cilium preflight pods failed")
@@ -362,7 +369,7 @@ func MigrateEtcdToCrd(client clientset.Interface, config *rest.Config) error {
 // switched to CRD as the identity allocation backend. That function should
 // be used after the migration from etcd to CRD is done.
 func RemoveEtcdConfig(client clientset.Interface) error {
-	cm, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ciliumConfigMapName, metav1.GetOptions{})
+	cm, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), ciliumConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not get cilium config map")
 	}
@@ -370,7 +377,7 @@ func RemoveEtcdConfig(client clientset.Interface) error {
 	delete(cm.Data, "etcd-config")
 	delete(cm.Data, "kvstore")
 	delete(cm.Data, "kvstore-opt")
-	if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(cm); err != nil {
+	if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(context.TODO(), cm, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrap(err, "could not update cilium config map")
 	}
 	return nil
@@ -385,7 +392,7 @@ func CiliumUpdateConfigMap(client clientset.Interface, ciliumVersion string) err
 
 func annotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) error {
 	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
-	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(context.TODO(), "cilium", types.StrategicMergePatchType, []byte(patch), metav1.PatchOptions{})
 	if err != nil {
 		return err
 	}

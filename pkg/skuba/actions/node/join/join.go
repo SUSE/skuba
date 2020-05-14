@@ -18,6 +18,7 @@
 package join
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -65,7 +66,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		criSetup = "cri.sysconfig"
 	}
 
-	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	_, err = client.CoreV1().Nodes().Get(context.TODO(), target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 		return err
