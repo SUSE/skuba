@@ -18,6 +18,9 @@
 package cluster
 
 import (
+	"fmt"
+	"regexp"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -30,6 +33,22 @@ type initOptions struct {
 	KubernetesVersion string
 	CloudProvider     string
 	StrictCapDefaults bool
+}
+
+// Checks if clustername provided is correct
+func isValidClusterName(clustername string) bool {
+	if len(clustername) == 0 {
+		return false
+	}
+	// NOT a letter, a number, underscore/dash
+	reg, err := regexp.Compile("[^a-zA-Z0-9_-]+")
+	if err != nil {
+		klog.Fatalf("Error compiling regex: %s", err)
+	}
+	if reg.MatchString(clustername) {
+		return false
+	}
+	return true
 }
 
 // NewInitCmd creates a new `skuba cluster init` cobra command
@@ -54,7 +73,15 @@ func NewInitCmd() *cobra.Command {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
 		},
-		Args: cobra.ExactArgs(1),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("accepts 1 arg, received %d", len(args))
+			}
+			if !isValidClusterName(args[0]) {
+				return fmt.Errorf("Invalid cluster name - only letters, numbers, dashes, and underscores are allowed: %s", args[0])
+			}
+			return nil
+		},
 	}
 	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes (required)")
 	if skuba.BuildType == "development" {
