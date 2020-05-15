@@ -50,7 +50,7 @@ class Skuba:
 
 
     @step
-    def cluster_init(self, kubernetes_version=None, cloud_provider=None):
+    def cluster_init(self, kubernetes_version=None, cloud_provider=None, path=None):
         logger.debug("Cleaning up any previous cluster dir")
         self.utils.cleanup_file(self.cluster_dir)
 
@@ -59,9 +59,12 @@ class Skuba:
             k8s_version_option = "--kubernetes-version {}".format(kubernetes_version)
         if cloud_provider:
             cloud_provider_option = "--cloud-provider {}".format(type(self.platform).__name__.lower())
+        path_option = "test-cluster"
+        if path:
+            path_option = "{}".format(path)
 
-        cmd = "cluster init --control-plane {} {} {} test-cluster".format(self.platform.get_lb_ipaddr(),
-                                                                          k8s_version_option, cloud_provider_option)
+        cmd = "cluster init --control-plane {} {} {} {}".format(self.platform.get_lb_ipaddr(),
+                                                                          k8s_version_option, cloud_provider_option, path_option)
         # Override work directory, because init must run in the parent directory of the
         # cluster directory
         self._run_skuba(cmd, cwd=self.workdir)
@@ -153,6 +156,11 @@ class Skuba:
     @step
     def node_upgrade(self, action, role, nr, ignore_errors=False):
         self._verify_bootstrap_dependency()
+
+        self.cluster_init("", "", "tmp-cluster")
+        cmd = "rsync -a tmp-cluster/addons/ test-cluster/addons/"
+        cwd = self.cluster_dir
+        self.utils.runshellcommand(cmd, cwd, ignore_errors)
 
         if role not in ("master", "worker"):
             raise ValueError("Invalid role '{}'".format(role))
