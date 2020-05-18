@@ -101,18 +101,23 @@ resource "libvirt_domain" "master" {
   }
 }
 
-resource "null_resource" "master_wait_cloudinit" {
+resource "null_resource" "master" {
   depends_on = [libvirt_domain.master]
   count      = var.masters
 
+  triggers = {
+    master_ips = "${join(",", libvirt_domain.master.*.network_interface.0.addresses.0)}"
+    username   = var.username
+  }
+
   connection {
     host = element(
-      libvirt_domain.master.*.network_interface.0.addresses.0,
-      count.index
+      split(",", self.triggers.master_ips),
+      count.index,
     )
-    user     = var.username
-    password = var.password
-    type     = "ssh"
+    user  = self.triggers.username
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
@@ -120,10 +125,17 @@ resource "null_resource" "master_wait_cloudinit" {
       "cloud-init status --wait > /dev/null",
     ]
   }
+
+  provisioner "remote-exec" {
+    when = destroy
+    inline = [
+      "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
+    ]
+  }
 }
 
 resource "null_resource" "master_reboot" {
-  depends_on = [null_resource.master_wait_cloudinit]
+  depends_on = [null_resource.master]
   count      = var.masters
 
   provisioner "local-exec" {

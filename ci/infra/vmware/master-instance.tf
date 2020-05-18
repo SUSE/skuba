@@ -81,6 +81,8 @@ resource "vsphere_virtual_machine" "master" {
 
   hardware_version = var.vsphere_hardware_version
 
+  enable_disk_uuid = var.cpi_enable == true ? true : false
+
   disk {
     label = "disk0"
     size  = var.master_disk_size
@@ -92,23 +94,27 @@ resource "vsphere_virtual_machine" "master" {
     "guestinfo.userdata"          = base64gzip(data.template_file.master_cloud_init_userdata[count.index].rendered)
     "guestinfo.userdata.encoding" = "gzip+base64"
   }
-  enable_disk_uuid = var.cpi_enable == true ? true : false
 
   network_interface {
     network_id = data.vsphere_network.network.id
   }
 }
 
-resource "null_resource" "master_wait_cloudinit" {
+resource "null_resource" "master" {
   depends_on = [vsphere_virtual_machine.master]
   count      = var.masters
 
+  triggers = {
+    master_ips = "${join(",", vsphere_virtual_machine.master.*.guest_ip_addresses.0)}"
+    username   = var.username
+  }
+
   connection {
     host = element(
-      vsphere_virtual_machine.master.*.guest_ip_addresses.0,
+      split(",", self.triggers.master_ips),
       count.index,
     )
-    user  = var.username
+    user  = self.triggers.username
     type  = "ssh"
     agent = true
   }
@@ -116,6 +122,13 @@ resource "null_resource" "master_wait_cloudinit" {
   provisioner "remote-exec" {
     inline = [
       "cloud-init status --wait > /dev/null",
+    ]
+  }
+
+  provisioner "remote-exec" {
+    when = destroy
+    inline = [
+      "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
     ]
   }
 }

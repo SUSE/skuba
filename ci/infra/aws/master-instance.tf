@@ -41,3 +41,35 @@ resource "aws_instance" "control_plane" {
   }
 }
 
+resource "null_resource" "control_plane" {
+  depends_on = [aws_instance.control_plane]
+  count      = var.masters
+
+  triggers = {
+    master_ips = "${join(",", aws_instance.control_plane.*.public_ip)}"
+    username   = var.username
+  }
+
+  connection {
+    host = element(
+      split(",", self.triggers.master_ips),
+      count.index,
+    )
+    user  = self.triggers.username
+    type  = "ssh"
+    agent = true
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait > /dev/null",
+    ]
+  }
+
+  provisioner "remote-exec" {
+    when = destroy
+    inline = [
+      "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
+    ]
+  }
+}

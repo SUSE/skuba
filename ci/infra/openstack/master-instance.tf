@@ -92,20 +92,26 @@ resource "openstack_compute_floatingip_associate_v2" "master_ext_ip" {
   instance_id = element(openstack_compute_instance_v2.master.*.id, count.index)
 }
 
-resource "null_resource" "master_wait_cloudinit" {
+resource "null_resource" "master" {
   depends_on = [
     openstack_compute_instance_v2.master,
     openstack_compute_floatingip_associate_v2.master_ext_ip
   ]
   count = var.masters
 
+  triggers = {
+    master_ips = "${join(",", openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip)}"
+    username   = var.username
+  }
+
   connection {
     host = element(
-      openstack_compute_floatingip_associate_v2.master_ext_ip.*.floating_ip,
+      split(",", self.triggers.master_ips),
       count.index,
     )
-    user = var.username
-    type = "ssh"
+    user  = self.triggers.username
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
@@ -113,10 +119,17 @@ resource "null_resource" "master_wait_cloudinit" {
       "cloud-init status --wait > /dev/null",
     ]
   }
+
+  provisioner "remote-exec" {
+    when = destroy
+    inline = [
+      "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
+    ]
+  }
 }
 
 resource "null_resource" "master_reboot" {
-  depends_on = [null_resource.master_wait_cloudinit]
+  depends_on = [null_resource.master]
   count      = var.masters
 
   provisioner "local-exec" {

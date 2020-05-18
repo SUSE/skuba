@@ -106,20 +106,26 @@ resource "openstack_compute_floatingip_associate_v2" "worker_ext_ip" {
   instance_id = element(openstack_compute_instance_v2.worker.*.id, count.index)
 }
 
-resource "null_resource" "worker_wait_cloudinit" {
+resource "null_resource" "worker" {
   depends_on = [
     openstack_compute_instance_v2.worker,
-    openstack_compute_floatingip_associate_v2.worker_ext_ip,
+    openstack_compute_floatingip_associate_v2.worker_ext_ip
   ]
   count = var.workers
 
+  triggers = {
+    worker_ips = "${join(",", openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip)}"
+    username   = var.username
+  }
+
   connection {
     host = element(
-      openstack_compute_floatingip_associate_v2.worker_ext_ip.*.floating_ip,
+      split(",", self.triggers.worker_ips),
       count.index,
     )
-    user = var.username
-    type = "ssh"
+    user  = self.triggers.username
+    type  = "ssh"
+    agent = true
   }
 
   provisioner "remote-exec" {
@@ -127,10 +133,17 @@ resource "null_resource" "worker_wait_cloudinit" {
       "cloud-init status --wait > /dev/null",
     ]
   }
+
+  provisioner "remote-exec" {
+    when = destroy
+    inline = [
+      "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
+    ]
+  }
 }
 
 resource "null_resource" "worker_reboot" {
-  depends_on = [null_resource.worker_wait_cloudinit]
+  depends_on = [null_resource.worker]
   count      = var.workers
 
   provisioner "local-exec" {
