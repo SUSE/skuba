@@ -6,6 +6,13 @@ import yaml
 
 from utils.format import Format
 
+class dict_with_default(dict):
+    def __init__(self, values, default):
+        self.default = default
+        super().__init__(values)
+
+    def __missing__(self, key):
+        return self.default
 
 class Constant:
     TERRAFORM_EXAMPLE = "terraform.tfvars.json.ci.example"
@@ -193,7 +200,7 @@ class BaseConfig:
         """
         if value is not None:
             if type(value) == str:
-                value = string.Template(value).safe_substitute(os.environ)
+                value = string.Template(value).safe_substitute(dict_with_default(os.environ, ''))
             elif type(value) == list:
                 value = [BaseConfig.substitute(e) for e in value]
             elif type(value) == dict:
