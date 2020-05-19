@@ -127,7 +127,8 @@ resource "null_resource" "worker" {
   }
 
   provisioner "remote-exec" {
-    when = destroy
+    when       = destroy
+    on_failure = "continue"
     inline = [
       "if sudo SUSEConnect -s | grep -qv 'Not Registered'; then sudo SUSEConnect -d; fi"
     ]
