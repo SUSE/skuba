@@ -96,6 +96,17 @@ def update_pr_status(args):
     status = PrStatus(build_url, repo)
     status.update_pr_status(args.commit_sha, args.context, args.state)
 
+def get_ci_labels(args):
+    if CHANGE_ID:
+        g = Github(GITHUB_TOKEN, per_page=1000)
+        repo = g.get_repo(GITHUB_REPO)
+        pull = repo.get_pull(CHANGE_ID)
+        # ci labels must start with 'ci:', take only the label value
+        labels = [l.name.split(":")[1] for l in pull.labels if l.name.startswith("ci:")]
+        for label in labels:
+            print(label)
+    else:
+        print('No CHANGE_ID was set. Assuming this is not a PR.', file=sys.stderr)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -126,6 +137,10 @@ def parse_args():
     filter_parser.set_defaults(func=filter_pr)
 
     parsed_args = parser.parse_args()
+
+    # Parse get-ci-labels command
+    ci_labels_parser = subparsers.add_parser('get-ci-labels', help='retrieve the ci labels from PE')
+    ci_labels_parser.set_defaults(func=get_ci_labels)
 
     return parsed_args
 
