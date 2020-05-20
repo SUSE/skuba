@@ -4,8 +4,31 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+// Set the agent platform label. Cannot be set using the environment variables
+// because agent labels are evaluated before environment is set
+labels=''
+node('caasp-team-private-integration') {
+    stage('set-labels') {
+        sh 'env'
+        def response = httpRequest(
+           url: "https://api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}",
+           authentication: 'github-token',
+           validResponseCodes: "200")
+
+        if (response.status == 200) {
+              def pr = readJSON text: response.content
+              pr.labels.findAll {
+                it.name.startsWith("ci:")
+              }.each{
+                def label = it.name.split(":")[1]
+                labels = labels + " && " + label 
+              }
+        }
+    }
+}
+
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+    agent { node { label "caasp-team-private-integration-nue ${labels}" } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
