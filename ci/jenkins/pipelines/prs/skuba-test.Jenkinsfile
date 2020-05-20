@@ -7,8 +7,34 @@
 // Branch specific repo
 def branch_repo = ""
 
+// Set the agent platform label. Cannot be set using the environment variables
+// because agent labels are evaluated before environment is set
+labels=''
+node('caasp-team-private-integration') {
+    stage('set-labels') {
+        try {
+           def response = httpRequest(
+               url: "https://api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}",
+               authentication: 'github-token',
+               validResponseCodes: "200")
+
+           def pr = readJSON text: response.content
+           pr.labels.findAll {
+             it.name.startsWith("ci-label:")
+           }.each{
+             def label = it.name.split(":")[1]
+             labels = labels + " && " + label 
+           }
+        } catch (Exception e) {
+            echo "Error retrieving labels for PR ${e.getMessage()}"
+            currentBuild.result = 'ABORTED'
+            error('Error retrieving labels for PR')
+        }
+    }
+}
+
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+    agent { node { label "caasp-team-private-integration ${labels}" } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
