@@ -70,6 +70,24 @@ def filter_pr(args):
     else:
         print('No CHANGE_ID was set assuming this is not a PR. Skipping filters...')
 
+# maps field names in the command to field path in the pr object
+pr_fields = {'branch':'head.ref', 'head':'head.sha', 'repo':'head.repo.full_name', 'user':'user.login'}
+def get_info(args):
+    if CHANGE_ID:
+        g = Github(GITHUB_TOKEN, per_page=1000)
+        repo = g.get_repo(GITHUB_REPO)
+        pull = repo.get_pull(CHANGE_ID)
+        for field in args.fields:
+            path = pr_fields[field]
+            target = pull
+            # for each requested field, navigate the path and return the value
+            for attribute in path.split('.'):
+                target = getattr(target, attribute)
+            print(f'{"field: " if not args.quiet else ""}{target}')
+    else:
+        print('No CHANGE_ID was set. Assuming this is not a PR.', file=sys.stderr)
+
+
 
 def merge_prs(args):
     if args.config:
@@ -124,6 +142,14 @@ def parse_args():
     filter_parser = subparsers.add_parser('filter-pr', help='Filter Pull Request by a file/pathname')
     filter_parser.add_argument('--filename', help='Name of the path or File to filter')
     filter_parser.set_defaults(func=filter_pr)
+
+    # Parse pr info command
+    info_parser = subparsers.add_parser('pr-info', help='Retrieves pr info')
+    info_parser.add_argument('--field', help='Field to retrieve. Can be specified miltiple times',
+                                choices=['branch', 'repo','user','head'], dest="fields", action='append')
+    info_parser.add_argument('--quiet', '-q', help='do not return the field name, only the value',
+                                action="store_true")
+    info_parser.set_defaults(func=get_info)
 
     parsed_args = parser.parse_args()
 
