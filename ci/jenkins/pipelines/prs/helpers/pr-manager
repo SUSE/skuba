@@ -2,8 +2,6 @@
 
 set -eo pipefail
 
-echo "Starting $0 script"
-
 SDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 VENVDIR=${WORKSPACE:-~}/py3venv
 export VENVDIR=${VENVDIR}

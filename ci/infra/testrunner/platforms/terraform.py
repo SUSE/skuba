@@ -179,7 +179,10 @@ class Terraform(Platform):
         repos = tfvars.get("repositories", {})
         if self.conf.packages.additional_repos:
            for name, url in self.conf.packages.additional_repos.items():
-               repos[name] = url
+                if not url:
+                    logger.warning(f'skipping repository {name} with empty url')
+                    continue
+                repos[name] = url
 
         # Update mirror urls
         if self.conf.packages.mirror and repos:
