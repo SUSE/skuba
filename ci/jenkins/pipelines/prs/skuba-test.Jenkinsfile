@@ -4,90 +4,8 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
-// pr context to report
-def pr_context = ''
-
-// Platform for pr tests.
-def platform = 'vmware'
-
-// Repo branch
+// Branch specific repo
 def branch_repo = ""
-
-// CaaSP Version for repo branch
-def repo_version = "4.0"
-
-// type of worker required by the PR
-def worker_type = 'integration'
-
-// Set the agent platform label. Cannot be set using the environment variables
-// because agent labels are evaluated before environment is set
-def labels = ''
-node('caasp-team-private-integration') {
-    stage('select worker') {
-
-        try {
-           def response = httpRequest(
-               url: "https://api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}",
-               authentication: 'github-token',
-               validResponseCodes: "200")
-
-           def pr = readJSON text: response.content
-
-           // check if PR needs experimental or maintenance workers
-           // ci-worker label will override this selection
-           if (env.CHANGE_TARGET.startsWith('experimental-') || env.CHANGE_TARGET.startsWith('maintenance-')) {
-               worker_type = env.CHANGE_TARGET
-           }
-
-           //check if the PR requires an specific worker type
-           def pr_worker_label = pr.labels.find {
-               it.name.startsWith("ci-worker:")
-           }
-           if (pr_worker_label != null) {
-               worker_type = pr_worker_label.name.split(":")[1]
-           }
-
-          // check additional worker labels
-           pr.labels.findAll {
-             it.name.startsWith("ci-label:")
-           }.each{
-             def label = it.name.split(":")[1]
-             labels = labels + " && " + label 
-           }
-
-           // check if the PR request an specific test platform
-           def pr_platform_label = pr.labels.find {
-               it.name.startsWith("ci-platform")
-           }
-           if (pr_platform_label != null) {
-                platform = pr_platform_label.name.split(":")[1]
-           }
-
-           //check if the PR requires an specific worker type
-           def pr_experimental_label = pr.labels.find {
-               it.name.startsWith("ci-worker:")
-           }
-           if (pr_experimental_label != null) {
-               worker_type = pr_experimental_label.name.split(":")[1]
-           }
-
-           //check if the PR requires an specific repository 
-           def pr_repo_label = pr.labels.find {
-               it.name.startsWith("ci-repo:")
-           }
-           if (pr_repo_label != null) {
-               def branch_name = pr_repo_label.name.split(":")[1]
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP1"
-
-           }
-
-        } catch (Exception e) {
-            echo "Error retrieving labels for PR ${e.getMessage()}"
-            currentBuild.result = 'ABORTED'
-            error('Error retrieving labels for PR')
-        }
-    }
-}
 
 pipeline {
     agent { node { label "caasp-team-private-${worker_type} ${labels}" } }
@@ -202,6 +120,16 @@ pipeline {
                 sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
                 sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
                 sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
+                script{
+                    def branch_name = sh(script: "skuba/${PR_MANAGER} pr-info --field branch --quiet", returnStdout: true, label: "get branch name").trim()
+                    def repo_url = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Branches:/${branch_name}/SLE_15_SP1"
+                    def repo_check = httpRequest(
+                        url: "${repo_url}",
+                        validResponseCodes: "200:404")
+                    if (repo_check.status != 404) {
+                        branch_repo = "${repo_url}"
+                    } 
+                }
             } 
         }
 
