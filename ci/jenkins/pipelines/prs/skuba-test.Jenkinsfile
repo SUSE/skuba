@@ -4,6 +4,9 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+// Branch specific repo
+def branch_repo = ""
+
 pipeline {
     agent { node { label 'caasp-team-private-integration' } }
 
@@ -85,13 +88,28 @@ pipeline {
             }
         } }
 
-        stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
-            sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
-            sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
-        } }
+        stage('Getting Ready For Cluster Deployment') { 
+            steps {
+                sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
+                sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
+                sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
+                script{
+                    def branch_name = sh(script: "skuba/${PR_MANAGER} pr-info --field branch --quiet", returnStdout: true, label: "get branch name").trim()
+                    def repo_url = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Branches:/${branch_name}/SLE_15_SP1"
+                    def repo_check = httpRequest(
+                        url: "${repo_url}",
+                        validResponseCodes: "200:404")
+                    if (repo_check.status != 404) {
+                        branch_repo = "${repo_url}"
+                    } 
+                }
+            } 
+        }
 
         stage('Provision cluster') {
+            environment {
+                BRANCH_REPO = "${branch_repo}"
+            }
             steps {
                 sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
             }

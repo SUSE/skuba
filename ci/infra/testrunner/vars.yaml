@@ -34,6 +34,8 @@ packages:
 # mirror: "ibs-mirror.prv.suse.net" # mirror url for downloading packages
   additional_pkgs:
   - "ca-certificates-suse"
+  additional_repos:
+    branch_repo: $BRANCH_REPO
 
 utils:
   ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" 
