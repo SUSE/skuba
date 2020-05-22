@@ -356,10 +356,12 @@ skuba:
  
 #### Terraform
 
-It is advisable to use a unique id related to the job execution as the terraform stack name:
+It is advisable to use a unique id related to the job execution as the
+terraform stack name that doesn't contain slash or dash and is at a maximum 70
+bytes long:
 
 ```
-TERRAFORM_STACK_NAME  = "${JOB_NAME}-${BUILD_NUMBER}" 
+TERRAFORM_STACK_NAME  = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
 ```
 
 #### Openstack

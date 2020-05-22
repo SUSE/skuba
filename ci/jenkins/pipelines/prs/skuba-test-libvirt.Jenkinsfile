@@ -11,7 +11,7 @@ pipeline {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = 'libvirt'
-        TERRAFORM_STACK_NAME = "${JOB_NAME.replaceAll("/","-")}-${BUILD_NUMBER}".take(70)
+        TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         PR_CONTEXT = 'jenkins/skuba-test-libvirt'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
