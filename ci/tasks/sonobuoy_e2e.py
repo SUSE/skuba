@@ -88,7 +88,7 @@ class SonobuoyE2eTests:
         return self._run_cmd(cmd)
 
     def _start_the_tests(self, sonobuoy_args):
-        self._sonobuoy('run ' + ' '.join(sonobuoy_args) + '--wait')
+        self._sonobuoy('run ' + ' '.join(sonobuoy_args) + ' --wait')
 
 
 class SonobuoyE2eTestsError(Exception):
