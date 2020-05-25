@@ -40,7 +40,7 @@ packages:
 utils:
   ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" 
   ssh_user: "sles"
-  ssh_sock: "$WORKSPACE/agent.sock"
+  ssh_sock: "/tmp/$TERRAFORM_STACK_NAME/agent.sock"
 
 #openstack:
 #  openrc: "" #os.getenv("OPENSTACK_OPENRC")
