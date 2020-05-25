@@ -10,7 +10,7 @@ def branch_repo = ""
 // Set the agent platform label. Cannot be set using the environment variables
 // because agent labels are evaluated before environment is set
 labels=''
-node('caasp-team-private-integration') {
+node('sle15sp2') {
     stage('set-labels') {
         try {
            def response = httpRequest(
@@ -34,7 +34,7 @@ node('caasp-team-private-integration') {
 }
 
 pipeline {
-    agent { node { label "caasp-team-private-integration ${labels}" } }
+    agent { node { label "sle15sp2 ${labels}" } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
