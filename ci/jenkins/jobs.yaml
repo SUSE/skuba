@@ -1,5 +1,5 @@
 - project:
-    name: caasp-jobs/v4/pr
+    name: caasp-jobs/pr
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
@@ -14,23 +14,27 @@
         - '{name}/jjb-validation'
 
 - project:
-      name: caasp-jobs/v4/conformance
+      name: caasp-jobs/conformance
       repo-name: skuba
       repo-owner: SUSE
       repo-credentials: github-token
       platform:
-        - openstack
-        - vmware
+          - openstack
+          - vmware
+      version:
+          - v4
       jobs:
-          - '{name}/{platform}-conformance'
+          - '{name}/{version}/{platform}/conformance'
 
 - project:
-    name: caasp-jobs/v4/e2e
+    name: caasp-jobs/e2e
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
     platform:
         - vmware
+    version:
+        - v4
     test:
         - test_addon_upgrade
         - test_cilium
@@ -50,8 +54,8 @@
         - test_upgrade_plan_from_previous_with_upgraded_control_plane:
            kubernetes_version: 1.17.4
     jobs:
-        - '{name}/{platform}/{test}-daily'
-        - '{name}/{platform}/update-daily'
+        - '{name}/{version}/{platform}/{test}-daily'
+        - '{name}/{version}/{platform}/update-daily'
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
