@@ -1,19 +1,18 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+Copyright 2017 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 package node
 
@@ -23,13 +22,11 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
-	kubeadmapiv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
+	kubeadmapiv1beta2 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2"
 	"k8s.io/kubernetes/cmd/kubeadm/app/componentconfigs"
-	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
 )
@@ -77,27 +74,18 @@ func BytesToInitConfiguration(b []byte) (*kubeadmapi.InitConfiguration, error) {
 }
 
 // documentMapToInitConfiguration converts a map of GVKs and YAML documents to defaulted and validated configuration object.
-func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, allowDeprecated bool) (*kubeadmapi.InitConfiguration, error) {
+func documentMapToInitConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecated bool) (*kubeadmapi.InitConfiguration, error) {
 	var initcfg *kubeadmapi.InitConfiguration
 	var clustercfg *kubeadmapi.ClusterConfiguration
-	decodedComponentConfigObjects := map[componentconfigs.RegistrationKind]runtime.Object{}
 
 	for gvk, fileContent := range gvkmap {
-		// verify the validity of the YAML
-		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
-		strict.VerifyUnmarshalStrict(fileContent, gvk)
-
-		// Try to get the registration for the ComponentConfig based on the kind
-		regKind := componentconfigs.RegistrationKind(gvk.Kind)
-		if registration, found := componentconfigs.Known[regKind]; found {
-			// Unmarshal the bytes from the YAML document into a runtime.Object containing the ComponentConfiguration struct
-			obj, err := registration.Unmarshal(fileContent)
-			if err != nil {
-				return nil, err
-			}
-			decodedComponentConfigObjects[regKind] = obj
-			continue
+		// first, check if this GVK is supported and possibly not deprecated
+		if err := validateSupportedVersion(gvk.GroupVersion(), allowDeprecated); err != nil {
+			return nil, err
 		}
+
+		// verify the validity of the YAML
+		strict.VerifyUnmarshalStrict(fileContent, gvk)
 
 		if kubeadmutil.GroupVersionKindsHasInitConfiguration(gvk) {
 			// Set initcfg to an empty struct value the deserializer will populate
@@ -120,7 +108,10 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 			continue
 		}
 
-		fmt.Printf("[config] WARNING: Ignored YAML document with GroupVersionKind %v\n", gvk)
+		// If the group is neither a kubeadm core type or of a supported component config group, we dump a warning about it being ignored
+		if !componentconfigs.Scheme.IsGroupRegistered(gvk.Group) {
+			fmt.Printf("[config] WARNING: Ignored YAML document with GroupVersionKind %v\n", gvk)
+		}
 	}
 
 	// Enforce that InitConfiguration and/or ClusterConfiguration has to exist among the YAML documents
@@ -130,12 +121,12 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 
 	// If InitConfiguration wasn't given, default it by creating an external struct instance, default it and convert into the internal type
 	if initcfg == nil {
-		extinitcfg := &kubeadmapiv1beta1.InitConfiguration{}
+		extinitcfg := &kubeadmapiv1beta2.InitConfiguration{}
 		kubeadmscheme.Scheme.Default(extinitcfg)
 		// Set initcfg to an empty struct value the deserializer will populate
 		initcfg = &kubeadmapi.InitConfiguration{}
 		if err := kubeadmscheme.Scheme.Convert(extinitcfg, initcfg, nil); err != nil {
-			return nil, errors.Wrap(err, "can not create kubeadm scheme")
+			return nil, err
 		}
 	}
 	// If ClusterConfiguration was given, populate it in the InitConfiguration struct
@@ -143,45 +134,10 @@ func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, a
 		initcfg.ClusterConfiguration = *clustercfg
 	}
 
-	// Save the loaded ComponentConfig objects in the initcfg object
-	for kind, obj := range decodedComponentConfigObjects {
-		if registration, found := componentconfigs.Known[kind]; found {
-			if ok := registration.SetToInternalConfig(obj, &initcfg.ClusterConfiguration); !ok {
-				return nil, errors.Errorf("couldn't save componentconfig value for kind %q", string(kind))
-			}
-		} else {
-			// This should never happen in practice
-			fmt.Printf("[config] WARNING: Decoded a kind that couldn't be saved to the internal configuration: %q\n", string(kind))
-		}
-	}
-
-	return initcfg, nil
-}
-
-// documentMapToJoinConfiguration takes a map between GVKs and YAML documents (as returned by SplitYAMLDocuments),
-// finds a JoinConfiguration, decodes it, dynamically defaults it and then validates it prior to return.
-func documentMapToJoinConfiguration(gvkmap map[schema.GroupVersionKind][]byte, allowDeprecated bool) (*kubeadmapi.JoinConfiguration, error) {
-	joinBytes := []byte{}
-	for gvk, bytes := range gvkmap {
-		// not interested in anything other than JoinConfiguration
-		if gvk.Kind != constants.JoinConfigurationKind {
-			continue
-		}
-
-		// verify the validity of the YAML
-		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
-		strict.VerifyUnmarshalStrict(bytes, gvk)
-		joinBytes = bytes
-	}
-
-	if len(joinBytes) == 0 {
-		return nil, errors.Errorf("no %s found in the supplied config", constants.JoinConfigurationKind)
-	}
-
-	internalcfg := &kubeadmapi.JoinConfiguration{}
-	if err := runtime.DecodeInto(kubeadmscheme.Codecs.UniversalDecoder(), joinBytes, internalcfg); err != nil {
+	// Load any component configs
+	if err := componentconfigs.FetchFromDocumentMap(&initcfg.ClusterConfiguration, gvkmap); err != nil {
 		return nil, err
 	}
 
-	return internalcfg, nil
+	return initcfg, nil
 }
