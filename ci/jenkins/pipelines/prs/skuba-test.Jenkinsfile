@@ -4,12 +4,16 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+
+// Platform for pr tests.
+def platform = 'vmware'
+
 // Branch specific repo
 def branch_repo = ""
 
 // Set the agent platform label. Cannot be set using the environment variables
 // because agent labels are evaluated before environment is set
-labels=''
+def labels=''
 node('caasp-team-private-integration') {
     stage('set-labels') {
         try {
@@ -25,6 +29,14 @@ node('caasp-team-private-integration') {
              def label = it.name.split(":")[1]
              labels = labels + " && " + label 
            }
+           // check if the PR request an specific test platform
+           def pr_platform_label = pr.labels.find {
+               it.name.startsWith("ci-platform")
+           }
+           if (pr_platform_label != null) {
+                platform = pr_platform_label.name.split(":")[1]
+           }
+
         } catch (Exception e) {
             echo "Error retrieving labels for PR ${e.getMessage()}"
             currentBuild.result = 'ABORTED'
@@ -40,11 +52,14 @@ pipeline {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         VMWARE_ENV_FILE = credentials('vmware-env')
         GITHUB_TOKEN = credentials('github-token')
-        PLATFORM = 'vmware'
+        PLATFORM = "${platform}" 
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
+        LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
+        LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
+        LIBVIRT_IMAGE_URI = 'http://download.suse.de/install/SLE-15-SP1-JeOS-QU2/SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU2.qcow2'
     }
 
     stages {
