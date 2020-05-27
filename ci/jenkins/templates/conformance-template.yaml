@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}/{version}/{platform}/conformance'
+    name: '{name}/{version}/{platform}'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
