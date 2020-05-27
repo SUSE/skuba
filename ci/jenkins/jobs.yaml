@@ -24,7 +24,7 @@
       version:
           - v4
       jobs:
-          - '{name}/{version}/{platform}/conformance'
+          - '{name}/{version}/{platform}'
 
 - project:
     name: caasp-jobs/e2e
