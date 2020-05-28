@@ -23,7 +23,8 @@ def worker_type = 'integration'
 // because agent labels are evaluated before environment is set
 def labels = ''
 node('caasp-team-private-integration') {
-    stage('set-labels') {
+    stage('select worker') {
+
         try {
            def response = httpRequest(
                url: "https://api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}",
@@ -31,12 +32,29 @@ node('caasp-team-private-integration') {
                validResponseCodes: "200")
 
            def pr = readJSON text: response.content
+
+           // check if PR needs experimental or maintenance workers
+           // ci-worker label will override this selection
+           if (env.CHANGE_TARGET.startsWith('experimental-') || env.CHANGE_TARGET.startsWith('maintenance-')) {
+               worker_type = env.CHANGE_TARGET
+           }
+
+           //check if the PR requires an specific worker type
+           def pr_worker_label = pr.labels.find {
+               it.name.startsWith("ci-worker:")
+           }
+           if (pr_worker_label != null) {
+               worker_type = pr_worker_label.name.split(":")[1]
+           }
+
+          // check additional worker labels
            pr.labels.findAll {
              it.name.startsWith("ci-label:")
            }.each{
              def label = it.name.split(":")[1]
              labels = labels + " && " + label 
            }
+
            // check if the PR request an specific test platform
            def pr_platform_label = pr.labels.find {
                it.name.startsWith("ci-platform")
