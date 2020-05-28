@@ -75,13 +75,10 @@ pipeline {
     }
 
     stages {
-
-        stage('Setting GitHub in-progress status for validate-pr-author') { steps { script {
+        stage('Collaborator Check') { steps { script {
             pr_context = 'jenkins/skuba-validate-pr-author'
             sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
-        } } }
 
-        stage('Collaborator Check') { steps { script {
             if (env.BRANCH_NAME.startsWith('PR')) {
                 def membersResponse = httpRequest(
                     url: "https://api.github.com/repos/SUSE/skuba/collaborators/${CHANGE_AUTHOR}",
@@ -119,11 +116,6 @@ pipeline {
             }
         } } }
 
-        stage('Setting GitHub in-progress status for code-lint') { steps { script {
-            pr_context = 'jenkins/skuba-code-lint'
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
-        } } }
-
         stage('Git Clone') { steps {
             deleteDir()
             checkout([$class: 'GitSCM',
@@ -142,23 +134,28 @@ pipeline {
             }
         }}
 
-        stage('Running make lint') { steps {
-            dir("${WORKSPACE}/skuba") {
+        stage('code-lint') { steps { script {
+            echo 'Starting code lint'
+            pr_context = 'jenkins/skuba-code-lint'
+            
+            // set code lint status to pending
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+
+            dir("skuba") {
                 sh(script: 'make lint', label: 'make lint')
             }
-        } }
 
-        stage('Checking status of git tree') { steps {
+            echo 'Checking status of git tree'
             dir("skuba") {
                 sh(script: 'test -z "$(git status --porcelain go.mod go.sum vendor/)" || { echo "there are uncommitted changes. This should never happen; diff:"; git diff; exit 1; }', label: 'git tree status')
             }
-        } }
 
-        stage('Updating GitHub status for code-lint') { steps {
+            echo 'Updating GitHub status for code-lint'
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
-        } }
 
-        stage('Setting GitHub in-progress status for pr-test') { steps { script {
+        } } }
+
+        stage('Setting in-progress status for pr-test') { steps { script {
             pr_context = 'jenkins/skuba-test'
             sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
         } } }
