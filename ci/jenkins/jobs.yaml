@@ -8,8 +8,6 @@
         - '{name}/test-libvirt'
         - '{name}/update-unit'
         - '{name}/update-acceptance'
-        - '{name}/code-lint'
-        - '{name}/code-author'
         - '{name}/handle-pr'
         - '{name}/jjb-validation'
 
