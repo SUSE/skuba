@@ -23,6 +23,8 @@
           - vmware
       version:
           - v4
+          - v5:
+              branch: experimental-v5
       jobs:
           - '{name}/{version}/{platform}'
 
@@ -35,6 +37,8 @@
         - vmware
     version:
         - v4
+        - v5:
+            branch: experimental-v5
     test:
         - test_addon_upgrade
         - test_cilium
