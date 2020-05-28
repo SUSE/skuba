@@ -4,16 +4,18 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
-
 // Platform for pr tests.
 def platform = 'vmware'
 
 // Branch specific repo
 def branch_repo = ""
 
+// type of worker required by the PR
+def worker_type = 'integration'
+
 // Set the agent platform label. Cannot be set using the environment variables
 // because agent labels are evaluated before environment is set
-def labels=''
+def labels = ''
 node('caasp-team-private-integration') {
     stage('set-labels') {
         try {
@@ -37,6 +39,14 @@ node('caasp-team-private-integration') {
                 platform = pr_platform_label.name.split(":")[1]
            }
 
+           //check if the PR requires an specific worker type
+           def pr_experimental_label = pr.labels.find {
+               it.name.startsWith("ci-worker:")
+           }
+           if (pr_experimental_label != null) {
+               worker_type = pr_experimental_label.name.split(":")[1]
+           }
+
         } catch (Exception e) {
             echo "Error retrieving labels for PR ${e.getMessage()}"
             currentBuild.result = 'ABORTED'
@@ -46,7 +56,7 @@ node('caasp-team-private-integration') {
 }
 
 pipeline {
-    agent { node { label "caasp-team-private-integration ${labels}" } }
+    agent { node { label "caasp-team-private-${worker_type} ${labels}" } }
 
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
