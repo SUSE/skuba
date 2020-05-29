@@ -4,6 +4,9 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+// pr context to report
+def pr_context = ''
+
 // Platform for pr tests.
 def platform = 'vmware'
 
