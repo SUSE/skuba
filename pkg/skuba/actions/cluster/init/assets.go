@@ -125,7 +125,7 @@ user = "<VC_USERNAME>"
 password = "<VC_PASSWORD>"
 port = "443"
 insecure-flag = "1"
-[VirtualCenter <VC_IP_OR_FQDN>]
+[VirtualCenter "<VC_IP_OR_FQDN>"]
 datacenters = "<VC_DATACENTERS>"
 [Workspace]
 server = "<VC_IP_OR_FQDN>"
@@ -154,7 +154,7 @@ user = "<VC_USERNAME>"
 password = "<VC_PASSWORD>"
 port = "443"
 insecure-flag = "1"
-[VirtualCenter <VC_IP_OR_FQDN>]
+[VirtualCenter "<VC_IP_OR_FQDN>"]
 datacenters = "<VC_DATACENTERS>"
 [Workspace]
 server = "<VC_IP_OR_FQDN>"
