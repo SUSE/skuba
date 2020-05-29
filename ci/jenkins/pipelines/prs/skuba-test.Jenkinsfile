@@ -4,6 +4,9 @@
  *   - Basic skuba deployment, bootstrapping, and adding nodes to a cluster
  */
 
+// pr context to report
+def pr_context = ''
+
 // Platform for pr tests.
 def platform = 'vmware'
 
@@ -64,7 +67,6 @@ pipeline {
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = "${platform}" 
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
-        PR_CONTEXT = 'jenkins/skuba-test'
         PR_MANAGER = 'ci/jenkins/pipelines/prs/helpers/pr-manager'
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
@@ -74,6 +76,9 @@ pipeline {
 
     stages {
         stage('Collaborator Check') { steps { script {
+            pr_context = 'jenkins/skuba-validate-pr-author'
+            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+
             if (env.BRANCH_NAME.startsWith('PR')) {
                 def membersResponse = httpRequest(
                     url: "https://api.github.com/repos/SUSE/skuba/collaborators/${CHANGE_AUTHOR}",
@@ -82,7 +87,7 @@ pipeline {
 
                 if (membersResponse.status == 204) {
                     echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
-
+                    sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
                 } else {
                     def allowExecution = false
 
@@ -111,10 +116,6 @@ pipeline {
             }
         } } }
 
-        stage('Setting GitHub in-progress status') { steps {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
-        } }
-
         stage('Git Clone') { steps {
             deleteDir()
             checkout([$class: 'GitSCM',
@@ -132,6 +133,32 @@ pipeline {
                 sh(script: "git checkout ${BRANCH_NAME}", label: "Checkout PR Branch")
             }
         }}
+
+        stage('code-lint') { steps { script {
+            echo 'Starting code lint'
+            pr_context = 'jenkins/skuba-code-lint'
+            
+            // set code lint status to pending
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+
+            dir("skuba") {
+                sh(script: 'make lint', label: 'make lint')
+            }
+
+            echo 'Checking status of git tree'
+            dir("skuba") {
+                sh(script: 'test -z "$(git status --porcelain go.mod go.sum vendor/)" || { echo "there are uncommitted changes. This should never happen; diff:"; git diff; exit 1; }', label: 'git tree status')
+            }
+
+            echo 'Updating GitHub status for code-lint'
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
+
+        } } }
+
+        stage('Setting in-progress status for pr-test') { steps { script {
+            pr_context = 'jenkins/skuba-test'
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+        } } }
 
         stage('Run skuba unit tests') { steps {
             dir("skuba") {
@@ -177,17 +204,24 @@ pipeline {
             sh(script: "make -f skuba/ci/Makefile test_pr", label: "test_pr")
         } }
 
+        stage('Updating GitHub status for pr-test') { steps {
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
+        } }
+
     }
     post {
-        always {
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
-            sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
-            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
-            junit('skuba/ci/infra/testrunner/*.xml')
-        }
+        always { script {
+            // collect artifacts only if pr-test stage was executed.
+            if (pr_context == 'jenkins/pr-test'){
+                archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+                archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+                archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+                archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
+                sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
+                archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
+                junit('skuba/ci/infra/testrunner/*.xml')
+            }
+        } }
         cleanup {
             sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
             dir("${WORKSPACE}@tmp") {
@@ -205,13 +239,14 @@ pipeline {
             sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
+            // status was alredy reported on each stage, no further action needed here
+            echo "SUCCESS!"
         }
     }
 }
