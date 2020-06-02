@@ -1,5 +1,18 @@
+// type of worker required by the job 
+def worker_type = 'integration'
+
+node('caasp-team-private-integration') {
+    stage('select worker') {
+        if (env.BRANCH != 'master') {
+            if (env.BRANCH.startsWith('experimental') || env.BRANCH.startsWith('maintenance')) {
+                worker_type = env.BRANCH
+            }
+        }
+    }
+}
+
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+   agent { node { label 'caasp-team-private-${worker_type}' } }
 
     environment {
         SKUBA_BINPATH = "/home/jenkins/go/bin/skuba"
