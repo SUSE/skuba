@@ -88,7 +88,6 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		criSetup,
 		"cri.start",
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",

@@ -143,7 +143,6 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		criSetup,
 		"cri.start",
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",
