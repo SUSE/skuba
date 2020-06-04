@@ -463,7 +463,13 @@ optional arguments:
   -c, --cloud-provider  Use cloud provider integration
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting a node to become ready (seconds)
-
+  -m R M, --registry-mirror R M
+                        Add to the registry R a mirror M. If an image is
+			available at the mirror it will be preferred, otherwise
+                        the image in the original registry is used. This
+                        argument can be used multiple times, then mirrors will
+                        be tried in that order. Example:
+                        --registry-mirror registry.example.com/path test-registry.example.com/path
 ```
 
 ### Deploy
@@ -476,6 +482,13 @@ optional arguments:
   -c, --cloud-provider  Use cloud provider integration
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting a node to become ready (seconds)
+  -m R M, --registry-mirror R M
+                        Add to the registry R a mirror M. If an image is
+			available at the mirror it will be preferred, otherwise
+                        the image in the original registry is used. This
+                        argument can be used multiple times, then mirrors will
+                        be tried in that order. Example:
+                        --registry-mirror registry.example.com/path test-registry.example.com/path
 ```
 
 ### Join nodes
