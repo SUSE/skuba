@@ -1,5 +1,6 @@
 import logging
 import os
+import toml
 
 import platforms
 from checks import Checker
@@ -39,11 +40,12 @@ class Skuba:
 
     @step
     def cluster_deploy(self, kubernetes_version=None, cloud_provider=None,
-                       timeout=None):
+                       timeout=None, registry_mirror=None):
         """Deploy a cluster joining all nodes"""
         self.cluster_bootstrap(kubernetes_version=kubernetes_version,
                                cloud_provider=cloud_provider,
-                               timeout=timeout)
+                               timeout=timeout,
+                               registry_mirror=registry_mirror)
         self.join_nodes(timeout=timeout)
 
     @step
@@ -64,17 +66,20 @@ class Skuba:
         self._run_skuba(cmd, cwd=self.workdir)
 
     @step
-    def cluster_bootstrap(self, kubernetes_version=None,
-                          cloud_provider=None, timeout=None):
+    def cluster_bootstrap(self, kubernetes_version=None, cloud_provider=None,
+                          timeout=None, registry_mirror=None):
         self.cluster_init(kubernetes_version, cloud_provider)
-        self.node_bootstrap(cloud_provider, timeout=timeout)
+        self.node_bootstrap(cloud_provider, timeout=timeout, registry_mirror=registry_mirror)
 
     @step
-    def node_bootstrap(self, cloud_provider=None, timeout=None):
+    def node_bootstrap(self, cloud_provider=None, timeout=None, registry_mirror=None):
         self._verify_bootstrap_dependency()
 
         if cloud_provider:
             self.platform.setup_cloud_provider(self.workdir)
+
+        if registry_mirror:
+            self._setup_container_registries(registry_mirror)
 
         master0_ip = self.platform.get_nodes_ipaddrs("master")[0]
         master0_name = self.platform.get_nodes_names("master")[0]
@@ -84,6 +89,26 @@ class Skuba:
 
         self.checker.check_node("master", 0, stage="joined", timeout=timeout)
 
+    def _setup_container_registries(self, registry_mirror):
+        mirrors = {}
+        for l in registry_mirror:
+            if l[0] not in mirrors:
+                mirrors[l[0]] = []
+            mirrors[l[0]].append(l[1])
+
+        conf = {'unqualified-search-registries': ['docker.io'], 'registry': []}
+        for location, mirror_list in mirrors.items():
+            mirror_toml = []
+            for m in mirror_list:
+                mirror_toml.append({'location': m, 'insecure': True})
+            conf['registry'].append(
+                    {'prefix': location, 'location': location,
+                        'mirror': mirror_toml})
+        conf_string = toml.dumps(conf)
+        c_dir = os.path.join(self.cluster_dir, 'addons/containers')
+        os.mkdir(c_dir)
+        with open(os.path.join(c_dir, 'registries.conf'), 'w') as f:
+            f.write(conf_string)
     @step
     def node_join(self, role="worker", nr=0, timeout=None):
         self._verify_bootstrap_dependency()
