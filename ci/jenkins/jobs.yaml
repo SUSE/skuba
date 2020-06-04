@@ -27,16 +27,12 @@
           - '{name}/{version}/{platform}'
 
 - project:
-    name: caasp-jobs/e2e
+    name: caasp-jobs/e2e/v4
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
     platform:
         - vmware
-    version:
-        - v4
-        - v5:
-            branch: experimental-v5
     test:
         - test_addon_upgrade
         - test_cilium
@@ -56,8 +52,31 @@
         - test_upgrade_plan_from_previous_with_upgraded_control_plane:
            kubernetes_version: 1.17.4
     jobs:
-        - '{name}/{version}/{platform}/{test}-daily'
-        - '{name}/{version}/{platform}/update-daily'
+        - '{name}/{platform}/{test}-daily'
+        - '{name}/{platform}/update-daily'
+
+- project:
+    name: caasp-jobs/e2e/v5
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    platform:
+        - vmware
+    branch: experimental-v5
+    test:
+        - test_addon_upgrade
+        - test_cilium
+        - test_dockercaps
+        - test_nginx_deployment
+        - test_node_reboot
+        - test_remove_master
+        - test_remove_worker
+        - test_upgrade_plan_all_fine
+        - test_upgrade_apply_all_fine
+    jobs:
+        - '{name}/{platform}/{test}-daily'
+        - '{name}/{platform}/update-daily'
+
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
