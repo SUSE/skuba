@@ -10,8 +10,11 @@ def pr_context = ''
 // Platform for pr tests.
 def platform = 'vmware'
 
-// Branch specific repo
+// Repo branch
 def branch_repo = ""
+
+// CaaSP Version for repo branch
+def repo_version = "4.0"
 
 // type of worker required by the PR
 def worker_type = 'integration'
@@ -48,6 +51,16 @@ node('caasp-team-private-integration') {
            }
            if (pr_experimental_label != null) {
                worker_type = pr_experimental_label.name.split(":")[1]
+           }
+
+           //check if the PR requires an specific repository 
+           def pr_repo_label = pr.labels.find {
+               it.name.startsWith("ci-repo:")
+           }
+           if (pr_repo_label != null) {
+               def branch_name = pr_repo_label.name.split(":")[1]
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP1"
+
            }
 
         } catch (Exception e) {
@@ -171,16 +184,6 @@ pipeline {
                 sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
                 sh(script: 'make -f skuba/ci/Makefile pr_checks', label: 'PR Checks')
                 sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
-                script{
-                    def branch_name = sh(script: "skuba/${PR_MANAGER} pr-info --field branch --quiet", returnStdout: true, label: "get branch name").trim()
-                    def repo_url = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Branches:/${branch_name}/SLE_15_SP1"
-                    def repo_check = httpRequest(
-                        url: "${repo_url}",
-                        validResponseCodes: "200:404")
-                    if (repo_check.status != 404) {
-                        branch_repo = "${repo_url}"
-                    } 
-                }
             } 
         }
 
