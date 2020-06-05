@@ -38,7 +38,7 @@ resource "azurerm_linux_virtual_machine" "master" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = var.master_storage_account_type
-    disk_size_gb = var.master_disk_size
+    disk_size_gb         = var.master_disk_size
   }
 
   source_image_reference {
@@ -66,7 +66,7 @@ resource "azurerm_virtual_machine_extension" "master" {
 
   settings = <<SETTINGS
     {
-        "script": "${base64encode(data.template_file.init.rendered)}"
+        "script": "${base64encode(data.template_file.cloud-init.rendered)}"
     }
 SETTINGS
 }

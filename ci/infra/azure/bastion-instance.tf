@@ -1,5 +1,5 @@
 resource "azurerm_bastion_host" "bastionhost" {
-  count               = var.create_bastionhost ? 1: 0
+  count               = var.create_bastionhost ? 1 : 0
   name                = "${var.stack_name}-bastion"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name

@@ -11,7 +11,7 @@ variable "enable_zone" {
 }
 
 variable "azure_availability_zones" {
-  type = list(string)
+  type        = list(string)
   default     = ["1", "2", "3"]
   description = "List of Availability Zones (e.g. `['1', '2', '3']`)"
 }
@@ -76,8 +76,8 @@ variable "repositories" {
 }
 
 variable "packages" {
-  type = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "List of packages to install"
 }
 

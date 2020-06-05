@@ -8,7 +8,7 @@ resource "azurerm_virtual_network" "virtual_network" {
 # Subnets
 
 resource "azurerm_subnet" "bastionhost" {
-  count                = var.create_bastionhost ? 1: 0
+  count                = var.create_bastionhost ? 1 : 0
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.resource_group.name
   virtual_network_name = azurerm_virtual_network.virtual_network.name
@@ -25,7 +25,7 @@ resource "azurerm_subnet" "nodes" {
 # Public IPs
 
 resource "azurerm_public_ip" "bastionhost" {
-  count               = var.create_bastionhost ? 1: 0
+  count               = var.create_bastionhost ? 1 : 0
   name                = "${var.stack_name}-bastionhost-ip"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
