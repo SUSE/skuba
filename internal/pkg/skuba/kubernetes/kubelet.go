@@ -64,8 +64,11 @@ func GenerateKubeletRootCert() error {
 		return nil
 	}
 
-	cfg := &certutil.Config{
+	certCfg := certutil.Config{
 		CommonName: "kubelet-ca",
+	}
+	cfg := &pkiutil.CertConfig{
+		Config: certCfg,
 	}
 	caCert, caKey, err := pkiutil.NewCertificateAuthority(cfg)
 	if err != nil {

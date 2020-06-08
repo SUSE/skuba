@@ -18,6 +18,8 @@
 package kured
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,7 +33,7 @@ const (
 )
 
 func LockExists(client clientset.Interface) (bool, error) {
-	kuredDaemonSet, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Get("kured", metav1.GetOptions{})
+	kuredDaemonSet, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Get(context.TODO(), "kured", metav1.GetOptions{})
 	if err != nil {
 		return false, errors.Wrap(err, "unable to get kured daemonset")
 	}
@@ -40,7 +42,12 @@ func LockExists(client clientset.Interface) (bool, error) {
 }
 
 func Lock(client clientset.Interface) error {
-	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(kuredDSName, types.StrategicMergePatchType, []byte(kuredLockAnnotationJson))
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(
+		context.TODO(),
+		kuredDSName,
+		types.StrategicMergePatchType,
+		[]byte(kuredLockAnnotationJson),
+		metav1.PatchOptions{})
 	if err != nil {
 		return errors.Wrap(err, "unable to patch daemonset with kured locking annotation")
 	}
@@ -52,7 +59,12 @@ func Unlock(client clientset.Interface) error {
 	// jsonpatch expects a ~1 escape sequence for a forward slash '/'
 	// the annotation we want to remove is 'weave.works/kured-node-lock'
 	payload := []byte(`[{"op":"remove","path":"/metadata/annotations/weave.works~1kured-node-lock"}]`)
-	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(kuredDSName, types.JSONPatchType, payload)
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch(
+		context.TODO(),
+		kuredDSName,
+		types.JSONPatchType,
+		payload,
+		metav1.PatchOptions{})
 	if err != nil {
 		return errors.Wrap(err, "unable to patch daemonset with kured unlocking annotation")
 	}

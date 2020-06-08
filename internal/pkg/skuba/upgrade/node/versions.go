@@ -19,6 +19,7 @@ package node
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"reflect"
 
@@ -157,7 +158,7 @@ func UpdateStatus(client clientset.Interface, nodeName string) (NodeVersionInfoU
 	if err != nil {
 		return NodeVersionInfoUpdate{}, err
 	}
-	node, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	node, err := client.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 	if err != nil {
 		return NodeVersionInfoUpdate{}, errors.Wrapf(err, "could not find node %s", nodeName)
 	}

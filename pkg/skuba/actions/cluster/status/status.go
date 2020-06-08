@@ -18,6 +18,7 @@
 package cluster
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -30,7 +31,9 @@ import (
 // Status prints the status of the cluster on the standard output by reading the
 // admin configuration file from the current folder
 func Status(client clientset.Interface) error {
-	nodeList, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodeList, err := client.CoreV1().Nodes().List(
+		context.TODO(),
+		metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve node list")
 	}

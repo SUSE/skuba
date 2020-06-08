@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -28,7 +29,7 @@ import (
 )
 
 func getPodContainerImageTag(client clientset.Interface, namespace string, podName string) (string, error) {
-	podObject, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+	podObject, err := client.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrap(err, "could not retrieve pod object")
 	}

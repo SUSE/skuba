@@ -18,6 +18,7 @@
 package etcd_test
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
 	"testing"
@@ -138,22 +139,26 @@ apiServer:
 		t.Run(tt.name, func(t *testing.T) {
 			clientset := fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{fakeMaster, fakeWorker}})
 			//nolint:errcheck
-			clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(fakeConfigMap)
+			clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(context.TODO(), fakeConfigMap, metav1.CreateOptions{})
 			//nolint:errcheck
-			clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(fakeDaemonSet)
+			clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(context.TODO(), fakeDaemonSet, metav1.CreateOptions{})
 
 			controlPlaneNodes, _ := kubernetes.GetControlPlaneNodes(clientset)
 			hashTarget := fmt.Sprintf("%x", sha1.Sum([]byte(fakeWorker.ObjectMeta.Name)))
 			hashExecutor := fmt.Sprintf("%x", sha1.Sum([]byte(controlPlaneNodes.Items[0].ObjectMeta.Name)))
 			job := fmt.Sprintf("caasp-remove-etcd-member-%.10s-from-%.10s", hashTarget, hashExecutor)
 			//nolint:errcheck
-			clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(&batchv1.Job{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      job,
-					Namespace: metav1.NamespaceSystem,
+			clientset.BatchV1().Jobs(metav1.NamespaceSystem).Create(
+				context.TODO(),
+				&batchv1.Job{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      job,
+						Namespace: metav1.NamespaceSystem,
+					},
+					Spec: fakeJobSpec,
 				},
-				Spec: fakeJobSpec,
-			})
+				metav1.CreateOptions{},
+			)
 
 			controlPlaneComponentsVersion, _ := kubeadm.GetCurrentClusterVersion(clientset)
 
