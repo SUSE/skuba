@@ -1,5 +1,5 @@
 - job-template:
-    name: '{name}/{version}/{platform}/{test}-daily'
+    name: '{name}/{platform}/{test}-daily'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
