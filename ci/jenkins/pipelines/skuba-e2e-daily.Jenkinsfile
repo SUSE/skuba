@@ -61,7 +61,7 @@ pipeline {
             archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
             archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'skuba/ci/infra/testrunner/*.xml', allowEmptyArchive: true)
+            sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
             archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
         }
         cleanup {
