@@ -163,6 +163,34 @@ pipeline {
             }
         } } }
 
+        stage('Git Clone') { steps {
+
+            checkout([$class: 'GitSCM',
+                      branches: [[name: "*/${BRANCH_NAME}"]],
+                      doGenerateSubmoduleConfigurations: false,
+                      extensions: [
+                          [$class: 'LocalBranch'],
+                          [$class: 'WipeWorkspace'],
+                          [$class: 'PreBuildMerge',
+                                options: [
+                                    mergeRemote: 'origin',
+                                    mergeTarget: "${env.CHANGE_TARGET}",
+                                    mergeStrategy: 'default',
+                                    fastForwardMode: 'FF'
+                               ]
+                          ],
+                          [$class: 'UserIdentity',
+                                email: 'worker@jenkins.ci',
+                                name: 'jenkins worker'
+                          ]
+                      ],
+                      submoduleCfg: [],
+                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
+                                           credentialsId: 'github-token',
+                                           url: 'https://github.com/SUSE/skuba']]
+            ])
+        }}
+
         stage('code-lint') { steps { script {
             echo 'Starting code lint'
             pr_context = 'jenkins/skuba-code-lint'
