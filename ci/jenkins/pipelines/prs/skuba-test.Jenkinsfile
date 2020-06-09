@@ -148,21 +148,42 @@ pipeline {
         } } }
 
         stage('Git Clone') { steps {
+
+            sh(script: 'git config --global user.email "worker@jenkins.ci"')
+            sh(script: 'git config --global user.name "Jenkins worker"')
+
             deleteDir()
+
             checkout([$class: 'GitSCM',
                       branches: [[name: "*/${BRANCH_NAME}"], [name: '*/master']],
                       doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
+                      extensions: [
+                          [$class: 'LocalBranch'],
+                          [$class: 'WipeWorkspace'],
+                          [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba'],
+                          [$class: 'PreBuildMerge',
+                                    options: [
+                                       mergeRemote: 'origin',
+                                       mergeTarget: "${env.CHANGE_TARGET}",
+                                       mergeStrategy: 'default',
+                                       fastForwardMode: 'NO_FF'
+                                   ]
+                          ]
+                      ],
                       submoduleCfg: [],
                       userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
                                            credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
+                                           url: 'https://github.com/SUSE/skuba']]
+            ])
+            dir("${WORKSPACE}/skuba") {
+                sh(script: 'git log -n 10 --graph --pretty=oneline --abbrev-commit --all --decorate=full')
+            }
 
             dir("${WORKSPACE}/skuba") {
                 sh(script: "git checkout ${BRANCH_NAME}", label: "Checkout PR Branch")
+                sh(script: 'git log -n 10 --graph --pretty=oneline --abbrev-commit --all --decorate=full')
             }
+
         }}
 
         stage('code-lint') { steps { script {
