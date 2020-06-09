@@ -202,12 +202,12 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
     <addons config:type="list">
       <addon>
         <name>sle-module-containers</name>
-        <version>15.1</version>
+        <version>15.2</version>
         <arch>x86_64</arch>
       </addon>
       <addon>
         <name>caasp</name>
-        <version>4.0</version>
+        <version>5</version>
         <arch>x86_64</arch>
         <reg_code><!-- replace this comment with a CaaSP registration code --></reg_code>
       </addon>
