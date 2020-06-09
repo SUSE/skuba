@@ -20,9 +20,9 @@
           - openstack
           - vmware
       version:
-          - v4
-          - v5:
-              branch: experimental-v5
+          - v4:
+              branch: maintenance-caasp-v4 
+          - v5
       jobs:
           - '{name}/{version}/{platform}'
 
@@ -31,6 +31,7 @@
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
+    branch: maintenance-caasp-v4
     platform:
         - vmware
     test:
@@ -62,7 +63,6 @@
     repo-credentials: github-token
     platform:
         - vmware
-    branch: experimental-v5
     test:
         - test_addon_upgrade
         - test_cilium
