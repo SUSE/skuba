@@ -1,9 +1,5 @@
-import os
-import stat
-
 from timeout_decorator import timeout
 from platforms.terraform import Terraform
-from utils import Format
 
 
 class Libvirt(Terraform):

@@ -14,8 +14,10 @@ class Check():
         self.roles = roles
         self.stages = stages
 
+
 _checks = []
 _checks_by_name = {}
+
 
 def check(description=None, scope=None, roles=[], stages=[], check_timeout=300, check_backoff=20):
     """Decorator for waiting a check to become true.
@@ -59,12 +61,13 @@ def check(description=None, scope=None, roles=[], stages=[], check_timeout=300, 
         if scope is None:
             raise ValueError("scope must be defined: 'cluster' or 'node'")
 
-        _check = Check(check.__name__,
-                    description,
-                    wait_condition,
-                    scope,
-                    roles=roles,
-                    stages=stages)
+        _check = Check(
+            check.__name__,
+            description,
+            wait_condition,
+            scope,
+            roles=roles,
+            stages=stages)
         _checks.append(_check)
         _checks_by_name[_check.name] = _check
 
@@ -81,13 +84,12 @@ class Checker:
         self.utils.setup_ssh()
         self.platform = platform
 
-
     def _filter_checks(self, checks, scope=None, stage=None):
         _filtered = checks
         if scope:
-            _filtered= [c for c in _filtered if scope == c.scope]
+            _filtered = [c for c in _filtered if scope == c.scope]
         if stage:
-            _filtered= [c for c in _filtered if stage in c.stages]
+            _filtered = [c for c in _filtered if stage in c.stages]
         return _filtered
 
     def _filter_by_name(self, names):
@@ -102,7 +104,7 @@ class Checker:
 
     def check_node(self, role, node, checks=None, stage=None, timeout=180, backoff=20):
 
-        #Prevent defaults to be accidentally overridden by callers with None
+        # Prevent defaults to be accidentally overridden by callers with None
         if timeout is None:
             timeout = 180
         if backoff is None:
@@ -118,9 +120,9 @@ class Checker:
                 raise ValueError("stage must be specified")
             checks = self._filter_checks(_checks, stage=stage, scope="node")
 
-        start   = int(time.time())
+        start = int(time.time())
         for check in checks:
-            remaining = timeout-(int(time.time())-start)
+            remaining = timeout - (int(time.time()) - start)
             check.func(self.conf, self.platform, role, node, check_timeout=remaining, check_backoff=backoff)
 
     def check_cluster(self, checks=None, stage=None, timeout=180, backoff=20):
@@ -134,18 +136,19 @@ class Checker:
                 raise ValueError("stage must be specified")
             checks = self._filter_checks(_checks, stage=stage, scope="cluster")
 
-        start   = int(time.time())
+        start = int(time.time())
         for check in checks:
-            remaining = timeout-(int(time.time())-start)
+            remaining = timeout - (int(time.time()) - start)
             check.func(self.conf, self.platform, check_timeout=remaining, check_backoff=backoff)
 
 
 @check(description="apiserver healthz check", scope="node", roles=['master'])
 def check_apiserver_healthz(conf, platform, role, node):
-     platform = platforms.get_platform(conf, platform)
-     cmd =   'curl -Ls --insecure https://localhost:6443/healthz'
-     output = platform.ssh_run(role, node, cmd)
-     return output.find("ok") > -1
+    platform = platforms.get_platform(conf, platform)
+    cmd = 'curl -Ls --insecure https://localhost:6443/healthz'
+    output = platform.ssh_run(role, node, cmd)
+    return output.find("ok") > -1
+
 
 @check(description="etcd health check", scope="node", roles=['master'])
 def check_etcd_health(conf, platform, role, node):
@@ -156,6 +159,7 @@ def check_etcd_health(conf, platform, role, node):
            'https://localhost:2379/health')
     output = platform.ssh_run(role, node, cmd)
     return output.find("true") > -1
+
 
 @check(description="check node is ready", scope="node", roles=["master", "worker"], stages=["joined"])
 def check_node_ready(conf, platform, role, node):

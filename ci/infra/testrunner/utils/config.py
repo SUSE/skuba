@@ -4,7 +4,6 @@ import sys
 
 import yaml
 
-from utils.format import Format
 
 class dict_with_default(dict):
     def __init__(self, values, default):
@@ -13,6 +12,7 @@ class dict_with_default(dict):
 
     def __missing__(self, key):
         return self.default
+
 
 class Constant:
     TERRAFORM_EXAMPLE = "terraform.tfvars.json.ci.example"
@@ -26,7 +26,7 @@ class BaseConfig:
     def __new__(cls, yaml_path, *args, **kwargs):
         obj = super().__new__(cls, *args, **kwargs)
         obj.yaml_path = yaml_path
-        obj.platform  = BaseConfig.Platform()
+        obj.platform = BaseConfig.Platform()
         obj.terraform = BaseConfig.Terraform()
         obj.openstack = BaseConfig.Openstack()
         obj.vmware = BaseConfig.VMware()
@@ -58,7 +58,7 @@ class BaseConfig:
 
     class Utils:
         def __init__(self):
-            self.ssh_sock =  "/tmp/testrunner_ssh_sock"
+            self.ssh_sock = "/tmp/testrunner_ssh_sock"
             self.ssh_key = "$HOME/.ssh/id_rsa"
             self.ssh_user = "sles"
 
@@ -140,7 +140,7 @@ class BaseConfig:
         print(f'{"  "*level}{config.__class__.__name__}:', file=out)
         for key, value in config.__dict__.items():
             if isinstance(value, BaseConfig.config_classes):
-                BaseConfig.print(value, level=level+1, out=out)
+                BaseConfig.print(value, level=level + 1, out=out)
                 continue
 
             print(f'{"  "*(level+1)}{key}: {value}', file=out)
@@ -174,13 +174,13 @@ class BaseConfig:
 
         for key, value in config.__dict__.items():
             if isinstance(value, BaseConfig.config_classes):
-                sub_ctx = "{}{}".format(ctx+"_" if ctx else "", key)
+                sub_ctx = "{}{}".format(ctx + "_" if ctx else "", key)
                 sub_config = value
                 sub_vars = vars.get(key) if vars else None
                 BaseConfig.inject_attrs_from_yaml(sub_config, sub_vars, sub_ctx)
                 continue
 
-            env_key = "{}{}".format(ctx+"_" if ctx else "", key).upper()
+            env_key = "{}{}".format(ctx + "_" if ctx else "", key).upper()
             env_value = os.getenv(env_key)
 
             # If env variable exists, use it. If not, use value fom vars, if
@@ -198,13 +198,14 @@ class BaseConfig:
         """subtitute environment variables in the value of the attribute
            recursively substitute values in list or maps
         """
+
         if value is not None:
             if type(value) == str:
                 value = string.Template(value).safe_substitute(dict_with_default(os.environ, ''))
             elif type(value) == list:
                 value = [BaseConfig.substitute(e) for e in value]
             elif type(value) == dict:
-                value = { k: BaseConfig.substitute(v) for k,v in value.items()}
+                value = {k: BaseConfig.substitute(v) for k, v in value.items()}
         return value
 
     @staticmethod
@@ -221,7 +222,6 @@ class BaseConfig:
         """
         return
 
-
     config_classes = (
         Platform,
         Packages,
@@ -236,5 +236,3 @@ class BaseConfig:
         Libvirt,
         Utils
     )
-
-

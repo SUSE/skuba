@@ -74,7 +74,7 @@ class Terraform(Platform):
                     exception = inner_ex
 
         if exception:
-           raise exception
+            raise exception
 
     def _load_tfstate(self):
         if self.state is None:
@@ -136,12 +136,12 @@ class Terraform(Platform):
     # Also ensure that only valid character are present and that the string
     # starts and ends with alphanumeric characters and all lowercase.
     def stack_name(self):
-         stack_name = self.conf.terraform.stack_name[:45]
-         stack_name = stack_name.replace("_","-").replace("/","-")
-         stack_name = stack_name.strip("-.")
-         stack_name = stack_name.lower()
+        stack_name = self.conf.terraform.stack_name[:45]
+        stack_name = stack_name.replace("_", "-").replace("/", "-")
+        stack_name = stack_name.strip("-.")
+        stack_name = stack_name.lower()
 
-         return stack_name
+        return stack_name
 
     def _update_tfvars(self, tfvars):
         new_vars = {
@@ -178,7 +178,7 @@ class Terraform(Platform):
 
         repos = tfvars.get("repositories", {})
         if self.conf.packages.additional_repos:
-           for name, url in self.conf.packages.additional_repos.items():
+            for name, url in self.conf.packages.additional_repos.items():
                 if not url:
                     logger.warning(f'skipping repository {name} with empty url')
                     continue
