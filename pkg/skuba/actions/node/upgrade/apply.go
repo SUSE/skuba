@@ -22,11 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	clientset "k8s.io/client-go/kubernetes"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
-
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -107,11 +104,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			initCfg.UseHyperKubeImage = false
 		}
 
-		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
-		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
-			Group:   "kubeadm.k8s.io",
-			Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
-		})
+		initCfgContents, err = kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
