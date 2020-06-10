@@ -31,7 +31,7 @@ class Terraform(Platform):
                           self.tfjson_path]
 
     def destroy(self, variables=[]):
-        cmd = "destroy -auto-approve"
+        cmd = "destroy -parallelism=1 -auto-approve"
 
         for var in variables:
             cmd += f" -var {var}"
@@ -57,7 +57,7 @@ class Terraform(Platform):
         self._run_terraform_command("version")
         self._generate_tfvars_file()
         plan_cmd = f"plan -out {self.tfout_path}"
-        apply_cmd = f"apply -auto-approve {self.tfout_path}"
+        apply_cmd = f"apply -parallelism=1 -auto-approve {self.tfout_path}"
 
         self._run_terraform_command(plan_cmd)
 
