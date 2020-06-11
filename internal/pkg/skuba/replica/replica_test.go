@@ -18,6 +18,7 @@
 package replica
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -172,6 +173,7 @@ func TestUpdateNodes(t *testing.T) {
 			}
 
 			deployments, _ := tt.fakeClientset.AppsV1().Deployments(metav1.NamespaceSystem).List(
+				context.TODO(),
 				metav1.ListOptions{
 					LabelSelector: fmt.Sprintf("%s=true", highAvailabilitylabel),
 				},
@@ -300,6 +302,7 @@ func TestUpdateDrainNodes(t *testing.T) {
 			}
 
 			deployments, _ := tt.fakeClientset.AppsV1().Deployments(metav1.NamespaceSystem).List(
+				context.TODO(),
 				metav1.ListOptions{
 					LabelSelector: fmt.Sprintf("%s=true", highAvailabilitylabel),
 				},

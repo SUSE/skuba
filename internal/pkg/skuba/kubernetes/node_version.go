@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
@@ -134,7 +135,7 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 	var nodeList *v1.NodeList
 	err := wait.ExponentialBackoff(retry.DefaultBackoff, func() (bool, error) {
 		var err error
-		nodeList, err = client.CoreV1().Nodes().List(metav1.ListOptions{})
+		nodeList, err = client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			lastErr = err
 			return false, nil
@@ -147,7 +148,7 @@ func AllNodesVersioningInfo(client clientset.Interface) (NodeVersionInfoMap, err
 	var podList *v1.PodList
 	err = wait.ExponentialBackoff(retry.DefaultBackoff, func() (bool, error) {
 		var err error
-		podList, err = client.CoreV1().Pods(metav1.NamespaceSystem).List(metav1.ListOptions{})
+		podList, err = client.CoreV1().Pods(metav1.NamespaceSystem).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			lastErr = err
 			return false, nil

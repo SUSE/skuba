@@ -56,15 +56,17 @@ func NewServerCertAndKey(
 	}
 
 	// Generate certificate
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &certutil.Config{
-		CommonName:   commonName,
-		Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-		AltNames: certutil.AltNames{
-			DNSNames: certDNSNames,
-			IPs:      certIPs,
-		},
-		Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-	})
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   commonName,
+			Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
+			AltNames: certutil.AltNames{
+				DNSNames: certDNSNames,
+				IPs:      certIPs,
+			},
+			Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		}},
+	)
 	if err != nil {
 		return nil, nil, errors.Errorf("error when creating certificate %v", err)
 	}

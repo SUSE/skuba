@@ -33,7 +33,7 @@ Patch0:         0001-Patch-out-load-balancer.patch
 BuildRequires:  git
 BuildRequires:  go-go-md2man
 BuildRequires:  golang-packaging
-BuildRequires:  golang(API) >= 1.12
+BuildRequires:  golang(API) = 1.13
 BuildRequires:  python3-setuptools
 # Standard systemd requirements
 BuildRequires:  pkgconfig(systemd)

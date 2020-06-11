@@ -18,6 +18,7 @@
 package cni
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -77,7 +78,7 @@ func Test_CreateCiliumSecret(t *testing.T) {
 
 			err := CreateCiliumSecret(tt.clientset, tt.ciliumVersion)
 			//nolint:errcheck
-			secrets, _ := tt.clientset.CoreV1().Secrets(metav1.NamespaceSystem).List(metav1.ListOptions{})
+			secrets, _ := tt.clientset.CoreV1().Secrets(metav1.NamespaceSystem).List(context.TODO(), metav1.ListOptions{})
 			secretSize := len(secrets.Items)
 			if tt.errExpected {
 				if err == nil {
@@ -179,7 +180,7 @@ func Test_AnnotateCiliumDaemonsetWithCurrentTimestamp(t *testing.T) {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
 			//nolint:errcheck
-			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(tt.daemonset)
+			tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Create(context.TODO(), tt.daemonset, metav1.CreateOptions{})
 
 			err := annotateCiliumDaemonsetWithCurrentTimestamp(tt.clientset)
 
@@ -382,11 +383,11 @@ trusted-ca-file: /var/lib/etcd-secrets/etcd-client-ca.crt
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.kubeadmConfigMap != nil {
 				//nolint:errcheck
-				tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.kubeadmConfigMap)
+				tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(context.TODO(), tt.kubeadmConfigMap, metav1.CreateOptions{})
 			}
 			if tt.ciliumConfigMap != nil {
 				//nolint:errcheck
-				tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(tt.ciliumConfigMap)
+				tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(context.TODO(), tt.ciliumConfigMap, metav1.CreateOptions{})
 			}
 
 			err := CreateOrUpdateCiliumConfigMap(tt.clientset, tt.ciliumVersion)
@@ -406,7 +407,7 @@ trusted-ca-file: /var/lib/etcd-secrets/etcd-client-ca.crt
 					return
 				}
 
-				dataGet, err := tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get("cilium-config", metav1.GetOptions{})
+				dataGet, err := tt.clientset.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), "cilium-config", metav1.GetOptions{})
 				if err != nil {
 					t.Errorf("error not expected on %s, but an error was reported (%v)", tt.name, err.Error())
 					return
