@@ -16,7 +16,7 @@ node('caasp-team-private-integration') {
 }
 
 pipeline {
-   agent { node { label "caasp-team-private-${worker_type}" } }
+   agent { node { label "caasp-team-private-${worker_type} && e2e" } }
 
    environment {
         OPENRC = credentials('ecp-openrc')
