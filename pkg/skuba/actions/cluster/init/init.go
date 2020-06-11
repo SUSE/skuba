@@ -114,7 +114,27 @@ func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
+	if err := writeScaffoldFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeKubeadmFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeAddonConfigFiles(initConfiguration); err != nil {
+		return err
+	}
 
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("[init] configuration files written, unable to get directory")
+		return nil
+	}
+
+	fmt.Printf("[init] configuration files written to %s\n", currentDir)
+	return nil
+}
+
+func writeScaffoldFiles(initConfiguration InitConfiguration) error {
 	scaffoldFilesToWrite := criScaffoldFiles["criconfig"]
 	kubernetesVersion := initConfiguration.KubernetesVersion
 	if kubernetesVersion.Minor() < 18 {
@@ -161,7 +181,10 @@ func Init(initConfiguration InitConfiguration) error {
 			return errors.Wrapf(err, "unable to close file %s", f.Name())
 		}
 	}
+	return nil
+}
 
+func writeKubeadmFiles(initConfiguration InitConfiguration) error {
 	// Write kubeadm-init.conf and kubeadm-join.conf.d templates
 	if err := writeKubeadmInitConf(initConfiguration); err != nil {
 		return err
@@ -175,7 +198,10 @@ func Init(initConfiguration InitConfiguration) error {
 	if err := writeKubeadmJoinWorkerConf(initConfiguration); err != nil {
 		return err
 	}
+	return nil
+}
 
+func writeAddonConfigFiles(initConfiguration InitConfiguration) error {
 	// Write addon configuration files
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: initConfiguration.KubernetesVersion,
@@ -190,14 +216,6 @@ func Init(initConfiguration InitConfiguration) error {
 			return errors.Wrapf(err, "could not write %q addon configuration", addonName)
 		}
 	}
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("[init] configuration files written, unable to get directory")
-		return nil
-	}
-
-	fmt.Printf("[init] configuration files written to %s\n", currentDir)
 	return nil
 }
 
