@@ -36,7 +36,7 @@ resource "azurerm_linux_virtual_machine" "master" {
   disable_password_authentication = (var.password == "") ? true : false
 
   os_disk {
-    caching              = "ReadWrite"
+    caching              = "ReadOnly"
     storage_account_type = var.master_storage_account_type
     disk_size_gb         = var.master_disk_size
   }
