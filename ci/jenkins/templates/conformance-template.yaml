@@ -4,12 +4,13 @@
     number-to-keep: 30
     days-to-keep: 30
     branch: master
+    schedule: '3-5'
     wrappers:
       - timeout:
           timeout: 180
           fail: true
     triggers:
-        - timed: 'H H(3-5) * * *'
+        - timed: 'H H({schedule}) * * *'
     parameters:
         - string:
             name: BRANCH
