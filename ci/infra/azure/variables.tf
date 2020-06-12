@@ -82,7 +82,7 @@ variable "username" {
 
 variable "password" {
   type        = string
-  description = "Password for the cluster nodes"
+  description = "Password for the cluster nodes. Warning: password based authentication is a security risk, please use key-based authentication instead."
 }
 
 variable "caasp_registry_code" {
