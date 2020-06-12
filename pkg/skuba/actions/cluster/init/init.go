@@ -55,6 +55,7 @@ type InitConfiguration struct {
 	// Note: UseHyperKube can be removed when we drop the support of
 	// provisioning clusters of version 1.17.
 	UseHyperKube bool
+	CniPlugin    kubernetes.Addon
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHost() string {
@@ -76,7 +77,7 @@ func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
 	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
 }
 
-func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
+func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool, cniPlugin string) (InitConfiguration, error) {
 	kubernetesVersion := kubernetes.LatestVersion()
 	var err error
 	needsHyperKube := false
@@ -104,6 +105,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 		StrictCapDefaults: strictCapDefaults,
 		UseHyperKube:      needsHyperKube,
+		CniPlugin:         kubernetes.Addon(cniPlugin),
 	}, nil
 }
 
@@ -114,6 +116,11 @@ func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
+	if addon, found := addons.Addons[initConfiguration.CniPlugin]; !found || addon.AddOnType != addons.CniAddOn {
+		return fmt.Errorf("unknown CNI plugin provided: %s", initConfiguration.CniPlugin)
+	}
+
+	// write configuration files
 	if err := writeScaffoldFiles(initConfiguration); err != nil {
 		return err
 	}
@@ -132,6 +139,16 @@ func Init(initConfiguration InitConfiguration) error {
 
 	fmt.Printf("[init] configuration files written to %s\n", currentDir)
 	return nil
+}
+
+func isAddonRequired(addon addons.Addon, initConfiguration InitConfiguration) bool {
+	if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		return false
+	}
+	if addon.AddOnType == addons.CniAddOn && initConfiguration.CniPlugin != addon.Addon {
+		return false
+	}
+	return true
 }
 
 func writeScaffoldFiles(initConfiguration InitConfiguration) error {
@@ -209,7 +226,7 @@ func writeAddonConfigFiles(initConfiguration InitConfiguration) error {
 		ClusterName:    initConfiguration.ClusterName,
 	}
 	for addonName, addon := range addons.Addons {
-		if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		if !isAddonRequired(addon, initConfiguration) {
 			continue
 		}
 		if err := addon.Write(addonConfiguration); err != nil {
