@@ -6,70 +6,67 @@
 # azure_location = "West Europe"
 
 # Enable zone for available regions
-enable_zone = false
+# EXAMPLE:
+# enable_zone = false
 
 # CIRD blocks for virtual network
-cidr_block = "10.1.0.0/16"
+# EXAMPLE:
+# cidr_block = "10.1.0.0/16"
 
 # CIDR blocks for the bastion host subnet
-bastionhost_subnet_cidr = "10.1.1.0/24"
+# EXAMPLE:
+# bastionhost_subnet_cidr = "10.1.1.0/24"
 
 # Private subnet of virtual_network
-private_subnet_cidr = "10.1.4.0/24"
+# EXAMPLE:
+# private_subnet_cidr = "10.1.4.0/24"
 
 # Identifier to make all your resources unique and avoid clashes with other users of this terraform project
-stack_name = "my-sles-cluster"
+# EXAMPLE:
+# stack_name = "my-sles-cluster"
 
 # Name of DNS domain
-dnsdomain = "my-sles-cluster.example.com"
+# EXAMPLE:
+# dnsdomain = "my-sles-cluster.example.com"
 
 # Enables creation of bastion host
 # https://docs.microsoft.com/en-us/azure/bastion/bastion-overview
-# create_bastionhost = true
-create_bastionhost = false
+# EXAMPLE:
+# create_bastionhost = false
 
 # Number of master nodes
-# masters = 1
-masters = 1
+# EXAMPLE:
+# masters = 3
 
 # Size of the master nodes
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/generation-2
 # EXAMPLE:
 # master_vm_size = "Standard_D2s_v3"
-master_vm_size = "Standard_D2s_v3"
 
 # Storage account type  of the master nodes
 # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types
 # EXAMPLE:
-master_storage_account_type = "StandardSSD_LRS"
+# master_storage_account_type = "StandardSSD_LRS"
 
 # "Size of the EBS volume, in Gb"
-master_disk_size = 30
+# EXAMPLE:
+# master_disk_size = 30
 
 # Number of worker nodes
-# workers = 3
-workers = 2
+# EXAMPLE:
+# workers = 2
 
 # Size of the worker nodes
 # EXAMPLE:
 # worker_vm_size = "Standard_D2s_v3"
-worker_vm_size = "Standard_D2s_v3"
 
 # Storage account type  of the worker nodes
 # EXAMPLE:
-# worker_storage_account_type = "Premium_LRS"
-worker_storage_account_type = "StandardSSD_LRS"
+# worker_storage_account_type = "StandardSSD_LRS"
 
 # "Size of the EBS volume, in Gb"
-worker_disk_size = 30
-
-# Username for the cluster nodes
 # EXAMPLE:
-username = "sles"
-
-# Password for the cluster nodes
-# EXAMPLE:
-password = "Linux12345"
+# worker_disk_size = 30
 
 # define the repositories to use
 # EXAMPLE:
@@ -77,8 +74,6 @@ password = "Linux12345"
 #   repository1 = "http://example.my.repo.com/repository1/"
 #   repository2 = "http://example.my.repo.com/repository2/"
 # }
-# repositories = {}
-# lb_repositories = {}
 
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
@@ -89,27 +84,17 @@ packages = []
 # authorized_keys = [
 #  "ssh-rsa <key-content>"
 # ]
-authorized_keys = [
-  ""
-]
 
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
-ntp_servers = [ "TIME.google.com", "TIME1.google.com", "TIME2.google.com", "TIME3.google.com", "TIME4.google.com" ]
-
-# DNS servers for the nodes
-# dns_nameservers = [
-#     "172.28.0.2",
-#     "8.8.8.8",
-#     "8.8.4.4",
-#     "1.1.1.1",
-#     "1.0.0.1",
-#     "168.95.1.1",
-#     "168.95.192.1"
+# EXAMPLE:
+# ntp_servers = [ 
+#   "TIME.google.com", 
+#   "TIME1.google.com", 
+#   "TIME2.google.com", 
+#   "TIME3.google.com", 
+#   "TIME4.google.com" 
 # ]
-dns_nameservers = [
-  "8.8.8.8",
-  "8.8.4.4"
-]
 
 # List of Virtual Network IDs to join via virual network peering
-#peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
+# EXAMPLE:`
+# peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
