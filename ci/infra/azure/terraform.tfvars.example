@@ -4,7 +4,6 @@
 # https://azure.microsoft.com/en-us/global-infrastructure/regions/
 # https://docs.microsoft.com/en-us/azure/availability-zones/az-region
 # azure_location = "West Europe"
-azure_location = "East Asia"
 
 # Enable zone for available regions
 enable_zone = false
