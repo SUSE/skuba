@@ -8,7 +8,6 @@ resource "azurerm_network_interface" "worker" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.nodes.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = var.create_bastionhost ? null : element(azurerm_public_ip.worker.*.id, count.index)
   }
 }
 

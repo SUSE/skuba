@@ -27,12 +27,6 @@ output "masters_private_ip" {
   )
 }
 
-output "workers_public_ip" {
-  value = zipmap(
-    azurerm_linux_virtual_machine.worker.*.name,
-    azurerm_linux_virtual_machine.worker.*.public_ip_address,
-  )
-}
 
 output "workers_private_ip" {
   value = zipmap(
