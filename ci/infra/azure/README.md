@@ -144,6 +144,10 @@ Caveats of Azure Bastion:
     (ugh!) or create a new one inside of the first master node and copy that
     around the cluster.
 
+## Enable Multiple Zones:
+
+It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentialy based on zones defined in `azure_availability_zones`.
+
 # Known limitations
 
   * nodes suffer a high load when skuba-updater runs for the first time
@@ -154,4 +158,3 @@ Caveats of Azure Bastion:
         used by the Azure Cluster API provider.
       * Slow disk? Right now we're using the most performing disk SKU
   * Cloud Provider Integration is **not** enabled yet.
-  * availability zones: right now these are not used.
