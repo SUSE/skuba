@@ -1,7 +1,6 @@
 variable "azure_location" {
   type = string
-  # default     = "West Europe"
-  description = "Name of the AZURE location to be used"
+  description = "Name of the AZURE location to be used (eg: "West Europe")"
 }
 
 variable "enable_zone" {
@@ -12,7 +11,6 @@ variable "enable_zone" {
 
 variable "azure_availability_zones" {
   type        = list(string)
-  default     = ["1", "2", "3"]
   description = "List of Availability Zones (e.g. `['1', '2', '3']`)"
 }
 
@@ -84,7 +82,6 @@ variable "username" {
 
 variable "password" {
   type        = string
-  default     = "linux"
   description = "Password for the cluster nodes"
 }
 
@@ -108,12 +105,12 @@ variable "suma_server_name" {
 
 variable "create_bastionhost" {
   type        = bool
-  description = "Enables creation of bastion host"
   default     = false
+  description = "Enables creation of bastion host"
 }
 
 variable "masters" {
-  default     = 1
+  default     = 3
   description = "Number of master nodes"
 }
 
