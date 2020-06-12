@@ -5,12 +5,13 @@
     days-to-keep: 30
     branch: master
     kubernetes_version: ''
+    schedule: '3-5'
     wrappers:
       - timeout:
           timeout: 120
           fail: true
     triggers:
-        - timed: 'H H(3-5) * * *'
+        - timed: 'H H({schedule}) * * *'
     parameters:
         - string:
             name: BRANCH
