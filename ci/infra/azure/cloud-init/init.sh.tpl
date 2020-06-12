@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 ${ntp_servers}
 ${name_servers}
