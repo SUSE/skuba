@@ -18,11 +18,10 @@ bastionhost_subnet_cidr = "10.1.1.0/24"
 private_subnet_cidr = "10.1.4.0/24"
 
 # Identifier to make all your resources unique and avoid clashes with other users of this terraform project
-# stack_name = "my-sles-cluster"
+stack_name = "my-sles-cluster"
 
 # Name of DNS domain
-# dnsdomain = "my.domain.com"
-dnsdomain = "my-cluster-101.example.com"
+dnsdomain = "my-sles-cluster.example.com"
 
 # Enables creation of bastion host
 # https://docs.microsoft.com/en-us/azure/bastion/bastion-overview
