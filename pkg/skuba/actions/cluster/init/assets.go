@@ -28,7 +28,7 @@ This directory contains all supported cloud provider integration configurations
 and instructions.
  
 - [~AWS~](aws/README.md)
-- [~Azure~](aws/README.md)
+- [~Azure~](azure/README.md)
 - [~Openstack~](openstack/README.md)
 - [~vSphere~](vsphere/README.md)
 
