@@ -4,6 +4,7 @@
     number-to-keep: 30
     days-to-keep: 30
     branch: master
+    kubernetes_version: ''
     wrappers:
       - timeout:
           timeout: 120
@@ -23,13 +24,18 @@
             name: E2E_MAKE_TARGET_NAME
             default: '{test}'
             description: The make target to run (only e2e tests)
+        - string:
+              name: KUBERNETES_VERSION 
+              default: '{kubernetes_version}'
+              description: version of kubernetes to install
     pipeline-scm:
         scm:
             - git:
                 url: 'https://github.com/{repo-owner}/{repo-name}.git'
                 credentials-id: '{repo-credentials}'
+                refspec: '+refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*'
                 branches:
-                    - '{branch}'
+                    - '$BRANCH'
                 browser: auto
                 suppress-automatic-scm-triggering: true
                 basedir: skuba

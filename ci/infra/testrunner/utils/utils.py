@@ -1,17 +1,15 @@
 import glob
-import hashlib
 import logging
 import os
 import shutil
 import subprocess
 from functools import wraps
-from tempfile import gettempdir
 from threading import Thread
 
 import requests
 from timeout_decorator import timeout
 
-from utils.constants import Constant
+from utils.config import Constant
 from utils.format import Format
 
 logger = logging.getLogger('testrunner')
@@ -75,7 +73,7 @@ class Utils:
     def ssh_cleanup(self):
         """Remove ssh sock files"""
         # TODO: also kill ssh agent here? maybe move pkill to kill_ssh_agent()?
-        sock_file = self.ssh_sock_fn()
+        sock_file = self.conf.utils.ssh_sock
         sock_dir = os.path.dirname(sock_file)
         try:
             Utils.cleanup_file(sock_file)
@@ -127,18 +125,21 @@ class Utils:
 
         return logging_errors
 
+    def ssh_user(self):
+        return self.conf.utils.ssh_user
+
     def authorized_keys(self):
-        public_key_path = self.conf.terraform.ssh_key + ".pub"
-        os.chmod(self.conf.terraform.ssh_key, 0o400)
+        public_key_path = self.conf.utils.ssh_key + ".pub"
+        os.chmod(self.conf.utils.ssh_key, 0o400)
 
         with open(public_key_path) as f:
             pubkey = f.read().strip()
         return pubkey
 
     def ssh_run(self, ipaddr, cmd):
-        key_fn = self.conf.terraform.ssh_key
+        key_fn = self.conf.utils.ssh_key
         cmd = "ssh " + Constant.SSH_OPTS + " -i {key_fn} {username}@{ip} -- '{cmd}'".format(
-            key_fn=key_fn, ip=ipaddr, cmd=cmd, username=self.conf.terraform.nodeuser)
+            key_fn=key_fn, ip=ipaddr, cmd=cmd, username=self.ssh_user())
         return self.runshellcommand(cmd)
 
     def scp_file(self, ip_address, remote_file_path, local_file_path):
@@ -149,8 +150,8 @@ class Utils:
         :param local_file_path: (str) Path where to store the log
         :return:
         """
-        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.terraform.ssh_key}"
-               f" {self.conf.terraform.nodeuser}@{ip_address}:{remote_file_path} {local_file_path}")
+        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.utils.ssh_key}"
+               f" {self.ssh_user()}@{ip_address}:{remote_file_path} {local_file_path}")
         self.runshellcommand(cmd)
 
     def rsync(self, ip_address, remote_dir_path, local_dir_path):
@@ -161,16 +162,13 @@ class Utils:
         :param local_dir_path: (str) Path where to store the dir
         :return:
         """
-        cmd = (f'rsync -avz --no-owner --no-perms -e "ssh {Constant.SSH_OPTS} -i {self.conf.terraform.ssh_key}"  '
-               f'--rsync-path="sudo rsync" --ignore-missing-args {self.conf.terraform.nodeuser}@{ip_address}:{remote_dir_path} '
+        cmd = (f'rsync -avz --no-owner --no-perms -e "ssh {Constant.SSH_OPTS} -i {self.conf.utils.ssh_key}"  '
+               f'--rsync-path="sudo rsync" --ignore-missing-args {self.ssh_user()}@{ip_address}:{remote_dir_path} '
                f'{local_dir_path}')
         self.runshellcommand(cmd)
 
     def runshellcommand(self, cmd, cwd=None, env={}, ignore_errors=False, stdin=None):
-        """Running shell command in {workspace} if cwd == None
-           Eg) cwd is "skuba", cmd will run shell in {workspace}/skuba/
-               cwd is None, cmd will run in {workspace}
-               cwd is abs path, cmd will run in cwd
+        """Running shell command
         Keyword arguments:
         cmd -- command to run
         cwd -- dir to run the cmd
@@ -178,27 +176,28 @@ class Utils:
         ignore_errors -- don't raise exception if command fails
         stdin -- standard input for the command in bytes
         """
-        if not cwd:
-            cwd = self.conf.workspace
 
-        if not os.path.isabs(cwd):
-            cwd = os.path.join(self.conf.workspace, cwd)
+        cmd_env = {
+            "SSH_AUTH_SOCK": self.conf.utils.ssh_sock,
+            "PATH": os.environ['PATH'],
+            **env
+        }
 
-        if not os.path.exists(cwd):
+        if cwd and not os.path.exists(cwd):
             raise FileNotFoundError(Format.alert("Directory {} does not exists".format(cwd)))
 
         if logging.DEBUG >= logger.level:
             logger.debug("Executing command\n"
                          "    cwd: {} \n"
                          "    env: {}\n"
-                         "    cmd: {}".format(cwd, str(env) if env else "{}", cmd))
+                         "    cmd: {}".format(cwd, str(cmd_env) if cmd_env else "{}", cmd))
         else:
             logger.info("Executing command {}".format(cmd))
 
         stdout, stderr = [], []
         p = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd,
-            stdin=subprocess.PIPE if stdin else None, shell=True, env=env
+            stdin=subprocess.PIPE if stdin else None, shell=True, env=cmd_env
         )
         if stdin:
             p.stdin.write(stdin)
@@ -221,23 +220,6 @@ class Utils:
                 return stderr
         return stdout
 
-    def ssh_sock_fn(self):
-        """generate path to ssh socket
-
-        A socket path can't be over 107 chars on Linux, so generate a short
-        hash of the workspace and use that in $TMPDIR (usually /tmp) so we have
-        a predictable, test-unique, fixed-length path.
-        """
-        path = os.path.join(
-            gettempdir(),
-            hashlib.md5(self.conf.workspace.encode()).hexdigest(),
-            "ssh-agent-sock"
-        )
-        maxl = 107
-        if len(path) > maxl:
-            raise Exception(f"Socket path '{path}' len {len(path)} > {maxl}")
-        return path
-
     def read_fd(self, proc, fd, logger_func, output):
         """Read from fd, logging using logger_func
 
@@ -254,10 +236,10 @@ class Utils:
     @timeout(60)
     @step
     def setup_ssh(self):
-        os.chmod(self.conf.terraform.ssh_key, 0o400)
+        os.chmod(self.conf.utils.ssh_key, 0o400)
 
         # use a dedicated agent to minimize stateful components
-        sock_fn = self.ssh_sock_fn()
+        sock_fn = self.conf.utils.ssh_sock
         # be sure directory containing socket exists and socket doesn't exist
         if os.path.exists(sock_fn):
             try:
@@ -282,7 +264,7 @@ class Utils:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
         self.runshellcommand(
-            "ssh-add " + self.conf.terraform.ssh_key, env={"SSH_AUTH_SOCK": sock_fn})
+            "ssh-add " + self.conf.utils.ssh_key, env={"SSH_AUTH_SOCK": sock_fn})
 
     @timeout(30)
     @step

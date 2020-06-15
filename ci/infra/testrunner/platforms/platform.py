@@ -47,13 +47,13 @@ class Platform:
             "worker": self.get_nodes_ipaddrs("worker")
         }
 
-        if not os.path.isdir(self.conf.log_dir):
-            os.mkdir(self.conf.log_dir)
-            logger.info(f"Created log dir {self.conf.log_dir}")
+        if not os.path.isdir(self.conf.platform.log_dir):
+            os.mkdir(self.conf.platform.log_dir)
+            logger.info(f"Created log dir {self.conf.platform.log_dir}")
 
         for node_type in node_ips:
             for ip_address in node_ips[node_type]:
-                node_log_dir = self._create_node_log_dir(ip_address, node_type, self.conf.log_dir)
+                node_log_dir = self._create_node_log_dir(ip_address, node_type, self.conf.platform.log_dir)
                 logging_error = self.utils.collect_remote_logs(ip_address, self.logs, node_log_dir)
 
                 if logging_error:
@@ -103,15 +103,12 @@ class Platform:
         if num_master > -1 or num_worker > -1:
             logger.warning("Overriding number of nodes")
             if num_master > -1:
-                self.conf.terraform.master.count = num_master
                 logger.warning("   Masters:{} ".format(num_master))
 
             if num_worker > -1:
-                self.conf.terraform.worker.count = num_worker
                 logger.warning("   Workers:{} ".format(num_worker))
 
-
-        self._provision_platform()
+        self._provision_platform(num_master, num_worker)
 
     def ssh_run(self, role, nr, cmd):
         ip_addrs = self.get_nodes_ipaddrs(role)

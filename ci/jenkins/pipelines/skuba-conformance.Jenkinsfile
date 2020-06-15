@@ -1,5 +1,18 @@
+// type of worker required by the job 
+def worker_type = 'integration'
+
+node('caasp-team-private-integration') {
+    stage('select worker') {
+        if (env.BRANCH != 'master') {
+            if (env.BRANCH.startsWith('experimental') || env.BRANCH.startsWith('maintenance')) {
+                worker_type = env.BRANCH
+            }
+        }
+    }
+}
+
 pipeline {
-    agent { node { label 'caasp-team-private-integration' } }
+   agent { node { label "caasp-team-private-${worker_type}" } }
 
     environment {
         SKUBA_BINPATH = "/home/jenkins/go/bin/skuba"
@@ -48,7 +61,7 @@ pipeline {
         stage('Conformance Tests') {
             options { timeout(time: 200, unit: 'MINUTES', activity: false) }
             steps {
-                sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION}", label: 'Run Conformance')
+                sh(script: "skuba/ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION} --mode=certified-conformance", label: 'Run Conformance')
                 sh(script: "skuba/ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION}", label: 'Collect Results')
                 sh(script: "skuba/ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION}", label: 'Cleanup Cluster')
             }
