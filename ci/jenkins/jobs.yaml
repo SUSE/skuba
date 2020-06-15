@@ -20,6 +20,7 @@
           - vmware
       version:
           - v4:
+              sonobuoy_version: 'v0.17'
               schedule: '1-3'
               branch: maintenance-caasp-v4 
           - v5
