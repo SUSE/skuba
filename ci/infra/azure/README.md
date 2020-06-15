@@ -51,7 +51,9 @@ This can be done by setting these variables to `true` (they are set to
 
 ## Network layout
 
-All the nodes are placed inside of the same virtual network, within the same
+All of the infrastructure is created inside of a user specified AZURE region.
+The resources are currently all located inside of the user specified availability
+zones. All the nodes are placed inside of the same virtual network, within the same
 subnet.
 
 Worker nodes are never exposed to the public internet. On the opposite
@@ -127,8 +129,7 @@ cluster by doing the following steps:
 Once this is done a new browser tab will be open with a shell session running
 inside of the desired node.
 
-It's recommended to use Chrome or Chromium during this process. Firefox doesn't
-seem to allow copying and pasting.
+It's recommended to use Chrome or Chromium during this process.
 
 You can ssh into the first master node of the cluster of drive the creation of
 a SUSE cluster from there. Once this is done you can download a kubeconfig
@@ -136,7 +137,7 @@ file and operate the cluster without having to go through the bastion host.
 
 Caveats of Azure Bastion:
 
-  * The Azure Bastion service is not available in all Azure regions.
+  * As of June 2020, the Azure Bastion service is not available in all Azure regions.
   * By design it's not possible to leverage the bastion host without using the
     ssh session embedded into the browser. This makes impossible to use tools like
     `sftp` or `scp`.
@@ -145,12 +146,14 @@ Caveats of Azure Bastion:
     You can "rely" on `cat`, `base64` and a lot of copy and paste...
   * `skuba` requires a private ssh key to connect to all the nodes of the cluster.
     You have to upload the private key you specified at cluster creation
-    (ugh!) or create a new one inside of the first master node and copy that
+    or create a new one inside of the first master node and copy that
     around the cluster.
 
 ## Enable Multiple Zones
 
 It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentially based on zones defined in `azure_availability_zones`.
+
+  * As of June 2020, the Azure Availability Zones is not available in all Azure regions.
 
 # Known limitations
 
