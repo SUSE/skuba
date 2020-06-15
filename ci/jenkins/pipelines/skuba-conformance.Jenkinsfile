@@ -20,7 +20,7 @@ pipeline {
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         GITHUB_TOKEN = credentials('github-token')
         VMWARE_ENV_FILE = credentials('vmware-env')
-        SONOBUOY_VERSION = "v0.17"
+        SONOBUOY_VERSION = "${SONOBUOY_VERSION}" 
     }
 
     stages {
