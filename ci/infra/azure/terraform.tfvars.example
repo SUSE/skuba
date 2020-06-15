@@ -7,7 +7,7 @@
 
 # Enable zone for available regions
 # EXAMPLE:
-# enable_zone = false
+# enable_zone = true
 
 # CIRD blocks for virtual network
 # EXAMPLE:
