@@ -11,6 +11,10 @@ by terraform.
 
 # Cluster layout
 
+## Setup service principal for terraform login credential
+
+Following the guide [Creating a Service Principal in the Azure Portal](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html#creating-a-service-principal-in-the-azure-portal), and set up `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `and ARM_TENANT_ID` in `container-openrc.sh`.  Source `container-openrc.sh` before deploying terraform script.
+
 ## Machines
 
 As usual the cluster is based on two types of nodes: master and worker nodes.
@@ -150,11 +154,4 @@ It is possible to enable multiple zone.  It can be set `enable_zone` to `true` a
 
 # Known limitations
 
-  * nodes suffer a high load when skuba-updater runs for the first time
-  * Sometimes etcd suffers from bad I/0. More investigations need to be done.
-    Possible causes:
-      * skuba-updater causing too much load
-      * Wrong size of the instances. Right now we are using the same size
-        used by the Azure Cluster API provider.
-      * Slow disk? Right now we're using the most performing disk SKU
   * Cloud Provider Integration is **not** enabled yet.
