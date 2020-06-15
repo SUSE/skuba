@@ -5,6 +5,7 @@
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
+import io
 import logging
 import sys
 from argparse import REMAINDER, ArgumentParser
@@ -24,6 +25,9 @@ logger = logging.getLogger("testrunner")
 def info(options):
     print(Utils(options.conf).info())
 
+
+def config(options):
+    BaseConfig.print(options.conf)
 
 def cleanup(options):
     platforms.get_platform(options.conf, options.platform).cleanup()
@@ -132,12 +136,17 @@ def main():
                         help="The platform you're targeting. Default is openstack")
     parser.add_argument("-l", "--log-level", dest="log_level", default=None, help="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    parser.add_argument("-c","--print-conf", dest="print_conf", action="store_true",
+                        help="prints the configuration")
 
     # Sub commands
     commands = parser.add_subparsers(help="command", dest="command")
 
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
+
+    cmd_config = commands.add_parser("config", help='prints configuration to log')
+    cmd_config.set_defaults(func=config)
 
     cmd_log = commands.add_parser("get_logs", help="gather logs from nodes")
     cmd_log.set_defaults(func=get_logs)
@@ -267,6 +276,11 @@ def main():
         conf = BaseConfig(options.yaml_path)
         Logger.config_logger(conf, level=options.log_level)
         options.conf = conf
+        if options.print_conf:
+            out = io.StringIO()
+            BaseConfig.print(conf, out=out)
+            logger.debug(f'Configuration\n{out.getvalue()}')
+
         options.func(options)
     except SystemExit as ex:
        if ex.code > 0:

@@ -1,5 +1,5 @@
 - project:
-    name: caasp-jobs/v4/pr
+    name: caasp-jobs/pr
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
@@ -8,46 +8,75 @@
         - '{name}/test-libvirt'
         - '{name}/update-unit'
         - '{name}/update-acceptance'
-        - '{name}/code-lint'
-        - '{name}/code-author'
         - '{name}/handle-pr'
         - '{name}/jjb-validation'
 
 - project:
-      name: caasp-jobs/v4/conformance
+      name: caasp-jobs/conformance
       repo-name: skuba
       repo-owner: SUSE
       repo-credentials: github-token
       platform:
-        - openstack
-        - vmware
+          - openstack
+          - vmware
+      version:
+          - v4
+          - v5:
+              branch: experimental-v5
       jobs:
-          - '{name}/{platform}-conformance'
+          - '{name}/{version}/{platform}'
 
 - project:
-    name: caasp-jobs/v4/e2e
+    name: caasp-jobs/e2e/v4
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
     platform:
         - vmware
     test:
-        - 'test_addon_upgrade'
-        - 'test_cilium'
-        - 'test_dockercaps'
-        - 'test_nginx_deployment'
-        - 'test_node_reboot'
-        - 'test_remove_master'
-        - 'test_remove_worker'
-        - 'test_upgrade_apply_all_fine'
-        - 'test_upgrade_apply_from_previous'
-        - 'test_upgrade_apply_user_lock'
-        - 'test_upgrade_plan_all_fine'
-        - 'test_upgrade_plan_from_previous'
-        - 'test_upgrade_plan_from_previous_with_upgraded_control_plane'
+        - test_addon_upgrade
+        - test_cilium
+        - test_dockercaps
+        - test_nginx_deployment
+        - test_node_reboot
+        - test_remove_master
+        - test_remove_worker
+        - test_upgrade_plan_all_fine
+        - test_upgrade_apply_all_fine
+        - test_upgrade_apply_from_previous:
+           kubernetes_version: 1.16.2
+        - test_upgrade_apply_user_lock:
+           kubernetes_version: 1.16.2
+        - test_upgrade_plan_from_previous:
+           kubernetes_version: 1.16.2
+        - test_upgrade_plan_from_previous_with_upgraded_control_plane:
+           kubernetes_version: 1.16.2
     jobs:
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
+
+- project:
+    name: caasp-jobs/e2e/v5
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    platform:
+        - vmware
+    branch: experimental-v5
+    test:
+        - test_addon_upgrade
+        - test_cilium
+        - test_dockercaps
+        - test_nginx_deployment
+        - test_node_reboot
+        - test_remove_master
+        - test_remove_worker
+        - test_upgrade_plan_all_fine
+        - test_upgrade_apply_all_fine
+    jobs:
+        - '{name}/{platform}/{test}-daily'
+        - '{name}/{platform}/update-daily'
+
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba

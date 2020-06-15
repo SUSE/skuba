@@ -35,7 +35,7 @@ class VMware(Terraform):
             "services": ["haproxy"]
         }
 
-        node_log_dir = self._create_node_log_dir(node_ip, "load_balancer", self.conf.log_dir)
+        node_log_dir = self._create_node_log_dir(node_ip, "load_balancer", self.conf.platform.log_dir)
         logging_error = self.utils.collect_remote_logs(node_ip, logs, node_log_dir)
 
         return logging_error

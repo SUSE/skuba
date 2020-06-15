@@ -20,8 +20,7 @@ class Logger:
             mode = 'a'
             if conf.log.overwrite:
                 mode = 'w'
-            log_file = os.path.join(conf.workspace, conf.log.file)
-            file_handler = logging.FileHandler(log_file)
+            file_handler = logging.FileHandler(conf.log.file)
             logger.addHandler(file_handler)
 
         if not conf.log.quiet:
