@@ -9,7 +9,7 @@
           timeout: 120
           fail: true
     triggers:
-        - timed: 'H H(3-5) * * *'
+        - timed: 'H H({schedule}) * * *'
     parameters:
         - string:
             name: BRANCH
