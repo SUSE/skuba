@@ -1,5 +1,5 @@
 variable "azure_location" {
-  type = string
+  type        = string
   description = "Name of the AZURE location to be used (eg: 'West Europe')"
 }
 
@@ -11,13 +11,13 @@ variable "enable_zone" {
 
 variable "azure_availability_zones" {
   type        = list(string)
-  description = "List of Availability Zones (e.g. `['1', '2', '3']`)"
+  description = "List of Availability Zones (e.g. [\"1\", \"2\", \"3\"])"
 }
 
 variable "cidr_block" {
   type        = string
   default     = "10.1.0.0/16"
-  description = "CIRD blocks for virtual_network"
+  description = "CIDR blocks for virtual_network"
 }
 
 variable "bastionhost_subnet_cidr" {
