@@ -18,6 +18,8 @@
 package cluster
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -54,7 +56,15 @@ func NewInitCmd() *cobra.Command {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
 		},
-		Args: cobra.ExactArgs(1),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("accepts 1 arg, received %d", len(args))
+			}
+			if len(args[0]) == 0 {
+				return fmt.Errorf("Invalid cluster name: expected non empty cluster name")
+			}
+			return nil
+		},
 	}
 	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes (required)")
 	if skuba.BuildType == "development" {
