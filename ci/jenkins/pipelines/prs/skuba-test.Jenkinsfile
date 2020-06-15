@@ -25,6 +25,21 @@ def labels = ''
 node('caasp-team-private-integration') {
     stage('select worker') {
 
+        // If not a PR use BRANCH to select worker. Labels are not available. Skip rest of stage
+        if (env.CHANGE_ID == null) {
+            if (env.BRANCH.startsWith('experimental-') || env.BRANCH.startsWith('maintenance-')) {
+                worker_type = env.BRANCH
+            }
+            currentBuild.result = 'SUCCESS'
+            return
+        }
+
+        // check if PR needs experimental or maintenance workers
+        // ci-worker label will override this selection
+        if (env.CHANGE_TARGET.startsWith('experimental-') || env.CHANGE_TARGET.startsWith('maintenance-')) {
+             worker_type = env.CHANGE_TARGET
+        }
+
         try {
            def response = httpRequest(
                url: "https://api.github.com/repos/SUSE/skuba/pulls/${CHANGE_ID}",
@@ -32,13 +47,6 @@ node('caasp-team-private-integration') {
                validResponseCodes: "200")
 
            def pr = readJSON text: response.content
-
-           // check if PR needs experimental or maintenance workers
-           // ci-worker label will override this selection
-           if (env.CHANGE_TARGET.startsWith('experimental-') || env.CHANGE_TARGET.startsWith('maintenance-')) {
-               worker_type = env.CHANGE_TARGET
-           }
-
            //check if the PR requires an specific worker type
            def pr_worker_label = pr.labels.find {
                it.name.startsWith("ci-worker:")
