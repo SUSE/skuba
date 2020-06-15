@@ -27,7 +27,7 @@ node('caasp-team-private-integration') {
 
         // If not a PR use BRANCH to select worker. Labels are not available. Skip rest of stage
         if (env.CHANGE_ID == null) {
-            if (env.BRANCH.startsWith('experimental-') || env.BRANCH.startsWith('maintenance-')) {
+            if (env.BRANCH_NAME.startsWith('experimental-') || env.BRANCH_NAME.startsWith('maintenance-')) {
                 worker_type = env.BRANCH
             }
             currentBuild.result = 'SUCCESS'
