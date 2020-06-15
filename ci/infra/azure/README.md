@@ -148,9 +148,9 @@ Caveats of Azure Bastion:
     (ugh!) or create a new one inside of the first master node and copy that
     around the cluster.
 
-## Enable Multiple Zones:
+## Enable Multiple Zones
 
-It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentialy based on zones defined in `azure_availability_zones`.
+It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentially based on zones defined in `azure_availability_zones`.
 
 # Known limitations
 
