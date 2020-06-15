@@ -1,6 +1,6 @@
 variable "azure_location" {
   type = string
-  description = "Name of the AZURE location to be used (eg: "West Europe")"
+  description = "Name of the AZURE location to be used (eg: 'West Europe')"
 }
 
 variable "enable_zone" {
