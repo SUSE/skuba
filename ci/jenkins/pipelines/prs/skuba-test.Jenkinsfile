@@ -163,24 +163,6 @@ pipeline {
             }
         } } }
 
-        stage('Git Clone') { steps {
-            deleteDir()
-            checkout([$class: 'GitSCM',
-                      branches: [[name: "*/${BRANCH_NAME}"], [name: '*/master']],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
-                      submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
-                                           credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
-
-            dir("${WORKSPACE}/skuba") {
-                sh(script: "git checkout ${BRANCH_NAME}", label: "Checkout PR Branch")
-            }
-        }}
-
         stage('code-lint') { steps { script {
             echo 'Starting code lint'
             pr_context = 'jenkins/skuba-code-lint'
