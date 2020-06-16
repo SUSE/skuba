@@ -14,7 +14,7 @@ def platform = 'vmware'
 def branch_repo = ""
 
 // CaaSP Version for repo branch
-def repo_version = "4.0"
+def repo_version = "5"
 
 // type of worker required by the PR
 def worker_type = 'integration'
