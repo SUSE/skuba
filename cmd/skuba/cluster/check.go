@@ -19,13 +19,16 @@ package cluster
 
 import (
 	"fmt"
+	"os"
 
+	clientset "github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/klog"
 )
 
 type checkOptions struct {
@@ -49,7 +52,24 @@ func NewCheckCmd() *cobra.Command {
 		Use:   "check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			_, cnf, err := clientset.GetAdminClientSetWithConfig()
+			if err != nil {
+				klog.Errorf("unable to get admin client set: %s", err)
+				os.Exit(1)
+			}
+
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
+			kubernetesConfigFlags.APIServer = &cnf.Host
+			kubernetesConfigFlags.BearerToken = &cnf.BearerToken
+			kubernetesConfigFlags.CAFile = &cnf.CAFile
+			kubernetesConfigFlags.CertFile = &cnf.CertFile
+			kubernetesConfigFlags.KeyFile = &cnf.KeyFile
+			kubernetesConfigFlags.Username = &cnf.Username
+			kubernetesConfigFlags.Insecure = &cnf.Insecure
+			kubernetesConfigFlags.Password = &cnf.Password
+			kubernetesConfigFlags.TLSServerName = &cnf.TLSClientConfig.ServerName
+			timeout := cnf.Timeout.String()
+			kubernetesConfigFlags.Timeout = &timeout
 
 			config := lib.Config{
 				K8sVersion:      checkOptions.K8sVersion,
