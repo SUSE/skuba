@@ -1,8 +1,4 @@
 # AZURE location
-# A list of location names can be found here:
-# https://azure.microsoft.com/en-in/global-infrastructure/locations/
-# https://azure.microsoft.com/en-us/global-infrastructure/regions/
-# https://docs.microsoft.com/en-us/azure/availability-zones/az-region
 # azure_location = "West Europe"
 
 # Enable zone for available regions
@@ -34,7 +30,6 @@ stack_name = "my-sles-cluster"
 # dnsdomain = "my-sles-cluster.example.com"
 
 # Enables creation of bastion host
-# https://docs.microsoft.com/en-us/azure/bastion/bastion-overview
 # EXAMPLE:
 # create_bastionhost = false
 
@@ -43,7 +38,6 @@ stack_name = "my-sles-cluster"
 # masters = 3
 
 # Size of the master nodes
-# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/generation-2
 # EXAMPLE:
 # master_vm_size = "Standard_D2s_v3"
 
