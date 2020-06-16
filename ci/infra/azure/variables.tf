@@ -1,5 +1,6 @@
 variable "azure_location" {
   type        = string
+  default     = ""
   description = "Name of the AZURE location to be used (eg: 'West Europe')"
 }
 
@@ -11,6 +12,7 @@ variable "enable_zone" {
 
 variable "azure_availability_zones" {
   type        = list(string)
+  default     = []
   description = "List of Availability Zones (e.g. [\"1\", \"2\", \"3\"])"
 }
 
@@ -82,6 +84,7 @@ variable "username" {
 
 variable "password" {
   type        = string
+  default     = ""
   description = "Password for the cluster nodes. Warning: password based authentication is a security risk, please use key-based authentication instead."
 }
 

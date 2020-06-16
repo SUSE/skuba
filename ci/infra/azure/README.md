@@ -121,10 +121,10 @@ a dedicate key pair.
 Once the whole infrastructure is created you can connect into any node of the
 cluster by doing the following steps:
 
-  * Log into Azure portal
-  * Choose one of the nodes of the cluster
-  * Click "connect" and select "bastion" as option
-  * Enter all the required fields
+  1. Log into Azure portal
+  2. Choose one of the nodes of the cluster
+  3. Click "connect" and select "bastion" as option
+  4. Enter all the required fields
 
 Once this is done a new browser tab will be open with a shell session running
 inside of the desired node.

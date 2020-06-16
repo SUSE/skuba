@@ -9,4 +9,4 @@
 #rmt_server_name = "rmt.example.com"
 
 # SUSE Repository Mirroring Server Name (FQDN)
-# suma_server_name = "suma.example.com"
+#suma_server_name = "suma.example.com"
