@@ -27,7 +27,7 @@
 
 # Identifier to make all your resources unique and avoid clashes with other users of this terraform project
 # EXAMPLE:
-# stack_name = "my-sles-cluster"
+stack_name = "my-sles-cluster"
 
 # Name of DNS domain
 # EXAMPLE:
