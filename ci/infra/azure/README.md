@@ -131,13 +131,12 @@ inside of the desired node.
 
 It's recommended to use Chrome or Chromium during this process.
 
-You can ssh into the first master node of the cluster of drive the creation of
-a SUSE cluster from there. Once this is done you can download a kubeconfig
-file and operate the cluster without having to go through the bastion host.
+You can ssh into the first bootstrapped master node to download the kubeconfig 
+file to operate the cluster without having to go through the bastion host.
 
 Caveats of Azure Bastion:
 
-  * As of June 2020, the Azure Bastion service is not available in all Azure regions.
+  * As of June 2020, the [Azure Bastion service](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview#regions) is not available in all Azure regions.
   * By design it's not possible to leverage the bastion host without using the
     ssh session embedded into the browser. This makes impossible to use tools like
     `sftp` or `scp`.
@@ -149,12 +148,12 @@ Caveats of Azure Bastion:
     or create a new one inside of the first master node and copy that
     around the cluster.
 
+## Virtual Network Peering Support
+
+It is possible to join existing network to the cluster.  It can be setup by adding a list of network id to `peer_virutal_network_id`.
+
 ## Enable Multiple Zones
 
 It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentially based on zones defined in `azure_availability_zones`.
 
-  * As of June 2020, the Azure Availability Zones is not available in all Azure regions.
-
-# Known limitations
-
-  * Cloud Provider Integration is **not** enabled yet.
+  * As of June 2020, the [Azure Availability Zones](https://docs.microsoft.com/en-us/azure/availability-zones/az-region) is not available in all Azure regions.

@@ -92,11 +92,10 @@ packages = []
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
 # EXAMPLE:
 # ntp_servers = [ 
-#   "TIME.google.com", 
-#   "TIME1.google.com", 
-#   "TIME2.google.com", 
-#   "TIME3.google.com", 
-#   "TIME4.google.com" 
+#     "0.novell.pool.ntp.org", 
+#     "1.novell.pool.ntp.org", 
+#     "2.novell.pool.ntp.org", 
+#     "3.novell.pool.ntp.org
 # ]
 
 # List of Virtual Network IDs to join via virual network peering
