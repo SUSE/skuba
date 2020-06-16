@@ -241,7 +241,8 @@ pipeline {
     post {
         always { script {
             // collect artifacts only if pr-test stage was executed.
-            if (pr_context == 'jenkins/pr-test'){
+            // FIXME: this will break if we add an stage after skuba-test
+            if (pr_context == 'jenkins/skuba-test'){
                 archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
                 archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
                 archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
