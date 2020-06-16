@@ -193,7 +193,6 @@ pipeline {
         stage('Getting Ready For Cluster Deployment') { 
             steps {
                 sh(script: 'make -f ci/Makefile pre_deployment', label: 'Pre Deployment')
-                sh(script: 'make -f ci/Makefile pr_checks', label: 'PR Checks')
                 sh(script: "make -f Makefile install", label: 'Build Skuba')
             } 
         }
