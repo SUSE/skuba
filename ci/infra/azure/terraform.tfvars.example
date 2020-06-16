@@ -9,9 +9,9 @@
 # EXAMPLE:
 # enable_zone = true
 
-# List of Availability Zones (e.g. `['1', '2', '3']`)
+# List of Availability Zones (e.g. `["1", "2", "3"]`)
 # EXAMPLE:
-# azure_availability_zones = ['1', '2', '3']
+# azure_availability_zones = ["1", "2", "3"]
 
 # CIRD blocks for virtual network
 # EXAMPLE:
