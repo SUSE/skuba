@@ -2,7 +2,6 @@
 MKFILE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 TEST_RUNNER := ${MKFILE_DIR}/infra/testrunner/testrunner
 TASKS := ${MKFILE_DIR}/tasks
-REBASE := rebase.py
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
@@ -59,10 +58,6 @@ cleanup:
 gather_logs:
 	${TEST_RUNNER} --platform ${PLATFORM} get_logs
 
-.PHONY: git_rebase_check
-git_rebase_check:
-	${TASKS}/${REBASE}
-
 .PHONY: info
 info:
 	${TEST_RUNNER} --platform ${PLATFORM} info
@@ -82,9 +77,6 @@ update_pkgs:
 # Stages
 .PHONY: pre_deployment
 pre_deployment: info update_pkgs
-
-.PHONY: pr_checks
-pr_checks: git_rebase_check
 
 .PHONY: post_run
 post_run: gather_logs cleanup
