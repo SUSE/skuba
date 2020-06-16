@@ -5,6 +5,7 @@
     days-to-keep: 30
     branch: master
     schedule: '3-5'
+    sonobuoy_version: 'v0.18.2'
     wrappers:
       - timeout:
           timeout: 180
@@ -20,6 +21,10 @@
               name: PLATFORM
               default: '{platform}'
               description: The platform to perform the tests on
+        - string:
+              name: SONOBUOY_VERSION 
+              default: '{sonobuoy_version}'
+              description: Version of sonobouy image to use
     pipeline-scm:
         scm:
             - git:

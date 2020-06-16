@@ -20,25 +20,11 @@ pipeline {
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         GITHUB_TOKEN = credentials('github-token')
         VMWARE_ENV_FILE = credentials('vmware-env')
-        SONOBUOY_VERSION = "v0.17"
+        SONOBUOY_VERSION = "${SONOBUOY_VERSION}" 
     }
 
     stages {
 
-        stage('Git Clone') { steps {
-            deleteDir()
-            checkout([$class: 'GitSCM',
-                      branches: [[name: "*/${BRANCH}"]],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba'],
-                                   [$class: 'ChangelogToBranch', options: [compareRemote: "origin", compareTarget: "master"]]],
-                      submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
-                                           credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
-        }}
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: 'make -f skuba/ci/Makefile pre_deployment', label: 'Pre Deployment')
             sh(script: 'cd skuba; make install; cd ../', label: 'Install skuba')
