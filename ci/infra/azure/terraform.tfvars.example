@@ -1,0 +1,92 @@
+# AZURE location
+azure_location = "West Europe" 
+
+# Enable zone for available regions
+# EXAMPLE:
+# enable_zone = true
+
+# List of Availability Zones (e.g. `["1", "2", "3"]`)
+# EXAMPLE:
+# azure_availability_zones = ["1", "2", "3"]
+
+# CIRD blocks for virtual network
+# EXAMPLE:
+# cidr_block = "10.1.0.0/16"
+
+# CIDR blocks for the bastion host subnet
+# EXAMPLE:
+# bastionhost_subnet_cidr = "10.1.1.0/24"
+
+# Private subnet of virtual_network
+# EXAMPLE:
+# private_subnet_cidr = "10.1.4.0/24"
+
+# Identifier to make all your resources unique and avoid clashes with other users of this terraform project
+# EXAMPLE:
+stack_name = "my-sles-cluster"
+
+# Name of DNS domain
+# EXAMPLE:
+dnsdomain = "my-sles-cluster.example.com"
+
+# Enables creation of bastion host
+# EXAMPLE:
+# create_bastionhost = false
+
+# Number of master nodes
+# EXAMPLE:
+# masters = 3
+
+# Size of the master nodes
+# EXAMPLE:
+# master_vm_size = "Standard_D2s_v3"
+
+# Storage account type  of the master nodes
+# EXAMPLE:
+# master_storage_account_type = "StandardSSD_LRS"
+
+# "Size of the volume, in Gb"
+# EXAMPLE:
+# master_disk_size = 30
+
+# Number of worker nodes
+# EXAMPLE:
+# workers = 2
+
+# Size of the worker nodes
+# EXAMPLE:
+# worker_vm_size = "Standard_D2s_v3"
+
+# Storage account type  of the worker nodes
+# EXAMPLE:
+# worker_storage_account_type = "StandardSSD_LRS"
+
+# "Size of the volume, in Gb"
+# EXAMPLE:
+# worker_disk_size = 30
+
+# define the repositories to use
+# EXAMPLE:
+# repositories = {
+#   repository1 = "http://example.my.repo.com/repository1/"
+#   repository2 = "http://example.my.repo.com/repository2/"
+# }
+
+# Minimum required packages. Do not remove them.
+# Feel free to add more packages
+packages = []
+
+# ssh keys to inject into all the nodes
+authorized_keys = []
+
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+# EXAMPLE:
+# ntp_servers = [ 
+#     "0.europe.pool.ntp.org", 
+#     "1.europe.pool.ntp.org", 
+#     "2.europe.pool.ntp.org"
+# ]
+
+# List of Virtual Network IDs to join via virual network peering
+# EXAMPLE:`
+# peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
