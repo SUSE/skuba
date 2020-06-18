@@ -11,6 +11,7 @@ from pr_checks import PrChecks
 from pr_merge import PrMerge
 from pr_status import PrStatus
 
+BUILD_URL = os.getenv('BUILD_URL')
 CHANGE_ID = os.getenv('CHANGE_ID')
 CHANGE_AUTHOR = os.getenv('CHANGE_AUTHOR')
 GITHUB_ORG = 'SUSE'
@@ -103,16 +104,13 @@ def merge_prs(args):
 
 
 def update_pr_status(args):
-    build_url = os.getenv('BUILD_URL')
-    if build_url is None:
-        print('Env var BUILD_URL missing please set it')
-        sys.exit(1)
-
-    g = Github(GITHUB_TOKEN)
-    repo = g.get_repo(GITHUB_REPO)
-
-    status = PrStatus(build_url, repo)
-    status.update_pr_status(args.commit_sha, args.context, args.state)
+    if CHANGE_ID:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo(GITHUB_REPO)
+        status = PrStatus(repo, CHANGE_ID, BUILD_URL)
+        status.update_pr_status(args.context, args.state)
+    else:
+        print('No CHANGE_ID was set. Assuming this is not a PR.', file=sys.stderr)
 
 
 def parse_args():
@@ -133,7 +131,6 @@ def parse_args():
 
     # Parse update-pr-status command
     update_status_parser = subparsers.add_parser('update-pr-status', help='Update the status of a Pull Request')
-    update_status_parser.add_argument('commit_sha')
     update_status_parser.add_argument('context')
     update_status_parser.add_argument('state', choices=['error', 'failure', 'pending', 'success'])
     update_status_parser.set_defaults(func=update_pr_status)
