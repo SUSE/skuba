@@ -78,7 +78,7 @@ class BaseConfig:
             self.internal_net = None
             self.stack_name = "$USER"
             self.workdir = "$WORKSPACE"
-            self.tfdir = "$WORKSPACE/skuba/ci/infra"
+            self.tfdir = "$WORKSPACE/ci/infra"
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
             self.lb = BaseConfig.NodeConfig()

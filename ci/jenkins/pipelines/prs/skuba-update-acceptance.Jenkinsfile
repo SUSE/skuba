@@ -71,30 +71,30 @@ pipeline {
         stage('skuba-update SUSE OS Tests') {
             when {
                 expression {
-                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+                    sh(script: "${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
                 }
             }
             steps {
-                sh(script: "make -f skuba/skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
+                sh(script: "make -f skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
             }
         }
     }
     post {
         cleanup {
             dir("${WORKSPACE}") {
-                sh(script: 'sudo rm -rf skuba/skuba-update/build skuba/skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
-                sh(script: 'sudo rm -rf skuba/skuba-update/test/os/suse/artifacts', label: 'Remove test artifacts created by root')
+                sh(script: 'sudo rm -rf skuba-update/build skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
+                sh(script: 'sudo rm -rf skuba-update/test/os/suse/artifacts', label: 'Remove test artifacts created by root')
                 deleteDir()
             }
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }

@@ -69,7 +69,7 @@ pipeline {
         }}
 
         stage('Info') { steps {
-            sh(script: "make -f skuba/ci/Makefile info", label: 'Info')
+            sh(script: "make -f ci/Makefile info", label: 'Info')
         } }
 
         stage('Setup Environment') { steps {
@@ -80,9 +80,9 @@ pipeline {
         stage('Test Jobs') { steps {
             sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make -f skuba/ci/Makefile test_jenkins_jobs
+                   make -f ci/Makefile test_jenkins_jobs
                 """, label: 'Test Jenkins Jobs')
-            zip archive: true, dir: 'skuba/ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
+            zip archive: true, dir: 'ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
         } }
     }
     post {
@@ -92,13 +92,13 @@ pipeline {
             }
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "{PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }

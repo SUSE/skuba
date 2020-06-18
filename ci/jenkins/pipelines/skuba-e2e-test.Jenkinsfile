@@ -57,40 +57,40 @@ pipeline {
 
    stages {
         stage('Getting Ready For Cluster Deployment') { steps {
-            sh(script: "make -f skuba/ci/Makefile pre_deployment", label: 'Pre Deployment')
-            sh(script: "pushd skuba; make -f Makefile install; popd", label: 'Build Skuba')
+            sh(script: "make -f ci/Makefile pre_deployment", label: 'Pre Deployment')
+            sh(script: "make -f Makefile install", label: 'Build Skuba')
         } }
 
         stage('Provision cluster') {
             steps {
-                sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
+                sh(script: 'make -f ci/Makefile provision', label: 'Provision')
             }
         }
 
         stage('Deploy cluster') {
             steps {
-                sh(script: 'make -f skuba/ci/Makefile deploy KUBERNETES_VERSION=${KUBERNETES_VERSION}', label: 'Deploy')
-                sh(script: 'make -f skuba/ci/Makefile check_cluster', label: 'Check cluster')
+                sh(script: 'make -f ci/Makefile deploy KUBERNETES_VERSION=${KUBERNETES_VERSION}', label: 'Deploy')
+                sh(script: 'make -f ci/Makefile check_cluster', label: 'Check cluster')
             }
         }
 
         stage('Run Skuba e2e Test') {
             steps {
-                sh(script: "make -f skuba/ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
+                sh(script: "make -f ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
             }
         }
    }
 
    post {
         always {
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: "skuba/ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            sh(script: "make --keep-going -f skuba/ci/Makefile gather_logs", label: 'Gather Logs')
+            sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
             archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
         }
         cleanup {
-            sh(script: "make --keep-going -f skuba/ci/Makefile cleanup", label: 'Cleanup')
+            sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
             dir("${WORKSPACE}@tmp") {
                 deleteDir()
             }
