@@ -51,7 +51,6 @@ func NewCheckCmd() *cobra.Command {
 		Use:   "check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 			kubeAdminFile := skuba.KubeConfigAdminFile()
 			kubernetesConfigFlags.KubeConfig = &kubeAdminFile
