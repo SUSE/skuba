@@ -1,5 +1,5 @@
 # AZURE location
-# azure_location = "West Europe"
+azure_location = "West Europe" 
 
 # Enable zone for available regions
 # EXAMPLE:
@@ -27,7 +27,7 @@ stack_name = "my-sles-cluster"
 
 # Name of DNS domain
 # EXAMPLE:
-# dnsdomain = "my-sles-cluster.example.com"
+dnsdomain = "my-sles-cluster.example.com"
 
 # Enables creation of bastion host
 # EXAMPLE:
@@ -42,11 +42,10 @@ stack_name = "my-sles-cluster"
 # master_vm_size = "Standard_D2s_v3"
 
 # Storage account type  of the master nodes
-# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-types
 # EXAMPLE:
 # master_storage_account_type = "StandardSSD_LRS"
 
-# "Size of the EBS volume, in Gb"
+# "Size of the volume, in Gb"
 # EXAMPLE:
 # master_disk_size = 30
 
@@ -62,7 +61,7 @@ stack_name = "my-sles-cluster"
 # EXAMPLE:
 # worker_storage_account_type = "StandardSSD_LRS"
 
-# "Size of the EBS volume, in Gb"
+# "Size of the volume, in Gb"
 # EXAMPLE:
 # worker_disk_size = 30
 
@@ -78,10 +77,7 @@ stack_name = "my-sles-cluster"
 packages = []
 
 # ssh keys to inject into all the nodes
-# EXAMPLE:
-# authorized_keys = [
-#  "ssh-rsa <key-content>"
-# ]
+authorized_keys = []
 
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
 # EXAMPLE:
@@ -89,7 +85,7 @@ packages = []
 #     "0.novell.pool.ntp.org", 
 #     "1.novell.pool.ntp.org", 
 #     "2.novell.pool.ntp.org", 
-#     "3.novell.pool.ntp.org
+#     "3.novell.pool.ntp.org"
 # ]
 
 # List of Virtual Network IDs to join via virual network peering
