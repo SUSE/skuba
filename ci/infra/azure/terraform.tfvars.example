@@ -82,10 +82,9 @@ authorized_keys = []
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
 # EXAMPLE:
 # ntp_servers = [ 
-#     "0.novell.pool.ntp.org", 
-#     "1.novell.pool.ntp.org", 
-#     "2.novell.pool.ntp.org", 
-#     "3.novell.pool.ntp.org"
+#     "0.europe.pool.ntp.org", 
+#     "1.europe.pool.ntp.org", 
+#     "2.europe.pool.ntp.org"
 # ]
 
 # List of Virtual Network IDs to join via virual network peering
