@@ -46,7 +46,7 @@ func plan(client clientset.Interface, availableVersions []*version.Version, clus
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
 	fmt.Printf("Latest Kubernetes version: %s\n", latestClusterVersion.String())
 
-	upgradePath, err := calculateUpgradePath(currentClusterVersion, availableVersions)
+	upgradePath, err := CalculateUpgradePath(currentClusterVersion, availableVersions)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,8 @@ func checkUpdatedAddons(client clientset.Interface, currentClusterVersion *versi
 	return addon.UpdatedAddonsForAddonsVersion(currentClusterVersion, skubaConfig.AddonsVersion, clusterAddonsKnownVersions), nil
 }
 
-func calculateUpgradePath(currentClusterVersion *version.Version, availableVersions []*version.Version) ([]*version.Version, error) {
+// CalculateUpgradePath using the current version and the available versions the upgrade path is calculated
+func CalculateUpgradePath(currentClusterVersion *version.Version, availableVersions []*version.Version) ([]*version.Version, error) {
 	latestClusterVersion := availableVersions[len(availableVersions)-1]
 	versionCompare, err := currentClusterVersion.Compare(latestClusterVersion.String())
 	if err != nil {

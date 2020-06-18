@@ -21,10 +21,14 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
 )
@@ -43,13 +47,13 @@ var (
 	inputFile string
 )
 
-// NewCheckCmd creates a new `skuba check` cobra command
-func NewCheckCmd() *cobra.Command {
+// NewUpgradeCheckCmd creates a new `skuba check` cobra command
+func NewUpgradeCheckCmd() *cobra.Command {
 	checkOptions := &checkOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
-		Short: "Print Check information",
+		Use:   "upgrade-check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
+		Short: "Print Upgrade Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 			kubeAdminFile := skuba.KubeConfigAdminFile()
@@ -63,6 +67,31 @@ func NewCheckCmd() *cobra.Command {
 				ShowDescription: checkOptions.ShowDescription,
 				ConfigFlags:     kubernetesConfigFlags,
 				Input:           inputFile,
+			}
+
+			if config.K8sVersion == "" {
+				client, err := kubernetes.GetAdminClientSet()
+				if err != nil {
+					return err
+				}
+				currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
+				if err != nil {
+					return err
+				}
+				availableVersions := kubernetes.AvailableVersions()
+				upgradePath, err := upgrade.CalculateUpgradePath(currentClusterVersion, availableVersions)
+				if err != nil {
+					return err
+				}
+
+				var nextClusterVersion *version.Version
+				if len(upgradePath) > 0 {
+					nextClusterVersion = upgradePath[0]
+				} else {
+					klog.Warning("Already on the latest version, nothing to check.\nFor a specific version use the `k8s-version` flag.")
+					return nil
+				}
+				config.K8sVersion = nextClusterVersion.String()
 			}
 
 			klog.Infof("Starting Kubepug with configs: %+v", config)
