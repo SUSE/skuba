@@ -125,7 +125,7 @@ test: test-unit test-bench
 
 .PHONY: test-unit
 test-unit:
-	$(GO) test $(GOMODFLAG) -coverprofile=coverage.out $(PROJECT_PATH)/{cmd,pkg,internal}/...
+	$(GO) test $(GOMODFLAG) -coverprofile=coverage.out ./{cmd,pkg,internal}/...
 
 .PHONY: test-unit-coverage
 test-unit-coverage: test-unit
