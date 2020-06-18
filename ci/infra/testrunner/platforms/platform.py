@@ -18,7 +18,7 @@ class Platform:
         # Which logs will be collected from the nodes
         self.logs = {
             "files": [],
-            "dirs": ["/var/log/pods"],
+            "dirs": ["/var/log/pods", "/etc/crio", "/etc/containers"],
             "services": ["kubelet", "crio"]
         }
 
