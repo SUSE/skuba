@@ -239,7 +239,7 @@ func Test_Login(t *testing.T) {
 				Password:           mockDefaultPassword,
 				InsecureSkipVerify: true,
 			},
-			expectedErrorMsg: "parse url: parse http://%41:8080/: invalid URL escape \"%41\"",
+			expectedErrorMsg: "invalid URL escape \"%41\"",
 		},
 		{
 			name:  "oidc server with incorrect port number",
@@ -280,7 +280,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				ClusterName:        "test-cluster-name",
 			},
-			expectedErrorMsg: "auth failed: failed on get auth code url: Get ?access_type=offline&client_id=oidc-cli&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=audience%3Aserver%3Aclient_id%3Aoidc: unsupported protocol scheme \"\"",
+			expectedErrorMsg: "unsupported protocol scheme",
 		},
 		{
 			name: "approval body content incorrect",
@@ -319,7 +319,7 @@ func Test_Login(t *testing.T) {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
 					return
 				}
-				if err.Error() != tt.expectedErrorMsg {
+				if !strings.Contains(err.Error(), tt.expectedErrorMsg) {
 					t.Errorf("got error msg %s, want %s", err.Error(), tt.expectedErrorMsg)
 					return
 				}
