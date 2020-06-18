@@ -124,7 +124,7 @@ pipeline {
     stages {
         stage('Collaborator Check') { steps { script {
             pr_context = 'jenkins/skuba-validate-pr-author'
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'pending'", label: "Sending pending status")
 
             if (env.BRANCH_NAME.startsWith('PR')) {
                 def membersResponse = httpRequest(
@@ -134,7 +134,7 @@ pipeline {
 
                 if (membersResponse.status == 204) {
                     echo "Test execution for collaborator ${CHANGE_AUTHOR} allowed"
-                    sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
+                    sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'success'", label: "Sending success status")
                 } else {
                     def allowExecution = false
 
@@ -168,7 +168,7 @@ pipeline {
             pr_context = 'jenkins/skuba-code-lint'
             
             // set code lint status to pending
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'pending'", label: "Sending pending status")
 
             sh(script: 'make lint', label: 'make lint')
 
@@ -177,13 +177,13 @@ pipeline {
             sh(script: 'test -z "$(git status --porcelain go.mod go.sum vendor/)" || { echo "there are uncommitted changes. This should never happen; diff:"; git diff; exit 1; }', label: 'git tree status')
 
             echo 'Updating GitHub status for code-lint'
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'success'", label: "Sending success status")
 
         } } }
 
         stage('Setting in-progress status for pr-test') { steps { script {
             pr_context = 'jenkins/skuba-test'
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'pending'", label: "Sending pending status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'pending'", label: "Sending pending status")
         } } }
 
         stage('Run skuba unit tests') { steps {
@@ -215,7 +215,7 @@ pipeline {
         } }
 
         stage('Updating GitHub status for pr-test') { steps {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'success'", label: "Sending success status")
         } }
 
     }
@@ -250,10 +250,10 @@ pipeline {
             sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
         }
         unstable {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${pr_context} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'failure'", label: "Sending failure status")
         }
         success {
             // status was alredy reported on each stage, no further action needed here
