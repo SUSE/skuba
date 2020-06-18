@@ -172,10 +172,6 @@ pipeline {
 
             sh(script: 'make lint', label: 'make lint')
 
-            echo 'Checking status of git tree'
-
-            sh(script: 'test -z "$(git status --porcelain go.mod go.sum vendor/)" || { echo "there are uncommitted changes. This should never happen; diff:"; git diff; exit 1; }', label: 'git tree status')
-
             echo 'Updating GitHub status for code-lint'
             sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'success'", label: "Sending success status")
 
