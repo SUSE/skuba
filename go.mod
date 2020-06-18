@@ -4,8 +4,7 @@ require (
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/rikatz/kubepug v1.0.1
-	github.com/sirupsen/logrus v1.6.0
+	github.com/rikatz/kubepug v1.1.0
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975

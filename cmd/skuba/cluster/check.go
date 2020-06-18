@@ -19,13 +19,11 @@ package cluster
 
 import (
 	"fmt"
-	"os"
+	"io/ioutil"
 
-	clientset "github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/pkg/skuba"
 	"github.com/rikatz/kubepug/lib"
 	"github.com/rikatz/kubepug/pkg/formatter"
-	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
@@ -40,8 +38,9 @@ type checkOptions struct {
 }
 
 var (
-	errorOnDeprecated bool
-	errorOnDeleted    bool
+	format    string
+	filename  string
+	inputFile string
 )
 
 // NewCheckCmd creates a new `skuba check` cobra command
@@ -52,24 +51,10 @@ func NewCheckCmd() *cobra.Command {
 		Use:   "check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, cnf, err := clientset.GetAdminClientSetWithConfig()
-			if err != nil {
-				klog.Errorf("unable to get admin client set: %s", err)
-				os.Exit(1)
-			}
 
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
-			kubernetesConfigFlags.APIServer = &cnf.Host
-			kubernetesConfigFlags.BearerToken = &cnf.BearerToken
-			kubernetesConfigFlags.CAFile = &cnf.CAFile
-			kubernetesConfigFlags.CertFile = &cnf.CertFile
-			kubernetesConfigFlags.KeyFile = &cnf.KeyFile
-			kubernetesConfigFlags.Username = &cnf.Username
-			kubernetesConfigFlags.Insecure = &cnf.Insecure
-			kubernetesConfigFlags.Password = &cnf.Password
-			kubernetesConfigFlags.TLSServerName = &cnf.TLSClientConfig.ServerName
-			timeout := cnf.Timeout.String()
-			kubernetesConfigFlags.Timeout = &timeout
+			kubeAdminFile := skuba.KubeConfigAdminFile()
+			kubernetesConfigFlags.KubeConfig = &kubeAdminFile
 
 			config := lib.Config{
 				K8sVersion:      checkOptions.K8sVersion,
@@ -78,23 +63,10 @@ func NewCheckCmd() *cobra.Command {
 				SwaggerDir:      checkOptions.SwaggerDir,
 				ShowDescription: checkOptions.ShowDescription,
 				ConfigFlags:     kubernetesConfigFlags,
+				Input:           inputFile,
 			}
 
-			lvl, err := logrus.ParseLevel("info")
-			if err != nil {
-				return err
-			}
-			logrus.SetLevel(lvl)
-
-			log.SetFormatter(&log.TextFormatter{
-				DisableColors: true,
-				FullTimestamp: true,
-			})
-			if lvl == log.DebugLevel {
-				log.SetReportCaller(true)
-			}
-
-			log.Debugf("Starting Kubepug with configs: %+v", config)
+			klog.Infof("Starting Kubepug with configs: %+v", config)
 			kubepug := lib.NewKubepug(config)
 
 			result, err := kubepug.GetDeprecated()
@@ -102,18 +74,22 @@ func NewCheckCmd() *cobra.Command {
 				return err
 			}
 
-			log.Debug("Starting deprecated objects printing")
-			formatter := formatter.NewFormatter("plain")
+			klog.Info("Starting deprecated objects printing")
+			formatter := formatter.NewFormatter(format)
 			bytes, err := formatter.Output(*result)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("%s", string(bytes))
-
-			if (errorOnDeleted && len(result.DeletedAPIs) > 0) || (errorOnDeprecated && len(result.DeprecatedAPIs) > 0) {
-				return fmt.Errorf("found %d Deleted APIs and %d Deprecated APIs", len(result.DeletedAPIs), len(result.DeprecatedAPIs))
+			if filename != "" {
+				err = ioutil.WriteFile(filename, bytes, 0644)
+				if err != nil {
+					return err
+				}
+			} else {
+				fmt.Printf("%s", string(bytes))
 			}
+
 			return nil
 		},
 		Args: cobra.MinimumNArgs(1),
@@ -123,5 +99,11 @@ func NewCheckCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
 	cmd.PersistentFlags().StringVar(&checkOptions.SwaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
+	cmd.PersistentFlags().StringVar(&format, "format", "plain", "Format in which the list will be displayed [stdout, plain, json, yaml]")
+	cmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
+	cmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analized")
+
+	// cmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
+
 	return cmd
 }
