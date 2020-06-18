@@ -72,11 +72,11 @@ pipeline {
         stage('skuba-update SUSE Unit Tests') {
             when {
                 expression {
-                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+                    sh(script: "${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
                 }
             }
             steps {
-                dir("skuba/skuba-update") {
+                dir("skuba-update") {
                     sh(script: "make test", label: 'skuba-update Unit Tests')
                 }
             }
@@ -89,13 +89,13 @@ pipeline {
             }
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }

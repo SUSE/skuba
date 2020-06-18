@@ -7,7 +7,7 @@ home = "/path/to/home"
 workspace = "/path/to/workspace"
 env_workspace = "/path/to/workspace/from/env"
 skuba_binpath = "go/bin/skuba"
-terraform_tfdir = "skuba/ci/infra"
+terraform_tfdir = "ci/infra"
 ssh_key = ".ssh/id_rsa"
 tfvars = "terraform.tfvars.json.ci.example"
 
