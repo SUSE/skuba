@@ -40,11 +40,7 @@ the [Azure Linux Agent](https://docs.microsoft.com/en-us/azure/virtual-machines/
 
 ### Using spot instances
 
-It's possible to create a [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms)
-both for the master and worker nodes.
-
-This can be done by setting these variables to `true` (they are set to
-`false` by default):
+User can enable nodes to use [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms) by setting below to `true` (`false` by default).
 
   * `master_use_spot_instance`
   * `worker_use_spot_instance`

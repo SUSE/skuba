@@ -8,7 +8,7 @@ data "template_file" "register_rmt" {
 }
 
 data "template_file" "register_scc" {
-  # register with SCC iff an RMT has not been provided
+  # register with SCC if an RMT has not been provided
   count    = var.caasp_registry_code != "" && var.rmt_server_name == "" ? 1 : 0
   template = file("${path.module}/cloud-init/register-scc.tpl")
 
