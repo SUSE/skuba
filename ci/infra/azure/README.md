@@ -15,7 +15,7 @@ by terraform.
 
 For cluster provision with terraform requires to have a service principle as authentication method.
 
-Following the guide [Creating a Service Principal in the Azure Portal](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html#creating-a-service-principal-in-the-azure-portal).
+Follow the instruction to [Creating a Service Principal in the Azure Portal](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html#creating-a-service-principal-in-the-azure-portal).
 
 You can also use Azure CLI to automate the task. For installation instructions, refer to link:https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest[Install the Azure CLI].
 ```bash
