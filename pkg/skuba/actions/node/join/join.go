@@ -52,10 +52,9 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
-	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	if err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: currentClusterVersion.String(),
-	})
-	if err != nil {
+	}, "kubernetes.install-fresh-pkgs"); err != nil {
 		return err
 	}
 

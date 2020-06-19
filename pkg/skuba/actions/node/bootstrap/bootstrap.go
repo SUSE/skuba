@@ -91,9 +91,9 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
 
-	if _, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	if err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: versionToDeploy.String(),
-	}); err != nil {
+	}, "kubernetes.install-fresh-pkgs"); err != nil {
 		return err
 	}
 
