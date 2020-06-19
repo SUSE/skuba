@@ -2,5 +2,5 @@
   - /usr/sbin/update-ca-certificates &> /dev/null
   - SUSEConnect --url https://${rmt_server_name}
   - SUSEConnect -p sle-module-containers/15.1/x86_64
-  - SUSEConnect -p caasp/4.0/x86_64
+  - SUSEConnect -p caasp/5/x86_64
   - SUSEConnect -p sle-ha/15.1/x86_64
