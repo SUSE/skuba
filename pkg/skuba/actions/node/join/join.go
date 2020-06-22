@@ -117,7 +117,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
-	fmt.Println("[join] node successfully joined the cluster")
+	fmt.Printf("[join] node %q successfully joined the cluster\n", target.Target)
 	return nil
 }
 
