@@ -5,6 +5,12 @@
 // type of worker required by the job 
 def worker_type = 'integration'
 
+// repository branch
+branch_repo = ""
+
+// worker selection labels 
+def labels = 'e2e'
+
 node('caasp-team-private-integration') {
     stage('select worker') {
         if (env.BRANCH != 'master') {
@@ -12,15 +18,25 @@ node('caasp-team-private-integration') {
                 worker_type = env.BRANCH
             }
         }
+
+        // Overrride the worker type if explicitly requested
+        if (env.WORKER_TYPE != '') {
+            worker_type = env.WORKER_TYPE  
+        }
+
+        // Set additional labels for worker selection
+        if (env.WORKER_LABELS != '') {
+            labels = env.WORKER_LABELS
+        }
+
+        if (env.REPO_BRANCH != ""){
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
+        }
     }
 }
 
 pipeline {
-   agent { node { label "caasp-team-private-${worker_type} && e2e" } }
-
-   parameters {
-        string(name: 'E2E_MAKE_TARGET_NAME', defaultValue: 'all', description: 'The make target to run (only e2e related)')
-   }
+   agent { node { label "caasp-team-private-${worker_type} && ${labels}" } }
 
    environment {
         SKUBA_BINPATH = "/home/jenkins/go/bin/skuba"
@@ -28,6 +44,7 @@ pipeline {
         GITHUB_TOKEN = credentials('github-token')
         VMWARE_ENV_FILE = credentials('vmware-env')
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
+        BRANCH_REPO = "${branch_repo}"
    }
 
    stages {
