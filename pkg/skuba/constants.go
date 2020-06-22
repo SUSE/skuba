@@ -172,7 +172,7 @@ func AzureReadmeFile() string {
 
 // AzureCloudConfFile returns the default location of the azure cloud integrations .conf file
 func AzureCloudConfFile() string {
-	return path.Join(VSphereDir(), "azure.conf")
+	return path.Join(AzureDir(), "azure.conf")
 }
 
 // AzureCloudConfTemplateFile returns the default location of the azure cloud integrations .conf.template file
