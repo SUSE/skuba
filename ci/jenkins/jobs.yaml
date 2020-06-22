@@ -80,6 +80,14 @@
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
 
+- project:
+    name: caasp-jobs/dev
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    jobs:
+        - '{name}/e2e-test'
+
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
