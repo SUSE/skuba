@@ -91,5 +91,5 @@ authorized_keys = []
 # EXAMPLE:`
 # peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
 
-# Enable CPI integration with vSphere
+# Enable CPI integration with Azure
 # cpi_enable = false

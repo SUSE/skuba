@@ -177,7 +177,7 @@ You can find a template named azure.conf.template inside this directory.
 
 ~~~
 {
-    "cloud":"AzurePublicCloud",
+    "cloud": "AzurePublicCloud",
     "tenantId": "<AZ_TENANT_ID>",
     "aadClientId": "<AZ_AAD_CLIENT_ID>",
     "aadClientSecret": "<AZ_AAD_CLIENT_SECRET>",
@@ -185,8 +185,7 @@ You can find a template named azure.conf.template inside this directory.
     "resourceGroup": "<AZ_RESOURCE_GROUP>",
     "location": "<AZ_LOCATION>",
     "routeTableName": "<AZ_ROUTE_TABLE_NAME>",
-    "routeTableResourceGroup": "<AZ_ROUTE_TABLE_RESOURCE_GROUP>",
-    "useManagedIdentityExtension": false,
+    "useManagedIdentityExtension": true,
     "useInstanceMetadata": true
 }
 ~~~
@@ -202,7 +201,7 @@ as these names will be used by services to reconcile node metadata.
 `, "~", "`")
 
 	azureCloudConfTemplate = `{
-    "cloud":"AzurePublicCloud",
+    "cloud": "AzurePublicCloud",
     "tenantId": "<AZ_TENANT_ID>",
     "aadClientId": "<AZ_AAD_CLIENT_ID>",
     "aadClientSecret": "<AZ_AAD_CLIENT_SECRET>",
@@ -210,8 +209,7 @@ as these names will be used by services to reconcile node metadata.
     "resourceGroup": "<AZ_RESOURCE_GROUP>",
     "location": "<AZ_LOCATION>",
     "routeTableName": "<AZ_ROUTE_TABLE_NAME>",
-    "routeTableResourceGroup": "<AZ_ROUTE_TABLE_RESOURCE_GROUP>",
-    "useManagedIdentityExtension": false,
+    "useManagedIdentityExtension": true,
     "useInstanceMetadata": true
 }
 `
