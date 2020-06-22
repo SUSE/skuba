@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,8 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -104,11 +102,7 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		return errors.Wrap(err, "unable to add target information to init configuration")
 	}
 
-	finalInitConfigurationContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initConfiguration, schema.GroupVersion{
-		Group:   "kubeadm.k8s.io",
-		Version: kubeadm.GetKubeadmApisVersion(versionToDeploy),
-	})
-
+	finalInitConfigurationContents, err := kubeadm.UpdateClusterConfigurationWithClusterVersion(initConfiguration, versionToDeploy)
 	if err != nil {
 		return errors.Wrap(err, "could not marshal configuration")
 	}
@@ -143,7 +137,6 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		criSetup,
 		"cri.start",
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.init",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	configutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
+	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	skubautil "github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
@@ -130,10 +132,28 @@ func RemoveAPIEndpointFromConfigMap(client clientset.Interface, node *corev1.Nod
 
 // UpdateClusterConfigurationWithClusterVersion allows us to set certain configurations during init, but also during upgrades.
 // The configuration that we put here will be consistently set to newly created configurations, and when we upgrade a cluster.
-func UpdateClusterConfigurationWithClusterVersion(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {
+func UpdateClusterConfigurationWithClusterVersion(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) ([]byte, error) {
+	// apiserver
 	setApiserverAdmissionPlugins(initCfg, clusterVersion)
 	setContainerImagesWithClusterVersion(initCfg, clusterVersion)
 	setApiserverArgs(initCfg)
+
+	initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
+		Group:   "kubeadm.k8s.io",
+		Version: GetKubeadmApisVersion(clusterVersion),
+	})
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// kubelet
+	kubeletManifest := []byte(`---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+serverTLSBootstrap: true
+`)
+
+	return append(initCfgContents, kubeletManifest...), nil
 }
 
 func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, clusterVersion *version.Version) {

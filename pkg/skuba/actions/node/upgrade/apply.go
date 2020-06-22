@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	clientset "k8s.io/client-go/kubernetes"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
-
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -107,11 +104,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			initCfg.UseHyperKubeImage = false
 		}
 
-		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
-		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
-			Group:   "kubeadm.k8s.io",
-			Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
-		})
+		initCfgContents, err = kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
@@ -183,7 +176,6 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	err = target.Apply(nil,
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubernetes.restart-services",
 	)
 	if err != nil {

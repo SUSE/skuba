@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,6 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		criSetup,
 		"cri.start",
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
 		"kubelet.enable",
 		"kubeadm.join",

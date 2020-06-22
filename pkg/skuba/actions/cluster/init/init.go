@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -259,14 +258,12 @@ func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
 	if len(initConfiguration.CloudProvider) > 0 {
 		updateInitConfigurationWithCloudIntegration(&initCfg, initConfiguration)
 	}
-	kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
-	initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(&initCfg, schema.GroupVersion{
-		Group:   "kubeadm.k8s.io",
-		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
-	})
+
+	initCfgContents, err := kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
 	if err != nil {
 		return err
 	}
+
 	if err := ioutil.WriteFile(skuba.KubeadmInitConfFile(), initCfgContents, 0600); err != nil {
 		return errors.Wrap(err, "error writing init configuration")
 	}
