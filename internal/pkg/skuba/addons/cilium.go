@@ -267,19 +267,26 @@ spec:
             command:
             - cilium
             - status
+            - --brief
           # The initial delay for the liveness probe is intentionally large to
           # avoid an endless kill & restart cycle if in the event that the initial
           # bootstrapping takes longer than expected.
           initialDelaySeconds: 120
           failureThreshold: 10
-          periodSeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
         readinessProbe:
           exec:
             command:
             - cilium
             - status
+            - --brief
+          failureThreshold: 3
           initialDelaySeconds: 5
-          periodSeconds: 5
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
         volumeMounts:
           - name: cilium-run
             mountPath: /var/run/cilium
