@@ -14,9 +14,9 @@ data "azurerm_platform_image" "sles_chost_byos" {
   sku       = "gen2"
 }
 
-data "azurerm_role_definition" "contributor" {
-  name = "Contributor"
+data "azurerm_subscription" "current" {
 }
 
-data "azurerm_subscription" "current" {
+data "azurerm_role_definition" "contributor" {
+  name = "Contributor"
 }

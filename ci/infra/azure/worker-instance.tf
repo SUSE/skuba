@@ -77,9 +77,15 @@ resource "azurerm_virtual_machine_extension" "worker" {
 SETTINGS
 }
 
+locals {
+  worker_principal_ids = azurerm_linux_virtual_machine.worker.*.identity.0.principal_id
+}
+
 resource "azurerm_role_assignment" "worker" {
   count              = var.cpi_enable ? var.workers : 0
   scope              = data.azurerm_subscription.current.id
   role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
-  principal_id       = lookup(element(azurerm_linux_virtual_machine.worker.*.identity[0], count.index), "principal_id")
+  principal_id       = local.worker_principal_ids[count.index]
+
+  depends_on = [azurerm_linux_virtual_machine.worker]
 }

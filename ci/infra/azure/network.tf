@@ -66,3 +66,22 @@ resource "azurerm_private_dns_zone_virtual_network_link" "internal_dns" {
   virtual_network_id    = azurerm_virtual_network.virtual_network.id
   registration_enabled  = true
 }
+
+# Route Table
+resource "azurerm_route_table" "nodes" {
+  count               = var.cpi_enable ? 1 : 0
+  name                = "${var.stack_name}-route-table"
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+}
+
+resource "azurerm_subnet_route_table_association" "nodes" {
+  count          = var.cpi_enable ? 1 : 0
+  subnet_id      = azurerm_subnet.nodes.id
+  route_table_id = azurerm_route_table.nodes[0].id
+
+  depends_on = [
+    azurerm_subnet.nodes,
+    azurerm_route_table.nodes
+  ]
+}
