@@ -79,7 +79,7 @@ SETTINGS
 }
 
 locals {
-  master_principal_ids = azurerm_linux_virtual_machine.master.*.identity.0.principal_id
+  master_principal_ids = var.cpi_enable ? azurerm_linux_virtual_machine.master.*.identity.0.principal_id : []
 }
 
 resource "azurerm_role_assignment" "master" {

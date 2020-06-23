@@ -78,7 +78,7 @@ SETTINGS
 }
 
 locals {
-  worker_principal_ids = azurerm_linux_virtual_machine.worker.*.identity.0.principal_id
+  worker_principal_ids = var.cpi_enable ? azurerm_linux_virtual_machine.worker.*.identity.0.principal_id : []
 }
 
 resource "azurerm_role_assignment" "worker" {
