@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Cilium, renderCiliumTemplate, renderCiliumPreflightTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumInitImage, GetCiliumOperatorImage, GetCiliumImage})
+	registerAddon(kubernetes.Cilium, CniAddOn, renderCiliumTemplate, renderCiliumPreflightTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumInitImage, GetCiliumOperatorImage, GetCiliumImage})
 }
 
 func GetCiliumInitImage(imageTag string) string {

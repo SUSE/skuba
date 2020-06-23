@@ -32,6 +32,7 @@ type initOptions struct {
 	KubernetesVersion string
 	CloudProvider     string
 	StrictCapDefaults bool
+	CniPlugin         string
 }
 
 // NewInitCmd creates a new `skuba cluster init` cobra command
@@ -47,7 +48,8 @@ func NewInitCmd() *cobra.Command {
 				initOptions.CloudProvider,
 				initOptions.ControlPlane,
 				initOptions.KubernetesVersion,
-				initOptions.StrictCapDefaults)
+				initOptions.StrictCapDefaults,
+				initOptions.CniPlugin)
 			if err != nil {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
@@ -74,6 +76,8 @@ func NewInitCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("control-plane")
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")
+
+	cmd.Flags().StringVar(&initOptions.CniPlugin, "cni-plugin", "cilium", "Specify the CNI plugin to be used across the cluster. Valid values: cilium")
 
 	return cmd
 }

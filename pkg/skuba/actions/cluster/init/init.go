@@ -54,6 +54,7 @@ type InitConfiguration struct {
 	// Note: UseHyperKube can be removed when we drop the support of
 	// provisioning clusters of version 1.17.
 	UseHyperKube bool
+	CniPlugin    kubernetes.Addon
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHost() string {
@@ -75,7 +76,7 @@ func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
 	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
 }
 
-func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
+func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool, cniPlugin string) (InitConfiguration, error) {
 	kubernetesVersion := kubernetes.LatestVersion()
 	var err error
 	needsHyperKube := false
@@ -103,6 +104,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 		StrictCapDefaults: strictCapDefaults,
 		UseHyperKube:      needsHyperKube,
+		CniPlugin:         kubernetes.Addon(cniPlugin),
 	}, nil
 }
 
@@ -113,7 +115,42 @@ func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
+	if addon, found := addons.Addons[initConfiguration.CniPlugin]; !found || addon.AddOnType != addons.CniAddOn {
+		return fmt.Errorf("unknown CNI plugin provided: %s", initConfiguration.CniPlugin)
+	}
 
+	// write configuration files
+	if err := writeScaffoldFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeKubeadmFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeAddonConfigFiles(initConfiguration); err != nil {
+		return err
+	}
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("[init] configuration files written, unable to get directory")
+		return nil
+	}
+
+	fmt.Printf("[init] configuration files written to %s\n", currentDir)
+	return nil
+}
+
+func isAddonRequired(addon addons.Addon, initConfiguration InitConfiguration) bool {
+	if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		return false
+	}
+	if addon.AddOnType == addons.CniAddOn && initConfiguration.CniPlugin != addon.Addon {
+		return false
+	}
+	return true
+}
+
+func writeScaffoldFiles(initConfiguration InitConfiguration) error {
 	scaffoldFilesToWrite := criScaffoldFiles["criconfig"]
 	kubernetesVersion := initConfiguration.KubernetesVersion
 	if kubernetesVersion.Minor() < 18 {
@@ -160,7 +197,10 @@ func Init(initConfiguration InitConfiguration) error {
 			return errors.Wrapf(err, "unable to close file %s", f.Name())
 		}
 	}
+	return nil
+}
 
+func writeKubeadmFiles(initConfiguration InitConfiguration) error {
 	// Write kubeadm-init.conf and kubeadm-join.conf.d templates
 	if err := writeKubeadmInitConf(initConfiguration); err != nil {
 		return err
@@ -174,7 +214,10 @@ func Init(initConfiguration InitConfiguration) error {
 	if err := writeKubeadmJoinWorkerConf(initConfiguration); err != nil {
 		return err
 	}
+	return nil
+}
 
+func writeAddonConfigFiles(initConfiguration InitConfiguration) error {
 	// Write addon configuration files
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: initConfiguration.KubernetesVersion,
@@ -182,21 +225,13 @@ func Init(initConfiguration InitConfiguration) error {
 		ClusterName:    initConfiguration.ClusterName,
 	}
 	for addonName, addon := range addons.Addons {
-		if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		if !isAddonRequired(addon, initConfiguration) {
 			continue
 		}
 		if err := addon.Write(addonConfiguration); err != nil {
 			return errors.Wrapf(err, "could not write %q addon configuration", addonName)
 		}
 	}
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("[init] configuration files written, unable to get directory")
-		return nil
-	}
-
-	fmt.Printf("[init] configuration files written to %s\n", currentDir)
 	return nil
 }
 

@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.MetricsServer, renderMetricsServerTemplate, nil, metricsServerCallbacks{}, normalPriority, []getImageCallback{GetMetricsServerImage})
+	registerAddon(kubernetes.MetricsServer, GenericAddOn, renderMetricsServerTemplate, nil, metricsServerCallbacks{}, normalPriority, []getImageCallback{GetMetricsServerImage})
 }
 
 func GetMetricsServerImage(imageTag string) string {

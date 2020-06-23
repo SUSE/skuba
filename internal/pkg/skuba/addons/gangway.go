@@ -28,7 +28,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Gangway, renderGangwayTemplate, nil, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
+	registerAddon(kubernetes.Gangway, GenericAddOn, renderGangwayTemplate, nil, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
 }
 
 func GetGangwayImage(imageTag string) string {
