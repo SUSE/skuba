@@ -1,10 +1,8 @@
 import logging
 import os
-import time
 
 import platforms
 from checks import Checker
-from utils.format import Format
 from utils.utils import (step, Utils)
 
 logger = logging.getLogger('testrunner')
@@ -19,7 +17,7 @@ class Skuba:
         self.platform = platforms.get_platform(conf, platform)
         self.workdir = self.conf.skuba.workdir
         self.cluster = self.conf.skuba.cluster
-        self.cluster_dir =os.path.join(self.workdir, self.cluster)
+        self.cluster_dir = os.path.join(self.workdir, self.cluster)
         self.utils.setup_ssh()
         self.checker = Checker(conf, platform)
 
@@ -48,7 +46,6 @@ class Skuba:
                                timeout=timeout)
         self.join_nodes(timeout=timeout)
 
-
     @step
     def cluster_init(self, kubernetes_version=None, cloud_provider=None):
         logger.debug("Cleaning up any previous cluster dir")
@@ -66,13 +63,11 @@ class Skuba:
         # cluster directory
         self._run_skuba(cmd, cwd=self.workdir)
 
-
     @step
     def cluster_bootstrap(self, kubernetes_version=None,
                           cloud_provider=None, timeout=None):
         self.cluster_init(kubernetes_version, cloud_provider)
         self.node_bootstrap(cloud_provider, timeout=timeout)
-
 
     @step
     def node_bootstrap(self, cloud_provider=None, timeout=None):
@@ -88,7 +83,6 @@ class Skuba:
         self._run_skuba(cmd)
 
         self.checker.check_node("master", 0, stage="joined", timeout=timeout)
-
 
     @step
     def node_join(self, role="worker", nr=0, timeout=None):
@@ -124,7 +118,6 @@ class Skuba:
 
         for node in range(0, workers):
             self.node_join("worker", node, timeout=timeout)
-
 
     @step
     def node_remove(self, role="worker", nr=0):

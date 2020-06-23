@@ -1,5 +1,4 @@
 import logging
-import os
 
 
 class Logger:
@@ -17,9 +16,6 @@ class Logger:
         logger = logging.getLogger("testrunner")
 
         if conf.log.file:
-            mode = 'a'
-            if conf.log.overwrite:
-                mode = 'w'
             file_handler = logging.FileHandler(conf.log.file)
             logger.addHandler(file_handler)
 

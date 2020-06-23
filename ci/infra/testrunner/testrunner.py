@@ -29,6 +29,7 @@ def info(options):
 def config(options):
     BaseConfig.print(options.conf)
 
+
 def cleanup(options):
     platforms.get_platform(options.conf, options.platform).cleanup()
     Skuba.cleanup(options.conf)
@@ -85,22 +86,27 @@ def join_nodes(options):
         timeout=options.timeout
     )
 
+
 def remove_node(options):
     Skuba(options.conf, options.platform).node_remove(
         role=options.role, nr=options.node)
+
 
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
         action=options.upgrade_action, role=options.role, nr=options.node)
 
+
 def node_check(options):
     Checker(options.conf, options.platform).check_node(
-         role=options.role, node=options.node,
-         checks=options.checks, stage=options.stage)
+        role=options.role, node=options.node,
+        checks=options.checks, stage=options.stage)
+
 
 def cluster_check(options):
     Checker(options.conf, options.platform).check_cluster(
-         checks=options.checks, stage=options.stage)
+        checks=options.checks, stage=options.stage)
+
 
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
@@ -136,7 +142,7 @@ def main():
                         help="The platform you're targeting. Default is openstack")
     parser.add_argument("-l", "--log-level", dest="log_level", default=None, help="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
-    parser.add_argument("-c","--print-conf", dest="print_conf", action="store_true",
+    parser.add_argument("-c", "--print-conf", dest="print_conf", action="store_true",
                         help="prints the configuration")
 
     # Sub commands
@@ -166,20 +172,20 @@ def main():
     # common parameters for cluster bootstrap
     bootstrap_args = ArgumentParser(add_help=False)
     bootstrap_args.add_argument("-k", "--kubernetes-version", help="kubernetes version",
-                               dest="kubernetes_version", default=None)
+                                dest="kubernetes_version", default=None)
     bootstrap_args.add_argument("-c", "--cloud-provider", action="store_true",
-                               help="Use cloud provider integration")
+                                help="Use cloud provider integration")
     bootstrap_args.add_argument("-t", "--timeout", type=int, default=300,
                                 help="timeout for waiting a node to become ready (seconds)")
 
-    cmd_bootstrap = commands.add_parser("bootstrap", parents=[bootstrap_args],
-                        help="bootstrap k8s cluster")
+    cmd_bootstrap = commands.add_parser(
+        "bootstrap", parents=[bootstrap_args], help="bootstrap k8s cluster")
     cmd_bootstrap.set_defaults(func=bootstrap)
 
-    cmd_deploy = commands.add_parser("deploy", parents=[bootstrap_args],
-                        help="initializes, bootstrap and join all nodes k8s")
+    cmd_deploy = commands.add_parser(
+        "deploy", parents=[bootstrap_args],
+        help="initializes, bootstrap and join all nodes k8s")
     cmd_deploy.set_defaults(func=deploy)
-
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
@@ -190,16 +196,20 @@ def main():
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
-    node_args.add_argument("-r", "--role", dest="role", choices=["master", "worker"],
-                           help='role of the node to be added or deleted. eg: --role master')
-    node_args.add_argument("-n", "--node", dest="node", type=int,
-                           help='node to be added or deleted.  eg: -n 0')
-   # End of common parameters
+    node_args.add_argument(
+        "-r", "--role", dest="role", choices=["master", "worker"],
+        help='role of the node to be added or deleted. eg: --role master')
+    node_args.add_argument(
+        "-n", "--node", dest="node", type=int,
+        help='node to be added or deleted.  eg: -n 0')
+    # End of common parameters
 
-    cmd_join_node = commands.add_parser("join-node", parents=[node_args],
-                                        help="add node in k8s cluster with the given role.")
-    cmd_join_node.add_argument("-t", "--timeout", type=int, default=180,
-                                help="timeout for waiting the node to become ready (seconds)")
+    cmd_join_node = commands.add_parser(
+        "join-node", parents=[node_args],
+        help="add node in k8s cluster with the given role.")
+    cmd_join_node.add_argument(
+        "-t", "--timeout", type=int, default=180,
+        help="timeout for waiting the node to become ready (seconds)")
     cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
@@ -212,8 +222,8 @@ def main():
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
 
-    cmd_check_node = commands.add_parser("check-node", parents=[node_args],
-                                          help="check node health")
+    cmd_check_node = commands.add_parser(
+        "check-node", parents=[node_args], help="check node health")
     cmd_check_node.add_argument("-c", "--check", dest="checks", nargs='+',
                                 help="check to be executed (multiple checks can be specified")
     cmd_check_node.add_argument("-s", "--stage", dest="stage",
@@ -259,16 +269,18 @@ def main():
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
 
-    cmd_inhibit_kured = commands.add_parser("inhibit_kured",
-                           help="Prevent kured to reboot nodes")
+    cmd_inhibit_kured = commands.add_parser(
+        "inhibit_kured", help="Prevent kured to reboot nodes")
     cmd_inhibit_kured.set_defaults(func=inhibit_kured)
 
-    cmd_check_cluster = commands.add_parser("check-cluster",
-                                          help="check cluster health")
-    cmd_check_cluster.add_argument("-c", "--check", dest="checks", nargs='+',
-                                help="check to be executed (multiple checks can be specified")
-    cmd_check_cluster.add_argument("-s", "--stage", dest="stage",
-                                help="only execute checks that apply to this stage")
+    cmd_check_cluster = commands.add_parser(
+        "check-cluster", help="check cluster health")
+    cmd_check_cluster.add_argument(
+        "-c", "--check", dest="checks", nargs='+',
+        help="check to be executed (multiple checks can be specified")
+    cmd_check_cluster.add_argument(
+        "-s", "--stage", dest="stage",
+        help="only execute checks that apply to this stage")
     cmd_check_cluster.set_defaults(func=cluster_check)
 
     options = parser.parse_args()
@@ -283,14 +295,15 @@ def main():
 
         options.func(options)
     except SystemExit as ex:
-       if ex.code > 0:
-          logger.error(f'Command {options.command} ended with error code {ex.code}')
-          sys.exit(ex.code)
+        if ex.code > 0:
+            logger.error(f'Command {options.command} ended with error code {ex.code}')
+            sys.exit(ex.code)
     except Exception as ex:
         logger.error(f'Exception {ex} executing command {options.command}', exc_info=True)
         sys.exit(255)
 
     sys.exit(0)
+
 
 if __name__ == '__main__':
     main()

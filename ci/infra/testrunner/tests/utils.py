@@ -46,7 +46,7 @@ def node_is_upgraded(kubectl, platform, role, nr):
          namespace="kube-system",
          wait_delay=60,
          wait_backoff=30,
-         wait_elapsed=60*10,
+         wait_elapsed=60 * 10,
          wait_allow=(AssertionError))
 
     cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
@@ -63,9 +63,10 @@ def check_pods_ready(kubectl, namespace=None, node=None, pods=[], statuses=['Run
 
     result = kubectl.run_kubectl(cmd)
     pod_list = result.split(";")
-    for name,status in [pod.split(":") for pod in pod_list if pod != ""]:
+    for name, status in [pod.split(":") for pod in pod_list if pod != ""]:
         assert status in statuses, (f'Pod {name} status {status}'
                                     f'not in expected statuses: {", ".join(statuses)}')
+
 
 def wait(func, *args, **kwargs):
 
@@ -73,10 +74,10 @@ def wait(func, *args, **kwargs):
         pass
 
     timeout = kwargs.pop("wait_timeout", 0)
-    delay   = kwargs.pop("wait_delay", 0)
+    delay = kwargs.pop("wait_delay", 0)
     backoff = kwargs.pop("wait_backoff", 0)
     retries = kwargs.pop("wait_retries", 0)
-    allow   = kwargs.pop("wait_allow", ())
+    allow = kwargs.pop("wait_allow", ())
     elapsed = kwargs.pop("wait_elapsed", 0)
 
     if retries > 0 and elapsed > 0:
@@ -90,7 +91,7 @@ def wait(func, *args, **kwargs):
 
     start = int(time.time())
     attempts = 1
-    reason=""
+    reason = ""
 
     time.sleep(delay)
     while True:
@@ -105,7 +106,7 @@ def wait(func, *args, **kwargs):
         finally:
             signal.alarm(0)
 
-        if elapsed > 0 and int(time.time())-start >= elapsed:
+        if elapsed > 0 and int(time.time()) - start >= elapsed:
             reason = "maximum wait time exceeded: {}s".format(elapsed)
             break
 

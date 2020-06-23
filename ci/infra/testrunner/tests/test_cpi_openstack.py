@@ -1,5 +1,4 @@
 import pytest
-import os
 import platforms
 from skuba import Skuba
 from utils import BaseConfig
@@ -122,6 +121,7 @@ def test_init_cpi_openstack_cluster(skuba, kubernetes_version=None):
     """
     skuba.cluster_init(kubernetes_version, cloud_provider="openstack")
 
+
 @pytest.mark.disruptive
 @pytest.mark.openstack
 @pytest.mark.run(order=2)
@@ -155,8 +155,8 @@ def test_node_join_cpi_openstack_cluster(skuba, kubectl):
 @pytest.mark.openstack
 @pytest.mark.run(order=4)
 def test_create_cinder_storage(kubectl, skuba):
-        # TODO: result of action is successful  
-        kubectl.run_kubectl(" apply -f -", stdin=CINDER_YAML.encode())
+    # TODO: result of action is successful
+    kubectl.run_kubectl(" apply -f -", stdin=CINDER_YAML.encode())
 
 
 @pytest.mark.disruptive
@@ -173,6 +173,7 @@ def test_wrtite_cinder_storage(kubectl, skuba):
         wait_delay=60,
         wait_retries=1,
         wait_allow=(AssertionError))
+
 
 @pytest.mark.disruptive
 @pytest.mark.openstack

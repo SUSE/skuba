@@ -11,8 +11,10 @@ terraform_tfdir = "skuba/ci/infra"
 ssh_key = ".ssh/id_rsa"
 tfvars = "terraform.tfvars.json.ci.example"
 
+
 empty_yaml = """
 """.format(workspace=workspace)
+
 
 def test_defaults():
     """Test defaults according to the [documentation](../README.md)
@@ -21,20 +23,20 @@ def test_defaults():
          mock.patch.dict("os.environ", clear=True,
                          values={"WORKSPACE": workspace,
                                  "HOME": home,
-                                 "USER": user
-                         }):
+                                 "USER": user}):
         config = BaseConfig("vars.yaml")
         assert config.skuba.workdir == workspace
-        assert config.skuba.binpath == os.path.join(workspace,skuba_binpath)
+        assert config.skuba.binpath == os.path.join(workspace, skuba_binpath)
         assert config.skuba.cluster == "test-cluster"
-        assert config.terraform.tfdir == os.path.join(workspace,terraform_tfdir)
+        assert config.terraform.tfdir == os.path.join(workspace, terraform_tfdir)
         assert config.terraform.stack_name == user
-        assert config.terraform.workdir ==  workspace
-        assert config.terraform.tfvars ==  tfvars
-        assert config.terraform.plugin_dir == None
+        assert config.terraform.workdir == workspace
+        assert config.terraform.tfvars == tfvars
+        assert config.terraform.plugin_dir is None
         assert config.utils.ssh_key == os.path.join(home, ssh_key)
 
-subs_yaml ="""
+
+subs_yaml = """
 packages:
   additional_pkgs:
   - $MYPACKAGE
@@ -44,14 +46,14 @@ packages:
 my_package = "my-repo"
 my_repo = "http://url/to/my/repo"
 
+
 def test_substitutions():
     """Test substitution of environment variables in lists and  maps
     """
     with mock.patch("builtins.open", mock.mock_open(read_data=subs_yaml)), \
          mock.patch.dict("os.environ", clear=True,
                          values={"MYPACKAGE": my_package,
-                                 "MYREPO": my_repo,
-                         }):
+                                 "MYREPO": my_repo}):
         config = BaseConfig("vars.yaml")
         assert len(config.packages.additional_pkgs) == 1
         assert config.packages.additional_pkgs[0] == my_package
