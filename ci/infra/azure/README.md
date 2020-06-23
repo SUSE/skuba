@@ -54,7 +54,7 @@ the [Azure Linux Agent](https://docs.microsoft.com/en-us/azure/virtual-machines/
 
 ### Using spot instances
 
-User can enable nodes to use [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms) by setting below to `true` (`false` by default).
+User can enable nodes to use [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms) by setting below variables to `true` (`false` by default).
 
   * `master_use_spot_instance`
   * `worker_use_spot_instance`
@@ -171,7 +171,7 @@ It is possible to enable multiple zone.  It can be set `enable_zone` to `true` a
 #enable-cloud-provider-interface
 ## Enable Cloud Provider Interface
 
-Configure `cpi_enable` to `true` enables terraform to provision the cluster with setups for cloud provider interface.
+Configuring `cpi_enable` to `true` enables terraform to provision the cluster with setups for cloud provider interface.
 
 To deploy CaaSP cluster with Azure as cloud provider, at lease one of the authentication method must be applied in cloud-config file during cluster bootstrap.
 
