@@ -88,20 +88,6 @@ func Test_renderContext_GangwayImage(t *testing.T) {
 	}
 }
 
-func Test_renderContext_GangwayClientSecret(t *testing.T) {
-	for _, ver := range kubernetes.AvailableVersions() {
-		t.Run("get gangway client secret when cluster version is "+ver.String(), func(t *testing.T) {
-			fake.NewSimpleClientset()
-
-			got := renderContext{}.GangwayClientSecret()
-			if got != "" {
-				t.Errorf("expect got client secret empty")
-				return
-			}
-		})
-	}
-}
-
 func Test_gangwayCallbacks_beforeApply(t *testing.T) {
 	type test struct {
 		name               string
