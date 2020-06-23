@@ -40,8 +40,12 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 )
 
-// defKnowHosts is the default `known_hosts` file
-const defKnowHosts = "known_hosts"
+const (
+	// defKnowHosts is the default `known_hosts` file
+	defKnowHosts = "known_hosts"
+	defSSHUser   = "root"
+	defSSHPort   = 22
+)
 
 // trustHostMessage is the message printed when we don't know about a host
 // fingerprint.
@@ -88,6 +92,9 @@ type Target struct {
 	targetName   string
 	sudo         bool
 	port         int
+	bastion      string
+	bastionUser  string
+	bastionPort  int
 	verboseLevel string
 	client       *ssh.Client
 }
@@ -95,9 +102,12 @@ type Target struct {
 // GetFlags adds init flags bound to the config to the specified flagset
 func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagSet.StringVarP(&t.user, "user", "u", "root", "User identity used to connect to target")
+	flagSet.StringVarP(&t.bastionUser, "bastion-user", "", defSSHUser, "User identity used to connect to the bastion using SSH")
+	flagSet.IntVarP(&t.bastionPort, "bastion-port", "", defSSHPort, "Port to connect to the bastion using SSH")
+	flagSet.StringVarP(&t.bastion, "bastion", "", "", "IP or FQDN of the bastion to connect to the other nodes using SSH")
+	flagSet.StringVarP(&t.user, "user", "u", defSSHUser, "User identity used to connect to target using SSH")
 	flagSet.BoolVarP(&t.sudo, "sudo", "s", false, "Run remote command via sudo")
-	flagSet.IntVarP(&t.port, "port", "p", 22, "Port to connect to using SSH")
+	flagSet.IntVarP(&t.port, "port", "p", defSSHPort, "Port to connect to using SSH")
 	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH (required)")
 
 	_ = cobra.MarkFlagRequired(flagSet, "target")
@@ -120,6 +130,9 @@ func (t *Target) GetDeployment(nodename string, role *deployments.Role, verboseL
 		user:         t.user,
 		sudo:         t.sudo,
 		port:         t.port,
+		bastion:      t.bastion,
+		bastionUser:  t.bastionUser,
+		bastionPort:  t.bastionPort,
 		verboseLevel: verboseLevel,
 	}
 	return &res
@@ -203,11 +216,11 @@ func (t *Target) initClient() error {
 		return errors.Errorf("SSH_AUTH_SOCK is undefined. Make sure ssh-agent is running")
 	}
 
-	conn, err := net.Dial("unix", socket)
+	agentConn, err := net.Dial("unix", socket)
 	if err != nil {
 		return err
 	}
-	agentClient := agent.NewClient(conn)
+	agentClient := agent.NewClient(agentConn)
 
 	// check a precondition: there must be some SSH keys loaded in the ssh agent
 	keys, err := agentClient.List()
@@ -232,18 +245,50 @@ func (t *Target) initClient() error {
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
-	if err != nil {
-		// crypto/ssh does not provide constants for some common errors, so we
-		// must "pattern match" the error strings in order to guess what failed
-		if strings.Contains(err.Error(), "unable to authenticate") {
-			klog.Errorf("ssh authentication error: please make sure you have added to "+
-				"your ssh-agent a ssh key that is authorized in %q.", t.target.Target)
-			return errSSHAuthErr
+	nodeAddr := fmt.Sprintf("%s:%d", t.target.Target, t.port)
+
+	// Use direct connection to the node
+	if t.bastion == "" {
+		t.client, err = ssh.Dial("tcp", nodeAddr, config)
+		if err != nil {
+			return checkSshDialError(err, t.target.Target)
 		}
+		return nil
+	}
+
+	// Start a client connection to the bastion
+	bastionClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.bastion, t.bastionPort), config)
+	if err != nil {
+		return checkSshDialError(err, t.bastion)
+	}
+
+	// Start a client connection from the bastion to the node
+	bastionTargetConn, err := bastionClient.Dial("tcp", nodeAddr)
+	if err != nil {
+		return checkSshDialError(err, t.target.Target)
+	}
+
+	// Establish an authenticated connection to the node over the bastion connection
+	sshConn, newChannelChan, requestChan, err := ssh.NewClientConn(bastionTargetConn, nodeAddr, config)
+	if err != nil {
+		klog.Errorf("cannot establish an authenticated connection to the node")
 		return err
 	}
+
+	t.client = ssh.NewClient(sshConn, newChannelChan, requestChan)
+
 	return nil
+}
+
+func checkSshDialError(err error, host string) error {
+	// crypto/ssh does not provide constants for some common errors, so we
+	// must "pattern match" the error strings in order to guess what failed
+	if strings.Contains(err.Error(), "unable to authenticate") {
+		klog.Errorf("ssh authentication error: please make sure you have added to "+
+			"your ssh-agent a ssh key that is authorized in %q.", host)
+		return errSSHAuthErr
+	}
+	return err
 }
 
 // hostKeyChecker checks that the host fingerprint is stored in the known_hosts
