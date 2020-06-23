@@ -18,7 +18,7 @@ def branch_registry = ""
 def original_registry = ""
 
 // CaaSP Version for repo and registry branch
-def repo_version = "5"
+def repo_version = "4.0"
 
 // type of worker required by the PR
 def worker_type = 'integration'
@@ -89,8 +89,8 @@ node('caasp-team-private-integration') {
            }
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Branches:/${branch_name}/SLE_15_SP1"
-               branch_registry = "registry.suse.de/devel/caasp/4.0/branches/${branch_name}/containers"
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP1"
+               branch_registry = "registry.suse.de/Devel/CaaSP/${repo_version}/Branches/${branch_name}/containers"
                original_registry = "registry.suse.de/devel/caasp/4.0/containers/containers"
            }
 
@@ -195,6 +195,11 @@ pipeline {
         }
 
         stage('Provision cluster') {
+            environment {
+                BRANCH_REPO = "${branch_repo}"
+                BRANCH_REGISTRY = "${branch_registry}"
+                ORIGINAL_REGISTRY = "${original_registry}"
+            }
             steps {
                 sh(script: 'make -f ci/Makefile provision', label: 'Provision')
             }
