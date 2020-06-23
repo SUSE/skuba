@@ -90,7 +90,7 @@ node('caasp-team-private-integration') {
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/4.5/branches/${branch_name}/containers"
+               branch_registry = "registry.suse.de/Devel/CaaSP/${repo_version}/Branches/${branch_name}/containers"
                original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
            }
 
@@ -193,6 +193,11 @@ pipeline {
         }
 
         stage('Provision cluster') {
+            environment {
+                BRANCH_REPO = "${branch_repo}"
+                BRANCH_REGISTRY = "${branch_registry}"
+                ORIGINAL_REGISTRY = "${original_registry}"
+            }
             steps {
                 sh(script: 'make -f ci/Makefile provision', label: 'Provision')
             }
