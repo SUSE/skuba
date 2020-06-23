@@ -10,10 +10,14 @@ def pr_context = ''
 // Platform for pr tests.
 def platform = 'vmware'
 
-// Repo branch
+// Repo and registry branch
 def branch_repo = ""
+def branch_registry = ""
 
-// CaaSP Version for repo branch
+// original (non-branched) registry, only needed when branch_registry is in use
+def original_registry = ""
+
+// CaaSP Version for repo and registry branch
 def repo_version = "5"
 
 // type of worker required by the PR
@@ -86,7 +90,8 @@ node('caasp-team-private-integration') {
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
-
+               branch_registry = "registry.suse.de/Devel/CaaSP/${repo_version}/Branches/${branch_name}/containers/cr/containers/caasp/v${repo_version}"
+               original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers/caasp/v5"
            }
 
         } catch (Exception e) {
@@ -216,6 +221,8 @@ pipeline {
         stage('Provision cluster') {
             environment {
                 BRANCH_REPO = "${branch_repo}"
+                BRANCH_REGISTRY = "${branch_registry}"
+                ORIGINAL_REGISTRY = "${original_registry}"
             }
             steps {
                 sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
