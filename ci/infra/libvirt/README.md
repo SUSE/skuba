@@ -7,7 +7,7 @@ cluster on KVM via terraform-provider-libvirt.
 
 Follow instructions at https://github.com/dmacvicar/terraform-provider-libvirt#installing to install terraform-provider-libvirt.
 
-The terraform template exect a storage pool be defined in libvirt. the default is 'default' but it can
+The terraform template expects a storage pool be defined in libvirt. the default is 'default' but it can
 be modifed by adjusting the variable 'pool' in terraform.tfvars. For creating the libvirt storage pool, use
 
 ```sh
