@@ -1,34 +1,41 @@
 - job-template:
-    name: '{name}/{platform}/{test}-daily'
+    name: '{name}/e2e-test'
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
-    branch: master
-    kubernetes_version: ''
-    schedule: '3-5'
     wrappers:
       - timeout:
           timeout: 120
           fail: true
-    triggers:
-        - timed: 'H H({schedule}) * * *'
     parameters:
         - string:
             name: BRANCH
-            default: '{branch}'
+            default: 'master'
             description: The branch to checkout
         - string:
               name: PLATFORM
-              default: '{platform}'
+              default: 'vmware'
               description: The platform to perform the tests on
         - string:
             name: E2E_MAKE_TARGET_NAME
-            default: '{test}'
+            default: ''
             description: The make target to run (only e2e tests)
         - string:
               name: KUBERNETES_VERSION 
-              default: '{kubernetes_version}'
+              default: ''
               description: version of kubernetes to install
+        - string:
+              name: WORKER_TYPE 
+              default: ''
+              description: worker type required by the job
+        - string:
+              name: WORKER_LABELS 
+              default: ''
+              description: additional labels used for worker selection
+        - string:
+              name: REPO_BRANCH 
+              default: ''
+              description: repository branch used for skuba packages
     pipeline-scm:
         scm:
             - git:
