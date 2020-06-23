@@ -22,7 +22,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/oidc"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
@@ -67,13 +66,14 @@ func (dexCallbacks) beforeApply(client clientset.Interface, addonConfiguration A
 		}
 	}
 
-	// handles dex certificates
+	// handles dex certificate
 	exist, err = oidc.IsSecretExist(client, oidc.DexCertSecretName)
-	if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.DexCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.DexCertSecretName); err != nil {
-		return err
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if oidc dex cert exists")
 	}
-	if exist {
-		if err := dex.RestartPods(client); err != nil {
+	if !exist {
+		// generate certificate if not present
+		if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.DexCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.DexCertSecretName); err != nil {
 			return err
 		}
 	}

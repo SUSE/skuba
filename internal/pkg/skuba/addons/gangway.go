@@ -22,7 +22,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/oidc"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
@@ -66,13 +65,14 @@ func (gangwayCallbacks) beforeApply(client clientset.Interface, addonConfigurati
 		}
 	}
 
-	// handles gangway certificates
+	// handles gangway certificate
 	exist, err = oidc.IsSecretExist(client, oidc.GangwayCertSecretName)
-	if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.GangwayCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.GangwayCertSecretName); err != nil {
-		return err
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if oidc gangway cert exists")
 	}
-	if exist {
-		if err := dex.RestartPods(client); err != nil {
+	if !exist {
+		// generate certificate if not present
+		if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.GangwayCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.GangwayCertSecretName); err != nil {
 			return err
 		}
 	}
