@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"testing"
 
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	img "github.com/SUSE/skuba/pkg/skuba"
@@ -101,7 +103,7 @@ func Test_dexCallbacks_beforeApply(t *testing.T) {
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			d := dexCallbacks{}
-			if err := d.beforeApply(tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
+			if err := d.beforeApply(fake.NewSimpleClientset(), tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
 				t.Errorf("dexCallbacks.beforeApply() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

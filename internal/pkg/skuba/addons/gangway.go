@@ -19,6 +19,7 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
@@ -54,12 +55,7 @@ func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {
 
 type gangwayCallbacks struct{}
 
-func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-
+func (gangwayCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	gangwaySecretExists, err := gangway.GangwaySecretExists(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if gangway secret exists")
@@ -90,7 +86,7 @@ func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skuba
 	return nil
 }
 
-func (gangwayCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (gangwayCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 

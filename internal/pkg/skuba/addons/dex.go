@@ -19,6 +19,7 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
@@ -45,14 +46,7 @@ func renderDexTemplate(addonConfiguration AddonConfiguration) string {
 
 type dexCallbacks struct{}
 
-func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	var err error
-
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-
+func (dexCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	dexCertExists, err := dex.DexCertExists(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if dex certificate exists")
@@ -69,7 +63,7 @@ func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConf
 	return nil
 }
 
-func (dexCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (dexCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 

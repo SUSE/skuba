@@ -117,7 +117,7 @@ func Test_gangwayCallbacks_beforeApply(t *testing.T) {
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			g := gangwayCallbacks{}
-			if err := g.beforeApply(tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
+			if err := g.beforeApply(fake.NewSimpleClientset(), tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
 				t.Errorf("gangwayCallbacks.beforeApply() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

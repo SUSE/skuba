@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
@@ -80,12 +81,7 @@ func renderMetricsServerTemplate(addonConfiguration AddonConfiguration) string {
 
 type metricsServerCallbacks struct{}
 
-func (metricsServerCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-
+func (metricsServerCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	exist, err := metricsserver.IsCertExist(client)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine metrics-server cert exist")
@@ -100,7 +96,7 @@ func (metricsServerCallbacks) beforeApply(addonConfiguration AddonConfiguration,
 	return nil
 }
 
-func (metricsServerCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (metricsServerCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 
