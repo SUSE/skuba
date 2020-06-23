@@ -21,6 +21,10 @@ endif
 ifdef KUBERNETES_VERSION
 K8S_VERSION_OPT=--kubernetes-version ${KUBERNETES_VERSION}
 endif
+ifdef BRANCH_REGISTRY
+REGISTRY_OPT=--registry-mirror ${ORIGINAL_REGISTRY} ${BRANCH_REGISTRY}
+endif
+BOOTSTRAP_OPT=${REGISTRY_OPT} ${K8S_VERSION_OPT}
 
 .PHONY: all
 all: provision deploy
@@ -33,7 +37,7 @@ provision:
 
 .PHONY: bootstrap
 bootstrap:
-	${TEST_RUNNER} --platform ${PLATFORM} bootstrap ${K8S_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} bootstrap ${BOOTSTRAP_OPT}
 
 .PHONY: join_nodes 
 join_nodes:
@@ -41,7 +45,7 @@ join_nodes:
 
 .PHONY: deploy 
 deploy:
-	${TEST_RUNNER} --platform ${PLATFORM} deploy ${K8S_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} deploy ${BOOTSTRAP_OPT}
 
 .PHONY: check_cluster
 check_cluster:
