@@ -151,10 +151,6 @@ customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 				},
 			}),
 		},
-		{
-			name:   "nil clientset",
-			client: nil,
-		},
 	}
 
 	for _, tt := range tests {
