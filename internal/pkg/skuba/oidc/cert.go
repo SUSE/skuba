@@ -26,7 +26,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
 
-// CreateServerCert creates a erver certificate with subject alternative name (SAN)
+// CreateServerCert creates a server certificate with subject alternative name (SAN)
 // issued by kubernetes CA cert/key pair
 func CreateServerCert(client clientset.Interface, pkiPath, certCN, controlPlaneHost, certSecretName string) error {
 	// load kubernetes CA
