@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ func NewUpgradeCheckCmd() *cobra.Command {
 	checkOptions := &checkOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "upgrade-check k8s-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
+		Use:   "upgrade-check kubernetes-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Upgrade Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
@@ -88,10 +88,10 @@ func NewUpgradeCheckCmd() *cobra.Command {
 				if len(upgradePath) > 0 {
 					nextClusterVersion = upgradePath[0]
 				} else {
-					klog.Warning("Already on the latest version, nothing to check.\nFor a specific version use the `k8s-version` flag.")
+					klog.Warning("Already on the latest version, nothing to check.\nFor a specific version use the `kubernetes-version` flag.")
 					return nil
 				}
-				config.K8sVersion = nextClusterVersion.String()
+				config.K8sVersion = fmt.Sprintf("v%s", nextClusterVersion.String())
 			}
 
 			klog.Infof("Starting Kubepug with configs: %+v", config)
@@ -120,18 +120,14 @@ func NewUpgradeCheckCmd() *cobra.Command {
 
 			return nil
 		},
-		Args: cobra.MinimumNArgs(1),
 	}
-	cmd.PersistentFlags().BoolVar(&checkOptions.APIWalk, "api-walk", true, "Wether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer. Defaults to true")
-	cmd.PersistentFlags().BoolVar(&checkOptions.ShowDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. Defaults to true")
-	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "k8s-version", "master", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. Defaults to master")
+	cmd.PersistentFlags().BoolVar(&checkOptions.APIWalk, "api-walk", true, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer.")
+	cmd.PersistentFlags().BoolVar(&checkOptions.ShowDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation.")
+	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "kubernetes-version", "", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects.")
 	cmd.PersistentFlags().StringVar(&checkOptions.SwaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
-	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists. Defaults to false")
+	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists.")
 	cmd.PersistentFlags().StringVar(&format, "format", "plain", "Format in which the list will be displayed [stdout, plain, json, yaml]")
 	cmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	cmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analized")
-
-	// cmd.PersistentFlags().StringVarP(&logLevel, "verbosity", "v", logrus.WarnLevel.String(), "Log level: debug, info, warn, error, fatal, panic")
-
 	return cmd
 }
