@@ -26,7 +26,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Kucero, renderKuceroTemplate, nil, kuceroCallbacks{}, normalPriority, []getImageCallback{GetKuceroImage})
+	registerAddon(kubernetes.Kucero, GenericAddOn, renderKuceroTemplate, nil, kuceroCallbacks{}, normalPriority, []getImageCallback{GetKuceroImage})
 }
 
 func GetKuceroImage(imageTag string) string {
