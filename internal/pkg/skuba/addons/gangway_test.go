@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"testing"
 
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	img "github.com/SUSE/skuba/pkg/skuba"
@@ -89,9 +91,11 @@ func Test_renderContext_GangwayImage(t *testing.T) {
 func Test_renderContext_GangwayClientSecret(t *testing.T) {
 	for _, ver := range kubernetes.AvailableVersions() {
 		t.Run("get gangway client secret when cluster version is "+ver.String(), func(t *testing.T) {
+			fake.NewSimpleClientset()
+
 			got := renderContext{}.GangwayClientSecret()
-			if got == "" {
-				t.Errorf("expect got client secret")
+			if got != "" {
+				t.Errorf("expect got client secret empty")
 				return
 			}
 		})
