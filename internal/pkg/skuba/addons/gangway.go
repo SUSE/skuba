@@ -40,11 +40,11 @@ func (renderContext renderContext) GangwayImage() string {
 }
 
 func (renderContext renderContext) GangwayClientSecret() string {
-	// ignore error for `skuba cluster init` case
 	client, err := kubernetes.GetAdminClientSet()
 	if err != nil {
-		return gangway.GetClientSecret(nil)
+		return ""
 	}
+
 	return gangway.GetClientSecret(client)
 }
 

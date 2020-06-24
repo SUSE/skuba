@@ -91,12 +91,6 @@ func GetClientSecret(client clientset.Interface) string {
 		return gClientSecret
 	}
 
-	// generate a new client secret when `skuba cluster init`
-	if client == nil {
-		gClientSecret = dex.GenerateClientSecret()
-		return gClientSecret
-	}
-
 	// global client secret not exist, read from ConfigMap
 	clientSecret, err := getClientSecretFromConfigMap(client)
 	if err != nil || clientSecret == "" {
