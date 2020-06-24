@@ -53,6 +53,13 @@ resource "azurerm_linux_virtual_machine" "worker" {
     create_before_destroy = true
     ignore_changes        = [source_image_id]
   }
+
+  dynamic "identity" {
+    for_each = range(var.cpi_enable ? 1 : 0)
+    content {
+      type = "SystemAssigned"
+    }
+  }
 }
 
 resource "azurerm_virtual_machine_extension" "worker" {
@@ -68,4 +75,17 @@ resource "azurerm_virtual_machine_extension" "worker" {
         "script": "${base64encode(data.template_file.cloud-init.rendered)}"
     }
 SETTINGS
+}
+
+locals {
+  worker_principal_ids = var.cpi_enable ? azurerm_linux_virtual_machine.worker.*.identity.0.principal_id : []
+}
+
+resource "azurerm_role_assignment" "worker" {
+  count              = var.cpi_enable ? var.workers : 0
+  scope              = data.azurerm_subscription.current.id
+  role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
+  principal_id       = local.worker_principal_ids[count.index]
+
+  depends_on = [azurerm_linux_virtual_machine.worker]
 }

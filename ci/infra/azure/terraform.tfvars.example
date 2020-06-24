@@ -90,3 +90,6 @@ authorized_keys = []
 # List of Virtual Network IDs to join via virual network peering
 # EXAMPLE:`
 # peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
+
+# Enable CPI integration with Azure
+# cpi_enable = false

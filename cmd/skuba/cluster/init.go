@@ -72,7 +72,7 @@ func NewInitCmd() *cobra.Command {
 	if skuba.BuildType == "development" {
 		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
 	}
-	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: aws, openstack, vsphere")
+	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: aws, azure, openstack, vsphere")
 	_ = cmd.MarkFlagRequired("control-plane")
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")

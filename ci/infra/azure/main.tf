@@ -13,3 +13,10 @@ data "azurerm_platform_image" "sles_chost_byos" {
   offer     = "sles-15-sp1-chost-byos"
   sku       = "gen2"
 }
+
+data "azurerm_subscription" "current" {
+}
+
+data "azurerm_role_definition" "contributor" {
+  name = "Contributor"
+}

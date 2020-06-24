@@ -9,11 +9,25 @@ to deploy CaaS Platform on top of it.
 This document focuses on the key aspects of the infrastructure created
 by terraform.
 
-# Cluster layout
+# Cluster Setup
 
-## Setup service principal for terraform login credential
+## Service Principle
 
-Following the guide [Creating a Service Principal in the Azure Portal](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html#creating-a-service-principal-in-the-azure-portal), and set up `ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID`, `and ARM_TENANT_ID` in `container-openrc.sh`.  Source `container-openrc.sh` before deploying terraform script.
+For cluster provision with terraform requires to have a service principle as authentication method.
+
+Follow the instruction to [Creating a Service Principal in the Azure Portal](https://www.terraform.io/docs/providers/azurerm/guides/service_principal_client_secret.html#creating-a-service-principal-in-the-azure-portal).
+
+You can also use Azure CLI to automate the task. For installation instructions, refer to link:https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest[Install the Azure CLI].
+```bash
+az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<SUBSCRIPTION_ID>"
+```
+
+Update and source `container-openrc.sh` before deploying terraform script.
+```bash
+source container-openrc.sh
+```
+
+The service principle can also be used in Azure cloud-config file. Reference to [Enable Cloud Provider Interface](#enable-cloud-provider-interface) for more details.
 
 ## Machines
 
@@ -40,11 +54,7 @@ the [Azure Linux Agent](https://docs.microsoft.com/en-us/azure/virtual-machines/
 
 ### Using spot instances
 
-It's possible to create a [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms)
-both for the master and worker nodes.
-
-This can be done by setting these variables to `true` (they are set to
-`false` by default):
+User can enable nodes to use [spot VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/spot-vms) by setting below variables to `true` (`false` by default).
 
   * `master_use_spot_instance`
   * `worker_use_spot_instance`
@@ -157,3 +167,17 @@ It is possible to join existing network to the cluster.  It can be setup by addi
 It is possible to enable multiple zone.  It can be set `enable_zone` to `true` and master/worker node will distribute sequentially based on zones defined in `azure_availability_zones`.
 
   * As of June 2020, the [Azure Availability Zones](https://docs.microsoft.com/en-us/azure/availability-zones/az-region) is not available in all Azure regions.
+
+#enable-cloud-provider-interface
+## Enable Cloud Provider Interface
+
+Configuring `cpi_enable` to `true` enables terraform to provision the cluster with setups for cloud provider interface.
+
+To deploy CaaSP cluster with Azure as cloud provider, at lease one of the authentication method must be applied in cloud-config file during cluster bootstrap.
+
+* Managed identity
+* Service principle
+
+When `cpi_enabled` is `true`, each Azure virtual machine is configured with system assigned managed identity. This enables Azure resources to authenticate to cloud services without storing credentials in cloud-config file.
+
+If more than one authentication is set, the order is Managed Identity > Service Principal.

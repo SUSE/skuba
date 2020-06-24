@@ -373,6 +373,24 @@ func updateInitConfigurationWithCloudIntegration(initCfg *kubeadmapi.InitConfigu
 	switch initConfiguration.CloudProvider {
 	case "aws":
 		initCfg.ControllerManager.ExtraArgs["allocate-node-cidrs"] = "false"
+	case "azure":
+		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
+		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.AzureConfigRuntimeFile(),
+			MountPath: skuba.AzureConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.ControllerManager.ExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
+		initCfg.ControllerManager.ExtraVolumes = append(initCfg.ControllerManager.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.AzureConfigRuntimeFile(),
+			MountPath: skuba.AzureConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
 	case "openstack":
 		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
@@ -419,6 +437,8 @@ func updateJoinConfigurationWithCloudIntegration(joinCfg *kubeadmapi.JoinConfigu
 	joinCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
 
 	switch initConfiguration.CloudProvider {
+	case "azure":
+		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
 	case "openstack":
 		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 	case "vsphere":

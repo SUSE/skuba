@@ -173,3 +173,8 @@ variable "peer_virutal_network_id" {
   default     = []
   description = "IDs of a Virtual Network to connect to via a peering connection"
 }
+
+variable "cpi_enable" {
+  default     = false
+  description = "Enable CPI integration with Azure"
+}

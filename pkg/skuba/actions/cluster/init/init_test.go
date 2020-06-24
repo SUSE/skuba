@@ -55,6 +55,14 @@ func TestInitCloudProvider(t *testing.T) {
 			},
 		},
 		{
+			name:          "init with azure cloud provider",
+			cloudProvider: "azure",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+				constants.AzureReadmeFile(),
+			},
+		},
+		{
 			name:          "init with opendstack cloud provider",
 			cloudProvider: "openstack",
 			providerReadmeFiles: []string{
