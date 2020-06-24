@@ -21,12 +21,11 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
-	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
 func init() {
-	registerAddon(kubernetes.Kucero, GenericAddOn, renderKuceroTemplate, nil, kuceroCallbacks{}, normalPriority, []getImageCallback{GetKuceroImage})
+	registerAddon(kubernetes.Kucero, GenericAddOn, renderKuceroTemplate, nil, nil, normalPriority, []getImageCallback{GetKuceroImage})
 }
 
 func GetKuceroImage(imageTag string) string {
@@ -39,16 +38,6 @@ func (renderContext renderContext) KuceroImage() string {
 
 func renderKuceroTemplate(addonConfiguration AddonConfiguration) string {
 	return kuceroManifest
-}
-
-type kuceroCallbacks struct{}
-
-func (kuceroCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	return nil
-}
-
-func (kuceroCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	return nil
 }
 
 const (

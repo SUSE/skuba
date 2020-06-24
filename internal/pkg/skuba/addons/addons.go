@@ -94,8 +94,8 @@ type Addon struct {
 }
 
 type addonCallbacks interface {
-	beforeApply(AddonConfiguration, *skuba.SkubaConfiguration) error
-	afterApply(AddonConfiguration, *skuba.SkubaConfiguration) error
+	beforeApply(clientset.Interface, AddonConfiguration, *skuba.SkubaConfiguration) error
+	afterApply(clientset.Interface, AddonConfiguration, *skuba.SkubaConfiguration) error
 }
 
 type AddonConfiguration struct {
@@ -381,7 +381,7 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		}
 	}
 	if addon.callbacks != nil {
-		if err := addon.callbacks.beforeApply(addonConfiguration, skubaConfiguration); err != nil {
+		if err := addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.Addon, err)
 			return err
 		}
@@ -426,7 +426,7 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		return err
 	}
 	if addon.callbacks != nil {
-		if err := addon.callbacks.afterApply(addonConfiguration, skubaConfiguration); err != nil {
+		if err := addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			// TODO: should we rollback here?
 			klog.Errorf("failed on %q addon AfterApply callback: %v", addon.Addon, err)
 			return err
