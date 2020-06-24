@@ -186,6 +186,7 @@ func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, cluster
 	admissionPlugins = append(admissionPlugins, "NodeRestriction")
 	// List of skuba-enabled plugins
 	admissionPlugins = append(admissionPlugins, "PodSecurityPolicy")
+	admissionPlugins = append(admissionPlugins, "ExtendedResourceToleration")
 	admissionPlugins = skubautil.UniqueStringSlice(admissionPlugins)
 	initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = strings.Join(admissionPlugins, ",")
 }
