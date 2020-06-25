@@ -24,16 +24,16 @@ node('caasp-team-private-integration') {
         }
 
         // Overrride the worker type if explicitly requested
-        if (env.WORKER_TYPE != '') {
+        if (env.WORKER_TYPE) {
             worker_type = env.WORKER_TYPE  
         }
 
         // Set additional labels for worker selection
-        if (env.WORKER_LABELS != '') {
+        if (env.WORKER_LABELS) {
             labels = env.WORKER_LABELS
         }
 
-        if (env.REPO_BRANCH != ""){
+        if (env.REPO_BRANCH){
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
                branch_registry = "registry.suse.de/devel/caasp/5/branches/${env.REPO_BRANCH}/containers"
                original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers"
