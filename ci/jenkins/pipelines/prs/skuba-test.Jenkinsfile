@@ -225,12 +225,14 @@ pipeline {
                 ORIGINAL_REGISTRY = "${original_registry}"
             }
             steps {
+                sh(script: 'echo $BRANCH_REPO $BRANCH_REGISTRY $ORIGINAL_REGISTRY')
                 sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
             }
         }
 
         stage('Deploy cluster') {
             steps {
+                sh(script: 'echo $BRANCH_REPO $BRANCH_REGISTRY $ORIGINAL_REGISTRY')
                 sh(script: 'make -f skuba/ci/Makefile deploy', label: 'Deploy')
                 sh(script: 'make -f skuba/ci/Makefile check_cluster', label: 'Check cluster')
             }
