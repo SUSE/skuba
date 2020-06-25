@@ -90,7 +90,7 @@ node('caasp-team-private-integration') {
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP1"
-               branch_registry = "registry.suse.de/Devel/CaaSP/${repo_version}/Branches/${branch_name}/containers"
+               branch_registry = "registry.suse.de/devel/caasp/${repo_version}/branches/${branch_name}/containers"
                original_registry = "registry.suse.de/devel/caasp/4.0/containers/containers"
            }
 
