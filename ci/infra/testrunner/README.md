@@ -465,7 +465,7 @@ optional arguments:
                         timeout for waiting a node to become ready (seconds)
   -m R M, --registry-mirror R M
                         Add to the registry R a mirror M. If an image is
-			available at the mirror it will be preferred, otherwise
+                        available at the mirror it will be preferred, otherwise
                         the image in the original registry is used. This
                         argument can be used multiple times, then mirrors will
                         be tried in that order. Example:
@@ -484,7 +484,7 @@ optional arguments:
                         timeout for waiting a node to become ready (seconds)
   -m R M, --registry-mirror R M
                         Add to the registry R a mirror M. If an image is
-			available at the mirror it will be preferred, otherwise
+                        available at the mirror it will be preferred, otherwise
                         the image in the original registry is used. This
                         argument can be used multiple times, then mirrors will
                         be tried in that order. Example:
