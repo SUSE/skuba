@@ -7,6 +7,24 @@ cluster on KVM via terraform-provider-libvirt.
 
 Follow instructions at https://github.com/dmacvicar/terraform-provider-libvirt#installing to install terraform-provider-libvirt.
 
+The terraform template expects a storage pool be defined in libvirt. the default is 'default' but it can
+be modifed by adjusting the variable 'pool' in terraform.tfvars. For creating the libvirt storage pool, use
+
+```sh
+cat - > pool.xml <<EOF
+<pool type="dir">
+  <name>default</name>
+  <target>
+    <path>/var/lib/libvirt/pool</path>
+  </target>
+</pool>
+EOF
+virsh pool-define pool.xml
+rm pool.xml
+virsh pool-autostart default
+virsh pool-start default
+```
+
 ## Deployment
 
 Use `terraform` to deploy the cluster. `-parallelism=1` used in apply command avoids potential concurrent issues in terraform-provider-libvirt.
