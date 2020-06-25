@@ -5,8 +5,12 @@
 // type of worker required by the job 
 def worker_type = 'integration'
 
-// repository branch
-branch_repo = ""
+// Repo and registry branch
+def branch_repo = ""
+def branch_registry = ""
+
+// original (non-branched) registry, only needed when branch_registry is in use
+def original_registry = ""
 
 // worker selection labels 
 def labels = 'e2e'
@@ -31,7 +35,9 @@ node('caasp-team-private-integration') {
 
         if (env.REPO_BRANCH != ""){
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
-        }
+               branch_registry = "registry.suse.de/devel/caasp/5/branches/${env.REPO_BRANCH}/containers"
+               original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers"
+         }
     }
 }
 
@@ -45,6 +51,8 @@ pipeline {
         VMWARE_ENV_FILE = credentials('vmware-env')
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
         BRANCH_REPO = "${branch_repo}"
+        BRANCH_REGISTRY = "${branch_registry}"
+        ORIGINAL_REGISTRY = "${original_registry}"
    }
 
    stages {
