@@ -72,6 +72,10 @@ func AddonsDir() string {
 	return "addons"
 }
 
+func ContainersDir() string {
+	return filepath.Join(AddonsDir(), "containers")
+}
+
 func CriDir() string {
 	return filepath.Join(AddonsDir(), "cri")
 }
