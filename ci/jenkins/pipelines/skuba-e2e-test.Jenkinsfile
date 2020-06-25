@@ -30,7 +30,7 @@ node('caasp-team-private-integration') {
         }
 
         if (env.REPO_BRANCH != ""){
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
         }
     }
 }
