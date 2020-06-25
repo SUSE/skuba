@@ -195,11 +195,6 @@ pipeline {
         }
 
         stage('Provision cluster') {
-            environment {
-                BRANCH_REPO = "${branch_repo}"
-                BRANCH_REGISTRY = "${branch_registry}"
-                ORIGINAL_REGISTRY = "${original_registry}"
-            }
             steps {
                 sh(script: 'make -f ci/Makefile provision', label: 'Provision')
             }
