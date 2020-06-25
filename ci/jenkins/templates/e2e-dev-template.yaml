@@ -35,7 +35,7 @@
         - string:
               name: REPO_BRANCH 
               default: ''
-              description: repository branch used for skuba packages
+              description: Branch of the CaaSP repository used for packages and images
     pipeline-scm:
         scm:
             - git:
