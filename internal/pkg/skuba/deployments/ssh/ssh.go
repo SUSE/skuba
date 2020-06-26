@@ -43,7 +43,7 @@ import (
 const (
 	// defKnowHosts is the default `known_hosts` file
 	defKnowHosts = "known_hosts"
-	defSSHUser   = "root"
+	defSSHUser   = "sles"
 	defSSHPort   = 22
 )
 
