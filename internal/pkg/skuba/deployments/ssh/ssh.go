@@ -355,7 +355,7 @@ func hostKeyChecker() (ssh.HostKeyCallback, error) {
 					Filename    string
 				}{
 					algoStr,
-					remote.String(),
+					hostname,
 					keyFingerprintStr,
 					defKnownHosts,
 				}); err != nil {
@@ -372,7 +372,7 @@ func hostKeyChecker() (ssh.HostKeyCallback, error) {
 				klog.Warning(replaceMessage(trustHostMessage))
 				klog.Infof("accepting SSH key for %q", hostname)
 				klog.Infof("adding fingerprint for %q to %q", hostname, defKnownHosts)
-				line := knownhosts.Line([]string{remote.String()}, key)
+				line := knownhosts.Line([]string{hostname}, key)
 				if _, err := out.WriteString(line + "\n"); err != nil {
 					return err
 				}
