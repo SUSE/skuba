@@ -55,20 +55,6 @@ pipeline {
             sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
 
-        stage('Git Clone') { steps {
-            deleteDir()
-            checkout([$class: 'GitSCM',
-                      branches: [[name: "*/${BRANCH_NAME}"]],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
-                      submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
-                                           credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
-        }}
-
         stage('skuba-update SUSE Unit Tests') {
             when {
                 expression {
