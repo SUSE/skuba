@@ -35,6 +35,7 @@ packages:
   additional_pkgs:
   - "ca-certificates-suse"
   additional_repos:
+    suse_ca: http://download.suse.de/ibs/SUSE:/CA/SLE_15
     branch_repo: $BRANCH_REPO
 
 utils:

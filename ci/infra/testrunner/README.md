@@ -322,7 +322,7 @@ or as an environment variable: `export VMWARE_ENV_FILE=/path/to/vmware-env.sh`
 
 #### Libvirt
 
-`testrunner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. However this is available from the development [CaaSP repositories](http://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/) for SLE15-SP1 or from the public [openSUSE repositories](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) for non SLE15-SP1 hosts. Notice it requires an updated version of libvirt (4.1.0 or above).
+`testrunner` can provision a cluster of virtual machines using terraform libvirt provider. The only noticeable difference with other platforms is the dependency on the terraform libvirt provider plugin which is not available from the official terraform plugin site, neither is delivered as part of the CaaSP packages. However this is available from the development [CaaSP repositories](https://download.suse.de/ibs/Devel:/CaaSP:/4.0/SLE_15_SP1/) for SLE15-SP1 or from the public [openSUSE repositories](https://build.opensuse.org/package/show/systemsmanagement:terraform:unstable/terraform-provider-libvirt) for non SLE15-SP1 hosts. Notice it requires an updated version of libvirt (4.1.0 or above).
 
 There three configuration variables required for libvirt operations, all configurable from the configuration yaml file or by environment variables like any other variable in the yaml file:
 
