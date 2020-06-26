@@ -41,10 +41,9 @@ import (
 )
 
 const (
-	// defKnowHosts is the default `known_hosts` file
-	defKnowHosts = "known_hosts"
-	defSSHUser   = "sles"
-	defSSHPort   = 22
+	// defKnownHosts is the default `known_hosts` file
+	defKnownHosts = "known_hosts"
+	defSSHPort    = 22
 )
 
 // trustHostMessage is the message printed when we don't know about a host
@@ -102,10 +101,10 @@ type Target struct {
 // GetFlags adds init flags bound to the config to the specified flagset
 func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagSet.StringVarP(&t.bastionUser, "bastion-user", "", defSSHUser, "User identity used to connect to the bastion using SSH")
+	flagSet.StringVarP(&t.bastionUser, "bastion-user", "", "", "User identity used to connect to the bastion using SSH (default to target user)")
 	flagSet.IntVarP(&t.bastionPort, "bastion-port", "", defSSHPort, "Port to connect to the bastion using SSH")
 	flagSet.StringVarP(&t.bastion, "bastion", "", "", "IP or FQDN of the bastion to connect to the other nodes using SSH")
-	flagSet.StringVarP(&t.user, "user", "u", defSSHUser, "User identity used to connect to target using SSH")
+	flagSet.StringVarP(&t.user, "user", "u", "", "User identity used to connect to target using SSH")
 	flagSet.BoolVarP(&t.sudo, "sudo", "s", false, "Run remote command via sudo")
 	flagSet.IntVarP(&t.port, "port", "p", defSSHPort, "Port to connect to using SSH")
 	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH (required)")
@@ -232,44 +231,49 @@ func (t *Target) initClient() error {
 		return errSSHNoKeysErr
 	}
 
-	hostKeyCallback, err := t.hostKeyChecker()
+	hostKeyCallback, err := hostKeyChecker()
 	if err != nil {
 		return err
 	}
 
-	config := &ssh.ClientConfig{
-		User: t.user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeysCallback(agentClient.Signers),
-		},
-		HostKeyCallback: hostKeyCallback,
+	nodeConfig, err := createClientConfig(t.user, agentClient, hostKeyCallback)
+	if err != nil {
+		return err
 	}
-
 	nodeAddr := fmt.Sprintf("%s:%d", t.target.Target, t.port)
 
 	// Use direct connection to the node
 	if t.bastion == "" {
-		t.client, err = ssh.Dial("tcp", nodeAddr, config)
+		t.client, err = ssh.Dial("tcp", nodeAddr, nodeConfig)
 		if err != nil {
-			return checkSshDialError(err, t.target.Target)
+			return checkDialError(err, t.target.Target)
 		}
 		return nil
 	}
 
-	// Start a client connection to the bastion
-	bastionClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.bastion, t.bastionPort), config)
+	if t.bastionUser == "" {
+		t.bastionUser = t.user
+	}
+
+	bastionConfig, err := createClientConfig(t.bastionUser, agentClient, hostKeyCallback)
 	if err != nil {
-		return checkSshDialError(err, t.bastion)
+		return err
+	}
+
+	// Start a client connection to the bastion
+	bastionClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.bastion, t.bastionPort), bastionConfig)
+	if err != nil {
+		return checkDialError(err, t.bastion)
 	}
 
 	// Start a client connection from the bastion to the node
 	bastionTargetConn, err := bastionClient.Dial("tcp", nodeAddr)
 	if err != nil {
-		return checkSshDialError(err, t.target.Target)
+		return checkDialError(err, t.target.Target)
 	}
 
 	// Establish an authenticated connection to the node over the bastion connection
-	sshConn, newChannelChan, requestChan, err := ssh.NewClientConn(bastionTargetConn, nodeAddr, config)
+	sshConn, newChannelChan, requestChan, err := ssh.NewClientConn(bastionTargetConn, nodeAddr, nodeConfig)
 	if err != nil {
 		klog.Errorf("cannot establish an authenticated connection to the node")
 		return err
@@ -280,7 +284,21 @@ func (t *Target) initClient() error {
 	return nil
 }
 
-func checkSshDialError(err error, host string) error {
+func createClientConfig(user string, agentClient agent.ExtendedAgent, hostKeyCallback ssh.HostKeyCallback) (*ssh.ClientConfig, error) {
+	if user == "" {
+		return nil, errors.Errorf("SSH user not provided")
+	}
+
+	return &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeysCallback(agentClient.Signers),
+		},
+		HostKeyCallback: hostKeyCallback,
+	}, nil
+}
+
+func checkDialError(err error, host string) error {
 	// crypto/ssh does not provide constants for some common errors, so we
 	// must "pattern match" the error strings in order to guess what failed
 	if strings.Contains(err.Error(), "unable to authenticate") {
@@ -295,19 +313,19 @@ func checkSshDialError(err error, host string) error {
 // if not present, it warns user (optionally asking for the key to be accepted or not)
 // adding the key to the `known_hosts` file. In case the key is found but there is a
 // mismatch (or the key has been rejected), it returns an error.
-func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
+func hostKeyChecker() (ssh.HostKeyCallback, error) {
 	// make sure the filename exists from the start
-	err := os.MkdirAll(path.Dir(defKnowHosts), 0700)
+	err := os.MkdirAll(path.Dir(defKnownHosts), 0700)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := os.OpenFile(defKnowHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	out, err := os.OpenFile(defKnownHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	hostKeyCallback, err := knownhosts.New(defKnowHosts)
+	hostKeyCallback, err := knownhosts.New(defKnownHosts)
 	if err != nil {
 		klog.Errorf("could not create callback function for checking hosts fingerprints: %s", err)
 		return nil, errSSHNoKeysErr
@@ -339,7 +357,7 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 					algoStr,
 					remote.String(),
 					keyFingerprintStr,
-					defKnowHosts,
+					defKnownHosts,
 				}); err != nil {
 					klog.Fatal("could not perform replacements in template")
 				}
@@ -353,7 +371,7 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 			if len(ke.Want) == 0 {
 				klog.Warning(replaceMessage(trustHostMessage))
 				klog.Infof("accepting SSH key for %q", hostname)
-				klog.Infof("adding fingerprint for %q to %q", hostname, defKnowHosts)
+				klog.Infof("adding fingerprint for %q to %q", hostname, defKnownHosts)
 				line := knownhosts.Line([]string{remote.String()}, key)
 				if _, err := out.WriteString(line + "\n"); err != nil {
 					return err
