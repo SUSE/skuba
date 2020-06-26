@@ -116,7 +116,10 @@ pipeline {
         LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
         LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
         LIBVIRT_IMAGE_URI = 'http://dist.suse.de/install/SLE-15-SP2-JeOS-PublicRC2/SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-PublicRC2.qcow2'
-    }
+        BRANCH_REPO = "${branch_repo}"
+        BRANCH_REGISTRY = "${branch_registry}"
+        ORIGINAL_REGISTRY = "${original_registry}"
+   }
 
     stages {
         stage('Collaborator Check') { steps { script {
@@ -219,11 +222,6 @@ pipeline {
         }
 
         stage('Provision cluster') {
-            environment {
-                BRANCH_REPO = "${branch_repo}"
-                BRANCH_REGISTRY = "${branch_registry}"
-                ORIGINAL_REGISTRY = "${original_registry}"
-            }
             steps {
                 sh(script: 'make -f skuba/ci/Makefile provision', label: 'Provision')
             }
