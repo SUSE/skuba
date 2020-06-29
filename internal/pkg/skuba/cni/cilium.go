@@ -113,6 +113,8 @@ func CreateCiliumSecret(client clientset.Interface, ciliumVersion string) error 
 			"ca.crt":            pkiutil.EncodeCertPEM(caCert),
 		}
 	case strings.HasPrefix(ciliumVersion, "1.6"):
+		fallthrough
+	case strings.HasPrefix(ciliumVersion, "1.7"):
 		secretData = map[string][]byte{
 			"etcd-client-ca.crt": pkiutil.EncodeCertPEM(caCert),
 			"etcd-client.key":    privateKey,
@@ -213,6 +215,8 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface, ciliumVersion str
 			"etcd-config": string(etcdConfigDataByte),
 		}
 	case strings.HasPrefix(ciliumVersion, "1.6"):
+		fallthrough
+	case strings.HasPrefix(ciliumVersion, "1.7"):
 		ciliumConfigMapData = map[string]string{
 			"bpf-ct-global-tcp-max":    "524288",
 			"bpf-ct-global-any-max":    "262144",
