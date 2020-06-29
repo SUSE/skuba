@@ -250,7 +250,7 @@ func Test_Login(t *testing.T) {
 				Password:    mockDefaultPassword,
 				ClusterName: "test-cluster-name",
 			},
-			expectedErrorMsg: fmt.Sprintf("auth failed: failed to query provider http://127.0.0.1:32001/ (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)"),
+			expectedErrorMsg: "auth failed: failed to query provider http://127.0.0.1:32001/ (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)",
 		},
 		{
 			name: "issuer scopes supported invalid",
