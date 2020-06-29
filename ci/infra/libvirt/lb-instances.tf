@@ -95,7 +95,6 @@ data "template_file" "lb_cloud_init_userdata" {
     register_rmt    = join("\n", data.template_file.lb_register_rmt.*.rendered)
     commands        = join("\n", data.template_file.lb_commands.*.rendered)
     username        = var.username
-    password        = var.password
     ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
   }
 }
@@ -156,7 +155,6 @@ resource "null_resource" "lb_wait_cloudinit" {
       count.index
     )
     user     = var.username
-    password = var.password
     type     = "ssh"
   }
 
