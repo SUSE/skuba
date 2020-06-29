@@ -25,6 +25,40 @@ the cluster.
 
 ## Starting the cluster
 
+### Credentials
+
+The three following arguments must be provided:
+
+* AWS_ACCESS_KEY_ID: This is the AWS access key.
+* AWS_SECRET_ACCESS_KEY This is the AWS secret key.
+* AWS_DEFAULT_REGION This is the AWS region. A list of region names
+can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+
+To do so, source the following variables,
+for security reasons turn off bash history:
+
+```sh
+set +o history
+export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+export AWS_DEFAULT_REGION="eu-central-1"
+set -o history
+```
+
+It can also be stored in a file, for example `aws-credentials`
+
+```
+AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+AWS_DEFAULT_REGION="eu-central-1"
+```
+
+and sourced:
+
+```sh
+set -a; source aws-credentials; set +a
+```
+
 ### Configuration
 
 You can use the `terraform.tfvars.example` as a template for configuring
@@ -34,13 +68,8 @@ the Terraform variables, or create your own file like `my-cluster.auto.tfvars`:
 # customize any variables defined in variables.tf
 stack_name = "my-k8s-cluster"
 
-access_key = "<KEY>"
-
-secret_key = "<SECRET>"
-
 authorized_keys = ["ssh-rsa AAAAB3NzaC1y..."]
 ```
-
 
 The terraform files will create a new dedicated VPC for the kubernetes cluster.
 It's possible to join this VPC with other existing ones by specifying the IDs
