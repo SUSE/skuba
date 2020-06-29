@@ -45,6 +45,16 @@ spec:
     containers:
     - name: app
       image: registry.suse.de/suse/containers/sle-server/15/containers/suse/sle15:15.1
+      command: ['/bin/sh', '-c', 'sleep 3600']
+---
+apiVersion: v1
+kind: Pod
+metadata:
+    name: sle15sp2
+spec:
+    containers:
+    - name: app
+      image: registry.suse.de/suse/containers/sle-server/15/containers/suse/sle15:15.2
       command: ['/bin/sh', '-c', 'sleep 3600']"""
 
 
@@ -63,7 +73,7 @@ def test_dockercaps(deployment, kubectl):
          wait_allow=(AssertionError))
 
     logger.info("Test: Run 'su root -c id' on the containers")
-    pods = ["sle12sp4", "leap", "sle15", "sle15sp1"]
+    pods = ["sle12sp4", "leap", "sle15", "sle15sp1", "sle15sp2"]
     for container in pods:
         output = kubectl.run_kubectl(
             "exec -it {} -- su root -c id".format(container))

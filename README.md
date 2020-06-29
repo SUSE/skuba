@@ -46,7 +46,7 @@ go get github.com/SUSE/skuba/cmd/skuba
 
 A development build will:
 
-* Pull container images from `registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4`
+* Pull container images from `registry.suse.de/devel/caasp/5/containers/containers/caasp/v5/`
 
 To build it, run:
 
@@ -58,7 +58,7 @@ make
 
 A staging build will:
 
-* Pull container images from `registry.suse.de/suse/sle-15-sp1/update/products/casp40/containers/caasp/v4`
+* Pull container images from `registry.suse.de/suse/sle-15-sp2/update/products/caasp/5/containers/caasp/v5`
 
 To build it, run:
 
@@ -70,7 +70,7 @@ make staging
 
 A release build will:
 
-* Pull container images from `registry.suse.com/caasp/v4`
+* Pull container images from `registry.suse.com/caasp/v5`
 
 To build it, run:
 
