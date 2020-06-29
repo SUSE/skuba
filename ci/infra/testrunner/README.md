@@ -147,7 +147,7 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
-* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
+* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
 * workdir: working directory on which tfout file will be generated. Default is `$WORKSPACE`
 * worker: specifications for the worker(s)
