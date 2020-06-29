@@ -1,4 +1,4 @@
-# AZURE location
+# Azure location
 azure_location = "West Europe" 
 
 # Enable zone for available regions
@@ -9,7 +9,7 @@ azure_location = "West Europe"
 # EXAMPLE:
 # azure_availability_zones = ["1", "2", "3"]
 
-# CIRD blocks for virtual network
+# CIDR blocks for virtual network
 # EXAMPLE:
 # cidr_block = "10.1.0.0/16"
 
@@ -41,11 +41,11 @@ dnsdomain = "my-sles-cluster.example.com"
 # EXAMPLE:
 # master_vm_size = "Standard_D2s_v3"
 
-# Storage account type  of the master nodes
+# Storage account type of the master nodes
 # EXAMPLE:
 # master_storage_account_type = "StandardSSD_LRS"
 
-# "Size of the volume, in Gb"
+# Size of the master volumes in GB
 # EXAMPLE:
 # master_disk_size = 30
 
@@ -57,11 +57,11 @@ dnsdomain = "my-sles-cluster.example.com"
 # EXAMPLE:
 # worker_vm_size = "Standard_D2s_v3"
 
-# Storage account type  of the worker nodes
+# Storage account type of the worker nodes
 # EXAMPLE:
 # worker_storage_account_type = "StandardSSD_LRS"
 
-# "Size of the volume, in Gb"
+# Size of the worker volumes in GB
 # EXAMPLE:
 # worker_disk_size = 30
 
@@ -87,7 +87,7 @@ authorized_keys = []
 #     "2.europe.pool.ntp.org"
 # ]
 
-# List of Virtual Network IDs to join via virual network peering
+# List of virtual network IDs to join via virual network peering
 # EXAMPLE:`
 # peer_virutal_network_id = ["vnet-id1", "vnet-id2"]
 
