@@ -99,7 +99,7 @@ lint: deps
 .PHONY: deps
 deps:
 	test -f $(BINPATH)/golangci-lint || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/v1.27.0/install.sh | sh -s -- -b $(BINPATH) v1.27.0
-	test -f $(BINPATH)/shellcheck || curl -sfL "https://storage.googleapis.com/shellcheck/shellcheck-v0.4.7.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
+	test -f $(BINPATH)/shellcheck || curl -sfL "https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
 
 .PHONY: pre-commit-install
 pre-commit-install:
