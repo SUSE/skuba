@@ -353,6 +353,19 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 			currentAdmissionPlugins:  []string{},
 			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
+		{
+			name:                    "1.18.6 without duplicates",
+			clusterVersion:          version.MustParseSemantic("1.18.6"),
+			currentAdmissionPlugins: []string{},
+			expectedAdmissionPlugins: []string{
+				"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition",
+				"Priority", "DefaultTolerationSeconds", "DefaultStorageClass",
+				"PersistentVolumeClaimResize", "MutatingAdmissionWebhook",
+				"ValidatingAdmissionWebhook", "ResourceQuota",
+				"StorageObjectInUseProtection", "RuntimeClass",
+				"CertificateApproval", "CertificateSigning", "CertificateSubjectRestriction",
+				"DefaultIngressClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
+		},
 	}
 
 	for _, tt := range scenarios {
