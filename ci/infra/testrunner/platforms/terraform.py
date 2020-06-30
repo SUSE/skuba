@@ -52,6 +52,8 @@ class Terraform(Platform):
         if self.conf.terraform.plugin_dir:
             logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
             init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
+        else:
+            init_cmd += f" -get-plugins=false"
         self._run_terraform_command(init_cmd)
 
         self._run_terraform_command("version")
