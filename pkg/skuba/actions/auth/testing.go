@@ -115,7 +115,7 @@ func authSingleConnectorHandler() func(w http.ResponseWriter, r *http.Request) {
 
 func authMultipleConnectorsHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		htmlOutput := fmt.Sprintf(`
+		htmlOutput := `
 		<!DOCTYPE html>
 		<html>
   		<head>
@@ -147,7 +147,7 @@ func authMultipleConnectorsHandler() func(w http.ResponseWriter, r *http.Request
     		</div>
 		</body>
 		</html>		
-		`)
+		`
 		_, _ = w.Write([]byte(htmlOutput))
 	}
 }
@@ -227,11 +227,11 @@ func approvalHandler() func(w http.ResponseWriter, r *http.Request) {
 
 func approvalInvalidBodyHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		htmlOutput := fmt.Sprintf(`
+		htmlOutput := `
 			<div class="theme-panel">
 			<h2 class="theme-heading">Login Successful</h2>
 			</div>
-		`)
+		`
 		_, _ = w.Write([]byte(htmlOutput))
 	}
 }
