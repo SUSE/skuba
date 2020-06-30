@@ -20,4 +20,3 @@
           discover-pr-forks-trust: contributors
           discover-pr-origin: current
           head-filter-regex: ^(master|release\-\d\.\d|PR\-\d+)$
-          basedir: skuba
