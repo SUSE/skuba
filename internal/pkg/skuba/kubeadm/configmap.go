@@ -163,6 +163,9 @@ func setApiserverAdmissionPlugins(initCfg *kubeadmapi.InitConfiguration, cluster
 	if clusterVersion.AtLeast(version.MustParseSemantic("1.16.0")) {
 		admissionPlugins = append(admissionPlugins, "RuntimeClass")
 	}
+	if clusterVersion.AtLeast(version.MustParseSemantic("1.18.0")) {
+		admissionPlugins = append(admissionPlugins, "CertificateApproval", "CertificateSigning", "CertificateSubjectRestriction", "DefaultIngressClass")
+	}
 	// List of kubeadm-enabled plugins
 	admissionPlugins = append(admissionPlugins, "NodeRestriction")
 	// List of skuba-enabled plugins
