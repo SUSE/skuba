@@ -27,6 +27,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
 type KubernetesUploadSecretsErrorBehavior uint
@@ -58,6 +59,8 @@ func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior)
 	}
 }
 
+// kubernetesParseInterfaceVersions parses the versions given in a consistent way for the fresh
+// install and the different upgrade stages, returning first the current version, then optionally the updated version.
 func kubernetesParseInterfaceVersions(data interface{}) (string, string, error) {
 	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
 	if !ok {
@@ -78,6 +81,7 @@ func kubernetesParseInterfaceVersions(data interface{}) (string, string, error) 
 }
 
 func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
+	// This only applies on new nodes (bootstrap/join)
 	current, _, err := kubernetesParseInterfaceVersions(data)
 	if err != nil {
 		return err
@@ -93,7 +97,7 @@ func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", current))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", current))
 
-	_, _, err = t.zypperInstall(pkgs...)
+	_, _, err = t.ZypperInstall(pkgs...)
 	return err
 }
 
@@ -110,7 +114,7 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 
 	var pkgs []string
 
-	if currentV == "1.17" {
+	if currentV == skubaconstants.LastCaaSP4KubernetesVersion {
 		// 1.17 is the last version included in CaaSP4. It's the tipping
 		// point where we changed our packaging.
 		// On 1.17 we can't remove kubernetes-1.17-kubeadm, because it doesn't exist.
@@ -123,13 +127,16 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 		// package to avoid upgrade during zypper migration).
 		// we need to remove cri-o in stage2 else 1.17 kubelet could
 		// complain about cri-runtime being absent.
-		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-\"kubernetes-kubeadm<1.18\"", "-caasp-config", "-cri-o-kubeadm-criconfig")
+		pkgs = append(pkgs, fmt.Sprintf("-patterns-caasp-Node-%s", skubaconstants.LastCaaSP4KubernetesVersion))
+		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-kubeadm<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
+		pkgs = append(pkgs, "-caasp-config", "-cri-o-kubeadm-criconfig")
+
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
 	}
 
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubeadm", nextV))
-	_, _, err = t.zypperInstall(pkgs...)
+	_, _, err = t.ZypperInstall(pkgs...)
 	return err
 }
 
@@ -146,14 +153,14 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 
 	var pkgs []string
 
-	if currentV == "1.17" {
+	if currentV == skubaconstants.LastCaaSP4KubernetesVersion {
 		// on 1.17 we need to finalize the cleanup for the
-		// caasp4 to 5 migration
-		pkgs = append(pkgs, "-\"kubernetes-kubelet<1.18\"")
+		// caasp4 to 5 migration during this stage.
+		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-kubelet<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 		pkgs = append(pkgs, "-kubernetes-common")
-		pkgs = append(pkgs, "-\"kubernetes-client<1.18\"")
-		pkgs = append(pkgs, "-\"cri-o<1.18\"")
-		pkgs = append(pkgs, "-\"cri-tools<1.18\"")
+		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-client<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
+		pkgs = append(pkgs, fmt.Sprintf("-\"cri-o<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
+		pkgs = append(pkgs, fmt.Sprintf("-\"cri-tools<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
@@ -164,7 +171,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", nextV))
-	_, _, err = t.zypperInstall(pkgs...)
+	_, _, err = t.ZypperInstall(pkgs...)
 	return err
 }
 

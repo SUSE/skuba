@@ -17,11 +17,11 @@
 
 package ssh
 
-func (t *Target) zypperInstall(packages ...string) (stdout string, stderr string, error error) {
-	// Runs a zypper install command wrapped with the right userdata and parameters
+// ZypperInstall runs a zypper command to install an arbitrary list of packages,
+// wrapped with the right userdata and parameters
+func (t *Target) ZypperInstall(packages ...string) (stdout string, stderr string, error error) {
 	var cliArgs []string
-	cliArgs = append(cliArgs, "--userdata", "skuba", "-i")
-	cliArgs = append(cliArgs, "--non-interactive", "install", "--")
+	cliArgs = append(cliArgs, "--userdata", "skuba", "-i", "--non-interactive", "install", "--")
 	cliArgs = append(cliArgs, packages...)
 	return t.ssh("zypper", cliArgs...)
 }
