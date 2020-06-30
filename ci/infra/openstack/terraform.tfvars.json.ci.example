@@ -1,5 +1,5 @@
 {
-    "image_name": "SLES15-SP2-JeOS.x86_64-PublicRC2",
+    "image_name": "SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM",
     "internal_net": "testing",
     "internal_subnet": "testing-subnet",
     "internal_router": "testing-router",
