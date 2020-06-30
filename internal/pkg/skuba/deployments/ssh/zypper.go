@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  *
  */
 
-package deployments
+package ssh
 
-func (t *Target) InstallNodePattern(kubernetesBaseOSConfiguration KubernetesBaseOSConfiguration) (bool, error) {
-	err := t.Apply(kubernetesBaseOSConfiguration, "kubernetes.install-node-pattern")
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+func (t *Target) zypperInstall(packages ...string) (stdout string, stderr string, error error) {
+	// Runs a zypper install command wrapped with the right userdata and parameters
+	var cliArgs []string
+	cliArgs = append(cliArgs, "--userdata", "skuba")
+	cliArgs = append(cliArgs, "--non-interactive", "install", "--")
+	cliArgs = append(cliArgs, packages...)
+	return t.ssh("zypper", cliArgs...)
 }

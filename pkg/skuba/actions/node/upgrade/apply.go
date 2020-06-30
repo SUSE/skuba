@@ -148,7 +148,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 			UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 			CurrentVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
-		}, "kubernetes.install-node-pattern")
+		}, "kubernetes.upgrade-stage-one")
 		if err != nil {
 			return err
 		}
@@ -164,8 +164,9 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 	err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-		CurrentVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
-	}, "kubernetes.install-node-pattern")
+		UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+		CurrentVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
+	}, "kubernetes.upgrade-stage-two")
 	if err != nil {
 		return err
 	}

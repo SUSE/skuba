@@ -39,7 +39,9 @@ const (
 func init() {
 	stateMap["kubernetes.bootstrap.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsContinueOnError)
 	stateMap["kubernetes.join.upload-secrets"] = kubernetesUploadSecrets(KubernetesUploadSecretsFailOnError)
-	stateMap["kubernetes.install-node-pattern"] = kubernetesInstallNodePattern
+	stateMap["kubernetes.install-fresh-pkgs"] = kubernetesFreshInstallAllPkgs
+	stateMap["kubernetes.upgrade-stage-one"] = kubernetesUpgradeStageOne
+	stateMap["kubernetes.upgrade-stage-two"] = kubernetesUpgradeStageTwo
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
 }
 
@@ -56,24 +58,102 @@ func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior)
 	}
 }
 
-func kubernetesInstallNodePattern(t *Target, data interface{}) error {
+func kubernetesParseInterfaceVersions(data interface{}) (string, string, error) {
 	kubernetesBaseOSConfiguration, ok := data.(deployments.KubernetesBaseOSConfiguration)
 	if !ok {
-		return errors.New("couldn't access kubernetes base OS configuration")
+		return "", "", errors.New("couldn't access kubernetes base OS configuration")
 	}
 
 	v, err := version.ParseSemantic(kubernetesBaseOSConfiguration.CurrentVersion)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	currentVersion := kubernetes.MajorMinorVersion(v)
-	patternName := fmt.Sprintf("patterns-caasp-Node-%s", currentVersion)
+	updatedVersion := ""
 
 	if kubernetesBaseOSConfiguration.UpdatedVersion != "" {
-		updatedVersion := kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
-		patternName = fmt.Sprintf("patterns-caasp-Node-%s-%s", currentVersion, updatedVersion)
+		updatedVersion = kubernetes.MajorMinorVersion(version.MustParseSemantic(kubernetesBaseOSConfiguration.UpdatedVersion))
 	}
-	_, _, err = t.ssh("zypper", "--userdata", "skuba", "--non-interactive", "install", patternName)
+	return currentVersion, updatedVersion, nil
+}
+
+func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
+	current, _, err := kubernetesParseInterfaceVersions(data)
+	if err != nil {
+		return err
+	}
+	var pkgs []string
+
+	// Standard packages for a new cluster
+	pkgs = append(pkgs, "+caasp-release", "skuba-update", "supportutils-plugin-suse-caasp", "cri-tools")
+	// Version specific
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubeadm", current))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", current))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", current))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", current))
+
+	_, _, err = t.zypperInstall(pkgs...)
+	return err
+}
+
+func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
+	// Stage1 upgrades only kubeadm.
+	// zypper install -- -kubernetes-old-kubeadm +kubernetes-new-kubeadm
+	currentV, nextV, err := kubernetesParseInterfaceVersions(data)
+	if err != nil {
+		return err
+	}
+	if nextV == "" {
+		return errors.New("Incorrect upgrade version")
+	}
+
+	var pkgs []string
+
+	if currentV == "1.17" {
+		// 1.17 is the last version included in CaaSP4. It's the tipping
+		// point where we changed our packaging.
+		// On 1.17 we can't remove kubernetes-1.17-kubeadm, because it doesn't exist.
+		// Removing kubeadm keeps kubelet alive.
+		// The rest needs to be removed on the next stage.
+		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-kubernetes-kubeadm", "-cri-o-kubeadm-criconfig")
+	} else {
+		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
+	}
+
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubeadm", nextV))
+	_, _, err = t.zypperInstall(pkgs...)
+	return err
+}
+
+func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
+	// Stage2 installs the rest of the packages during the upgrade
+	// with zypper install -- -<previous>-<component> +<next>-<component>
+	currentV, nextV, err := kubernetesParseInterfaceVersions(data)
+	if err != nil {
+		return err
+	}
+	if nextV == "" {
+		return errors.New("Incorrect upgrade version")
+	}
+
+	var pkgs []string
+
+	if currentV == "1.17" {
+		// on 1.17 we need to finalize the cleanup for the
+		// caasp4 to 5 migration
+		pkgs = append(pkgs, "-kubernetes-kubelet")
+		pkgs = append(pkgs, "-kubernetes-common")
+		pkgs = append(pkgs, "-kubernetes-client")
+		pkgs = append(pkgs, "-cri-o")
+	} else {
+		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
+		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
+	}
+
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", nextV))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", nextV))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", nextV))
+	_, _, err = t.zypperInstall(pkgs...)
 	return err
 }
 
