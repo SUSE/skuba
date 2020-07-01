@@ -116,6 +116,7 @@ check_kubectl_calls() {
         for i in "$@"; do
             echo "$i" >> /commands.txt
         done
+        type -p diff || zypper -n in diffutils
         diff -w /commands.txt /tmp/kubectl-commands &> /dev/null
     fi
 }
