@@ -37,6 +37,7 @@ func NewUpgradeCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		newUpgradePlanCmd(),
+		newUpgradeCheckCmd(),
 	)
 
 	return cmd

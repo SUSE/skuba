@@ -47,12 +47,12 @@ var (
 	inputFile string
 )
 
-// NewUpgradeCheckCmd creates a new `skuba check` cobra command
-func NewUpgradeCheckCmd() *cobra.Command {
+// newUpgradeCheckCmd creates a new `skuba check` cobra command
+func newUpgradeCheckCmd() *cobra.Command {
 	checkOptions := &checkOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "upgrade-check kubernetes-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
+		Use:   "check kubernetes-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Upgrade Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
@@ -121,7 +121,7 @@ func NewUpgradeCheckCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.PersistentFlags().BoolVar(&checkOptions.APIWalk, "api-walk", true, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer.")
+	cmd.PersistentFlags().BoolVar(&checkOptions.APIWalk, "api-walk", false, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer.")
 	cmd.PersistentFlags().BoolVar(&checkOptions.ShowDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation.")
 	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "kubernetes-version", "", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects.")
 	cmd.PersistentFlags().StringVar(&checkOptions.SwaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")

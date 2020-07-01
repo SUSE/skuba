@@ -1,17 +1,17 @@
-% skuba-cluster-upgrade-check(1) # skuba cluster upgrade-check - Returns the list of upgrade-check used by skuba
+% skuba-cluster-upgrade-check(1) # skuba cluster upgrade check - Returns the list of deprecated APIs used by skuba
 
 # NAME
-upgrade-check - Lists deprecated APIs used
+check - Lists deprecated APIs used
 
 # SYNOPSIS
-**upgrade-check**
+**check**
 [**--api-walk**] [**--description**] [**--kubernetes-version**]
 [**--swagger-dir**] [**--force-download**] [**--format**]
 [**--filename**] [**--input-file**] [**--help**|**-h**]
-*upgrade-check* [kubernetes-version=*<version>*] [swaggerDir=*<directory>*] [--api-walk=*<true|fasle>*] [--description] [--force-download] [--input-file=*<filename>*]
+*check* [kubernetes-version=*<version>*] [swaggerDir=*<directory>*] [--api-walk=*<true|fasle>*] [--description] [--force-download] [--input-file=*<filename>*]
 
 # DESCRIPTION
-**upgrade-check** list deprecated APIs used for the next upgradable version of skuba.
+**check** list deprecated APIs used for the next upgradable version of skuba.
 
 # OPTIONS
 
