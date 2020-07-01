@@ -20,7 +20,7 @@ package ssh
 func (t *Target) zypperInstall(packages ...string) (stdout string, stderr string, error error) {
 	// Runs a zypper install command wrapped with the right userdata and parameters
 	var cliArgs []string
-	cliArgs = append(cliArgs, "--userdata", "skuba")
+	cliArgs = append(cliArgs, "--userdata", "skuba", "-i")
 	cliArgs = append(cliArgs, "--non-interactive", "install", "--")
 	cliArgs = append(cliArgs, packages...)
 	return t.ssh("zypper", cliArgs...)

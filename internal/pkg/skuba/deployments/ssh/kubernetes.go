@@ -115,7 +115,7 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 		// On 1.17 we can't remove kubernetes-1.17-kubeadm, because it doesn't exist.
 		// Removing kubeadm keeps kubelet alive.
 		// The rest needs to be removed on the next stage.
-		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-kubernetes-kubeadm", "-cri-o-kubeadm-criconfig")
+		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-\"kubernetes-kubeadm<1.18\"", "-caasp-config")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
 	}
@@ -144,7 +144,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 		pkgs = append(pkgs, "-kubernetes-kubelet")
 		pkgs = append(pkgs, "-kubernetes-common")
 		pkgs = append(pkgs, "-kubernetes-client")
-		pkgs = append(pkgs, "-cri-o")
+		pkgs = append(pkgs, "-cri-o*")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
