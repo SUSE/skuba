@@ -141,9 +141,9 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 	if currentV == "1.17" {
 		// on 1.17 we need to finalize the cleanup for the
 		// caasp4 to 5 migration
-		pkgs = append(pkgs, "-kubernetes-kubelet")
+		pkgs = append(pkgs, "-\"kubernetes-kubelet<1.18\"")
 		pkgs = append(pkgs, "-kubernetes-common")
-		pkgs = append(pkgs, "-kubernetes-client")
+		pkgs = append(pkgs, "-\"kubernetes-client<1.18\"")
 		pkgs = append(pkgs, "-cri-o*")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
