@@ -54,6 +54,7 @@ repositories = {}
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
+    "zypper-needs-restarting"
 ]
 
 # ssh keys to inject into all the nodes
