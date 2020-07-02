@@ -26,6 +26,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 	"github.com/pkg/errors"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
@@ -79,9 +80,9 @@ func renderCiliumPreflightTemplate(addonConfiguration AddonConfiguration) string
 
 type ciliumCallbacks struct{}
 
-func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (ciliumCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	ciliumVersion := kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, addonConfiguration.ClusterVersion).Version
-	client, config, err := kubernetes.GetAdminClientSetWithConfig()
+	_, config, err := kubernetes.GetAdminClientSetWithConfig()
 	if err != nil {
 		return errors.Wrap(err, "unable to get admin client set")
 	}
@@ -110,7 +111,7 @@ func (ciliumCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaC
 	return nil
 }
 
-func (ciliumCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (ciliumCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 

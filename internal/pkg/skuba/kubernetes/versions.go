@@ -103,8 +103,8 @@ var (
 			AddonsVersion: AddonsVersion{
 				Cilium:        &AddonVersion{"1.6.6", 3},
 				Kured:         &AddonVersion{"1.3.0", 4},
-				Dex:           &AddonVersion{"2.16.0", 6},
-				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
+				Dex:           &AddonVersion{"2.16.0-rev6", 7},
+				Gangway:       &AddonVersion{"3.1.0-rev4", 6},
 				MetricsServer: &AddonVersion{"0.3.6", 1},
 				PSP:           &AddonVersion{"", 4},
 			},
