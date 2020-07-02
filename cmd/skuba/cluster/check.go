@@ -52,7 +52,7 @@ func newUpgradeCheckCmd() *cobra.Command {
 	checkOptions := &checkOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "check kubernetes-version=<version> swaggerDir=<directory> --api-walk=<true|fasle>",
+		Use:   "check --kubernetes-version=<version> --swaggerDir=<directory> --api-walk=<true|fasle>",
 		Short: "Print Upgrade Check information",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
