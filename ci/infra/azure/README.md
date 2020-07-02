@@ -33,7 +33,7 @@ The service principle can also be used in Azure cloud-config file. Reference to 
 
 As usual the cluster is based on two types of nodes: master and worker nodes.
 
-All the nodes are created using the SLES 15 SP1 container host image built
+All the nodes are created using the SLES 15 SP2 container host image built
 and maintained by the SUSE Public Cloud team.
 
 Right now users **must** bring their own license into the public cloud to be

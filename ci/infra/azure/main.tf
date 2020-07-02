@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "resource_group" {
 data "azurerm_platform_image" "sles_chost_byos" {
   location  = azurerm_resource_group.resource_group.location
   publisher = "SUSE"
-  offer     = "sles-15-sp1-chost-byos"
+  offer     = "sles-15-sp2-chost-byos"
   sku       = "gen2"
 }
 

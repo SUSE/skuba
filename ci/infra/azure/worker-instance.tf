@@ -42,7 +42,7 @@ resource "azurerm_linux_virtual_machine" "worker" {
 
   source_image_reference {
     publisher = "SUSE"
-    offer     = "sles-15-sp1-chost-byos"
+    offer     = "sles-15-sp2-chost-byos"
     sku       = "gen2"
     version   = data.azurerm_platform_image.sles_chost_byos.version
   }

@@ -6,7 +6,7 @@
     "vsphere_resource_pool": "CaaSP_CI",
     "template_name": "SLES15-SP2-RC2-up200525-guestinfo",
     "firmware": "bios",
-    "stack_name": "caasp-jenkins-v4",
+    "stack_name": "caasp-jenkins-v5",
     "masters": 1,
     "workers": 2,
     "username": "sles",
