@@ -38,6 +38,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -58,22 +59,11 @@ type InitConfiguration struct {
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHost() string {
-	controlPlane, _, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
-	if err != nil {
-		return ""
-	}
-	return controlPlane
+	return util.ControlPlaneHost(initConfiguration.ControlPlane)
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
-	controlPlaneHost, controlPlanePort, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
-	if err != nil {
-		return ""
-	}
-	if controlPlanePort == "" {
-		controlPlanePort = "6443"
-	}
-	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
+	return util.ControlPlaneHostAndPort(initConfiguration.ControlPlane)
 }
 
 func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
