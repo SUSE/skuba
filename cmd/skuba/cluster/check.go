@@ -122,12 +122,12 @@ func newUpgradeCheckCmd() *cobra.Command {
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&checkOptions.APIWalk, "api-walk", false, "Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer.")
-	cmd.PersistentFlags().BoolVar(&checkOptions.ShowDescription, "description", true, "Wether to show the description of the deprecated object. The description may contain the solution for the deprecation.")
+	cmd.PersistentFlags().BoolVar(&checkOptions.ShowDescription, "description", true, "Whether to show the description of the deprecated object. The description may contain the solution for the deprecation.")
 	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "kubernetes-version", "", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects.")
 	cmd.PersistentFlags().StringVar(&checkOptions.SwaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
-	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Wether to force the download of a new swagger.json file even if one exists.")
+	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Whether to force the download of a new swagger.json file even if one exists.")
 	cmd.PersistentFlags().StringVar(&format, "format", "plain", "Format in which the list will be displayed [stdout, plain, json, yaml]")
 	cmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
-	cmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing k8s manifests to be analized")
+	cmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing kubernetes manifests to be analized")
 	return cmd
 }
