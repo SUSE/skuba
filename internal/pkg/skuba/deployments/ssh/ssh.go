@@ -110,6 +110,7 @@ func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH (required)")
 
 	_ = cobra.MarkFlagRequired(flagSet, "target")
+	_ = cobra.MarkFlagRequired(flagSet, "user")
 
 	return flagSet
 }
@@ -285,10 +286,6 @@ func (t *Target) initClient() error {
 }
 
 func createClientConfig(user string, agentClient agent.ExtendedAgent, hostKeyCallback ssh.HostKeyCallback) (*ssh.ClientConfig, error) {
-	if user == "" {
-		return nil, errors.Errorf("SSH user not provided")
-	}
-
 	return &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
