@@ -19,11 +19,19 @@ locals {
 }
 
 provider "aws" {
-  profile    = "default"
+  profile = "default"
 }
 
 resource "aws_key_pair" "kube" {
   key_name   = "${var.stack_name}-keypair"
   public_key = element(var.authorized_keys, 0)
+
+  tags = merge(
+    local.basic_tags,
+    {
+      "Name"  = "${var.stack_name}-keypair"
+      "Class" = "KeyPair"
+    },
+  )
 }
 

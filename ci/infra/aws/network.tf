@@ -11,7 +11,7 @@ resource "aws_vpc" "platform" {
   )
 }
 
-// list of az which can be access from the current region
+# list of az which can be access from the current region
 data "aws_availability_zones" "az" {
   state = "available"
 }
