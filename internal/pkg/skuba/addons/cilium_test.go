@@ -36,13 +36,13 @@ func TestGetCiliumInitImage(t *testing.T) {
 	}{
 		{
 			name:     "get cilium init image without revision",
-			imageTag: "1.5.3",
-			want:     img.ImageRepository + "/cilium-init:1.5.3",
+			imageTag: "1.7.5",
+			want:     img.ImageRepository + "/cilium-init:1.7.5",
 		},
 		{
 			name:     "get cilium init image with revision",
-			imageTag: "1.5.3-rev2",
-			want:     img.ImageRepository + "/cilium-init:1.5.3-rev2",
+			imageTag: "1.7.5-rev2",
+			want:     img.ImageRepository + "/cilium-init:1.7.5-rev2",
 		},
 	}
 	for _, tt := range tests {
@@ -63,13 +63,13 @@ func TestGetCiliumOperatorImage(t *testing.T) {
 	}{
 		{
 			name:     "get cilium operator image without revision",
-			imageTag: "1.5.3",
-			want:     img.ImageRepository + "/cilium-operator:1.5.3",
+			imageTag: "1.7.5",
+			want:     img.ImageRepository + "/cilium-operator:1.7.5",
 		},
 		{
 			name:     "get cilium operator image with revision",
-			imageTag: "1.5.3-rev2",
-			want:     img.ImageRepository + "/cilium-operator:1.5.3-rev2",
+			imageTag: "1.7.5-rev2",
+			want:     img.ImageRepository + "/cilium-operator:1.7.5-rev2",
 		},
 	}
 	for _, tt := range tests {
@@ -90,13 +90,13 @@ func TestGetCiliumImage(t *testing.T) {
 	}{
 		{
 			name:     "get cilium image without revision",
-			imageTag: "1.5.3",
-			want:     img.ImageRepository + "/cilium:1.5.3",
+			imageTag: "1.7.5",
+			want:     img.ImageRepository + "/cilium:1.7.5",
 		},
 		{
 			name:     "get cilium image with revision",
-			imageTag: "1.5.3-rev2",
-			want:     img.ImageRepository + "/cilium:1.5.3-rev2",
+			imageTag: "1.7.5-rev2",
+			want:     img.ImageRepository + "/cilium:1.7.5-rev2",
 		},
 	}
 	for _, tt := range tests {
