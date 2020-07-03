@@ -72,6 +72,10 @@ func AddonsDir() string {
 	return "addons"
 }
 
+func ContainersDir() string {
+	return filepath.Join(AddonsDir(), "containers")
+}
+
 func CriDir() string {
 	return filepath.Join(AddonsDir(), "cri")
 }
@@ -158,6 +162,31 @@ func VSphereCloudConfTemplateFile() string {
 // VSphereConfigRuntimeFile returns the location the vsphere.conf is stored on nodes in the cluster
 func VSphereConfigRuntimeFile() string {
 	return path.Join(constants.KubernetesDir, "vsphere.conf")
+}
+
+// AzureDir returns the location for the azure cloud integrations
+func AzureDir() string {
+	return path.Join(CloudDir(), "azure")
+}
+
+// AzureReadmeFile returns the location for the azure cloud integrations README.md
+func AzureReadmeFile() string {
+	return path.Join(AzureDir(), "README.md")
+}
+
+// AzureCloudConfFile returns the default location of the azure cloud integrations .conf file
+func AzureCloudConfFile() string {
+	return path.Join(AzureDir(), "azure.conf")
+}
+
+// AzureCloudConfTemplateFile returns the default location of the azure cloud integrations .conf.template file
+func AzureCloudConfTemplateFile() string {
+	return path.Join(AzureDir(), "azure.conf.template")
+}
+
+// AzureConfigRuntimeFile returns the location the azure.conf is stored on nodes in the cluster
+func AzureConfigRuntimeFile() string {
+	return path.Join(constants.KubernetesDir, "azure.conf")
 }
 
 // AWSDir returns the location for the AWS cloud integrations

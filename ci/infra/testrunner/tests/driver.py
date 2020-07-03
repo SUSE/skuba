@@ -14,6 +14,7 @@ PYTEST_RC = {
     5: "no tests were collected"
 }
 
+
 class TestDriver:
     def __init__(self, conf, platform):
         self.conf = conf

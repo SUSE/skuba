@@ -147,7 +147,7 @@ General setting for terraform-based platforms such as [Openstack](#openstack) an
 * plugin_dir: directory used for retrieving terraform plugins. If not set, plugins are installed using terraform [discovery mechanism](https://www.terraform.io/docs/extend/how-terraform-works.html#discovery)
 * retries: maximum number of attempts to recover from failures during terraform provisioning 
 * stack name: the unique name of the platform stack on the shared infrastructure, used as prefix by many resources such as networks, nodes, among others. Default is "$USER" 
-* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/skuba/ci/infra`.
+* tfdir: path to the terraform files. Testrunner must have writing permissions to this directory. Defaults to `$WORKSPACE/ci/infra`.
 * tfvars: name of the terraform variables file to be used. Defaults to "terraform.tfvars.json.ci.example"
 * workdir: working directory on which tfout file will be generated. Default is `$WORKSPACE`
 * worker: specifications for the worker(s)
@@ -463,7 +463,13 @@ optional arguments:
   -c, --cloud-provider  Use cloud provider integration
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting a node to become ready (seconds)
-
+  -m R M, --registry-mirror R M
+                        Add to the registry R a mirror M. If an image is
+                        available at the mirror it will be preferred, otherwise
+                        the image in the original registry is used. This
+                        argument can be used multiple times, then mirrors will
+                        be tried in that order. Example:
+                        --registry-mirror registry.example.com/path test-registry.example.com/path
 ```
 
 ### Deploy
@@ -476,6 +482,13 @@ optional arguments:
   -c, --cloud-provider  Use cloud provider integration
   -t TIMEOUT, --timeout TIMEOUT
                         timeout for waiting a node to become ready (seconds)
+  -m R M, --registry-mirror R M
+                        Add to the registry R a mirror M. If an image is
+                        available at the mirror it will be preferred, otherwise
+                        the image in the original registry is used. This
+                        argument can be used multiple times, then mirrors will
+                        be tried in that order. Example:
+                        --registry-mirror registry.example.com/path test-registry.example.com/path
 ```
 
 ### Join nodes

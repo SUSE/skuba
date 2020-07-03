@@ -29,5 +29,4 @@
                     - '$BRANCH'
                 browser: auto
                 suppress-automatic-scm-triggering: true
-                basedir: skuba
-        script-path: skuba/ci/jenkins/pipelines/skuba-update-daily.Jenkinsfile
+        script-path: ci/jenkins/pipelines/skuba-update-daily.Jenkinsfile

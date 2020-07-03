@@ -21,5 +21,5 @@ package skuba
 
 const (
 	BuildType       = "development"
-	ImageRepository = "registry.suse.de/devel/caasp/5/containers/cr/containers/caasp/v5"
+	ImageRepository = "registry.suse.de/devel/caasp/5/containers/containers/caasp/v5"
 )

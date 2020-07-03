@@ -49,7 +49,6 @@ data "template_file" "master-cloud-init" {
     register_rmt       = join("\n", data.template_file.master_register_rmt.*.rendered)
     commands           = join("\n", data.template_file.master_commands.*.rendered)
     username           = var.username
-    password           = var.password
     ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
     hostname           = "${var.stack_name}-master-${count.index}"
     hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
@@ -111,7 +110,6 @@ resource "null_resource" "master_wait_cloudinit" {
       count.index
     )
     user     = var.username
-    password = var.password
     type     = "ssh"
   }
 
@@ -136,11 +134,17 @@ resource "null_resource" "master_reboot" {
     }
 
     command = <<EOT
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
-# wait for ssh ready after reboot
-until nc -zv $host 22; do sleep 5; done
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
+export sshopts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60"
+if ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; then
+    ssh $sshopts $user@$host sudo reboot || :
+    export delay=5
+    # wait for node reboot completed
+    while ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; do
+        sleep $delay
+        delay=$((delay+1))
+        [ $delay -gt 30 ] && exit 1
+    done
+fi
 EOT
-
   }
 }

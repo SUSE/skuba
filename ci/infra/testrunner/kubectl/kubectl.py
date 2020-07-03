@@ -1,6 +1,7 @@
 from utils.utils import (Utils)
 from time import sleep
 
+
 class Kubectl:
 
     def __init__(self, conf):

@@ -55,6 +55,14 @@ func TestInitCloudProvider(t *testing.T) {
 			},
 		},
 		{
+			name:          "init with azure cloud provider",
+			cloudProvider: "azure",
+			providerReadmeFiles: []string{
+				constants.CloudReadmeFile(),
+				constants.AzureReadmeFile(),
+			},
+		},
+		{
 			name:          "init with opendstack cloud provider",
 			cloudProvider: "openstack",
 			providerReadmeFiles: []string{
@@ -77,6 +85,7 @@ func TestInitCloudProvider(t *testing.T) {
 	k8sDesiredVersion := ""
 	strictCapDefaults := true
 	initConfig := "kubeadm-init.conf"
+	cniPlugin := "cilium"
 	joinFiles := []string{
 		filepath.Join("kubeadm-join.conf.d", "master.conf.template"),
 		filepath.Join("kubeadm-join.conf.d", "worker.conf.template"),
@@ -89,7 +98,8 @@ func TestInitCloudProvider(t *testing.T) {
 				tt.cloudProvider,
 				controlPlane,
 				k8sDesiredVersion,
-				strictCapDefaults)
+				strictCapDefaults,
+				cniPlugin)
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
@@ -136,6 +146,57 @@ func TestInitCloudProvider(t *testing.T) {
 			for _, f := range joinFiles {
 				if err := checkJoinConfig(ctx, clusterName, f, tt.cloudProvider); err != nil {
 					t.Errorf("error while inspecting file %s: %v", f, err)
+				}
+			}
+		})
+	}
+}
+
+func TestInitCniPlugin(t *testing.T) {
+	clusterName := "testCluster"
+	cloudProvider := ""
+	controlPlane := "http://k8s.example.com"
+	k8sDesiredVersion := ""
+	strictCapDefaults := true
+	ciliumCni := "cilium"
+	unknownCni := "unknown"
+	tests := []string{ciliumCni, unknownCni}
+
+	for _, cniPlugin := range tests {
+		t.Run(cniPlugin, func(t *testing.T) {
+			initConf, err := NewInitConfiguration(
+				clusterName,
+				cloudProvider,
+				controlPlane,
+				k8sDesiredVersion,
+				strictCapDefaults,
+				cniPlugin)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			ctx, err := switchToTemporaryDirectory()
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			} else {
+				defer switchBackAndCleanFilesystem(ctx)
+				switch cniPlugin {
+				case ciliumCni:
+					if err = Init(initConf); err != nil {
+						t.Errorf("unexpected error: %v", err)
+					}
+					ciliumManifestPath := "addons/" + ciliumCni + "/base/" + ciliumCni + ".yaml"
+					found, err := doesFileExist(ctx, clusterName, ciliumManifestPath)
+					if err != nil {
+						t.Errorf("unexpected error: %v", err)
+					}
+					if !found {
+						t.Error("Cilium manifests not properly rendered")
+					}
+				case unknownCni:
+					if err = Init(initConf); err == nil {
+						t.Error("Expected Init() to raise error")
+					}
 				}
 			}
 		})

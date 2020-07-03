@@ -27,8 +27,9 @@ var (
 This directory contains all supported cloud provider integration configurations
 and instructions.
  
-- [~Openstack~](openstack/README.md)
 - [~AWS~](aws/README.md)
+- [~Azure~](azure/README.md)
+- [~Openstack~](openstack/README.md)
 - [~vSphere~](vsphere/README.md)
 
 ## Important
@@ -166,5 +167,50 @@ folder = "<VC_VM_FOLDER>"
 scsicontrollertype = pvscsi
 [Network]
 public-network = "VM Network"
+`
+
+	azureReadme = strings.ReplaceAll(`# ~Azure~ integration
+
+Create a file inside this directory named ~azure.conf~, with the [supported contents](https://github.com/kubernetes-sigs/cloud-provider-azure/blob/master/docs/cloud-provider-config.md):
+
+You can find a template named azure.conf.template inside this directory.
+
+~~~
+{
+    "cloud": "AzurePublicCloud",
+    "tenantId": "<AZ_TENANT_ID>",
+    "aadClientId": "<AZ_AAD_CLIENT_ID>",
+    "aadClientSecret": "<AZ_AAD_CLIENT_SECRET>",
+    "subscriptionId": "<AZ_SUBSCRIPTION_ID>",
+    "resourceGroup": "<AZ_RESOURCE_GROUP>",
+    "location": "<AZ_LOCATION>",
+    "routeTableName": "<AZ_ROUTE_TABLE_NAME>",
+    "useManagedIdentityExtension": true,
+    "useInstanceMetadata": true
+}
+~~~
+
+If this file exists the cloud integration for ~Azure~ will be automatically
+enabled when you bootstrap the cluster.
+
+## Important
+
+When the cloud provider integration is enabled, it's very important to bootstrap
+and join nodes with the node names same as ~Azure~ virtual machine's hostnames,
+as these names will be used by services to reconcile node metadata.
+`, "~", "`")
+
+	azureCloudConfTemplate = `{
+    "cloud": "AzurePublicCloud",
+    "tenantId": "<AZ_TENANT_ID>",
+    "aadClientId": "<AZ_AAD_CLIENT_ID>",
+    "aadClientSecret": "<AZ_AAD_CLIENT_SECRET>",
+    "subscriptionId": "<AZ_SUBSCRIPTION_ID>",
+    "resourceGroup": "<AZ_RESOURCE_GROUP>",
+    "location": "<AZ_LOCATION>",
+    "routeTableName": "<AZ_ROUTE_TABLE_NAME>",
+    "useManagedIdentityExtension": true,
+    "useInstanceMetadata": true
+}
 `
 )

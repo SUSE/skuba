@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,13 +45,6 @@ const (
 	KubeletCACertName = "kubelet-ca.crt"
 	// KubeletCAKeyName defines kubelet's CA key name
 	KubeletCAKeyName = "kubelet-ca.key"
-
-	// KubeletServerCertAndKeyBaseName defines kubelet server certificate and key base name
-	KubeletServerCertAndKeyBaseName = "kubelet"
-	// KubeletServerCertName defines kubelet server certificate name
-	KubeletServerCertName = "kubelet.crt"
-	// KubeletServerKeyName defines kubelet server key name
-	KubeletServerKeyName = "kubelet.key"
 )
 
 // GenerateKubeletRootCert generates kubelet root CA certificate and key

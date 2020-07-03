@@ -202,8 +202,8 @@ class Utils:
         if stdin:
             p.stdin.write(stdin)
             p.stdin.close()
-        stdoutStreamer = Thread(target = self.read_fd, args = (p, p.stdout, logger.debug, stdout))
-        stderrStreamer = Thread(target = self.read_fd, args = (p, p.stderr, logger.error, stderr))
+        stdoutStreamer = Thread(target=self.read_fd, args=(p, p.stdout, logger.debug, stdout))
+        stderrStreamer = Thread(target=self.read_fd, args=(p, p.stderr, logger.error, stderr))
         stdoutStreamer.start()
         stderrStreamer.start()
         stdoutStreamer.join()
@@ -260,7 +260,7 @@ class Utils:
         try:
             self.runshellcommand("pkill -f 'ssh-agent -a {}'".format(sock_fn))
             logger.warning("Killed previous instance of ssh-agent")
-        except:
+        except Exception:
             pass
         self.runshellcommand("ssh-agent -a {}".format(sock_fn))
         self.runshellcommand(

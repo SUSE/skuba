@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Kured, renderKuredTemplate, nil, nil, normalPriority, []getImageCallback{GetKuredImage})
+	registerAddon(kubernetes.Kured, GenericAddOn, renderKuredTemplate, nil, nil, normalPriority, []getImageCallback{GetKuredImage})
 }
 
 func GetKuredImage(imageTag string) string {

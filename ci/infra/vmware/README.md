@@ -1,6 +1,6 @@
 ## Introduction
 
-These terraform definitions are going to create the CaaSP v4 cluster on top of VMWare vSphere cluster.
+These terraform definitions are going to create the CaaSP v5 cluster on top of VMWare vSphere cluster.
 
 This code was developed and tested on VMware vSphere cluster based on VMware ESXi 6.7.20000.
 
@@ -8,7 +8,7 @@ This code was developed and tested on VMware vSphere cluster based on VMware ESX
 
 Prepare a VM template machine in vSphere by following [vmware-deployment guide](https://susedoc.github.io/doc-caasp/master/caasp-deployment/single-html/#_vm_preparation_for_creating_a_template).
 
-It doesn't matter if you deploy the VM template for SLES15-SP1 manually by using ISO or you use pregenerated vmdk SLES15-SP1 JeOS image but in both cases you'll need `cloud-init-vmware-guestinfo` package (from SUSE CaaS Platform module), `cloud-init` package (from Public Cloud Module) and its dependent packages installed. The respective services must be enabled:
+It doesn't matter if you deploy the VM template for SLES15-SP2 manually by using ISO or you use pregenerated vmdk SLES15-SP2 JeOS image but in both cases you'll need `cloud-init-vmware-guestinfo` package (from SUSE CaaS Platform module), `cloud-init` package (from Public Cloud Module) and its dependent packages installed. The respective services must be enabled:
 
 ```sh
 systemctl enable cloud-init cloud-init-local cloud-config cloud-final
