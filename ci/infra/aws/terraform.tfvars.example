@@ -1,6 +1,12 @@
 # prefix for resources
 stack_name = "my-k8s"
 
+# Number of master nodes
+masters = 1
+
+# Number of worker nodes
+workers = 2
+
 # Extra tags to add to all the resources
 #tags = {
 #  "key": "value"
@@ -10,16 +16,6 @@ stack_name = "my-k8s"
 authorized_keys = [
   "ssh-rsa AAAAB3NzaC1yc2EA...",
 ]
-
-# AWS region
-# A list of region names can be found here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
-aws_region = "eu-central-1"
-
-# access key for AWS services
-aws_access_key = "AKIXU..."
-
-# secret key used for AWS services
-aws_secret_key = "ORd..."
 
 ## To register CaaSP product please use ONLY ONE of the following method
 # - register against SUSE Customer Service, with SUSE CaaSP Product Registration Code

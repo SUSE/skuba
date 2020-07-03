@@ -8,7 +8,7 @@ pipeline {
     }
     stages {
         stage('Info') { steps {
-            sh(script: "make -f skuba/ci/Makefile info", label: 'Info')
+            sh(script: "make -f ci/Makefile info", label: 'Info')
         } }
         stage('Setup Environment') { steps {
             sh(script: 'python3 -m venv venv', label: 'Setup Python Virtualenv')
@@ -17,14 +17,14 @@ pipeline {
         stage('Test Jobs') { steps {
             sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make -f skuba/ci/Makefile test_jenkins_jobs
+                   make -f ci/Makefile test_jenkins_jobs
                 """, label: 'Test Jenkins Jobs')
-            zip archive: true, dir: 'skuba/ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
+            zip archive: true, dir: 'ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
         } }
         stage('Update Jobs') { steps {
             sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make -f skuba/ci/Makefile update_jenkins_jobs
+                   make -f ci/Makefile update_jenkins_jobs
                 """, label: 'Update Jenkins Jobs')
         } }
     }

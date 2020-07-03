@@ -1,7 +1,7 @@
 PWD := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 OPENSUSE_TUMBLEWEED_IMAGE = registry.opensuse.org/opensuse/tumbleweed:latest
-SLE_15_IMAGE = registry.suse.de/suse/sle-15-sp1/update/cr/images/suse/sle15:15.1
+SLE_15_IMAGE = registry.suse.de/suse/sle-15-sp2/update/cr/images/suse/sle15:15.2
 BUILDER_IMAGE = opensuse/tumbleweed:build-rpm
 
 .PHONY: test

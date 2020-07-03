@@ -31,14 +31,15 @@
         "sle15_ga": "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
     },
     "packages": [
+        "zypper-needs-restarting",
         "kernel-default",
         "-kernel-default-base"
     ],
     "authorized_keys": [],
     "ntp_servers": [
-        "0.novell.pool.ntp.org",
-        "1.novell.pool.ntp.org",
-        "2.novell.pool.ntp.org",
-        "3.novell.pool.ntp.org"
+        "0.suse.pool.ntp.org",
+        "1.suse.pool.ntp.org",
+        "2.suse.pool.ntp.org",
+        "3.suse.pool.ntp.org"
     ]
 }

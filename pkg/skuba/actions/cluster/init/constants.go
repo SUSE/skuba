@@ -86,5 +86,19 @@ var (
 				Content:  vSphereReadme,
 			},
 		},
+		"azure": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.AzureCloudConfTemplateFile(),
+				Content:  azureCloudConfTemplate,
+			},
+			{
+				Location: skuba.AzureReadmeFile(),
+				Content:  azureReadme,
+			},
+		},
 	}
 )

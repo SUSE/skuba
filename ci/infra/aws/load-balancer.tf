@@ -6,6 +6,14 @@ resource "aws_elb" "kube_api" {
   name                      = "${var.stack_name}-elb"
   subnets                   = [aws_subnet.public.id]
 
+  tags = merge(
+    local.basic_tags,
+    {
+      "Name"  = "${var.stack_name}-elb"
+      "Class" = "ElasticLoadBalancer"
+    },
+  )
+
   security_groups = [
     aws_security_group.elb.id,
     aws_security_group.egress.id,

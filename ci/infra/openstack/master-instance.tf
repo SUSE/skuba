@@ -70,8 +70,8 @@ resource "openstack_compute_instance_v2" "master" {
   }
 
   security_groups = [
-    openstack_networking_secgroup_v2.common.name,
-    openstack_networking_secgroup_v2.master_nodes.name,
+    openstack_networking_secgroup_v2.common.id,
+    openstack_networking_secgroup_v2.master_nodes.id,
   ]
 
   user_data = data.template_file.master-cloud-init[count.index].rendered
@@ -129,10 +129,17 @@ resource "null_resource" "master_reboot" {
     }
 
     command = <<EOT
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
-# wait for ssh ready after reboot
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
+export sshopts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60"
+if ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; then
+    ssh $sshopts $user@$host sudo reboot || :
+    export delay=5
+    # wait for node reboot completed
+    while ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; do
+        sleep $delay
+        delay=$((delay+1))
+        [ $delay -gt 30 ] && exit 1
+    done
+fi
 EOT
-
   }
 }

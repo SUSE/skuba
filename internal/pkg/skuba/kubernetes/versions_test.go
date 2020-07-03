@@ -374,7 +374,7 @@ func TestMajorMinorVersion(t *testing.T) {
 func TestEnsureHyperKubeIsRemovedForSupportedVersions(t *testing.T) {
 	for kubernetesVersionStr := range supportedVersions {
 		kubernetesVersion := version.MustParseSemantic(kubernetesVersionStr)
-		versionComparedTo118, err := kubernetesVersion.Compare("1.18.2")
+		versionComparedTo118, err := kubernetesVersion.Compare("1.18.5")
 		if err != nil {
 			t.Fatalf("our versions should always be valid semver and something bad happened: %+v", err)
 		}

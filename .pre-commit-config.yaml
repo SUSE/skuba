@@ -28,7 +28,7 @@ repos:
         files: '\.go$'
         language: script
 -   repo: https://github.com/golangci/golangci-lint
-    rev: v1.21.0
+    rev: v1.27.0
     hooks:
     -   id: golangci-lint
         args: [--verbose, --timeout=3m]

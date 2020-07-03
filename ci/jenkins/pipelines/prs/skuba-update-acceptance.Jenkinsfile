@@ -51,50 +51,36 @@ pipeline {
         } } }
 
         stage('Setting GitHub in-progress status') { steps {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
-
-        stage('Git Clone') { steps {
-            deleteDir()
-            checkout([$class: 'GitSCM',
-                      branches: [[name: "*/${BRANCH_NAME}"]],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
-                      submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
-                                           credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
-        }}
 
         stage('skuba-update SUSE OS Tests') {
             when {
                 expression {
-                    sh(script: "skuba/${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
+                    sh(script: "${PR_MANAGER} filter-pr --filename ${FILTER_SUBDIRECTORY}", returnStdout: true, label: "Filtering PR") =~ "contains changes"
                 }
             }
             steps {
-                sh(script: "make -f skuba/skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
+                sh(script: "make -f skuba-update/test/os/suse/Makefile test", label: 'skuba-update SUSE OS Tests')
             }
         }
     }
     post {
         cleanup {
             dir("${WORKSPACE}") {
-                sh(script: 'sudo rm -rf skuba/skuba-update/build skuba/skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
-                sh(script: 'sudo rm -rf skuba/skuba-update/test/os/suse/artifacts', label: 'Remove test artifacts created by root')
+                sh(script: 'sudo rm -rf skuba-update/build skuba-update/skuba_update.egg-info', label: 'Remove python artifacts created by root')
+                sh(script: 'sudo rm -rf skuba-update/test/os/suse/artifacts', label: 'Remove test artifacts created by root')
                 deleteDir()
             }
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }

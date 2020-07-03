@@ -10,7 +10,7 @@ ssh_authorized_keys:
 ${authorized_keys}
 
 bootcmd:
-  - ip link set dev eth0 mtu 1400
+  - ip link set dev eth0 mtu 1500
 
 runcmd:
 ${register_scc}

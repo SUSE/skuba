@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ const (
 	Dex           Addon = "dex"
 	Gangway       Addon = "gangway"
 	MetricsServer Addon = "metrics-server"
+	Kucero        Addon = "kucero"
 	PSP           Addon = "psp"
 
 	Kubelet          Component = "kubelet"
@@ -85,27 +86,28 @@ type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVe
 
 var (
 	supportedVersions = KubernetesVersions{
-		"1.18.2": KubernetesVersion{
+		"1.18.5": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.18.2",
-				ContainerRuntimeVersion: "1.18.0",
+				KubeletVersion:          "1.18.5",
+				ContainerRuntimeVersion: "1.18.2",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.18.2"},
-				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.18.2"},
-				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.18.2"},
-				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.18.2"},
+				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.18.5"},
+				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.18.5"},
+				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.18.5"},
+				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.18.5"},
 				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:        &AddonVersion{"1.6.6", 3},
+				Cilium:        &AddonVersion{"1.7.5", 4},
 				Kured:         &AddonVersion{"1.3.0", 5},
-				Dex:           &AddonVersion{"2.23.0", 6},
-				Gangway:       &AddonVersion{"3.1.0-rev4", 4},
+				Dex:           &AddonVersion{"2.23.0", 7},
+				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
 				MetricsServer: &AddonVersion{"0.3.6", 0},
+				Kucero:        &AddonVersion{"1.1.1", 0},
 				PSP:           &AddonVersion{"", 2},
 			},
 		},
@@ -130,6 +132,7 @@ var (
 				Dex:           &AddonVersion{"2.16.0", 6},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
 				MetricsServer: &AddonVersion{"0.3.6", 1},
+				Kucero:        &AddonVersion{"1.1.1", 0},
 				PSP:           &AddonVersion{"", 4},
 			},
 		},
@@ -149,7 +152,7 @@ var (
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:        &AddonVersion{"1.5.3", 2},
+				Cilium:        &AddonVersion{"1.5.3", 3},
 				Kured:         &AddonVersion{"1.3.0", 4},
 				Dex:           &AddonVersion{"2.16.0", 6},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
@@ -173,7 +176,7 @@ var (
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 2},
+				Cilium:  &AddonVersion{"1.5.3", 3},
 				Kured:   &AddonVersion{"1.2.0-rev4", 2},
 				Dex:     &AddonVersion{"2.16.0", 6},
 				Gangway: &AddonVersion{"3.1.0-rev4", 5},

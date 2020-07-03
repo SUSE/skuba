@@ -6,13 +6,6 @@ locale: en_US.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# set root password
-chpasswd:
-  list: |
-    root:linux
-    ${username}:${password}
-  expire: False
-
 ssh_authorized_keys:
 ${authorized_keys}
 
@@ -40,9 +33,6 @@ ${repositories}
 
 # set hostname
 hostname: ${hostname}
-
-bootcmd:
-  - ip link set dev eth0 mtu 1400
 
 runcmd:
   # Set node's hostname from DHCP server

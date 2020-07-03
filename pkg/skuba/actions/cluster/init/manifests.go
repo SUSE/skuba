@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019-2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,14 @@
 package cluster
 
 const (
-	CriConfFolderReadme = `This directory contains CRI-O configuration files that are uploaded to CaaSP nodes. All the files (except this README) will be uploaded to the /etc/crio/conf.d/ folder. If it is required user custom files name as 99-custom.conf
+	CriConfFolderReadme = `This folder provides CRI-O configuration for CaaSP nodes.
+All the files (except this README) will be uploaded to the /etc/crio/crio.conf.d/ folder.
+If you need any customization, please add a custom files with the name 99-custom.conf
 	`
-	criDockerDefaultsConf = `## Path           : System/Management
+	criDockerDefaultsConf = `# PLEASE DON'T EDIT THIS FILE!
+# This file is managed by CaaSP skuba.
+
+## Path           : System/Management
 ## Description    : Extra cli switches for crio daemon
 ## Type           : string
 ## Default        : ""

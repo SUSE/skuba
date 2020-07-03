@@ -148,8 +148,10 @@ resource "vsphere_virtual_machine" "lb" {
   hardware_version = var.vsphere_hardware_version
 
   disk {
-    label = "disk0"
-    size  = var.lb_disk_size
+    label            = "disk0"
+    size             = var.lb_disk_size
+    eagerly_scrub    = data.vsphere_virtual_machine.template.disks.0.eagerly_scrub
+    thin_provisioned = data.vsphere_virtual_machine.template.disks.0.thin_provisioned
   }
 
   extra_config = {

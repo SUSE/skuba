@@ -133,7 +133,7 @@ sles ALL=(ALL,ALL) NOPASSWD: ALL" > /etc/sudoers.d/sles
     <ntp_servers config:type="list">
       <ntp_server>
         <!-- replace ntp server address value bellow with one from your infrastructure -->
-        <address>0.novell.pool.ntp.org</address>
+        <address>0.suse.pool.ntp.org</address>
         <iburst config:type="boolean">true</iburst>
         <offline config:type="boolean">true</offline>
       </ntp_server>

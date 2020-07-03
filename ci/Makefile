@@ -2,7 +2,6 @@
 MKFILE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 TEST_RUNNER := ${MKFILE_DIR}/infra/testrunner/testrunner
 TASKS := ${MKFILE_DIR}/tasks
-REBASE := rebase.py
 JENKINS_JOBS_DIR = ${MKFILE_DIR}/jenkins
 JENKINS_JOB_CONFIG ?= ${JENKINS_JOBS_DIR}/jenkins_jobs.ini
 PLATFORM ?= openstack
@@ -21,6 +20,10 @@ endif
 ifdef KUBERNETES_VERSION
 K8S_VERSION_OPT=--kubernetes-version ${KUBERNETES_VERSION}
 endif
+ifdef BRANCH_REGISTRY
+REGISTRY_OPT=--registry-mirror ${ORIGINAL_REGISTRY} ${BRANCH_REGISTRY}
+endif
+BOOTSTRAP_OPT=${REGISTRY_OPT} ${K8S_VERSION_OPT}
 
 .PHONY: all
 all: provision deploy
@@ -33,7 +36,7 @@ provision:
 
 .PHONY: bootstrap
 bootstrap:
-	${TEST_RUNNER} --platform ${PLATFORM} bootstrap ${K8S_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} bootstrap ${BOOTSTRAP_OPT}
 
 .PHONY: join_nodes 
 join_nodes:
@@ -41,7 +44,7 @@ join_nodes:
 
 .PHONY: deploy 
 deploy:
-	${TEST_RUNNER} --platform ${PLATFORM} deploy ${K8S_VERSION_OPT}
+	${TEST_RUNNER} --platform ${PLATFORM} deploy ${BOOTSTRAP_OPT}
 
 .PHONY: check_cluster
 check_cluster:
@@ -54,10 +57,6 @@ cleanup:
 .PHONY: gather_logs
 gather_logs:
 	${TEST_RUNNER} --platform ${PLATFORM} get_logs
-
-.PHONY: git_rebase_check
-git_rebase_check:
-	${TASKS}/${REBASE}
 
 .PHONY: info
 info:
@@ -78,9 +77,6 @@ update_pkgs:
 # Stages
 .PHONY: pre_deployment
 pre_deployment: info update_pkgs
-
-.PHONY: pr_checks
-pr_checks: git_rebase_check
 
 .PHONY: post_run
 post_run: gather_logs cleanup

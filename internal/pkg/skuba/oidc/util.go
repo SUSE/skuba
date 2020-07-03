@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,16 @@
  *
  */
 
-package deployments
+package oidc
 
-func (t *Target) InstallNodePattern(kubernetesBaseOSConfiguration KubernetesBaseOSConfiguration) (bool, error) {
-	err := t.Apply(kubernetesBaseOSConfiguration, "kubernetes.install-node-pattern")
+import "crypto/rand"
+
+// RandomGenerateWithLength generates random byte slice with specified length
+func RandomGenerateWithLength(len int) ([]byte, error) {
+	r := make([]byte, len)
+	_, err := rand.Read(r)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	return true, nil
+	return r, nil
 }

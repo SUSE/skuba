@@ -58,7 +58,7 @@ def deployment(request, bootstrap, skuba, kubectl):
          wait_delay=60,
          wait_timeout=10,
          wait_backoff=60,
-         wait_elapsed=60*30,
+         wait_elapsed=60 * 30,
          wait_allow=(AssertionError))
 
 

@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.disruptive
 def test_upgrade_plan_all_fine(provision, skuba, kubectl, platform):
     """

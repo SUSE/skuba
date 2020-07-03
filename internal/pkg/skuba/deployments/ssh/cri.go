@@ -20,6 +20,7 @@ package ssh
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/SUSE/skuba/pkg/skuba"
@@ -42,7 +43,7 @@ func criConfigure(t *Target, data interface{}) error {
 		if err != nil {
 			// If the deferred function has any return values, they are discarded when the function completes
 			// https://golang.org/ref/spec#Defer_statements
-			fmt.Println("Could not delete the crio.conf.d config path")
+			fmt.Println("Could not delete the path /tmp/crio.conf.d")
 		}
 	}()
 
@@ -55,7 +56,30 @@ func criConfigure(t *Target, data interface{}) error {
 	if _, _, err = t.ssh("mkdir -p /etc/crio/crio.conf.d"); err != nil {
 		return err
 	}
-	_, _, err = t.ssh("cp -r /tmp/crio.conf.d/*.conf /etc/crio/crio.conf.d")
+	if _, _, err = t.ssh("cp -r /tmp/crio.conf.d/*.conf /etc/crio/crio.conf.d"); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(filepath.Join(skuba.ContainersDir(), "registries.conf")); err != nil {
+		return nil
+	}
+	defer func() {
+		_, _, err := t.ssh("rm -rf /tmp/containers")
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the path /tmp/containers")
+		}
+	}()
+
+	if err := t.target.UploadFile(filepath.Join(skuba.ContainersDir(), "registries.conf"), filepath.Join("/tmp/containers", "registries.conf")); err != nil {
+		return err
+	}
+
+	if _, _, err = t.ssh("mkdir -p /etc/containers"); err != nil {
+		return err
+	}
+	_, _, err = t.ssh("cp -r /tmp/containers/*.conf /etc/containers")
 	return err
 }
 

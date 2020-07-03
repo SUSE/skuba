@@ -3,11 +3,6 @@ variable "stack_name" {
   description = "identifier to make all your resources unique and avoid clashes with other users of this terraform project"
 }
 
-variable "aws_region" {
-  default     = "eu-north-1"
-  description = "Name of the AWS region to be used"
-}
-
 variable "ami_name_pattern" {
   default     = "suse-sles-15-*"
   description = "Pattern for choosing the AMI image"
@@ -35,16 +30,6 @@ variable "vpc_cidr_block" {
   type        = string
   description = "CIRD blocks for vpc"
   default     = "10.1.0.0/16"
-}
-
-variable "aws_access_key" {
-  default     = ""
-  description = "AWS access key"
-}
-
-variable "aws_secret_key" {
-  default     = ""
-  description = "AWS secret key"
 }
 
 variable "master_size" {
@@ -86,8 +71,10 @@ variable "packages" {
     "kmod",
     "-docker",
     "-containerd",
+    "-containerd-ctr",
     "-docker-runc",
     "-docker-libnetwork",
+    "-docker-img-store-setup",
   ]
 
   description = "list of additional packages to install"

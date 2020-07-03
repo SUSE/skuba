@@ -5,6 +5,7 @@ set -e
 susepkg_dir=$(cd "$( dirname "$0" )" && pwd)
 tmp_dir=$(mktemp -d -t skuba_XXXX)
 rpm_files="${susepkg_dir}/obs_files"
+devel_prj="Devel:CaaSP:5"
 version="$1"
 tag="$2"
 closest_tag="$3"
@@ -37,15 +38,10 @@ then
     branch_name="skuba_$tag"
     work_dir="$tmp_dir/ibs_skuba"
     log "Creating IBS branch"
-    osc -A 'https://api.suse.de' branch Devel:CaaSP:4.0 skuba \
+    osc -A 'https://api.suse.de' branch --force "${devel_prj}" skuba \
       "$branch_project" "$branch_name"
     osc -A 'https://api.suse.de' co -o "$work_dir" \
       "$branch_project/$branch_name"
-    log "Running OBS services"
-    (
-        cd "$work_dir"
-        osc -A 'https://api.suse.de' service run go_modules
-    )
     log "Updating IBS branch"
     cp -v "$rpm_files/skuba.spec" "$rpm_files/skuba.tar.gz" "$work_dir/"
     cat "$rpm_files/skuba.changes.append" \
@@ -53,14 +49,13 @@ then
       > "$tmp_dir/merged.changes" \
       && \
       cp -v "$tmp_dir/merged.changes" "$work_dir/skuba.changes"
+    log "Running OBS services"
+    (
+        cd "$work_dir"
+        osc -A 'https://api.suse.de' service disabledrun
+    )
     osc -A 'https://api.suse.de' ci "$work_dir" \
       -m "$(<"$rpm_files/skuba.changes.append")"
-    log "Creating self-cleaning SR"
-    osc -A 'https://api.suse.de' sr \
-      -m "Update for release '$tag'" \
-      --cleanup --yes \
-      "$branch_project" "$branch_name" \
-      Devel:CaaSP:4.0 skuba
 fi
 
 clean

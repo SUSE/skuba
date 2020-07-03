@@ -33,11 +33,11 @@ import (
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -55,28 +55,18 @@ type InitConfiguration struct {
 	// Note: UseHyperKube can be removed when we drop the support of
 	// provisioning clusters of version 1.17.
 	UseHyperKube bool
+	CniPlugin    kubernetes.Addon
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHost() string {
-	controlPlane, _, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
-	if err != nil {
-		return ""
-	}
-	return controlPlane
+	return util.ControlPlaneHost(initConfiguration.ControlPlane)
 }
 
 func (initConfiguration InitConfiguration) ControlPlaneHostAndPort() string {
-	controlPlaneHost, controlPlanePort, err := kubeadmutil.ParseHostPort(initConfiguration.ControlPlane)
-	if err != nil {
-		return ""
-	}
-	if controlPlanePort == "" {
-		controlPlanePort = "6443"
-	}
-	return fmt.Sprintf("%s:%s", controlPlaneHost, controlPlanePort)
+	return util.ControlPlaneHostAndPort(initConfiguration.ControlPlane)
 }
 
-func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool) (InitConfiguration, error) {
+func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDesiredVersion string, strictCapDefaults bool, cniPlugin string) (InitConfiguration, error) {
 	kubernetesVersion := kubernetes.LatestVersion()
 	var err error
 	needsHyperKube := false
@@ -104,6 +94,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 		StrictCapDefaults: strictCapDefaults,
 		UseHyperKube:      needsHyperKube,
+		CniPlugin:         kubernetes.Addon(cniPlugin),
 	}, nil
 }
 
@@ -114,7 +105,42 @@ func Init(initConfiguration InitConfiguration) error {
 	if _, err := os.Stat(initConfiguration.ClusterName); err == nil {
 		return errors.Errorf("cluster configuration directory %q already exists", initConfiguration.ClusterName)
 	}
+	if addon, found := addons.Addons[initConfiguration.CniPlugin]; !found || addon.AddOnType != addons.CniAddOn {
+		return fmt.Errorf("unknown CNI plugin provided: %s", initConfiguration.CniPlugin)
+	}
 
+	// write configuration files
+	if err := writeScaffoldFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeKubeadmFiles(initConfiguration); err != nil {
+		return err
+	}
+	if err := writeAddonConfigFiles(initConfiguration); err != nil {
+		return err
+	}
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("[init] configuration files written, unable to get directory")
+		return nil
+	}
+
+	fmt.Printf("[init] configuration files written to %s\n", currentDir)
+	return nil
+}
+
+func isAddonRequired(addon addons.Addon, initConfiguration InitConfiguration) bool {
+	if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		return false
+	}
+	if addon.AddOnType == addons.CniAddOn && initConfiguration.CniPlugin != addon.Addon {
+		return false
+	}
+	return true
+}
+
+func writeScaffoldFiles(initConfiguration InitConfiguration) error {
 	scaffoldFilesToWrite := criScaffoldFiles["criconfig"]
 	kubernetesVersion := initConfiguration.KubernetesVersion
 	if kubernetesVersion.Minor() < 18 {
@@ -161,7 +187,10 @@ func Init(initConfiguration InitConfiguration) error {
 			return errors.Wrapf(err, "unable to close file %s", f.Name())
 		}
 	}
+	return nil
+}
 
+func writeKubeadmFiles(initConfiguration InitConfiguration) error {
 	// Write kubeadm-init.conf and kubeadm-join.conf.d templates
 	if err := writeKubeadmInitConf(initConfiguration); err != nil {
 		return err
@@ -175,7 +204,10 @@ func Init(initConfiguration InitConfiguration) error {
 	if err := writeKubeadmJoinWorkerConf(initConfiguration); err != nil {
 		return err
 	}
+	return nil
+}
 
+func writeAddonConfigFiles(initConfiguration InitConfiguration) error {
 	// Write addon configuration files
 	addonConfiguration := addons.AddonConfiguration{
 		ClusterVersion: initConfiguration.KubernetesVersion,
@@ -183,21 +215,13 @@ func Init(initConfiguration InitConfiguration) error {
 		ClusterName:    initConfiguration.ClusterName,
 	}
 	for addonName, addon := range addons.Addons {
-		if !addon.IsPresentForClusterVersion(initConfiguration.KubernetesVersion) {
+		if !isAddonRequired(addon, initConfiguration) {
 			continue
 		}
 		if err := addon.Write(addonConfiguration); err != nil {
 			return errors.Wrapf(err, "could not write %q addon configuration", addonName)
 		}
 	}
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("[init] configuration files written, unable to get directory")
-		return nil
-	}
-
-	fmt.Printf("[init] configuration files written to %s\n", currentDir)
 	return nil
 }
 
@@ -259,14 +283,12 @@ func writeKubeadmInitConf(initConfiguration InitConfiguration) error {
 	if len(initConfiguration.CloudProvider) > 0 {
 		updateInitConfigurationWithCloudIntegration(&initCfg, initConfiguration)
 	}
-	kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
-	initCfgContents, err := kubeadmconfigutil.MarshalInitConfigurationToBytes(&initCfg, schema.GroupVersion{
-		Group:   "kubeadm.k8s.io",
-		Version: kubeadm.GetKubeadmApisVersion(initConfiguration.KubernetesVersion),
-	})
+
+	initCfgContents, err := kubeadm.UpdateClusterConfigurationWithClusterVersion(&initCfg, initConfiguration.KubernetesVersion)
 	if err != nil {
 		return err
 	}
+
 	if err := ioutil.WriteFile(skuba.KubeadmInitConfFile(), initCfgContents, 0600); err != nil {
 		return errors.Wrap(err, "error writing init configuration")
 	}
@@ -341,6 +363,24 @@ func updateInitConfigurationWithCloudIntegration(initCfg *kubeadmapi.InitConfigu
 	switch initConfiguration.CloudProvider {
 	case "aws":
 		initCfg.ControllerManager.ExtraArgs["allocate-node-cidrs"] = "false"
+	case "azure":
+		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
+		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.AzureConfigRuntimeFile(),
+			MountPath: skuba.AzureConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.ControllerManager.ExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
+		initCfg.ControllerManager.ExtraVolumes = append(initCfg.ControllerManager.ExtraVolumes, kubeadmapi.HostPathMount{
+			Name:      "cloud-config",
+			HostPath:  skuba.AzureConfigRuntimeFile(),
+			MountPath: skuba.AzureConfigRuntimeFile(),
+			ReadOnly:  true,
+			PathType:  v1.HostPathFileOrCreate,
+		})
+		initCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
 	case "openstack":
 		initCfg.APIServer.ExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 		initCfg.APIServer.ExtraVolumes = append(initCfg.APIServer.ExtraVolumes, kubeadmapi.HostPathMount{
@@ -387,6 +427,8 @@ func updateJoinConfigurationWithCloudIntegration(joinCfg *kubeadmapi.JoinConfigu
 	joinCfg.NodeRegistration.KubeletExtraArgs["cloud-provider"] = initConfiguration.CloudProvider
 
 	switch initConfiguration.CloudProvider {
+	case "azure":
+		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.AzureConfigRuntimeFile()
 	case "openstack":
 		joinCfg.NodeRegistration.KubeletExtraArgs["cloud-config"] = skuba.OpenstackConfigRuntimeFile()
 	case "vsphere":

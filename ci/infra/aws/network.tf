@@ -11,13 +11,13 @@ resource "aws_vpc" "platform" {
   )
 }
 
-// list of az which can be access from the current region
+# list of az which can be access from the current region
 data "aws_availability_zones" "az" {
   state = "available"
 }
 
 resource "aws_vpc_dhcp_options" "platform" {
-  domain_name         = "${var.aws_region}.compute.internal"
+  domain_name         = "${data.aws_region.current.name}.compute.internal"
   domain_name_servers = ["AmazonProvidedDNS"]
   tags = merge(
     local.tags,

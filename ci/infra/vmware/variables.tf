@@ -75,11 +75,6 @@ variable "username" {
   description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
-variable "masters" {
-  default     = 1
-  description = "Number of master nodes"
-}
-
 variable "workers" {
   default     = 1
   description = "Number of worker nodes"
@@ -98,6 +93,11 @@ variable "worker_memory" {
 variable "worker_disk_size" {
   default     = 40
   description = "Size of the root disk in GB on worker node"
+}
+
+variable "masters" {
+  default     = 1
+  description = "Number of master nodes"
 }
 
 variable "master_cpus" {
