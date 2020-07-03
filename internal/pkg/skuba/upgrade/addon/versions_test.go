@@ -164,14 +164,14 @@ func TestHasAddonUpdate(t *testing.T) {
 			name: "has addon update",
 			aviu: AddonVersionInfoUpdate{
 				Current: kubernetes.AddonsVersion{
-					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},
+					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 0},
 					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 0},
 					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 0},
 					kubernetes.PSP:     &kubernetes.AddonVersion{Version: "1.0.0", ManifestVersion: 1},
 				},
 				Updated: kubernetes.AddonsVersion{
-					kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 1},
+					kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 1},
 				},
 			},
 			expected: true,
@@ -180,7 +180,7 @@ func TestHasAddonUpdate(t *testing.T) {
 			name: "no addon update",
 			aviu: AddonVersionInfoUpdate{
 				Current: kubernetes.AddonsVersion{
-					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},
+					kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 0},
 					kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 					kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 0},
 					kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 0},
@@ -206,20 +206,20 @@ func TestHasAddonUpdate(t *testing.T) {
 func ExamplePrintAddonUpdates() {
 	PrintAddonUpdates(AddonVersionInfoUpdate{
 		Current: kubernetes.AddonsVersion{
-			kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 0},
+			kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 0},
 			kubernetes.Kured:   &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 			kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.16.0", ManifestVersion: 1},
 			kubernetes.Gangway: nil,
 		},
 		Updated: kubernetes.AddonsVersion{
-			kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.5.3", ManifestVersion: 1},
+			kubernetes.Cilium:  &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 1},
 			kubernetes.Dex:     &kubernetes.AddonVersion{Version: "2.17.0", ManifestVersion: 1},
 			kubernetes.Gangway: &kubernetes.AddonVersion{Version: "3.1.0", ManifestVersion: 0},
 		},
 	})
 
 	// Output:
-	//   - cilium: 1.5.3 (manifest version from 0 to 1)
+	//   - cilium: 1.7.5 (manifest version from 0 to 1)
 	//   - dex: 2.16.0 -> 2.17.0
 	//   - gangway: 3.1.0 (new addon)
 }
