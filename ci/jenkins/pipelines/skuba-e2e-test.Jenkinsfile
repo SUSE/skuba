@@ -15,8 +15,12 @@ def original_registry = ""
 // worker selection labels 
 def labels = 'e2e'
 
+// keep the cluster at the end of the job
+def keep_cluster = false
+
 node('caasp-team-private-integration') {
     stage('select worker') {
+
         if (env.BRANCH != 'master') {
             if (env.BRANCH.startsWith('experimental') || env.BRANCH.startsWith('maintenance')) {
                 worker_type = env.BRANCH
@@ -31,6 +35,10 @@ node('caasp-team-private-integration') {
         // Set additional labels for worker selection
         if (env.WORKER_LABELS) {
             labels = env.WORKER_LABELS
+        }
+
+        if (env.RETAIN_CLUSTER){
+            labels = labels + "&& dedicated"
         }
 
         if (env.REPO_BRANCH){
@@ -93,8 +101,26 @@ pipeline {
                 archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             }
         }}
-        cleanup {
-            sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
+        failure{ script{
+            if (env.RETAIN_CLUSTER) {
+                def retention_period= env.RETENTION_PERIOD?env.RETENTION_PERIOD:24
+                try{
+                    timeout(time: retention_period, unit: 'HOURS'){
+                        input(message: 'Waiting '+retention_period +' hours before cleaning up cluster \n. ' +
+                                       'Press <abort> to cleanup inmediately, <keep> for keeping it',
+                              ok: 'keep')
+                        keep_cluster = true
+                    }
+                }catch (err){
+                    // either timeout occurred or <abort> was selected
+                    keep_cluster = false
+                }
+            }
+        }}
+        cleanup{ script{
+            if(!keep_cluster){
+                sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
+            }
             dir("${WORKSPACE}@tmp") {
                 deleteDir()
             }
@@ -108,6 +134,6 @@ pipeline {
                 deleteDir()
             }
             sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
-       }
+        }}
     }
 }
