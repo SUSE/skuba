@@ -198,6 +198,7 @@ class Terraform(Platform):
 
     def _run_terraform_command(self, cmd, env={}):
         """Running terraform command in {terraform.tfdir}/{platform}"""
+        env['TF_LOG'] = self.conf.terraform.log_level
         cmd = f'{self._env_setup_cmd()}; terraform {cmd}'
         self.utils.runshellcommand(cmd, cwd=self.tfdir, env=env)
 

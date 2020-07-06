@@ -81,6 +81,7 @@ class BaseConfig:
             self.tfdir = "$WORKSPACE/ci/infra"
             self.tfvars = Constant.TERRAFORM_EXAMPLE
             self.plugin_dir = None
+            self.log_level = "INFO"
             self.lb = BaseConfig.NodeConfig()
             self.master = BaseConfig.NodeConfig()
             self.worker = BaseConfig.NodeConfig()
