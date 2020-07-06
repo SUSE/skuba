@@ -273,6 +273,10 @@ func (addon Addon) preflightManifestFilename() string {
 	return fmt.Sprintf("%s-preflight.yaml", addon.Addon)
 }
 
+func (addon Addon) legacyManifestPath(rootDir string) string {
+	return filepath.Join(rootDir, addon.manifestFilename())
+}
+
 func (addon Addon) manifestPath(rootDir string) string {
 	return filepath.Join(addon.baseResourcesDir(rootDir), addon.manifestFilename())
 }
@@ -318,6 +322,15 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	if err := os.MkdirAll(patchResourcesDir, 0700); err != nil {
 		return errors.Wrapf(err, "unable to create directory: %s", patchResourcesDir)
 	}
+
+	// migrates legacy addon manifest if existed
+	lagacyManifestPath := addon.legacyManifestPath(addon.addonDir())
+	if f, err := os.Stat(lagacyManifestPath); !os.IsNotExist(err) && !f.IsDir() {
+		if err := os.Remove(lagacyManifestPath); err != nil {
+			return errors.Wrapf(err, "unable to remove %s addon legacy rendered template", addon.Addon)
+		}
+	}
+
 	if err := ioutil.WriteFile(addon.manifestPath(addon.addonDir()), []byte(addonTemplateWarning+addonManifest), 0600); err != nil {
 		return errors.Wrapf(err, "unable to write %s addon rendered template", addon.Addon)
 	}
