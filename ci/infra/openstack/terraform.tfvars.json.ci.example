@@ -27,8 +27,7 @@
     },
     "packages": [
         "zypper-needs-restarting",
-        "kernel-default",
-        "-kernel-default-base"
+        "kernel-default-base"
     ],
     "authorized_keys": [],
     "ntp_servers": [

@@ -100,8 +100,8 @@ variable "packages" {
   type = list(string)
 
   default = [
-    "kernel-default",
-    "-kernel-default-base",
+    "zypper-needs-restarting",
+    "kernel-default-base",
   ]
 
   description = "list of additional packages to install"

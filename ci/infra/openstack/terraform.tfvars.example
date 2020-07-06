@@ -78,8 +78,7 @@ repositories = {}
 # Feel free to add more packages
 packages = [
   "zypper-needs-restarting",
-  "kernel-default",
-  "-kernel-default-base"
+  "kernel-default-base"
 ]
 
 # ssh keys to inject into all the nodes
