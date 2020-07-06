@@ -339,19 +339,19 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 			name:                     "1.15.2 without duplicates",
 			clusterVersion:           version.MustParseSemantic("1.15.2"),
 			currentAdmissionPlugins:  []string{},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "NodeRestriction", "PodSecurityPolicy"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
 		{
 			name:                     "1.15.2 with duplicates",
 			clusterVersion:           version.MustParseSemantic("1.15.2"),
 			currentAdmissionPlugins:  []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy"},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "ExtendedResourceToleration"},
 		},
 		{
 			name:                     "1.16.2 without duplicates",
 			clusterVersion:           version.MustParseSemantic("1.16.2"),
 			currentAdmissionPlugins:  []string{},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
 	}
 
