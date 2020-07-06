@@ -74,6 +74,9 @@ resource "vsphere_virtual_machine" "master" {
   datastore_id         = (var.vsphere_datastore == null ? null : data.vsphere_datastore.datastore[0].id)
   datastore_cluster_id = (var.vsphere_datastore_cluster == null ? null : data.vsphere_datastore_cluster.datastore[0].id)
   folder               = var.cpi_enable == true ? vsphere_folder.folder[0].path : null
+  wait_for_guest_net_timeout = 0
+  wait_for_guest_ip_timeout = 5
+
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
