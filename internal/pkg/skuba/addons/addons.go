@@ -22,7 +22,6 @@ package addons
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -374,53 +373,25 @@ func (addon Addon) deletePreflight(sandboxDir string) error {
 // manifest
 func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	klog.V(1).Infof("applying %q addon", addon.Addon)
-	sandboxDir, err := addon.createSandbox()
-	if err != nil {
-		return errors.Wrapf(err, "could not create %q addon sandbox", addon.Addon)
-	}
-	defer func() {
-		_ = addon.deleteSandbox(sandboxDir)
-	}()
-	baseResourcesDir := addon.baseResourcesDir(sandboxDir)
-	if err := os.MkdirAll(baseResourcesDir, 0700); err != nil {
-		return errors.Wrapf(err, "unable to create directory: %s", baseResourcesDir)
-	}
 
+	var err error
 	hasPreflight := false
 	if addon.preflightTemplater != nil {
-		hasPreflight, err = addon.applyPreflight(addonConfiguration, sandboxDir)
+		hasPreflight, err = addon.applyPreflight(addonConfiguration, addon.addonDir())
 		if err != nil {
 			return err
 		}
 	}
 	if addon.callbacks != nil {
-		if err := addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
+		if err = addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.Addon, err)
 			return err
 		}
 	}
 	if hasPreflight {
-		if err := addon.deletePreflight(sandboxDir); err != nil {
+		if err = addon.deletePreflight(addon.addonDir()); err != nil {
 			return err
 		}
-	}
-
-	renderedManifest, err := addon.Render(addonConfiguration)
-	if err != nil {
-		return err
-	}
-
-	patchResourcesDir := addon.patchResourcesDir(sandboxDir)
-	if err := os.MkdirAll(patchResourcesDir, 0700); err != nil {
-		return errors.Wrapf(err, "unable to create directory: %s", patchResourcesDir)
-	}
-	// Write base resources
-	if err := ioutil.WriteFile(addon.manifestPath(sandboxDir), []byte(renderedManifest), 0600); err != nil {
-		return errors.Wrapf(err, "could not create %q addon manifests", addon.Addon)
-	}
-	// Write patch resources
-	if err := addon.copyCustomizePatches(sandboxDir); err != nil {
-		return errors.Wrapf(err, "could not link %q addon patches", addon.Addon)
 	}
 	patchList, err := addon.listPatches()
 	if err != nil {
@@ -430,16 +401,16 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 	if err != nil {
 		return errors.Wrapf(err, "could not render kustomize file")
 	}
-	if err := ioutil.WriteFile(addon.kustomizePath(sandboxDir), []byte(kustomizeContents), 0600); err != nil {
+	if err = ioutil.WriteFile(addon.kustomizePath(addon.addonDir()), []byte(kustomizeContents), 0600); err != nil {
 		return errors.Wrapf(err, "could not create %q kustomize file", addon.Addon)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-k", sandboxDir)
+	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-k", addon.addonDir())
 	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
 		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
 		return err
 	}
 	if addon.callbacks != nil {
-		if err := addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
+		if err = addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			// TODO: should we rollback here?
 			klog.Errorf("failed on %q addon AfterApply callback: %v", addon.Addon, err)
 			return err
@@ -467,35 +438,6 @@ func (addon Addon) listPatches() ([]string, error) {
 		result = append(result, filepath.Base(patchPath))
 	}
 	return result, nil
-}
-
-func (addon Addon) createSandbox() (string, error) {
-	return ioutil.TempDir("", fmt.Sprintf("skuba-addon-%s", addon.Addon))
-}
-
-func (addon Addon) deleteSandbox(sandboxDir string) error {
-	return os.RemoveAll(sandboxDir)
-}
-
-func (addon Addon) copyCustomizePatches(targetDir string) error {
-	patches, err := addon.listPatches()
-	if err != nil {
-		return err
-	}
-	for _, patch := range patches {
-		source, err := os.Open(filepath.Join(addon.patchResourcesDir(addon.addonDir()), patch))
-		if err != nil {
-			return err
-		}
-		target, err := os.Create(filepath.Join(addon.patchResourcesDir(targetDir), patch))
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(target, source); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // addonVersionLower checks if the updated version of the Addon is greater than the current
