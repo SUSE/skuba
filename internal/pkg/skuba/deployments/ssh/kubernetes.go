@@ -113,9 +113,16 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 		// 1.17 is the last version included in CaaSP4. It's the tipping
 		// point where we changed our packaging.
 		// On 1.17 we can't remove kubernetes-1.17-kubeadm, because it doesn't exist.
-		// Removing kubeadm keeps kubelet alive.
-		// The rest needs to be removed on the next stage.
-		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-\"kubernetes-kubeadm<1.18\"", "-caasp-config")
+		// We are removing kubeadm while keeping kubelet alive to its version 1.17.
+		// For the initial migration we need to update crio kubeadm
+		// to 1.18 in stage1, due to conflict resolution: the caasp4
+		// cri-o-kubeadm-criconfig requires kubernetes-kubeadm which is
+		// not provided anymore (when we remove kubernetes-kubeadm, and
+		// because we don't want to have the same provides: on the new
+		// package to avoid upgrade during zypper migration).
+		// we need to remove cri-o in stage2 else 1.17 kubelet could
+		// complain about cri-runtime being absent.
+		pkgs = append(pkgs, "-patterns-caasp-Node-1.17", "-\"kubernetes-kubeadm<1.18\"", "-caasp-config", "-cri-o-kubeadm-criconfig")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
 	}
@@ -144,7 +151,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 		pkgs = append(pkgs, "-\"kubernetes-kubelet<1.18\"")
 		pkgs = append(pkgs, "-kubernetes-common")
 		pkgs = append(pkgs, "-\"kubernetes-client<1.18\"")
-		pkgs = append(pkgs, "-cri-o*")
+		pkgs = append(pkgs, "-\"cri-o<1.18\"")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
