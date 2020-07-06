@@ -76,7 +76,7 @@ pipeline {
 
         stage('Run Skuba e2e Test') {
             steps {
-                sh(script: "make -f ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
+                sh(script: "msdsdake -f ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
             }
         }
    }
