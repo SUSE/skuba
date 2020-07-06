@@ -119,6 +119,7 @@ pipeline {
         BRANCH_REPO = "${branch_repo}"
         BRANCH_REGISTRY = "${branch_registry}"
         ORIGINAL_REGISTRY = "${original_registry}"
+        TF_LOG = "DEBUG"
    }
 
     stages {
