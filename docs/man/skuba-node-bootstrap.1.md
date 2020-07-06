@@ -23,7 +23,7 @@ the first node of a cluster
   IP or host name of the node to connect to using SSH
 
 **--user, -u**
-  User identity used to connect to target
+  User identity used to connect to target (required)
 
 **--port, -p**
   Port to connect to using SSH
@@ -38,7 +38,7 @@ the first node of a cluster
   IP or FQDN of the bastion to connect to the other nodes using SSH
 
 **--bastion-user**
-  User identity used to connect to the bastion using SSH (default to target user)
+  User identity used to connect to the bastion using SSH (defaults to target user)
 
 **--bastion-port**
   Port to connect to the bastion using SSH (default 22)
