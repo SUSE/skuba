@@ -108,6 +108,7 @@ pipeline {
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         VMWARE_ENV_FILE = credentials('vmware-env')
+        OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = "${platform}" 
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
