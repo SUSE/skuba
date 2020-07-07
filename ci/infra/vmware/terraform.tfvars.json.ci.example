@@ -4,7 +4,7 @@
     "vsphere_datastore_cluster": null,
     "vsphere_network": "VM Network",
     "vsphere_resource_pool": "CaaSP_CI",
-    "template_name": "SLES15-SP2-RC2-up200525-guestinfo",
+    "template_name": "SLES15-SP2-GMC-up200615-guestinfo",
     "firmware": "bios",
     "stack_name": "caasp-jenkins-v5",
     "masters": 1,
