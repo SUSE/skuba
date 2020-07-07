@@ -217,18 +217,17 @@ pipeline {
     }
     post {
         always { script {
-            // collect artifacts only if pr-test stage was executed.
-            // FIXME: this will break if we add an stage after skuba-test
-            if (pr_context == 'jenkins/skuba-test'){
-                archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
-                archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
-                archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-                archiveArtifacts(artifacts: 'ci/infra/testrunner/*.xml', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+            archiveArtifacts(artifacts: 'ci/infra/testrunner/*.xml', allowEmptyArchive: true)
+            // only attempt to collect logs if platform was provisioned
+            if (fileExists("tfout.json")) {
+                archiveArtifacts(artifacts: 'tfout.json', allowEmptyArchive: true)
                 sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
                 archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
-                junit('ci/infra/testrunner/*.xml')
             }
-        } }
+        }}
         cleanup {
             sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
             dir("${WORKSPACE}@tmp") {
