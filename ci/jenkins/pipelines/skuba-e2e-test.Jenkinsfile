@@ -82,13 +82,17 @@ pipeline {
    }
 
    post {
-        always {
+        always { script {
             archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
             archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
-            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
-        }
+            // only attempt to collect logs if platform was provisioned
+            if (fileExists("tfout.json")) {
+                archiveArtifacts(artifacts: 'tfout.json', allowEmptyArchive: true)
+                sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
+                archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
+            }
+        }}
         cleanup {
             sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
             dir("${WORKSPACE}@tmp") {
