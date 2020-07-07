@@ -40,8 +40,11 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 )
 
-// defKnowHosts is the default `known_hosts` file
-const defKnowHosts = "known_hosts"
+const (
+	// defKnownHosts is the default `known_hosts` file
+	defKnownHosts = "known_hosts"
+	defSSHPort    = 22
+)
 
 // trustHostMessage is the message printed when we don't know about a host
 // fingerprint.
@@ -88,6 +91,9 @@ type Target struct {
 	targetName   string
 	sudo         bool
 	port         int
+	bastion      string
+	bastionUser  string
+	bastionPort  int
 	verboseLevel string
 	client       *ssh.Client
 }
@@ -95,12 +101,16 @@ type Target struct {
 // GetFlags adds init flags bound to the config to the specified flagset
 func (t *Target) GetFlags() *flag.FlagSet {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagSet.StringVarP(&t.user, "user", "u", "root", "User identity used to connect to target")
+	flagSet.StringVarP(&t.bastionUser, "bastion-user", "", "", "User identity used to connect to the bastion using SSH (default to target user)")
+	flagSet.IntVarP(&t.bastionPort, "bastion-port", "", defSSHPort, "Port to connect to the bastion using SSH")
+	flagSet.StringVarP(&t.bastion, "bastion", "", "", "IP or FQDN of the bastion to connect to the other nodes using SSH")
+	flagSet.StringVarP(&t.user, "user", "u", "", "User identity used to connect to target using SSH")
 	flagSet.BoolVarP(&t.sudo, "sudo", "s", false, "Run remote command via sudo")
-	flagSet.IntVarP(&t.port, "port", "p", 22, "Port to connect to using SSH")
+	flagSet.IntVarP(&t.port, "port", "p", defSSHPort, "Port to connect to using SSH")
 	flagSet.StringVarP(&t.targetName, "target", "t", "", "IP or FQDN of the node to connect to using SSH (required)")
 
 	_ = cobra.MarkFlagRequired(flagSet, "target")
+	_ = cobra.MarkFlagRequired(flagSet, "user")
 
 	return flagSet
 }
@@ -120,6 +130,9 @@ func (t *Target) GetDeployment(nodename string, role *deployments.Role, verboseL
 		user:         t.user,
 		sudo:         t.sudo,
 		port:         t.port,
+		bastion:      t.bastion,
+		bastionUser:  t.bastionUser,
+		bastionPort:  t.bastionPort,
 		verboseLevel: verboseLevel,
 	}
 	return &res
@@ -203,11 +216,11 @@ func (t *Target) initClient() error {
 		return errors.Errorf("SSH_AUTH_SOCK is undefined. Make sure ssh-agent is running")
 	}
 
-	conn, err := net.Dial("unix", socket)
+	agentConn, err := net.Dial("unix", socket)
 	if err != nil {
 		return err
 	}
-	agentClient := agent.NewClient(conn)
+	agentClient := agent.NewClient(agentConn)
 
 	// check a precondition: there must be some SSH keys loaded in the ssh agent
 	keys, err := agentClient.List()
@@ -219,50 +232,97 @@ func (t *Target) initClient() error {
 		return errSSHNoKeysErr
 	}
 
-	hostKeyCallback, err := t.hostKeyChecker()
+	hostKeyCallback, err := hostKeyChecker()
 	if err != nil {
 		return err
 	}
 
-	config := &ssh.ClientConfig{
-		User: t.user,
+	nodeConfig, err := createClientConfig(t.user, agentClient, hostKeyCallback)
+	if err != nil {
+		return err
+	}
+	nodeAddr := fmt.Sprintf("%s:%d", t.target.Target, t.port)
+
+	// Use direct connection to the node
+	if t.bastion == "" {
+		t.client, err = ssh.Dial("tcp", nodeAddr, nodeConfig)
+		if err != nil {
+			return checkDialError(err, t.target.Target)
+		}
+		return nil
+	}
+
+	if t.bastionUser == "" {
+		t.bastionUser = t.user
+	}
+
+	bastionConfig, err := createClientConfig(t.bastionUser, agentClient, hostKeyCallback)
+	if err != nil {
+		return err
+	}
+
+	// Start a client connection to the bastion
+	bastionClient, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.bastion, t.bastionPort), bastionConfig)
+	if err != nil {
+		return checkDialError(err, t.bastion)
+	}
+
+	// Start a client connection from the bastion to the node
+	bastionTargetConn, err := bastionClient.Dial("tcp", nodeAddr)
+	if err != nil {
+		return checkDialError(err, t.target.Target)
+	}
+
+	// Establish an authenticated connection to the node over the bastion connection
+	sshConn, newChannelChan, requestChan, err := ssh.NewClientConn(bastionTargetConn, nodeAddr, nodeConfig)
+	if err != nil {
+		klog.Errorf("cannot establish an authenticated connection to the node")
+		return err
+	}
+
+	t.client = ssh.NewClient(sshConn, newChannelChan, requestChan)
+
+	return nil
+}
+
+func createClientConfig(user string, agentClient agent.ExtendedAgent, hostKeyCallback ssh.HostKeyCallback) (*ssh.ClientConfig, error) {
+	return &ssh.ClientConfig{
+		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeysCallback(agentClient.Signers),
 		},
 		HostKeyCallback: hostKeyCallback,
-	}
+	}, nil
+}
 
-	t.client, err = ssh.Dial("tcp", fmt.Sprintf("%s:%d", t.target.Target, t.port), config)
-	if err != nil {
-		// crypto/ssh does not provide constants for some common errors, so we
-		// must "pattern match" the error strings in order to guess what failed
-		if strings.Contains(err.Error(), "unable to authenticate") {
-			klog.Errorf("ssh authentication error: please make sure you have added to "+
-				"your ssh-agent a ssh key that is authorized in %q.", t.target.Target)
-			return errSSHAuthErr
-		}
-		return err
+func checkDialError(err error, host string) error {
+	// crypto/ssh does not provide constants for some common errors, so we
+	// must "pattern match" the error strings in order to guess what failed
+	if strings.Contains(err.Error(), "unable to authenticate") {
+		klog.Errorf("ssh authentication error: please make sure you have added to "+
+			"your ssh-agent a ssh key that is authorized in %q.", host)
+		return errSSHAuthErr
 	}
-	return nil
+	return err
 }
 
 // hostKeyChecker checks that the host fingerprint is stored in the known_hosts
 // if not present, it warns user (optionally asking for the key to be accepted or not)
 // adding the key to the `known_hosts` file. In case the key is found but there is a
 // mismatch (or the key has been rejected), it returns an error.
-func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
+func hostKeyChecker() (ssh.HostKeyCallback, error) {
 	// make sure the filename exists from the start
-	err := os.MkdirAll(path.Dir(defKnowHosts), 0700)
+	err := os.MkdirAll(path.Dir(defKnownHosts), 0700)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := os.OpenFile(defKnowHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	out, err := os.OpenFile(defKnownHosts, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, err
 	}
 
-	hostKeyCallback, err := knownhosts.New(defKnowHosts)
+	hostKeyCallback, err := knownhosts.New(defKnownHosts)
 	if err != nil {
 		klog.Errorf("could not create callback function for checking hosts fingerprints: %s", err)
 		return nil, errSSHNoKeysErr
@@ -292,9 +352,9 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 					Filename    string
 				}{
 					algoStr,
-					remote.String(),
+					hostname,
 					keyFingerprintStr,
-					defKnowHosts,
+					defKnownHosts,
 				}); err != nil {
 					klog.Fatal("could not perform replacements in template")
 				}
@@ -308,8 +368,8 @@ func (t Target) hostKeyChecker() (ssh.HostKeyCallback, error) {
 			if len(ke.Want) == 0 {
 				klog.Warning(replaceMessage(trustHostMessage))
 				klog.Infof("accepting SSH key for %q", hostname)
-				klog.Infof("adding fingerprint for %q to %q", hostname, defKnowHosts)
-				line := knownhosts.Line([]string{remote.String()}, key)
+				klog.Infof("adding fingerprint for %q to %q", hostname, defKnownHosts)
+				line := knownhosts.Line([]string{hostname}, key)
 				if _, err := out.WriteString(line + "\n"); err != nil {
 					return err
 				}
