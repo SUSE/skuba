@@ -87,6 +87,7 @@
     repo-credentials: github-token
     jobs:
         - '{name}/e2e-test'
+        - '{name}/obs-branch'
 
 
 - job:

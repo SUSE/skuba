@@ -1,0 +1,39 @@
+- job-template:
+    name: '{name}/obs-branch'
+    number-to-keep: 30
+    days-to-keep: 30
+    branch: master
+    concurrent: false
+    wrappers:
+        - timeout:
+            timeout: 30
+            fail: true
+        - timestamps
+        - build-name:
+          name: '#${BUILD_NUMBER} / ${ENV,var="BRANCH"}'
+    node: caasp-team-private-integration
+    triggers:
+    parameters:
+       - string:
+            name: PROJECT
+            default: 'Devel:CaaSP:5'
+            description: The OBS project on whose staging branches to act on
+       - string:
+            name: BRANCH
+            default: 'Branches:test'
+            description: The OBS project to use as a staging branch of PROJECT. Will be appended to PROJECT. Will be created if it does not exist.
+       - string:
+            name: REQUESTS
+            default: ''
+            description: The OBS requests to add into the staging branch.
+       - choice:
+            name: REBUILD
+            default: 'containers'
+            choices:
+              - containers
+              - both
+              - packages
+            description: Whether to linkpac only containers, packages, or both that where not added from a request into the staging for rebuilding.
+   builders:
+      - shell: !include-raw: obs-branch.py
+
