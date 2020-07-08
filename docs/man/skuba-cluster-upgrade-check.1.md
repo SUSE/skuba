@@ -22,7 +22,7 @@ check - Lists deprecated APIs used
   Whether to walk in the whole API, checking if all objects type still exists in the current swagger.json. May be IO intensive to APIServer.
 
 **description**
-  Wether to show the description of the deprecated object. The description may contain the solution for the deprecation. (Default=false)
+  Whether to show the description of the deprecated object. The description may contain the solution for the deprecation. (default true)
 
 **kubernetes-version**
   Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects. (Default=next upgradable kubernetes version)
@@ -31,13 +31,13 @@ check - Lists deprecated APIs used
   Where to keep swagger.json downloaded file. If not provided will use the system temporary directory.
 
 **force-download**
-  Wether to force the download of a new swagger.json file even if one exists. (Default=false).
+  Whether to force the download of a new swagger.json file even if one exists.
 
 **format**
-  Format in which the list will be displayed [stdout, plain, json, yaml]. (Default=plain).
+  Format in which the list will be displayed [stdout, plain, json, yaml]. (default plain).
 
 **filename**
   Name of the file the results will be saved to, if empty it will display to stdout.
 
 **input-file**
-  Location of a file or directory containing k8s manifests to be analized.
+  Location of a file or directory containing kubernetes manifests to be analized.
