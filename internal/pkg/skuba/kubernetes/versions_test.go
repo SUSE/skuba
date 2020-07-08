@@ -214,6 +214,14 @@ func TestAddonVersionForClusterVersion(t *testing.T) {
 			addon:          "not-exist",
 			expectErr:      true,
 		},
+		addonTestData{
+			name:           "Cilium 1.7 for 1.18",
+			clusterVersion: version.MustParseSemantic("1.18.6"),
+			addon:          "cilium",
+			expectVersion:  "1.7.6",
+			expectManifestVersion:  5,
+			expectErr:      false,
+		},
 	)
 
 	for _, tt := range tests {
