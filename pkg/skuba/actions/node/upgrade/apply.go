@@ -23,7 +23,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -182,7 +185,39 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	if err != nil {
 		return err
 	}
-
+	// After the node upgrade to Kubernetes 1.18, Cilium pods are stuck in
+	// the Init:Error state due to cri-o issue;
+	// "Error reserving pod name k8s_cilium-<endofpodname>kube-system<number> for id <id>: name is reserved"
+	// Deleting the pod will trigger its creation by k8s, without problem
+	// of name reservation. To avoid a massive flood of deletion, we only
+	// select the Cilium pod running on the node on which we have done the
+	// upgrade.
+	if currentVersion == "1.17" {
+		ciliumPod, err := kubernetes.GetFirstPodMatchingSelectors(
+			client,
+			metav1.NamespaceSystem,
+			"k8s-app=cilium",
+			fmt.Sprintf("spec.nodeName=%s", target.Nodename),
+		)
+		if err != nil {
+			return err
+		}
+		switch ciliumPod.Status.Phase {
+		case v1.PodFailed:
+			klog.V(4).Info("cilium pod in failed state")
+			if err := kubernetes.DeletePod(client, metav1.NamespaceSystem, ciliumPod.GetName()); err != nil {
+				return errors.Wrap(err, "could not delete failed Cilium pod")
+			}
+		case v1.PodUnknown:
+			// TODO: rmeove this case if not needed
+			klog.V(4).Info("cilium pod in unknown state")
+			if err := kubernetes.DeletePod(client, metav1.NamespaceSystem, ciliumPod.GetName()); err != nil {
+				return errors.Wrap(err, "could not delete failed Cilium pod")
+			}
+		default:
+			klog.V(4).Infof("cilium pod state: %s", ciliumPod.Status.Phase)
+		}
+	}
 	if skubaUpdateWasEnabled {
 		err = target.Apply(nil,
 			"skuba-update.start.no-block",
