@@ -89,9 +89,9 @@ node('caasp-team-private-integration') {
            }
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/5/branches/${branch_name}/containers"
-               original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers"
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/4.0:/Branches:/${branch_name}/SLE_15_SP1"
+               branch_registry = "registry.suse.de/devel/caasp/4.0/branches/${branch_name}/containers"
+               original_registry = "registry.suse.de/devel/caasp/4.0/containers/cr/containers"
            }
 
         } catch (Exception e) {
@@ -116,7 +116,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
         LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
-        LIBVIRT_IMAGE_URI = 'https://download.suse.de/install/SLE-15-SP2-JeOS-GM/SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2'
+        LIBVIRT_IMAGE_URI = 'http://download.suse.de/install/SLE-15-SP1-JeOS-QU2/SLES15-SP1-JeOS.x86_64-15.1-OpenStack-Cloud-QU2.qcow2'
         BRANCH_REPO = "${branch_repo}"
         BRANCH_REGISTRY = "${branch_registry}"
         ORIGINAL_REGISTRY = "${original_registry}"
