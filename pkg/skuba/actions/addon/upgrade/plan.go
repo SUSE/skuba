@@ -23,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 	clientset "k8s.io/client-go/kubernetes"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/addons"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
@@ -48,6 +49,11 @@ func Plan(client clientset.Interface) error {
 		return errors.Errorf("Not all nodes match clusterVersion %s", currentVersion)
 	}
 
+	clusterConfiguration, err := kubeadm.GetClusterConfiguration(client)
+	if err != nil {
+		return errors.Wrap(err, "Could not fetch cluster configuration")
+	}
+
 	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
@@ -55,6 +61,16 @@ func Plan(client clientset.Interface) error {
 	if addon.HasAddonUpdate(updatedAddons) {
 		fmt.Printf("Addon upgrades for %s:\n", currentVersion)
 		addon.PrintAddonUpdates(updatedAddons)
+
+		addonConfiguration := addons.AddonConfiguration{
+			ClusterVersion: currentClusterVersion,
+			ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
+			ClusterName:    clusterConfiguration.ClusterName,
+		}
+		dryRun := true
+		if err := addons.DeployAddons(client, addonConfiguration, dryRun); err != nil {
+			return errors.Wrap(err, "Failed to plan addons")
+		}
 	} else {
 		fmt.Printf("Congratulations! Addons for %s are already at the latest version available\n", currentVersion)
 	}

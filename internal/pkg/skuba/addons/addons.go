@@ -155,7 +155,7 @@ func addonsByPriority() []Addon {
 
 // DeployAddons loops over the sorted list of addons, checks if each needs to be deployed and
 // triggers its deployment
-func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration) error {
+func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration, dryRun bool) error {
 	skubaConfiguration, err := skuba.GetSkubaConfiguration(client)
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 			continue
 		}
 		if hasToBeApplied {
-			if err := addon.Apply(client, addonConfiguration, skubaConfiguration); err == nil {
+			if err := addon.Apply(client, addonConfiguration, skubaConfiguration, dryRun); err == nil {
 				klog.V(1).Infof("%q addon correctly applied", addonName)
 			} else {
 				klog.Errorf("failed to apply %q addon (%v)", addonName, err)
@@ -339,7 +339,7 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 // applyPreflight applies the preflight deployment/daemonset manifest if such
 // is defined by the addon. It returns a bool whether preflight was defined
 // by the addon and an error.
-func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, sandboxDir string) (bool, error) {
+func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, rootDir string, dryRun bool) (bool, error) {
 	renderedPreflightManifest, err := addon.RenderPreflight(addonConfiguration)
 	if err != nil {
 		return false, err
@@ -347,20 +347,31 @@ func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, sandbox
 	if renderedPreflightManifest == "" {
 		return false, nil
 	}
-	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+	preflightManifestPath := addon.preflightManifestPath(rootDir)
 	if err := ioutil.WriteFile(preflightManifestPath, []byte(renderedPreflightManifest), 0600); err != nil {
 		return true, errors.Wrapf(err, "could not create %q addon manifests", addon.Addon)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+	kubectlArgs := []string{
+		"apply",
+		"--kubeconfig", skubaconstants.KubeConfigAdminFile(),
+		"-f", preflightManifestPath,
+	}
+	if dryRun {
+		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+	}
+	cmd := exec.Command("kubectl", kubectlArgs...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		// prints out stderr
+		fmt.Printf("%s", stderr.Bytes())
 		return true, err
 	}
 	return true, nil
 }
 
-func (addon Addon) deletePreflight(sandboxDir string) error {
-	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+func (addon Addon) deletePreflight(rootDir string) error {
+	preflightManifestPath := addon.preflightManifestPath(rootDir)
 	cmd := exec.Command("kubectl", "delete", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
 	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
 		klog.Errorf("failed to run kubectl delete: %s", combinedOutput)
@@ -371,24 +382,26 @@ func (addon Addon) deletePreflight(sandboxDir string) error {
 
 // Apply deploys the addon by calling kubectl apply and pointing to the generated addon
 // manifest
-func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration, dryRun bool) error {
 	klog.V(1).Infof("applying %q addon", addon.Addon)
 
 	var err error
 	hasPreflight := false
 	if addon.preflightTemplater != nil {
-		hasPreflight, err = addon.applyPreflight(addonConfiguration, addon.addonDir())
+		hasPreflight, err = addon.applyPreflight(addonConfiguration, addon.addonDir(), dryRun)
 		if err != nil {
 			return err
 		}
 	}
-	if addon.callbacks != nil {
+	if addon.callbacks != nil && !dryRun {
 		if err = addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.Addon, err)
 			return err
 		}
 	}
-	if hasPreflight {
+	if hasPreflight && !dryRun {
+		// since we did not run applyPreflight if dryRun=true
+		// bypass delete preflight manifests
 		if err = addon.deletePreflight(addon.addonDir()); err != nil {
 			return err
 		}
@@ -404,17 +417,33 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 	if err = ioutil.WriteFile(addon.kustomizePath(addon.addonDir()), []byte(kustomizeContents), 0600); err != nil {
 		return errors.Wrapf(err, "could not create %q kustomize file", addon.Addon)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-k", addon.addonDir())
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+	kubectlArgs := []string{
+		"apply",
+		"--kubeconfig", skubaconstants.KubeConfigAdminFile(),
+		"-k", addon.addonDir(),
+	}
+	if dryRun {
+		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+	}
+	cmd := exec.Command("kubectl", kubectlArgs...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		// prints out stderr
+		fmt.Printf("%s", stderr.Bytes())
 		return err
 	}
-	if addon.callbacks != nil {
+	if addon.callbacks != nil && !dryRun {
 		if err = addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			// TODO: should we rollback here?
 			klog.Errorf("failed on %q addon AfterApply callback: %v", addon.Addon, err)
 			return err
 		}
+	}
+
+	if dryRun {
+		// immediately return, do not update skuba-config ConfigMap
+		return nil
 	}
 	return updateSkubaConfigMapWithAddonVersion(client, addon.Addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
