@@ -53,3 +53,19 @@ func getPodFromPodList(list *v1.PodList, name string) (*v1.Pod, error) {
 	}
 	return nil, fmt.Errorf("could not find pod %s in pod list", name)
 }
+
+// return the pod associated with the label and FieldSelector
+func getFirstPodMatchingSelectors(client clientset.Interface, namespace string, labelSelector string, fieldSelector string) (string, error) {
+	pods, err := client.CoreV1().Pods(namespace).List(
+		context.TODO(),
+		metav1.ListOptions{
+			LabelSelector: labelSelector,
+			FieldSelector: fieldSelector,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+	pod := &pods.Items[0]
+	return pod.GetName(), nil
+}

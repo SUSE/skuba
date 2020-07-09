@@ -182,7 +182,18 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	if err != nil {
 		return err
 	}
+	// During 1.17 migration, after node is on 1.18 kubeadm/kubelet/crio, we need to tear down the daemonset for cilium
+	// because of error like this:
+	// "Error reserving pod name k8s_cilium-6qhkh_kube-system_1e9495f3-f935-4911-a609-0fd9a32e22b8_2 for id 99d1395a5e84cfd71a2017a1284c0dd51ddbf5395f3ea99d61c376bb6b8e0944: name is reserved"
+	if currentVersion == "1.17" {
+		// TODO, trigger client-go deletion of pod with the following filter. Maybe use getPodwithLabel
+		ciliumPod, err := kubernetes.getFirstPodMatchingSelectors(client, "kube-system", "k8s-app=cilium", fmt.Sprint("spec.nodeName=%s", target.Nodename))
+		if err != nil {
+			return err
+		}
+		// delete ciliumPod
 
+	}
 	if skubaUpdateWasEnabled {
 		err = target.Apply(nil,
 			"skuba-update.start.no-block",
