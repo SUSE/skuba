@@ -3,7 +3,7 @@
     "libvirt_keyfile": "",
     "network_name": "",
     "pool": "default",
-    "image_uri": "",
+    "image_uri": "https://download.suse.de/install/SLE-15-SP2-JeOS-GM/SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2",
     "stack_name": "testing",
     "network_cidr": "10.17.0.0/22",
     "dns_domain": "caasp.local",
