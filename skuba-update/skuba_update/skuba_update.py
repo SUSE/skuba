@@ -43,7 +43,6 @@ ZYPPER_REBOOT_NEEDED_PATH = '/var/run/reboot-needed'
 REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 # Exit codes as defined by zypper.
-
 ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
 ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
@@ -91,25 +90,19 @@ def parse_args():
 
     annotate_only_msg = \
         'Do not install any update, just annotate there are available updates'
-    version_msg = f"%(prog)s {version()}"
 
     parser = argparse.ArgumentParser(description='Updates a CaaSP node')
     parser.add_argument(
         '--annotate-only', action='store_true', help=annotate_only_msg
     )
     parser.add_argument(
-        '--version', action='version', version=version_msg
+        "--version",
+        action="version",
+        version="%(prog)s {0}".format(
+            pkg_resources.require("skuba-update")[0].version),
     )
 
     return parser.parse_args()
-
-
-def version():
-    """
-    Returns the version of the current skuba-update
-    """
-
-    return pkg_resources.require('skuba-update')[0].version
 
 
 def update():
@@ -117,10 +110,10 @@ def update():
     Performs an update operation.
     """
 
-    code = run_zypper_patch()
-    if is_restart_needed(code):
-        code = run_zypper_patch()
-    return code
+    returncode = run_zypper_patch()
+    if zypper_needs_transaction_restart(returncode):
+        returncode = run_zypper_patch()
+    return returncode
 
 
 def annotate_node():
@@ -256,10 +249,10 @@ def is_zypper_error(code):
     return code != 0 and code < ZYPPER_EXIT_INF_UPDATE_NEEDED
 
 
-def is_restart_needed(code):
+def zypper_needs_transaction_restart(code):
     """
-    Returns true of the given code is defined by zypper to mean that restart is
-    needed (zypper itself has been updated).
+    Returns true if the given return code by zypper means a restart
+    of zypper is needed (zypper itself has been updated).
     """
 
     return code == ZYPPER_EXIT_INF_RESTART_NEEDED
@@ -322,8 +315,8 @@ def run_zypper_command(command, needsOutput=False):
 
 def run_zypper_patch():
     """
-    Run patch updates without --with-optional. --with-optional can cause
-    conflicts with K8s upgrade scenario.
+    Install patch updates (zypper patch) without '--with-optional' flag.
+    --with-optional can cause conflicts with K8s upgrade scenario.
     """
     return run_zypper_command([
         '--non-interactive', '--non-interactive-include-reboot-patches',
