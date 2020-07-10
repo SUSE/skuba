@@ -47,7 +47,7 @@ var (
 	inputFile string
 )
 
-// newUpgradeCheckCmd creates a new `skuba check` cobra command
+// newUpgradeCheckCmd creates a new `check` cobra command that tests for deprecated APIs
 func newUpgradeCheckCmd() *cobra.Command {
 	checkOptions := &checkOptions{}
 
@@ -126,7 +126,7 @@ func newUpgradeCheckCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&checkOptions.K8sVersion, "kubernetes-version", "", "Which kubernetes release version (https://github.com/kubernetes/kubernetes/releases) should be used to validate objects.")
 	cmd.PersistentFlags().StringVar(&checkOptions.SwaggerDir, "swagger-dir", "", "Where to keep swagger.json downloaded file. If not provided will use the system temporary directory")
 	cmd.PersistentFlags().BoolVar(&checkOptions.ForceDownload, "force-download", false, "Whether to force the download of a new swagger.json file even if one exists.")
-	cmd.PersistentFlags().StringVar(&format, "format", "plain", "Format in which the list will be displayed [stdout, plain, json, yaml]")
+	cmd.PersistentFlags().StringVar(&format, "format", "plain", "Format in which the list will be displayed [plain, json, yaml]")
 	cmd.PersistentFlags().StringVar(&filename, "filename", "", "Name of the file the results will be saved to, if empty it will display to stdout")
 	cmd.PersistentFlags().StringVar(&inputFile, "input-file", "", "Location of a file or directory containing kubernetes manifests to be analized")
 	return cmd
