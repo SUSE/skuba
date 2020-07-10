@@ -34,6 +34,28 @@ func Plan(client clientset.Interface) error {
 	if err != nil {
 		return err
 	}
+	clusterConfiguration, err := kubeadm.GetClusterConfiguration(client)
+	if err != nil {
+		return errors.Wrap(err, "Could not fetch cluster configuration")
+	}
+
+	addonConfiguration := addons.AddonConfiguration{
+		ClusterVersion: currentClusterVersion,
+		ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
+		ClusterName:    clusterConfiguration.ClusterName,
+	}
+
+	// check local addons cluster folder configuration is up-to-date
+	match, err := addons.CheckLocalAddonsBaseManifests(addonConfiguration)
+	if err != nil {
+		return err
+	}
+	if !match {
+		fmt.Println("Current local addons cluster folder configuration is out-of-date.")
+		fmt.Println("Please run \"skuba addon refresh localconfig\" before you perform addon upgrade.")
+		return nil
+	}
+
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
 	allNodesVersioningInfo, err := kubernetes.AllNodesVersioningInfo(client)
@@ -49,11 +71,6 @@ func Plan(client clientset.Interface) error {
 		return errors.Errorf("Not all nodes match clusterVersion %s", currentVersion)
 	}
 
-	clusterConfiguration, err := kubeadm.GetClusterConfiguration(client)
-	if err != nil {
-		return errors.Wrap(err, "Could not fetch cluster configuration")
-	}
-
 	updatedAddons, err := addon.UpdatedAddons(client, currentClusterVersion)
 	if err != nil {
 		return err
@@ -62,11 +79,6 @@ func Plan(client clientset.Interface) error {
 		fmt.Printf("Addon upgrades for %s:\n", currentVersion)
 		addon.PrintAddonUpdates(updatedAddons)
 
-		addonConfiguration := addons.AddonConfiguration{
-			ClusterVersion: currentClusterVersion,
-			ControlPlane:   clusterConfiguration.ControlPlaneEndpoint,
-			ClusterName:    clusterConfiguration.ClusterName,
-		}
 		dryRun := true
 		if err := addons.DeployAddons(client, addonConfiguration, dryRun); err != nil {
 			return errors.Wrap(err, "Failed to plan addons")

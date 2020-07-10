@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"text/template"
 
@@ -151,6 +152,19 @@ func addonsByPriority() []Addon {
 		return sortedAddons[i].addonPriority < sortedAddons[j].addonPriority
 	})
 	return sortedAddons
+}
+
+func CheckLocalAddonsBaseManifests(addonConfiguration AddonConfiguration) (bool, error) {
+	for _, addon := range addonsByPriority() {
+		if !addon.IsPresentForClusterVersion(addonConfiguration.ClusterVersion) {
+			// This registered addon is not available on the chosen Kubernetes version, skip it
+			continue
+		}
+		if match, err := addon.compareLocalBaseManifest(addonConfiguration); err != nil || !match {
+			return match, err
+		}
+	}
+	return true, nil
 }
 
 // DeployAddons loops over the sorted list of addons, checks if each needs to be deployed and
@@ -305,6 +319,23 @@ func (addon Addon) kustomizeContents(resourceManifests []string, patchManifests 
 
 func (addon Addon) kustomizePath(rootDir string) string {
 	return filepath.Join(rootDir, "kustomization.yaml")
+}
+
+func (addon Addon) compareLocalBaseManifest(addonConfiguration AddonConfiguration) (bool, error) {
+	localManifest, err := ioutil.ReadFile(addon.manifestPath(addon.addonDir()))
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to read %s addon rendered template", addon.Addon)
+	}
+
+	addonManifest, err := addon.Render(addonConfiguration)
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to render %s addon template", addon.Addon)
+	}
+
+	if !reflect.DeepEqual(localManifest, []byte(addonTemplateWarning+addonManifest)) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // Write creates the manifest yaml file of the Addon after rendering its template
