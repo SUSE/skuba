@@ -324,9 +324,9 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	}
 
 	// migrates legacy addon manifest if existed
-	lagacyManifestPath := addon.legacyManifestPath(addon.addonDir())
-	if f, err := os.Stat(lagacyManifestPath); !os.IsNotExist(err) && !f.IsDir() {
-		if err := os.Remove(lagacyManifestPath); err != nil {
+	legacyManifestPath := addon.legacyManifestPath(addon.addonDir())
+	if f, err := os.Stat(legacyManifestPath); !os.IsNotExist(err) && !f.IsDir() {
+		if err := os.Remove(legacyManifestPath); err != nil {
 			return errors.Wrapf(err, "unable to remove %s addon legacy rendered template", addon.Addon)
 		}
 	}

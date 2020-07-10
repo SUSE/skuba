@@ -27,7 +27,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 )
 
-// Render implements the `skuba cluster update localconfig` command.
+// AddonsBaseManifest implements the `skuba addon refresh localconfig` command.
 func AddonsBaseManifest(client clientset.Interface) error {
 	currentClusterVersion, err := kubeadm.GetCurrentClusterVersion(client)
 	if err != nil {
@@ -47,10 +47,10 @@ func AddonsBaseManifest(client clientset.Interface) error {
 	}
 	for addonName, addon := range addons.Addons {
 		if err := addon.Write(addonConfiguration); err != nil {
-			return errors.Wrapf(err, "Failed to refresh addon %s manifest", string(addonName))
+			return errors.Wrapf(err, "failed to refresh addon %s manifest", string(addonName))
 		}
 	}
 
-	fmt.Println("Successfully refresh addons base manifests")
+	fmt.Println("Successfully refreshed addons base manifests")
 	return nil
 }
