@@ -213,3 +213,7 @@ in the cluster.
 ### Availability zones
 
 Right now all the nodes are created inside of the same availability zone.
+
+It is possible to filter the available AZ by configuring `availability_zones_filter`.
+
+The available filters can be found [here in the AWS API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html)
