@@ -38,7 +38,7 @@ packages:
     branch_repo: $BRANCH_REPO
 
 utils:
-  ssh_key: "$WORKSPACE/skuba/ci/infra/id_shared" 
+  ssh_key: "$WORKSPACE/ci/infra/id_shared" 
   ssh_user: "sles"
   ssh_sock: "/tmp/$TERRAFORM_STACK_NAME/agent.sock"
 
