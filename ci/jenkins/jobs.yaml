@@ -5,7 +5,6 @@
     repo-credentials: github-token
     jobs:
         - '{name}/test'
-        - '{name}/test-libvirt'
         - '{name}/update-unit'
         - '{name}/update-acceptance'
         - '{name}/handle-pr'
@@ -20,9 +19,11 @@
           - openstack
           - vmware
       version:
-          - v4
-          - v5:
-              branch: experimental-v5
+          - v4:
+              sonobuoy_version: 'v0.17'
+              schedule: '1-3'
+              branch: maintenance-caasp-v4 
+          - v5
       jobs:
           - '{name}/{version}/{platform}'
 
@@ -33,6 +34,10 @@
     repo-credentials: github-token
     platform:
         - vmware
+    version:
+        - v4
+        - v5:
+            branch: experimental-v5
     test:
         - test_addon_upgrade
         - test_cilium
@@ -77,6 +82,14 @@
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
 
+- project:
+    name: caasp-jobs/dev
+    repo-name: skuba
+    repo-owner: SUSE
+    repo-credentials: github-token
+    jobs:
+        - '{name}/e2e-test'
+
 
 - job:
     name: caasp-jobs/caasp-jjb-skuba
@@ -98,5 +111,4 @@
                     - master
                 browser: auto
                 suppress-automatic-scm-triggering: true
-                basedir: skuba
-        script-path: skuba/ci/jenkins/pipelines/skuba-jjb.Jenkinsfile
+        script-path: ci/jenkins/pipelines/skuba-jjb.Jenkinsfile

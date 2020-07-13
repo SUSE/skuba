@@ -51,25 +51,11 @@ pipeline {
         } } }
 
         stage('Setting GitHub in-progress status') { steps {
-            sh(script: "${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'pending'", label: "Sending pending status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'pending'", label: "Sending pending status")
         } }
 
-        stage('Git Clone') { steps {
-            deleteDir()
-            checkout([$class: 'GitSCM',
-                      branches: [[name: "*/${BRANCH_NAME}"]],
-                      doGenerateSubmoduleConfigurations: false,
-                      extensions: [[$class: 'LocalBranch'],
-                                   [$class: 'WipeWorkspace'],
-                                   [$class: 'RelativeTargetDirectory', relativeTargetDir: 'skuba']],
-                      submoduleCfg: [],
-                      userRemoteConfigs: [[refspec: '+refs/pull/*/head:refs/remotes/origin/PR-*',
-                                           credentialsId: 'github-token',
-                                           url: 'https://github.com/SUSE/skuba']]])
-        }}
-
         stage('Info') { steps {
-            sh(script: "make -f skuba/ci/Makefile info", label: 'Info')
+            sh(script: "make -f ci/Makefile info", label: 'Info')
         } }
 
         stage('Setup Environment') { steps {
@@ -80,9 +66,9 @@ pipeline {
         stage('Test Jobs') { steps {
             sh(script: """
                    source ${WORKSPACE}/venv/bin/activate
-                   make -f skuba/ci/Makefile test_jenkins_jobs
+                   make -f ci/Makefile test_jenkins_jobs
                 """, label: 'Test Jenkins Jobs')
-            zip archive: true, dir: 'skuba/ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
+            zip archive: true, dir: 'ci/jenkins/jobs', zipFile: 'jenkins_jobs.zip'
         } }
     }
     post {
@@ -92,13 +78,13 @@ pipeline {
             }
         }
         unstable {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         failure {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'failure'", label: "Sending failure status")
+            sh(script: "{PR_MANAGER} update-pr-status ${PR_CONTEXT} 'failure'", label: "Sending failure status")
         }
         success {
-            sh(script: "skuba/${PR_MANAGER} update-pr-status ${GIT_COMMIT} ${PR_CONTEXT} 'success'", label: "Sending success status")
+            sh(script: "${PR_MANAGER} update-pr-status ${PR_CONTEXT} 'success'", label: "Sending success status")
         }
     }
 }
