@@ -31,7 +31,7 @@ login - Authenticate to a cluster and authorized with kubeconfig
   The authentication connector ID
 
 **--root-ca, -r**
-  The cluster root certificate authority chain file
+  The kube-apiserver certificate authority chain file
 
 **--insecure, -k**
   Insecure SSL/TLS connection to OIDC dex server and further kube apiserver (true|false)

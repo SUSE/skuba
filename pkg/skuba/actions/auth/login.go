@@ -44,15 +44,15 @@ const (
 
 // LoginConfig represents the login configuration
 type LoginConfig struct {
-	DexServer          string
-	Username           string
-	Password           string
-	RootCAPath         string
-	InsecureSkipVerify bool
-	AuthConnector      string
-	ClusterName        string
-	KubeConfigPath     string
-	Debug              bool
+	DexServer           string
+	Username            string
+	Password            string
+	KubeAPIServerCAPath string
+	InsecureSkipVerify  bool
+	AuthConnector       string
+	ClusterName         string
+	KubeConfigPath      string
+	Debug               bool
 }
 
 // Login do authentication login process
@@ -60,8 +60,8 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	var err error
 	var rootCAData []byte
 
-	if !cfg.InsecureSkipVerify && cfg.RootCAPath != "" {
-		rootCAData, err = ioutil.ReadFile(cfg.RootCAPath)
+	if !cfg.InsecureSkipVerify && cfg.KubeAPIServerCAPath != "" {
+		rootCAData, err = ioutil.ReadFile(cfg.KubeAPIServerCAPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "read CA failed")
 		}
