@@ -14,6 +14,11 @@ resource "aws_vpc" "platform" {
 # list of az which can be access from the current region
 data "aws_availability_zones" "az" {
   state = "available"
+
+  filter {
+    name = var.availability_zones_filter.name
+    values = var.availability_zones_filter.values
+  }
 }
 
 resource "aws_vpc_dhcp_options" "platform" {
