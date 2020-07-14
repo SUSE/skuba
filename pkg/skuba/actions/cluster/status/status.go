@@ -19,9 +19,11 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -55,19 +57,29 @@ func Status(client clientset.Interface) error {
 				node.Labels["caasp-role.kubernetes.io"] = strings.Split(label, "/")[1]
 			}
 		}
+		currentAnnotations := node.GetAnnotations()
+		// TODO: Fine tune what means is supported or not. Is it only because you are at latest release?
+		// This would mark the state as unsupported after `zypper migration`, because skuba would get
+		// updated, and the node would be outdated.
+		if node.Status.NodeInfo.KubeletVersion == fmt.Sprintf("v%s", kubernetes.LatestVersion().String()) {
+			currentAnnotations["caasp.suse.com/supported"] = "✅"
+		} else {
+			currentAnnotations["caasp.suse.com/supported"] = "❌"
+		}
 	}
 
 	outputFormat := "custom-columns=" +
 		"NAME:.metadata.name," +
 		"STATUS:.metadata.labels.node-status\\.kubernetes\\.io," +
+		"SUPPORTED:.metadata.annotations.caasp\\.suse\\.com/supported," +
 		"ROLE:.metadata.labels.caasp-role\\.kubernetes\\.io," +
 		"OS-IMAGE:.status.nodeInfo.osImage," +
-		"KERNEL-VERSION:.status.nodeInfo.kernelVersion," +
-		"KUBELET-VERSION:.status.nodeInfo.kubeletVersion," +
+		"KERNEL:.status.nodeInfo.kernelVersion," +
+		"KUBELET:.status.nodeInfo.kubeletVersion," +
 		"CONTAINER-RUNTIME:.status.nodeInfo.containerRuntimeVersion," +
 		"HAS-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-updates," +
 		"HAS-DISRUPTIVE-UPDATES:.metadata.annotations.caasp\\.suse\\.com/has-disruptive-updates," +
-		"CAASP-RELEASE-VERSION:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
+		"RELEASE:.metadata.annotations.caasp\\.suse\\.com/caasp-release-version"
 
 	printFlags := kubectlget.NewGetPrintFlags()
 	printFlags.OutputFormat = &outputFormat
