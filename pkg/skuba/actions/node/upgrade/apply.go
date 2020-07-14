@@ -130,24 +130,14 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		}
 	}
 
-	// Always upload crio files, regardless of the version (allows to
-	// enforce user behavior during patch updates).
-	// During the upgrade from 1.16 to 1.18 crio, the cri-o package will
-	// handle overriding the old crio sysconfig to an "empty" sysconfig,
-	// and the cri.configure action will be enough.
-	// We can remove the conditionals and only
-	// keep the cri.configure action when caasp 4.2.0 is not supported
-	// anymore (everyone has updated crio to 1.18)
-	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
-		err = target.Apply(nil, "cri.configure")
-		if err != nil {
-			return err
-		}
-	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
-		err = target.Apply(nil, "cri.sysconfig")
-		if err != nil {
-			return err
-		}
+	// Always upload crio files, regardless of the version (allows to enforce
+	// user behavior during patch updates).
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err != nil {
+		return errors.Wrap(err, "you need to migrate the local configuration of the cluster. Run: `skuba cluster upgrade localconfig`")
+	}
+	err = target.Apply(nil, "cri.configure", "cri.sysconfig")
+	if err != nil {
+		return err
 	}
 
 	if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
