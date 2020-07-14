@@ -19,6 +19,7 @@ package upgrade
 
 import (
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -30,6 +31,7 @@ import (
 	skubaconfig "github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func Plan(client clientset.Interface) error {
@@ -99,6 +101,8 @@ func plan(client clientset.Interface, availableVersions []*version.Version, clus
 	} else {
 		fmt.Printf("All nodes match the current cluster version: %s.\n", currentClusterVersion.String())
 	}
+
+	checkOldCriFormat()
 
 	planPrePlatformUpgrade(currentClusterVersion, nextClusterVersion, currentAddonVersionInfoUpdate)
 	hasPlatformUpgrade := len(upgradePath) > 0
@@ -209,4 +213,12 @@ func checkUpdatedAddonsFromClusterVersion(currentClusterVersion *version.Version
 		}
 	}
 	return nil
+}
+
+// checkOldCriFormat displays a message if the current cri-o configuration is
+// deemed to be outdated.
+func checkOldCriFormat() {
+	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		fmt.Printf("\nLocal configuration has to be upgraded: cri-o is using an old format.\n")
+	}
 }
