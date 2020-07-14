@@ -73,8 +73,13 @@ func (dexCallbacks) beforeApply(client clientset.Interface, addonConfiguration A
 		return errors.Wrap(err, "unable to determine if oidc dex cert exists")
 	}
 	if !exist {
-		// generate certificate if not present
-		if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.DexCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.DexCertSecretName); err != nil {
+		// try to use local server certificate if present
+		if err := oidc.TryToUseLocalServerCert(client, oidc.DexServerCertAndKeyBaseFileName, oidc.DexCertSecretName); err == nil {
+			return nil
+		}
+
+		// sign the server certificate by cluster CA or custom OIDC CA if server certificate not present
+		if err := oidc.SignServerWithLocalCACertAndKey(client, oidc.DexCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.DexCertSecretName); err != nil {
 			return err
 		}
 	}
