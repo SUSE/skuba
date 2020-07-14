@@ -85,7 +85,7 @@ func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
 	var pkgs []string
 
 	// Standard packages for a new cluster
-	pkgs = append(pkgs, "+caasp-release", "skuba-update", "supportutils-plugin-suse-caasp", "cri-tools")
+	pkgs = append(pkgs, "+caasp-release", "skuba-update", "supportutils-plugin-suse-caasp")
 	// Version specific
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubeadm", current))
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", current))
@@ -153,6 +153,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 		pkgs = append(pkgs, "-kubernetes-common")
 		pkgs = append(pkgs, "-\"kubernetes-client<1.18\"")
 		pkgs = append(pkgs, "-\"cri-o<1.18\"")
+		pkgs = append(pkgs, "-\"cri-tools<1.18\"")
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
