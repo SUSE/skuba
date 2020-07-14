@@ -142,11 +142,7 @@ func isAddonRequired(addon addons.Addon, initConfiguration InitConfiguration) bo
 }
 
 func writeScaffoldFiles(initConfiguration InitConfiguration) error {
-	scaffoldFilesToWrite := criScaffoldFiles["criconfig"]
-	kubernetesVersion := initConfiguration.KubernetesVersion
-	if kubernetesVersion.Minor() < 18 {
-		scaffoldFilesToWrite = criScaffoldFiles["sysconfig"]
-	}
+	scaffoldFilesToWrite := CriScaffoldFiles["criconfig"]
 
 	if len(initConfiguration.CloudProvider) > 0 {
 		if cloudScaffoldFiles, found := cloudScaffoldFiles[initConfiguration.CloudProvider]; found {
@@ -163,30 +159,40 @@ func writeScaffoldFiles(initConfiguration InitConfiguration) error {
 		return errors.Wrapf(err, "could not change to cluster directory %q", initConfiguration.ClusterName)
 	}
 	for _, file := range scaffoldFilesToWrite {
-		filePath, _ := filepath.Split(file.Location)
-		if filePath != "" {
-			if err := os.MkdirAll(filePath, 0700); err != nil {
-				return errors.Wrapf(err, "could not create directory %q", filePath)
-			}
+		if err := WriteScaffoldFile(file, initConfiguration); err != nil {
+			return err
 		}
-		f, err := os.Create(file.Location)
-		if err != nil {
-			return errors.Wrapf(err, "could not create file %q", file.Location)
+	}
+	return nil
+}
+
+// WriteScaffoldFile writes the given scaffold file into the right location. The
+// initConfiguration is used to render the template itself, since some of the
+// file's contents depend on the configuration.
+func WriteScaffoldFile(file ScaffoldFile, initConfiguration InitConfiguration) error {
+	filePath, _ := filepath.Split(file.Location)
+	if filePath != "" {
+		if err := os.MkdirAll(filePath, 0700); err != nil {
+			return errors.Wrapf(err, "could not create directory %q", filePath)
 		}
-		str, err := renderTemplate(file.Content, initConfiguration)
-		if err != nil {
-			return errors.Wrap(err, "unable to render template")
-		}
-		_, err = f.WriteString(str)
-		if err != nil {
-			return errors.Wrapf(err, "unable to write template to file %s", f.Name())
-		}
-		if err := f.Chmod(0600); err != nil {
-			return errors.Wrapf(err, "unable to chmod file %s", f.Name())
-		}
-		if err := f.Close(); err != nil {
-			return errors.Wrapf(err, "unable to close file %s", f.Name())
-		}
+	}
+	f, err := os.Create(file.Location)
+	if err != nil {
+		return errors.Wrapf(err, "could not create file %q", file.Location)
+	}
+	str, err := RenderTemplate(file.Content, initConfiguration)
+	if err != nil {
+		return errors.Wrap(err, "unable to render template")
+	}
+	_, err = f.WriteString(str)
+	if err != nil {
+		return errors.Wrapf(err, "unable to write template to file %s", f.Name())
+	}
+	if err := f.Chmod(0600); err != nil {
+		return errors.Wrapf(err, "unable to chmod file %s", f.Name())
+	}
+	if err := f.Close(); err != nil {
+		return errors.Wrapf(err, "unable to close file %s", f.Name())
 	}
 	return nil
 }
@@ -226,7 +232,9 @@ func writeAddonConfigFiles(initConfiguration InitConfiguration) error {
 	return nil
 }
 
-func renderTemplate(templateContents string, initConfiguration InitConfiguration) (string, error) {
+// RenderTemplate renders the given templateContents by using the given
+// initConfiguration.
+func RenderTemplate(templateContents string, initConfiguration InitConfiguration) (string, error) {
 	template, err := template.New("").Parse(templateContents)
 	if err != nil {
 		return "", errors.Wrap(err, "could not parse template")

@@ -25,6 +25,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
 	"github.com/SUSE/skuba/pkg/skuba/actions/cluster/upgrade"
 )
 
@@ -37,6 +38,7 @@ func NewUpgradeCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		newUpgradePlanCmd(),
+		newUpgradeLocalConfigCmd(),
 	)
 
 	return cmd
@@ -54,6 +56,20 @@ func newUpgradePlanCmd() *cobra.Command {
 			}
 			if err := upgrade.Plan(clientSet); err != nil {
 				fmt.Printf("Unable to plan cluster upgrade: %s\n", err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.NoArgs,
+	}
+}
+
+func newUpgradeLocalConfigCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "localconfig",
+		Short: "Upgrades the local configuration",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cluster.CriMigrate(); err != nil {
+				klog.Errorf("unable to upgrade the cluster configuration: %s\n", err)
 				os.Exit(1)
 			}
 		},

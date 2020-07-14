@@ -1,0 +1,7 @@
+## Path           : System/Management
+## Description    : Extra cli switches for crio daemon
+## Type           : string
+## Default        : ""
+## ServiceRestart : crio
+#
+CRIO_OPTIONS=--pause-image=registry.suse.com/caasp/v4/pause:3.1 --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"

@@ -28,7 +28,7 @@ type ScaffoldFile struct {
 }
 
 var (
-	criScaffoldFiles = map[string][]ScaffoldFile{
+	CriScaffoldFiles = map[string][]ScaffoldFile{
 		"sysconfig": {
 			{
 				Location: skuba.CriDockerDefaultsConfFile(),
