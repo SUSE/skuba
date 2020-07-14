@@ -26,6 +26,11 @@ variable "vsphere_hardware_version" {
   description = "Hardware version of the virtual machine."
 }
 
+variable "wait_for_guest_net_routable" {
+  default     = true
+  description = "Wait for network to be routable"
+}
+
 variable "authorized_keys" {
   type        = list(string)
   default     = []
