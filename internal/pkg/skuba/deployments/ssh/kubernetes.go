@@ -91,6 +91,7 @@ func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", current))
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", current))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", current))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", current))
 
 	_, _, err = t.zypperInstall(pkgs...)
 	return err
@@ -155,11 +156,13 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
+		pkgs = append(pkgs, fmt.Sprintf("-cri-tools-%s*", currentV))
 	}
 
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", nextV))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", nextV))
 	_, _, err = t.zypperInstall(pkgs...)
 	return err
 }
