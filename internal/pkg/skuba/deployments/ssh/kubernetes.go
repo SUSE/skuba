@@ -43,6 +43,7 @@ func init() {
 	stateMap["kubernetes.upgrade-stage-one"] = kubernetesUpgradeStageOne
 	stateMap["kubernetes.upgrade-stage-two"] = kubernetesUpgradeStageTwo
 	stateMap["kubernetes.restart-services"] = kubernetesRestartServices
+	stateMap["kubernetes.enable-services"] = kubernetesEnsureServicesEnabled
 }
 
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
@@ -170,5 +171,10 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 
 func kubernetesRestartServices(t *Target, data interface{}) error {
 	_, _, err := t.ssh("systemctl", "restart", "crio", "kubelet")
+	return err
+}
+
+func kubernetesEnsureServicesEnabled(t *Target, data interface{}) error {
+	_, _, err := t.ssh("systemctl", "enable", "crio", "kubelet")
 	return err
 }

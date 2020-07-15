@@ -178,6 +178,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	err = target.Apply(nil,
 		"kubelet.rootcert.upload",
 		"kubernetes.restart-services",
+		"kubernetes.enable-services",
 	)
 	if err != nil {
 		return err
