@@ -71,14 +71,28 @@ func NewLoginCmd() *cobra.Command {
 				cfg.Password = password
 			}
 
-			if cfg.RootCAPath != "" {
-				fi, err := os.Stat(cfg.RootCAPath)
+			if cfg.KubeAPIServerCAPath != "" {
+				fi, err := os.Stat(cfg.KubeAPIServerCAPath)
 				if os.IsNotExist(err) {
-					fmt.Printf("Root certificate authority chain file \"%s\" not exist\n", cfg.RootCAPath)
+					fmt.Printf("The kube-apiserver certificate authority chain file %q not exist\n", cfg.KubeAPIServerCAPath)
 					os.Exit(1)
 				}
 				if fi.IsDir() {
-					fmt.Printf("Root certificate authority chain file \"%s\" is a folder\n", cfg.RootCAPath)
+					fmt.Printf("The kube-apiserver certificate authority chain file %q is a folder\n", cfg.KubeAPIServerCAPath)
+					os.Exit(1)
+				}
+			}
+
+			// the users might use custom CA for OIDC servers dex & gangway
+			// in this case, the OIDC dex CA differs to kube-apiserver CA
+			if cfg.OIDCDexServerCAPath != "" {
+				fi, err := os.Stat(cfg.OIDCDexServerCAPath)
+				if os.IsNotExist(err) {
+					fmt.Printf("The OIDC dex server certificate authority chain file %q not exist\n", cfg.OIDCDexServerCAPath)
+					os.Exit(1)
+				}
+				if fi.IsDir() {
+					fmt.Printf("The OIDC dex server certificate authority chain file %q is a folder\n", cfg.OIDCDexServerCAPath)
 					os.Exit(1)
 				}
 			}
@@ -96,11 +110,12 @@ func NewLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "OIDC dex server url https://<IP/FQDN>:<Port> (specify port 32000 for standard CaaSP deployments) (required)")
+	cmd.Flags().StringVarP(&cfg.DexServer, "server", "s", "", "The OIDC dex server url https://<IP/FQDN>:<Port> (specify port 32000 for standard CaaSP deployments) (required)")
 	cmd.Flags().StringVarP(&cfg.Username, "username", "u", "", "Username")
 	cmd.Flags().StringVarP(&cfg.Password, "password", "p", "", "Password")
 	cmd.Flags().StringVarP(&cfg.AuthConnector, "auth-connector", "a", "", "Authentication connector ID")
-	cmd.Flags().StringVarP(&cfg.RootCAPath, "root-ca", "r", "", "Root certificate authority chain file")
+	cmd.Flags().StringVarP(&cfg.KubeAPIServerCAPath, "root-ca", "r", "", "The kube-apiserver certificate authority chain file")
+	cmd.Flags().StringVarP(&cfg.OIDCDexServerCAPath, "oidc-dex-ca", "", "", "The OIDC dex server certificate authority chain file")
 	cmd.Flags().BoolVarP(&cfg.InsecureSkipVerify, "insecure", "k", false, "Insecure SSL connection")
 	cmd.Flags().StringVarP(&cfg.ClusterName, "cluster-name", "n", "local", "Kubernetes cluster name")
 	cmd.Flags().StringVarP(&cfg.KubeConfigPath, "kubeconfig", "c", "kubeconf.txt", "Path to save kubeconfig file")

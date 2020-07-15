@@ -53,13 +53,13 @@ const (
 
 // request represents an OAuth2 auth request flow
 type request struct {
-	IssuerURL          string
-	Username           string
-	Password           string
-	RootCAData         []byte
-	InsecureSkipVerify bool
-	AuthConnector      string
-	Debug              bool
+	IssuerURL           string
+	Username            string
+	Password            string
+	OIDCDexServerCAData []byte
+	InsecureSkipVerify  bool
+	AuthConnector       string
+	Debug               bool
 
 	clientID     string
 	clientSecret string
@@ -170,8 +170,8 @@ func doAuth(authReq request) (*response, error) {
 
 	if authReq.InsecureSkipVerify {
 		client = httpClientForSkipTLS()
-	} else if len(authReq.RootCAData) > 0 {
-		client, err = httpClientForRootCAs(authReq.RootCAData)
+	} else if len(authReq.OIDCDexServerCAData) > 0 {
+		client, err = httpClientForRootCAs(authReq.OIDCDexServerCAData)
 		if err != nil {
 			return nil, err
 		}

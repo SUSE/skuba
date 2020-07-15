@@ -44,26 +44,37 @@ const (
 
 // LoginConfig represents the login configuration
 type LoginConfig struct {
-	DexServer          string
-	Username           string
-	Password           string
-	RootCAPath         string
-	InsecureSkipVerify bool
-	AuthConnector      string
-	ClusterName        string
-	KubeConfigPath     string
-	Debug              bool
+	DexServer                                string
+	Username, Password                       string
+	KubeAPIServerCAPath, OIDCDexServerCAPath string
+	InsecureSkipVerify                       bool
+	AuthConnector                            string
+	ClusterName                              string
+	KubeConfigPath                           string
+	Debug                                    bool
 }
 
 // Login do authentication login process
 func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	var err error
-	var rootCAData []byte
+	var kubeAPIServerCAData, dexServerCAData []byte
 
-	if !cfg.InsecureSkipVerify && cfg.RootCAPath != "" {
-		rootCAData, err = ioutil.ReadFile(cfg.RootCAPath)
+	if !cfg.InsecureSkipVerify && cfg.KubeAPIServerCAPath != "" {
+		kubeAPIServerCAData, err = ioutil.ReadFile(cfg.KubeAPIServerCAPath)
 		if err != nil {
-			return nil, errors.Wrap(err, "read CA failed")
+			return nil, errors.Wrap(err, "read kube-apiserver CA failed")
+		}
+	}
+
+	if !cfg.InsecureSkipVerify {
+		if cfg.OIDCDexServerCAPath != "" {
+			dexServerCAData, err = ioutil.ReadFile(cfg.OIDCDexServerCAPath)
+			if err != nil {
+				return nil, errors.Wrap(err, "read oidc dex CA failed")
+			}
+		} else {
+			// default the oidc dex server CA equals to the kube-apiserver CA
+			dexServerCAData = kubeAPIServerCAData
 		}
 	}
 
@@ -73,15 +84,15 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	}
 
 	authResp, err := doAuth(request{
-		clientID:           clientID,
-		clientSecret:       clientSecret,
-		IssuerURL:          cfg.DexServer,
-		Username:           cfg.Username,
-		Password:           cfg.Password,
-		RootCAData:         rootCAData,
-		InsecureSkipVerify: cfg.InsecureSkipVerify,
-		AuthConnector:      cfg.AuthConnector,
-		Debug:              cfg.Debug,
+		clientID:            clientID,
+		clientSecret:        clientSecret,
+		IssuerURL:           cfg.DexServer,
+		Username:            cfg.Username,
+		Password:            cfg.Password,
+		OIDCDexServerCAData: dexServerCAData,
+		InsecureSkipVerify:  cfg.InsecureSkipVerify,
+		AuthConnector:       cfg.AuthConnector,
+		Debug:               cfg.Debug,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "auth failed")
@@ -92,7 +103,7 @@ func Login(cfg LoginConfig) (*clientcmdapi.Config, error) {
 	kubeConfig.Clusters[cfg.ClusterName] = &clientcmdapi.Cluster{
 		Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort), // Guess kube-apiserver on port 6443
 		InsecureSkipTLSVerify:    cfg.InsecureSkipVerify,
-		CertificateAuthorityData: rootCAData,
+		CertificateAuthorityData: kubeAPIServerCAData,
 	}
 
 	// fill out contexts

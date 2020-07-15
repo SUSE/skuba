@@ -44,7 +44,7 @@ func startServer() *httptest.Server {
 	mux.HandleFunc("/approval", approvalHandler())
 
 	srv := httptest.NewUnstartedServer(mux)
-	cert, _ := tls.LoadX509KeyPair("testdata/localhost.crt", "testdata/localhost.key")
+	cert, _ := tls.LoadX509KeyPair("testdata/oidc-dex.crt", "testdata/oidc-dex.key")
 	srv.TLS = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
@@ -61,13 +61,13 @@ func Test_Login(t *testing.T) {
 		expectedErrorMsg   string
 	}{
 		{
-			name:  "secure ssl/tls",
+			name:  "secure ssl/tls with same ca of kube-apiserver and oidc dex server",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/localhost.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/oidc-dex.crt",
+				ClusterName:         "test-cluster-name",
 			},
 			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
 				url, _ := url.Parse(dexServerURL)
@@ -75,7 +75,45 @@ func Test_Login(t *testing.T) {
 				kubeConfig := clientcmdapi.NewConfig()
 				kubeConfig.Clusters[clusterName] = &clientcmdapi.Cluster{
 					Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort),
-					CertificateAuthorityData: localhostCert,
+					CertificateAuthorityData: oidcDexCert,
+				}
+				kubeConfig.Contexts[clusterName] = &clientcmdapi.Context{
+					Cluster:  clusterName,
+					AuthInfo: mockDefaultUsername,
+				}
+				kubeConfig.CurrentContext = clusterName
+				kubeConfig.AuthInfos[mockDefaultUsername] = &clientcmdapi.AuthInfo{
+					AuthProvider: &clientcmdapi.AuthProviderConfig{
+						Name: authProviderID,
+						Config: map[string]string{
+							"idp-issuer-url": dexServerURL,
+							"client-id":      clientID,
+							"client-secret":  clientSecret,
+							"id-token":       mockIDToken,
+							"refresh-token":  mockRefreshToken,
+						},
+					},
+				}
+				return kubeConfig
+			},
+		},
+		{
+			name:  "secure ssl/tls with different ca of kube-apiserver and oidc dex server",
+			srvCb: startServer,
+			cfg: LoginConfig{
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/kube-apiserver.crt",
+				OIDCDexServerCAPath: "testdata/oidc-dex.crt",
+				ClusterName:         "test-cluster-name",
+			},
+			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
+				url, _ := url.Parse(dexServerURL)
+
+				kubeConfig := clientcmdapi.NewConfig()
+				kubeConfig.Clusters[clusterName] = &clientcmdapi.Cluster{
+					Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort),
+					CertificateAuthorityData: kubeAPIServerCert,
 				}
 				kubeConfig.Contexts[clusterName] = &clientcmdapi.Context{
 					Cluster:  clusterName,
@@ -199,26 +237,38 @@ func Test_Login(t *testing.T) {
 			expectedErrorMsg: "auth failed: invalid input auth connector ID",
 		},
 		{
-			name:  "invalid root ca",
+			name:  "invalid kube-apiserver ca",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/invalid.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/invalid.crt",
+				ClusterName:         "test-cluster-name",
 			},
 			expectedErrorMsg: "auth failed: no valid certificates found in root CA file",
+		},
+		{
+			name:  "invalid dex server ca",
+			srvCb: startServer,
+			cfg: LoginConfig{
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/oidc-dex.crt",
+				OIDCDexServerCAPath: "testdata/nonexist.crt",
+				ClusterName:         "test-cluster-name",
+			},
+			expectedErrorMsg: "read oidc dex CA failed: open testdata/nonexist.crt: no such file or directory",
 		},
 		{
 			name:  "cert file not exist",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/nonexist.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/nonexist.crt",
+				ClusterName:         "test-cluster-name",
 			},
-			expectedErrorMsg: "read CA failed: open testdata/nonexist.crt: no such file or directory",
+			expectedErrorMsg: "read kube-apiserver CA failed: open testdata/nonexist.crt: no such file or directory",
 		},
 		{
 			name:  "auth failed",
