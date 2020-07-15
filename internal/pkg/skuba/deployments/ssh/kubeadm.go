@@ -62,7 +62,13 @@ func kubeadmInit(t *Target, data interface{}) error {
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors, "-v", t.verboseLevel)
+	_, _, err := t.ssh(
+		"kubeadm",
+		"init",
+		"--config", remoteKubeadmInitConfFile,
+		"--skip-phases", "addon/kube-proxy",
+		"--skip-token-print", ignorePreflightErrors,
+		"-v", t.verboseLevel)
 	return err
 }
 

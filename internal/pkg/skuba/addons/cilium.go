@@ -92,6 +92,10 @@ func (ciliumCallbacks) beforeApply(client clientset.Interface, addonConfiguratio
 		return err
 	}
 
+	if err := cni.DeleteKubeProxy(client, ciliumVersion); err != nil {
+		return err
+	}
+
 	// Handle migration from etcd to CRD when upgrading from Cilium 1.5.
 	needsMigration, err := cni.NeedsEtcdToCrdMigration(client, ciliumVersion)
 	if err != nil {

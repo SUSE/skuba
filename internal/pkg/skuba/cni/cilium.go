@@ -46,6 +46,7 @@ import (
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 )
 
 const (
@@ -403,5 +404,24 @@ func annotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) err
 	}
 
 	klog.V(1).Info("successfully annotated cilium daemonset with current timestamp, which will restart all cilium pods")
+	return nil
+}
+
+// DeleteKubeProxy deletes the kube-proxy DaemonSet if it exists and if Cilium
+// >= 1.7 is being deployed.
+func DeleteKubeProxy(client clientset.Interface, ciliumVersion string) error {
+	if util.VersionCompare(ciliumVersion, "<1.7.5") {
+		return nil
+	}
+
+	err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Delete(context.TODO(), "kube-proxy", metav1.DeleteOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	klog.V(1).Info("successfully deleted kube-proxy")
 	return nil
 }

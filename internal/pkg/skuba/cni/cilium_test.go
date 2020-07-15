@@ -24,6 +24,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -416,6 +417,81 @@ trusted-ca-file: /var/lib/etcd-secrets/etcd-client-ca.crt
 					t.Errorf("returned data (%v) does not match the expected one (%v)", dataGet.Data, tt.dataExpected)
 					return
 				}
+			}
+		})
+	}
+}
+
+func Test_DeleteKubeProxy(t *testing.T) {
+	dsKubeProxy := &appsv1.DaemonSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DaemonSet",
+			APIVersion: "app/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: metav1.NamespaceSystem,
+			Name:      "kube-proxy",
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  "fake",
+							Image: "fake",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name          string
+		clientset     *fake.Clientset
+		ciliumVersion string
+		kpShouldExist bool
+	}{
+		{
+			name:          "delete kube-proxy",
+			clientset:     fake.NewSimpleClientset(dsKubeProxy),
+			ciliumVersion: "1.7.5",
+			kpShouldExist: false,
+		},
+		{
+			name:          "kube-proxy not deployed",
+			clientset:     fake.NewSimpleClientset(),
+			ciliumVersion: "1.7.5",
+			kpShouldExist: false,
+		},
+		{
+			name:          "old cilium without kube-proxy replacement",
+			clientset:     fake.NewSimpleClientset(dsKubeProxy),
+			ciliumVersion: "1.6.7",
+			kpShouldExist: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := DeleteKubeProxy(tt.clientset, tt.ciliumVersion)
+			if err != nil {
+				t.Errorf("error not expected: (%v)", err)
+			}
+
+			ds, err := tt.clientset.AppsV1().DaemonSets(metav1.NamespaceSystem).Get(context.TODO(), "kube-proxy", metav1.GetOptions{})
+			if err != nil {
+				if apierrors.IsNotFound(err) {
+					if tt.kpShouldExist {
+						t.Errorf("expected kube-proxy daemonset to exist, but was not found: (%v)", err)
+					} else {
+						return
+					}
+				}
+				t.Errorf("error not expected: (%v)", err)
+			}
+			if !tt.kpShouldExist {
+				t.Errorf("kube-proxy daemonset was not expected to exist, but was found: (%v)", ds)
 			}
 		})
 	}
