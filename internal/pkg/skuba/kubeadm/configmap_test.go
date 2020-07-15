@@ -367,10 +367,7 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 				}
 				initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"] = currentAdmissionPlugins
 			}
-			_, err := UpdateClusterConfigurationWithClusterVersion(&initCfg, tt.clusterVersion)
-			if err != nil {
-				t.Errorf("expected no error but an error returned: %v", err)
-			}
+			UpdateClusterConfigurationWithClusterVersion(&initCfg, tt.clusterVersion)
 			// Check admission plugins
 			gotAdmissionPlugins := initCfg.APIServer.ControlPlaneComponent.ExtraArgs["enable-admission-plugins"]
 			if gotAdmissionPlugins != expectedAdmissionPlugins {
