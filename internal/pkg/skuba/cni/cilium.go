@@ -217,8 +217,6 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface, ciliumVersion str
 			"etcd-config": string(etcdConfigDataByte),
 		}
 	case strings.HasPrefix(ciliumVersion, "1.6"):
-		fallthrough
-	case strings.HasPrefix(ciliumVersion, "1.7"):
 		ciliumConfigMapData = map[string]string{
 			"bpf-ct-global-tcp-max":    "524288",
 			"bpf-ct-global-any-max":    "262144",
@@ -252,6 +250,17 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface, ciliumVersion str
 			ciliumConfigMapData["identity-allocation-mode"] = "kvstore"
 			ciliumConfigMapData["kvstore"] = "etcd"
 			ciliumConfigMapData["kvstore-opt"] = "{\"etcd.config\": \"/var/lib/etcd-config/etcd.config\"}"
+		}
+	case strings.HasPrefix(ciliumVersion, "1.7"):
+		ciliumConfigMapData = map[string]string{
+			"bpf-map-dynamic-size-ratio":  "0.0025",
+			"debug":                       "false",
+			"enable-ipv4":                 "true",
+			"enable-ipv6":                 "false",
+			"enable-remote-node-identity": "true",
+			"identity-allocation-mode":    "crd",
+			"kube-proxy-replacement":      "strict",
+			"preallocate-bpf-maps":        "false",
 		}
 	}
 

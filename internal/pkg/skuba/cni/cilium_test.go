@@ -302,6 +302,24 @@ key-file: /tmp/cilium-etcd/tls.key
 			errExpected:   true,
 			errMessage:    "unable to get api endpoints: could not retrieve the kubeadm-config configmap to get apiEndpoints: configmaps \"kubeadm-config\" not found",
 		},
+		// This test case represents the new deployment with Cilium 1.7
+		// which should habe kube-proxy replacement enabled.
+		{
+			name:          "should create cilium configmap for a new 1.7 deployment",
+			clientset:     fake.NewSimpleClientset(),
+			ciliumVersion: "1.7.5",
+			dataExpected: map[string]string{
+				"bpf-map-dynamic-size-ratio":  "0.0025",
+				"debug":                       "false",
+				"enable-ipv4":                 "true",
+				"enable-ipv6":                 "false",
+				"enable-remote-node-identity": "true",
+				"identity-allocation-mode":    "crd",
+				"kube-proxy-replacement":      "strict",
+				"preallocate-bpf-maps":        "false",
+			},
+			errExpected: false,
+		},
 		// This test case represents the new deployment with Cilium 1.6
 		// which should use CRD for identity allocation.
 		{
