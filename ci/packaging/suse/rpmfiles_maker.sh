@@ -52,7 +52,7 @@ then
     log "Running OBS services"
     (
         cd "$work_dir"
-        osc -A 'https://api.suse.de' service disabledrun
+        osc -A 'https://api.suse.de' service run go_modules
     )
     osc -A 'https://api.suse.de' ci "$work_dir" \
       -m "$(<"$rpm_files/skuba.changes.append")"
