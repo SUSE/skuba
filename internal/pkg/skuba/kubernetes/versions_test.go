@@ -194,7 +194,7 @@ func TestComponentContainerImageForClusterVersion(t *testing.T) {
 					return
 				}
 			} else {
-				expect := images.GetGenericImage(skuba.ImageRepository, tt.imageName, tt.expectVersion)
+				expect := images.GetGenericImage(skuba.ImageRepository(tt.clusterVersion), tt.imageName, tt.expectVersion)
 				if actual != expect {
 					t.Errorf("returned image (%s) does not match the expected one (%s)", actual, expect)
 					return

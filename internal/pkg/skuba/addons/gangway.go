@@ -19,6 +19,7 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
@@ -33,12 +34,12 @@ func init() {
 	registerAddon(kubernetes.Gangway, GenericAddOn, renderGangwayTemplate, nil, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
 }
 
-func GetGangwayImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway", imageTag)
+func GetGangwayImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "gangway", imageTag)
 }
 
 func (renderContext renderContext) GangwayImage() string {
-	return GetGangwayImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
+	return GetGangwayImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
 }
 
 func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {

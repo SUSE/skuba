@@ -19,6 +19,7 @@ package addons
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/version"
 	"strings"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons/cilium_manifests"
@@ -35,28 +36,28 @@ func init() {
 	registerAddon(kubernetes.Cilium, CniAddOn, renderCiliumTemplate, renderCiliumPreflightTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumInitImage, GetCiliumOperatorImage, GetCiliumImage})
 }
 
-func GetCiliumInitImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-init", imageTag)
+func GetCiliumInitImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "cilium-init", imageTag)
 }
 
-func GetCiliumOperatorImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-operator", imageTag)
+func GetCiliumOperatorImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "cilium-operator", imageTag)
 }
 
-func GetCiliumImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium", imageTag)
+func GetCiliumImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "cilium", imageTag)
 }
 
 func (renderContext renderContext) CiliumInitImage() string {
-	return GetCiliumInitImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumInitImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) CiliumOperatorImage() string {
-	return GetCiliumOperatorImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumOperatorImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) CiliumImage() string {
-	return GetCiliumImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
+	return GetCiliumImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func renderCiliumTemplate(addonConfiguration AddonConfiguration) string {
