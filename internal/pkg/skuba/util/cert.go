@@ -62,9 +62,12 @@ func NewServerCSRAndKey(commonName string, sans []string) (*x509.CertificateRequ
 // NewServerCertAndKey creates new certificate and key by
 // passing the certificate authority certificate and key
 // and server common name and server SANs
-func NewServerCertAndKey(caCert *x509.Certificate, caKey crypto.Signer, commonName string, sans []string) (*x509.Certificate, crypto.Signer, error) {
+func NewServerCertAndKey(
+	caCert *x509.Certificate, caKey crypto.Signer,
+	commonName string, sans []string,
+) (*x509.Certificate, crypto.Signer, error) {
 	if caCert == nil {
-		return nil, nil, errors.Errorf("invalid input")
+		return nil, nil, errors.New("invalid input")
 	}
 
 	cfg := &pkiutil.CertConfig{

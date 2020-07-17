@@ -27,8 +27,8 @@ import (
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-// GenerateOIDCCSR generates OIDC CSR into pki folder
-func GenerateOIDCServerCSRAndKey() error {
+// GenerateCSRAndKey generates in-cluster services CSR and key into pki folder
+func GenerateCSRAndKey() error {
 	// load kubeadm-init.conf
 	initCfg, err := node.LoadInitConfigurationFromFile(skuba.KubeadmInitConfFile())
 	if err != nil {

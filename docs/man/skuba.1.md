@@ -34,7 +34,11 @@ reconfiguration in an easy way.
   Addon handling commands.
 
 # SEE ALSO
+**skuba-addon-refresh-localconfig**(1),
+**skuba-addon-upgrade-plan**(1),
+**skuba-addon-upgrade-apply**(1)
 **skuba-auth-login**(1),
+**skuba-cert-generate-csr**(1),
 **skuba-cluster-images**(1),
 **skuba-cluster-init**(1),
 **skuba-cluster-status**(1),
@@ -44,6 +48,3 @@ reconfiguration in an easy way.
 **skuba-node-remove**(1),
 **skuba-node-upgrade-plan**(1),
 **skuba-node-upgrade-apply**(1),
-**skuba-addon-refresh-localconfig**(1),
-**skuba-addon-upgrade-plan**(1),
-**skuba-addon-upgrade-apply**(1)
