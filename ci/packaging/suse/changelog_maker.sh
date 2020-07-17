@@ -7,7 +7,9 @@ changes=${1:-skuba.changes.append}
 
 [ -f "${changes}" ] && rm "${changes}"
 
-mapfile -t tags < <( git tag | sort -rV | head -n2 )
+branch=$(git branch --show-current)
+
+mapfile -t tags < <( git tag --merged "${branch}" | sort -rV | head -n2 )
 scope="${tags[1]}...${tags[0]}"
 
 {
