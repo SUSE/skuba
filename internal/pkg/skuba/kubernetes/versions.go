@@ -218,7 +218,7 @@ func AllComponentContainerImagesForClusterVersion(clusterVersion *version.Versio
 func ComponentContainerImageForClusterVersion(component Component, clusterVersion *version.Version) string {
 	currentKubernetesVersion := supportedVersions[clusterVersion.String()]
 	if componentDetails, found := currentKubernetesVersion.ComponentContainerVersion[component]; found {
-		return images.GetGenericImage(skuba.ImageRepository, componentDetails.Name, componentDetails.Tag)
+		return images.GetGenericImage(skuba.ImageRepository(clusterVersion), componentDetails.Name, componentDetails.Tag)
 	}
 	klog.Errorf("unknown component %q container image", component)
 	return ""
