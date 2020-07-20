@@ -31,7 +31,6 @@ func NewAddonCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		addons.NewRefreshCmd(),
 		addons.NewUpgradeCmd(),
 	)
 

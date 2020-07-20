@@ -117,12 +117,14 @@ class BaseConfig:
     class VMware:
         def __init__(self):
             self.env_file = None
+            self.template_name = None
 
     class Libvirt:
         def __init__(self):
             super().__init__()
             self.uri = "qemu:///system"
             self.keyfile = None
+            self.image_uri = None
 
     class Packages:
         def __init__(self):

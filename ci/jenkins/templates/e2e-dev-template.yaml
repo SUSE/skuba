@@ -3,7 +3,10 @@
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
-    concurrent: true
+    wrappers:
+      - timeout:
+          timeout: 120
+          fail: true
     parameters:
         - string:
             name: BRANCH
@@ -13,14 +16,6 @@
               name: PLATFORM
               default: 'vmware'
               description: The platform to perform the tests on
-        - bool:
-            name: RETAIN_CLUSTER
-            default: false
-            description: Retain the cluster in case of failure
-        - string:
-            name: RETENTION_PERIOD
-            default: 24
-            description: retention period for cluster (in hours)
         - string:
             name: E2E_MAKE_TARGET_NAME
             default: ''

@@ -91,7 +91,7 @@ node('caasp-team-private-integration') {
                def branch_name = pr_repo_label.name.split(":")[1]
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
                branch_registry = "registry.suse.de/devel/caasp/5/branches/${branch_name}/containers"
-               original_registry = "registry.suse.de/devel/caasp/5/containers/containers"
+               original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers"
            }
 
         } catch (Exception e) {
@@ -108,7 +108,6 @@ pipeline {
     environment {
         SKUBA_BINPATH = '/home/jenkins/go/bin/skuba'
         VMWARE_ENV_FILE = credentials('vmware-env')
-        OPENSTACK_OPENRC = credentials('ecp-openrc')
         GITHUB_TOKEN = credentials('github-token')
         PLATFORM = "${platform}" 
         TERRAFORM_STACK_NAME = "${BUILD_NUMBER}-${JOB_NAME.replaceAll("/","-")}".take(70)
@@ -116,6 +115,7 @@ pipeline {
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
         LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
+        LIBVIRT_IMAGE_URI = 'https://download.suse.de/install/SLE-15-SP2-JeOS-GM/SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2'
         BRANCH_REPO = "${branch_repo}"
         BRANCH_REGISTRY = "${branch_registry}"
         ORIGINAL_REGISTRY = "${original_registry}"
@@ -217,17 +217,18 @@ pipeline {
     }
     post {
         always { script {
-            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            archiveArtifacts(artifacts: 'ci/infra/testrunner/*.xml', allowEmptyArchive: true)
-            // only attempt to collect logs if platform was provisioned
-            if (fileExists("tfout.json")) {
-                archiveArtifacts(artifacts: 'tfout.json', allowEmptyArchive: true)
+            // collect artifacts only if pr-test stage was executed.
+            // FIXME: this will break if we add an stage after skuba-test
+            if (pr_context == 'jenkins/skuba-test'){
+                archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
+                archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
+                archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
+                archiveArtifacts(artifacts: 'ci/infra/testrunner/*.xml', allowEmptyArchive: true)
                 sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
                 archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
+                junit('ci/infra/testrunner/*.xml')
             }
-        }}
+        } }
         cleanup {
             sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
             dir("${WORKSPACE}@tmp") {
