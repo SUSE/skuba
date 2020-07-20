@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -197,4 +198,14 @@ func AWSDir() string {
 // AWSReadmeFile returns the location for the AWS cloud integrations README.md
 func AWSReadmeFile() string {
 	return path.Join(AWSDir(), "README.md")
+}
+
+//ImageRepository returns the image registry of the cluster version
+func ImageRepository(clusterVersion *version.Version) string {
+	result, _ := clusterVersion.Compare("1.18.0")
+	if result < 0 {
+		return imageRepositoryV4
+	}
+
+	return imageRepository
 }
