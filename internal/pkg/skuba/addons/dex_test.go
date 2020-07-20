@@ -18,6 +18,7 @@
 package addons
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -37,21 +38,26 @@ func TestGetDexImage(t *testing.T) {
 		{
 			name:     "get dex init image without revision",
 			imageTag: "2.16.0",
-			want:     img.ImageRepository + "/caasp-dex:2.16.0",
+			want:     "caasp-dex:2.16.0",
 		},
 		{
 			name:     "get dex init image with revision",
 			imageTag: "2.16.0-rev2",
-			want:     img.ImageRepository + "/caasp-dex:2.16.0-rev2",
+			want:     "caasp-dex:2.16.0-rev2",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetDexImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetDexImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetDexImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetDexImage() = %v, want %v", got, imageUri)
+				}
+			})
+		}
 	}
 }
 
@@ -71,7 +77,7 @@ func Test_renderContext_DexImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/caasp-dex:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/caasp-dex:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.DexImage()

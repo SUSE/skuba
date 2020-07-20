@@ -106,7 +106,7 @@ type AddonConfiguration struct {
 
 type addonTemplater func(AddonConfiguration) string
 type preflightAddonTemplater func(AddonConfiguration) string
-type getImageCallback func(imageTag string) string
+type getImageCallback func(clusterVersion *version.Version, imageTag string) string
 
 type renderContext struct {
 	addon  Addon
@@ -449,10 +449,10 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 }
 
 // Images returns the images required for this Addon to properly function
-func (addon Addon) Images(imageTag string) []string {
+func (addon Addon) Images(clusterVersion *version.Version, imageTag string) []string {
 	images := []string{}
 	for _, cb := range addon.getImageCallbacks {
-		images = append(images, cb(imageTag))
+		images = append(images, cb(clusterVersion, imageTag))
 	}
 	return images
 }
