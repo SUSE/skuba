@@ -34,7 +34,7 @@ const (
 	MaxNodeNameLength = 63
 	// LastCaaSP4KubernetesVersion only uses Major.Minor version of
 	// kubernetes for string matching
-	LastCaaSP4KubernetesVersion = "1.17"
+	LastCaaSP4KubernetesVersion  = "1.17"
 	FirstCaaSP5KubernetesVersion = "1.18"
 )
 

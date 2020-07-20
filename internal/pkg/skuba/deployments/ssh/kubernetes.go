@@ -130,7 +130,6 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 		pkgs = append(pkgs, fmt.Sprintf("-patterns-caasp-Node-%s", skubaconstants.LastCaaSP4KubernetesVersion))
 		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-kubeadm<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 		pkgs = append(pkgs, "-caasp-config", "-cri-o-kubeadm-criconfig")
-
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
 	}
