@@ -71,6 +71,7 @@
         - test_cilium
         - test_dockercaps
         - test_nginx_deployment
+        - test_istio_deployment
         - test_node_reboot
         - test_remove_master
         - test_remove_worker
