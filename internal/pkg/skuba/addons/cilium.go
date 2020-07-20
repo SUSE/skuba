@@ -19,17 +19,18 @@ package addons
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/version"
 	"strings"
+
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/addons/cilium_manifests"
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 )
 
 func init() {

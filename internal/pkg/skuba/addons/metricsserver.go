@@ -21,11 +21,11 @@ import (
 	"bufio"
 	"encoding/base64"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/version"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"

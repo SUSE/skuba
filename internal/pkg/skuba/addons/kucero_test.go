@@ -19,9 +19,10 @@ package addons
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	img "github.com/SUSE/skuba/pkg/skuba"
-	"testing"
 )
 
 func TestGetKuceroImage(t *testing.T) {
@@ -54,5 +55,4 @@ func TestGetKuceroImage(t *testing.T) {
 			})
 		}
 	}
-
 }
