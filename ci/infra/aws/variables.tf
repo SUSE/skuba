@@ -111,3 +111,14 @@ variable "peer_vpc_ids" {
   description = "IDs of a VPCs to connect to via a peering connection"
 }
 
+variable "availability_zones_filter" {
+  type = object({
+    name   = string
+    values = list(string)
+  })
+  default = {
+    name   = "zone-name"
+    values = ["*"]
+  }
+  description = "Filter Availability Zones"
+}

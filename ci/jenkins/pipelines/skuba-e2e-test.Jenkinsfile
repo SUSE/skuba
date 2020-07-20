@@ -15,8 +15,12 @@ def original_registry = ""
 // worker selection labels 
 def labels = 'e2e'
 
+// keep the cluster at the end of the job
+def keep_cluster = false
+
 node('caasp-team-private-integration') {
     stage('select worker') {
+
         if (env.BRANCH != 'master') {
             if (env.BRANCH.startsWith('experimental') || env.BRANCH.startsWith('maintenance')) {
                 worker_type = env.BRANCH
@@ -33,10 +37,14 @@ node('caasp-team-private-integration') {
             labels = env.WORKER_LABELS
         }
 
+        if (env.RETAIN_CLUSTER){
+            labels = labels + "&& dedicated"
+        }
+
         if (env.REPO_BRANCH){
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
                branch_registry = "registry.suse.de/devel/caasp/5/branches/${env.REPO_BRANCH}/containers"
-               original_registry = "registry.suse.de/devel/caasp/5/containers/cr/containers"
+               original_registry = "registry.suse.de/devel/caasp/5/containers/containers"
          }
     }
 }
@@ -82,15 +90,37 @@ pipeline {
    }
 
    post {
-        always {
+        always { script {
             archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfstate", allowEmptyArchive: true)
             archiveArtifacts(artifacts: "ci/infra/${PLATFORM}/terraform.tfvars.json", allowEmptyArchive: true)
             archiveArtifacts(artifacts: 'testrunner.log', allowEmptyArchive: true)
-            sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
-            archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
-        }
-        cleanup {
-            sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
+            // only attempt to collect logs if platform was provisioned
+            if (fileExists("tfout.json")) {
+                archiveArtifacts(artifacts: 'tfout.json', allowEmptyArchive: true)
+                sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
+                archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
+            }
+        }}
+        failure{ script{
+            if (env.RETAIN_CLUSTER) {
+                def retention_period= env.RETENTION_PERIOD?env.RETENTION_PERIOD:24
+                try{
+                    timeout(time: retention_period, unit: 'HOURS'){
+                        input(message: 'Waiting '+retention_period +' hours before cleaning up cluster \n. ' +
+                                       'Press <abort> to cleanup inmediately, <keep> for keeping it',
+                              ok: 'keep')
+                        keep_cluster = true
+                    }
+                }catch (err){
+                    // either timeout occurred or <abort> was selected
+                    keep_cluster = false
+                }
+            }
+        }}
+        cleanup{ script{
+            if(!keep_cluster){
+                sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
+            }
             dir("${WORKSPACE}@tmp") {
                 deleteDir()
             }
@@ -104,6 +134,6 @@ pipeline {
                 deleteDir()
             }
             sh(script: "rm -f ${SKUBA_BINPATH}; ", label: 'Remove built skuba')
-       }
+        }}
     }
 }
