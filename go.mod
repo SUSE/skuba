@@ -15,8 +15,9 @@ require (
 	k8s.io/client-go v0.16.13
 	k8s.io/cluster-bootstrap v0.16.13
 	k8s.io/klog v1.0.0
-	k8s.io/kubectl v0.0.0
-	k8s.io/kubernetes v1.18.6
+	k8s.io/kubectl v0.16.13
+	k8s.io/kubelet v0.16.13
+	k8s.io/kubernetes v0.16.2
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -38,6 +39,7 @@ replace (
 	k8s.io/kube-proxy => k8s.io/kube-proxy v0.16.13
 	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.16.13
 	k8s.io/kubectl => k8s.io/kubectl v0.16.13
+	k8s.io/kubernetes => k8s.io/kubernetes v0.16.2
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.16.13
 	k8s.io/metrics => k8s.io/metrics v0.16.13
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.16.13
