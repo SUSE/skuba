@@ -14,7 +14,7 @@ require (
 	k8s.io/client-go v0.18.5
 	k8s.io/cluster-bootstrap v0.18.5
 	k8s.io/klog v1.0.0
-	k8s.io/kubectl v0.18.5
+	k8s.io/kubectl v0.16.2
 	k8s.io/kubernetes v1.18.5
 	sigs.k8s.io/yaml v1.2.0
 )

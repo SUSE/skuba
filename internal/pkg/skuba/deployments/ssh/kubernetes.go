@@ -111,6 +111,7 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 
 	var pkgs []string
 
+        // ignoring this for 1.16 fixed version
 	if currentV == "1.17" {
 		// 1.17 is the last version included in CaaSP4. It's the tipping
 		// point where we changed our packaging.
@@ -147,6 +148,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 
 	var pkgs []string
 
+        // I think this should also work fine with 1.16
 	if currentV == "1.17" {
 		// on 1.17 we need to finalize the cleanup for the
 		// caasp4 to 5 migration
