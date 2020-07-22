@@ -9,14 +9,13 @@ require (
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	k8s.io/api v0.18.5
-	k8s.io/apimachinery v0.18.5
-	k8s.io/client-go v0.18.5
-	k8s.io/cluster-bootstrap v0.18.5
-	k8s.io/klog v1.0.0
-	k8s.io/kubectl v0.18.5
-	k8s.io/kubernetes v1.18.5
-	sigs.k8s.io/yaml v1.2.0
+	k8s.io/api v0.0.0
+	k8s.io/apimachinery v0.0.0
+	k8s.io/client-go v0.0.0
+	k8s.io/cluster-bootstrap v0.0.0
+	k8s.io/klog v0.3.1
+	k8s.io/kubernetes v1.15.0
+	sigs.k8s.io/yaml v1.1.0
 )
 
 replace (
