@@ -88,11 +88,11 @@ func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
 	// Standard packages for a new cluster
 	pkgs = append(pkgs, "+caasp-release", "skuba-update", "supportutils-plugin-suse-caasp")
 	// Version specific
-	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-kubeadm<1.17", current))
-	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-kubelet<1.17", current))
-	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-client<1.17", current))
-	pkgs = append(pkgs, fmt.Sprintf("+cri-o", current))
-	pkgs = append(pkgs, fmt.Sprintf("+cri-tools", current))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-kubeadm<1.17"))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-kubelet<1.17"))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-client<1.17"))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-o"))
+	pkgs = append(pkgs, fmt.Sprintf("+cri-tools"))
 
 	_, _, err = t.zypperInstall(pkgs...)
 	return err
