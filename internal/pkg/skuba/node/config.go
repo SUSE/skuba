@@ -22,10 +22,11 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmscheme "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/scheme"
-	kubeadmapiv1beta2 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2"
+	kubeadmapiv1beta1 "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1"
 	"k8s.io/kubernetes/cmd/kubeadm/app/componentconfigs"
 	kubeadmutil "k8s.io/kubernetes/cmd/kubeadm/app/util"
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/config/strict"
@@ -74,20 +75,26 @@ func BytesToInitConfiguration(b []byte) (*kubeadmapi.InitConfiguration, error) {
 }
 
 // documentMapToInitConfiguration converts a map of GVKs and YAML documents to defaulted and validated configuration object.
-func documentMapToInitConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecated bool) (*kubeadmapi.InitConfiguration, error) {
+func documentMapToInitConfiguration(gvkmap map[schema.GroupVersionKind][]byte, allowDeprecated bool) (*kubeadmapi.InitConfiguration, error) {
 	var initcfg *kubeadmapi.InitConfiguration
 	var clustercfg *kubeadmapi.ClusterConfiguration
+	decodedComponentConfigObjects := map[componentconfigs.RegistrationKind]runtime.Object{}
 
 	for gvk, fileContent := range gvkmap {
-		// first, check if this GVK is supported and possibly not deprecated
-		if err := validateSupportedVersion(gvk.GroupVersion(), allowDeprecated); err != nil {
-			return nil, err
-		}
-
 		// verify the validity of the YAML
-		err := strict.VerifyUnmarshalStrict(fileContent, gvk)
-		if err != nil {
-			return nil, err
+		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
+		strict.VerifyUnmarshalStrict(fileContent, gvk)
+
+		// Try to get the registration for the ComponentConfig based on the kind
+		regKind := componentconfigs.RegistrationKind(gvk.Kind)
+		if registration, found := componentconfigs.Known[regKind]; found {
+			// Unmarshal the bytes from the YAML document into a runtime.Object containing the ComponentConfiguration struct
+			obj, err := registration.Unmarshal(fileContent)
+			if err != nil {
+				return nil, err
+			}
+			decodedComponentConfigObjects[regKind] = obj
+			continue
 		}
 
 		if kubeadmutil.GroupVersionKindsHasInitConfiguration(gvk) {
@@ -111,10 +118,7 @@ func documentMapToInitConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecat
 			continue
 		}
 
-		// If the group is neither a kubeadm core type or of a supported component config group, we dump a warning about it being ignored
-		if !componentconfigs.Scheme.IsGroupRegistered(gvk.Group) {
-			fmt.Printf("[config] WARNING: Ignored YAML document with GroupVersionKind %v\n", gvk)
-		}
+		fmt.Printf("[config] WARNING: Ignored YAML document with GroupVersionKind %v\n", gvk)
 	}
 
 	// Enforce that InitConfiguration and/or ClusterConfiguration has to exist among the YAML documents
@@ -124,12 +128,12 @@ func documentMapToInitConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecat
 
 	// If InitConfiguration wasn't given, default it by creating an external struct instance, default it and convert into the internal type
 	if initcfg == nil {
-		extinitcfg := &kubeadmapiv1beta2.InitConfiguration{}
+		extinitcfg := &kubeadmapiv1beta1.InitConfiguration{}
 		kubeadmscheme.Scheme.Default(extinitcfg)
 		// Set initcfg to an empty struct value the deserializer will populate
 		initcfg = &kubeadmapi.InitConfiguration{}
 		if err := kubeadmscheme.Scheme.Convert(extinitcfg, initcfg, nil); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "can not create kubeadm scheme")
 		}
 	}
 	// If ClusterConfiguration was given, populate it in the InitConfiguration struct
@@ -137,9 +141,16 @@ func documentMapToInitConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecat
 		initcfg.ClusterConfiguration = *clustercfg
 	}
 
-	// Load any component configs
-	if err := componentconfigs.FetchFromDocumentMap(&initcfg.ClusterConfiguration, gvkmap); err != nil {
-		return nil, err
+	// Save the loaded ComponentConfig objects in the initcfg object
+	for kind, obj := range decodedComponentConfigObjects {
+		if registration, found := componentconfigs.Known[kind]; found {
+			if ok := registration.SetToInternalConfig(obj, &initcfg.ClusterConfiguration); !ok {
+				return nil, errors.Errorf("couldn't save componentconfig value for kind %q", string(kind))
+			}
+		} else {
+			// This should never happen in practice
+			fmt.Printf("[config] WARNING: Decoded a kind that couldn't be saved to the internal configuration: %q\n", string(kind))
+		}
 	}
 
 	return initcfg, nil
