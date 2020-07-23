@@ -18,7 +18,6 @@
 package oidc
 
 import (
-	"context"
 	"encoding/base64"
 
 	"github.com/pkg/errors"
@@ -51,6 +50,6 @@ func CreateOrUpdateToSecret(client clientset.Interface, secretName, key string, 
 
 // IsSecretExist checks if the secret in namespace kube-system exist
 func IsSecretExist(client clientset.Interface, secretName string) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), secretName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }

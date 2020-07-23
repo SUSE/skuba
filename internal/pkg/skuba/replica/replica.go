@@ -18,7 +18,6 @@
 package replica
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -147,7 +146,6 @@ func NewHelper(client clientset.Interface) (*Helper, error) {
 // deploymentsHelper updates deployment list in Helper object
 func (r *Helper) deploymentsHelper() error {
 	deployments, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).List(
-		context.TODO(),
 		metav1.ListOptions{
 			LabelSelector: fmt.Sprintf("%s=true", highAvailabilitylabel),
 		},
@@ -161,7 +159,7 @@ func (r *Helper) deploymentsHelper() error {
 
 // deploymentHelper updates deployment in Helper object
 func (r *Helper) deploymentHelper(name string) error {
-	deployment, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Get(context.TODO(), name, metav1.GetOptions{})
+	deployment, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -224,7 +222,6 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 		return false, err
 	}
 	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
-		context.TODO(),
 		r.deployment.ObjectMeta.Name,
 		types.StrategicMergePatchType,
 		[]byte(affinityJSON),
@@ -242,7 +239,6 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 // removeAffinity patch to remove affinity from deployment
 func (r *Helper) removeAffinity() error {
 	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
-		context.TODO(),
 		r.deployment.ObjectMeta.Name,
 		types.JSONPatchType,
 		[]byte(patchAffinityRemove),
@@ -257,7 +253,6 @@ func (r *Helper) removeAffinity() error {
 func (r *Helper) updateDeploymentReplica(size int) (*appsv1.Deployment, error) {
 	replicaJSON := fmt.Sprintf(patchReplicas, size)
 	return r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
-		context.TODO(),
 		r.deployment.ObjectMeta.Name,
 		types.StrategicMergePatchType,
 		[]byte(replicaJSON),
@@ -397,7 +392,6 @@ func (r *Helper) waitForDeploymentReplicas() error {
 
 func (r *Helper) removePendingPods() error {
 	pods, err := r.client.CoreV1().Pods(metav1.NamespaceSystem).List(
-		context.TODO(),
 		metav1.ListOptions{},
 	)
 	if err != nil {
@@ -413,7 +407,7 @@ func (r *Helper) removePendingPods() error {
 		}
 		if !ready {
 			klog.Warningf("removing pending pod: %s", pod.Name)
-			err := r.client.CoreV1().Pods(metav1.NamespaceSystem).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{})
+			err := r.client.CoreV1().Pods(metav1.NamespaceSystem).Delete(pod.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
