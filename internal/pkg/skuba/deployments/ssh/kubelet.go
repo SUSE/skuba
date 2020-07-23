@@ -99,14 +99,12 @@ func kubeletCreateAndUploadServerCert(t *Target, data interface{}) error {
 	altNames.IPs = append(altNames.IPs, alternateIPs...)
 	altNames.DNSNames = append(altNames.DNSNames, alternateDNS...)
 
-	cfg := &pkiutil.CertConfig{
-		Config: certutil.Config{
+	cfg := Config: certutil.Config{
 			CommonName: host,
 			AltNames:   altNames,
 			Usages:     []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		},
 	}
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, cfg)
+	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &cfg)
 	if err != nil {
 		return errors.Wrap(err, "couldn't generate kubelet server certificate")
 	}
