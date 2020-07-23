@@ -85,3 +85,77 @@ func TestAddonLegacyManifestMigration(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckLocalAddonsBaseManifests(t *testing.T) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Errorf("unable to get current directory: %v", err)
+		return
+	}
+
+	defer func() {
+		// removes rendered addon folder
+		dir := filepath.Join(pwd, "addons")
+		if f, err := os.Stat(dir); !os.IsNotExist(err) && f.IsDir() {
+			if err := os.RemoveAll(dir); err != nil {
+				t.Errorf("unable to remove rendered addon folder: %v", err)
+				return
+			}
+		}
+	}()
+
+	addonConfiguration := AddonConfiguration{
+		ClusterVersion: kubernetes.LatestVersion(),
+		ControlPlane:   "unit.test",
+		ClusterName:    "unit-test",
+	}
+
+	// pre-check
+	_, err = CheckLocalAddonsBaseManifests(addonConfiguration)
+	if err == nil {
+		t.Error("expected got error but no error reported")
+		return
+	}
+
+	// create the addons manifests
+	for _, addon := range Addons {
+		if err := addon.Write(addonConfiguration); err != nil {
+			t.Errorf("expected no error, but got %v", err)
+			return
+		}
+	}
+
+	// check local addons base manifests match
+	match, err := CheckLocalAddonsBaseManifests(addonConfiguration)
+	if err != nil {
+		t.Errorf("expected no error, but got %v", err)
+		return
+	}
+	if !match {
+		t.Error("expected addons base manifests match")
+		return
+	}
+
+	// change addon psp base manifest and
+	// check local addons base manifests mismatch
+	addon := Addons[kubernetes.PSP]
+	manifest, err := ioutil.ReadFile(addon.manifestPath(addon.addonDir()))
+	if err != nil {
+		t.Errorf("expected no error, but got %v", err)
+		return
+	}
+	if err := ioutil.WriteFile(addon.manifestPath(addon.addonDir()), manifest[1:], 0600); err != nil {
+		t.Errorf("expected no error, but got %v", err)
+		return
+	}
+
+	match, err = CheckLocalAddonsBaseManifests(addonConfiguration)
+	if err != nil {
+		t.Errorf("expected no error, but got %v", err)
+		return
+	}
+	if match {
+		t.Error("expected addons base manifests mismatch")
+		return
+	}
+}

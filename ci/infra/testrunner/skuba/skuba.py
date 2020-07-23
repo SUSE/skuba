@@ -202,6 +202,13 @@ class Skuba:
         return self._run_skuba("cluster status")
 
     @step
+    def addon_refresh(self, action):
+        self._verify_bootstrap_dependency()
+        if action not in ['localconfig']:
+            raise ValueError("Invalid action '{}'".format(action))
+        return self._run_skuba("addon refresh {0}".format(action))
+
+    @step
     def addon_upgrade(self, action):
         self._verify_bootstrap_dependency()
         if action not in ['plan', 'apply']:

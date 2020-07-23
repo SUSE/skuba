@@ -22,11 +22,11 @@ package addons
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"text/template"
 
@@ -154,9 +154,22 @@ func addonsByPriority() []Addon {
 	return sortedAddons
 }
 
+func CheckLocalAddonsBaseManifests(addonConfiguration AddonConfiguration) (bool, error) {
+	for _, addon := range addonsByPriority() {
+		if !addon.IsPresentForClusterVersion(addonConfiguration.ClusterVersion) {
+			// This registered addon is not available on the chosen Kubernetes version, skip it
+			continue
+		}
+		if match, err := addon.compareLocalBaseManifest(addonConfiguration); err != nil || !match {
+			return match, err
+		}
+	}
+	return true, nil
+}
+
 // DeployAddons loops over the sorted list of addons, checks if each needs to be deployed and
 // triggers its deployment
-func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration) error {
+func DeployAddons(client clientset.Interface, addonConfiguration AddonConfiguration, dryRun bool) error {
 	skubaConfiguration, err := skuba.GetSkubaConfiguration(client)
 	if err != nil {
 		return err
@@ -173,7 +186,7 @@ func DeployAddons(client clientset.Interface, addonConfiguration AddonConfigurat
 			continue
 		}
 		if hasToBeApplied {
-			if err := addon.Apply(client, addonConfiguration, skubaConfiguration); err == nil {
+			if err := addon.Apply(client, addonConfiguration, skubaConfiguration, dryRun); err == nil {
 				klog.V(1).Infof("%q addon correctly applied", addonName)
 			} else {
 				klog.Errorf("failed to apply %q addon (%v)", addonName, err)
@@ -308,6 +321,23 @@ func (addon Addon) kustomizePath(rootDir string) string {
 	return filepath.Join(rootDir, "kustomization.yaml")
 }
 
+func (addon Addon) compareLocalBaseManifest(addonConfiguration AddonConfiguration) (bool, error) {
+	localManifest, err := ioutil.ReadFile(addon.manifestPath(addon.addonDir()))
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to read %s addon rendered template", addon.Addon)
+	}
+
+	addonManifest, err := addon.Render(addonConfiguration)
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to render %s addon template", addon.Addon)
+	}
+
+	if !reflect.DeepEqual(localManifest, []byte(addonTemplateWarning+addonManifest)) {
+		return false, nil
+	}
+	return true, nil
+}
+
 // Write creates the manifest yaml file of the Addon after rendering its template
 func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 	addonManifest, err := addon.Render(addonConfiguration)
@@ -340,7 +370,7 @@ func (addon Addon) Write(addonConfiguration AddonConfiguration) error {
 // applyPreflight applies the preflight deployment/daemonset manifest if such
 // is defined by the addon. It returns a bool whether preflight was defined
 // by the addon and an error.
-func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, sandboxDir string) (bool, error) {
+func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, rootDir string, dryRun bool) (bool, error) {
 	renderedPreflightManifest, err := addon.RenderPreflight(addonConfiguration)
 	if err != nil {
 		return false, err
@@ -348,20 +378,31 @@ func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, sandbox
 	if renderedPreflightManifest == "" {
 		return false, nil
 	}
-	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+	preflightManifestPath := addon.preflightManifestPath(rootDir)
 	if err := ioutil.WriteFile(preflightManifestPath, []byte(renderedPreflightManifest), 0600); err != nil {
 		return true, errors.Wrapf(err, "could not create %q addon manifests", addon.Addon)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+	kubectlArgs := []string{
+		"apply",
+		"--kubeconfig", skubaconstants.KubeConfigAdminFile(),
+		"-f", preflightManifestPath,
+	}
+	if dryRun {
+		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+	}
+	cmd := exec.Command("kubectl", kubectlArgs...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		// prints out stderr
+		fmt.Printf("%s", stderr.Bytes())
 		return true, err
 	}
 	return true, nil
 }
 
-func (addon Addon) deletePreflight(sandboxDir string) error {
-	preflightManifestPath := addon.preflightManifestPath(sandboxDir)
+func (addon Addon) deletePreflight(rootDir string) error {
+	preflightManifestPath := addon.preflightManifestPath(rootDir)
 	cmd := exec.Command("kubectl", "delete", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-f", preflightManifestPath)
 	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
 		klog.Errorf("failed to run kubectl delete: %s", combinedOutput)
@@ -372,55 +413,29 @@ func (addon Addon) deletePreflight(sandboxDir string) error {
 
 // Apply deploys the addon by calling kubectl apply and pointing to the generated addon
 // manifest
-func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration, dryRun bool) error {
 	klog.V(1).Infof("applying %q addon", addon.Addon)
-	sandboxDir, err := addon.createSandbox()
-	if err != nil {
-		return errors.Wrapf(err, "could not create %q addon sandbox", addon.Addon)
-	}
-	defer func() {
-		_ = addon.deleteSandbox(sandboxDir)
-	}()
-	baseResourcesDir := addon.baseResourcesDir(sandboxDir)
-	if err := os.MkdirAll(baseResourcesDir, 0700); err != nil {
-		return errors.Wrapf(err, "unable to create directory: %s", baseResourcesDir)
-	}
 
+	var err error
 	hasPreflight := false
 	if addon.preflightTemplater != nil {
-		hasPreflight, err = addon.applyPreflight(addonConfiguration, sandboxDir)
+		hasPreflight, err = addon.applyPreflight(addonConfiguration, addon.addonDir(), dryRun)
 		if err != nil {
 			return err
 		}
 	}
-	if addon.callbacks != nil {
-		if err := addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
+	if addon.callbacks != nil && !dryRun {
+		if err = addon.callbacks.beforeApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			klog.Errorf("failed on %q addon BeforeApply callback: %v", addon.Addon, err)
 			return err
 		}
 	}
-	if hasPreflight {
-		if err := addon.deletePreflight(sandboxDir); err != nil {
+	if hasPreflight && !dryRun {
+		// since we did not run applyPreflight if dryRun=true
+		// bypass delete preflight manifests
+		if err = addon.deletePreflight(addon.addonDir()); err != nil {
 			return err
 		}
-	}
-
-	renderedManifest, err := addon.Render(addonConfiguration)
-	if err != nil {
-		return err
-	}
-
-	patchResourcesDir := addon.patchResourcesDir(sandboxDir)
-	if err := os.MkdirAll(patchResourcesDir, 0700); err != nil {
-		return errors.Wrapf(err, "unable to create directory: %s", patchResourcesDir)
-	}
-	// Write base resources
-	if err := ioutil.WriteFile(addon.manifestPath(sandboxDir), []byte(renderedManifest), 0600); err != nil {
-		return errors.Wrapf(err, "could not create %q addon manifests", addon.Addon)
-	}
-	// Write patch resources
-	if err := addon.copyCustomizePatches(sandboxDir); err != nil {
-		return errors.Wrapf(err, "could not link %q addon patches", addon.Addon)
 	}
 	patchList, err := addon.listPatches()
 	if err != nil {
@@ -430,20 +445,36 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 	if err != nil {
 		return errors.Wrapf(err, "could not render kustomize file")
 	}
-	if err := ioutil.WriteFile(addon.kustomizePath(sandboxDir), []byte(kustomizeContents), 0600); err != nil {
+	if err = ioutil.WriteFile(addon.kustomizePath(addon.addonDir()), []byte(kustomizeContents), 0600); err != nil {
 		return errors.Wrapf(err, "could not create %q kustomize file", addon.Addon)
 	}
-	cmd := exec.Command("kubectl", "apply", "--kubeconfig", skubaconstants.KubeConfigAdminFile(), "-k", sandboxDir)
-	if combinedOutput, err := cmd.CombinedOutput(); err != nil {
-		klog.Errorf("failed to run kubectl apply: %s", combinedOutput)
+	kubectlArgs := []string{
+		"apply",
+		"--kubeconfig", skubaconstants.KubeConfigAdminFile(),
+		"-k", addon.addonDir(),
+	}
+	if dryRun {
+		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+	}
+	cmd := exec.Command("kubectl", kubectlArgs...)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		// prints out stderr
+		fmt.Printf("%s", stderr.Bytes())
 		return err
 	}
-	if addon.callbacks != nil {
-		if err := addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
+	if addon.callbacks != nil && !dryRun {
+		if err = addon.callbacks.afterApply(client, addonConfiguration, skubaConfiguration); err != nil {
 			// TODO: should we rollback here?
 			klog.Errorf("failed on %q addon AfterApply callback: %v", addon.Addon, err)
 			return err
 		}
+	}
+
+	if dryRun {
+		// immediately return, do not update skuba-config ConfigMap
+		return nil
 	}
 	return updateSkubaConfigMapWithAddonVersion(client, addon.Addon, addonConfiguration.ClusterVersion, skubaConfiguration)
 }
@@ -467,35 +498,6 @@ func (addon Addon) listPatches() ([]string, error) {
 		result = append(result, filepath.Base(patchPath))
 	}
 	return result, nil
-}
-
-func (addon Addon) createSandbox() (string, error) {
-	return ioutil.TempDir("", fmt.Sprintf("skuba-addon-%s", addon.Addon))
-}
-
-func (addon Addon) deleteSandbox(sandboxDir string) error {
-	return os.RemoveAll(sandboxDir)
-}
-
-func (addon Addon) copyCustomizePatches(targetDir string) error {
-	patches, err := addon.listPatches()
-	if err != nil {
-		return err
-	}
-	for _, patch := range patches {
-		source, err := os.Open(filepath.Join(addon.patchResourcesDir(addon.addonDir()), patch))
-		if err != nil {
-			return err
-		}
-		target, err := os.Create(filepath.Join(addon.patchResourcesDir(targetDir), patch))
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(target, source); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // addonVersionLower checks if the updated version of the Addon is greater than the current
