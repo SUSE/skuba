@@ -86,6 +86,30 @@ type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVe
 
 var (
 	supportedVersions = KubernetesVersions{
+		"1.16.13": KubernetesVersion{
+			ComponentHostVersion: ComponentHostVersion{
+				KubeletVersion:          "1.16.13",
+				ContainerRuntimeVersion: "1.18.2",
+			},
+			ComponentContainerVersion: ComponentContainerVersion{
+				APIServer:         &ContainerImageTag{Name: "api-server", Tag: "v1.16.13"},
+				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.16.13"},
+				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.16.13"},
+				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.16.13"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
+				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
+			},
+			AddonsVersion: AddonsVersion{
+				Cilium:        &AddonVersion{"1.7.5", 4},
+				Kured:         &AddonVersion{"1.4.3", 6},
+				Dex:           &AddonVersion{"2.23.0", 7},
+				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
+				MetricsServer: &AddonVersion{"0.3.6", 0},
+				PSP:           &AddonVersion{"", 2},
+			},
+		},
 		"1.16.2": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
 				KubeletVersion:          "1.16.2",
@@ -108,29 +132,6 @@ var (
 				Gangway:       &AddonVersion{"3.1.0-rev4", 5},
 				MetricsServer: &AddonVersion{"0.3.6", 1},
 				PSP:           &AddonVersion{"", 2},
-			},
-		},
-		"1.15.2": KubernetesVersion{
-			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.15.2",
-				ContainerRuntimeVersion: "1.15.2",
-			},
-			ComponentContainerVersion: ComponentContainerVersion{
-				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
-				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
-				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
-				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.15.2"},
-				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.3.11"},
-				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.3.1"},
-				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
-				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
-			},
-			AddonsVersion: AddonsVersion{
-				Cilium:  &AddonVersion{"1.5.3", 2},
-				Kured:   &AddonVersion{"1.2.0-rev4", 2},
-				Dex:     &AddonVersion{"2.16.0", 6},
-				Gangway: &AddonVersion{"3.1.0-rev4", 5},
-				PSP:     &AddonVersion{"", 1},
 			},
 		},
 	}
