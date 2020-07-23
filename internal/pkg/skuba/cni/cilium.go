@@ -393,7 +393,7 @@ func CiliumUpdateConfigMap(client clientset.Interface, ciliumVersion string) err
 
 func annotateCiliumDaemonsetWithCurrentTimestamp(client clientset.Interface) error {
 	patch := fmt.Sprintf(ciliumUpdateLabelsFmt, time.Now().Unix())
-	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch), metav1.PatchOptions{})
+	_, err := client.AppsV1().DaemonSets(metav1.NamespaceSystem).Patch("cilium", types.StrategicMergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}

@@ -224,8 +224,7 @@ func (r *Helper) replaceAffinity(remove affinity, create affinity) (bool, error)
 	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
 		r.deployment.ObjectMeta.Name,
 		types.StrategicMergePatchType,
-		[]byte(affinityJSON),
-		metav1.PatchOptions{})
+		[]byte(affinityJSON))
 	if err != nil {
 		return false, err
 	}
@@ -241,8 +240,7 @@ func (r *Helper) removeAffinity() error {
 	_, err := r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
 		r.deployment.ObjectMeta.Name,
 		types.JSONPatchType,
-		[]byte(patchAffinityRemove),
-		metav1.PatchOptions{})
+		[]byte(patchAffinityRemove))
 	if err != nil {
 		return err
 	}
@@ -255,8 +253,7 @@ func (r *Helper) updateDeploymentReplica(size int) (*appsv1.Deployment, error) {
 	return r.client.AppsV1().Deployments(metav1.NamespaceSystem).Patch(
 		r.deployment.ObjectMeta.Name,
 		types.StrategicMergePatchType,
-		[]byte(replicaJSON),
-		metav1.PatchOptions{})
+		[]byte(replicaJSON))
 }
 
 // UpdateNodes patches for replicas affinity rules after adding nodes, before removing nodes, or after addon
@@ -407,7 +404,7 @@ func (r *Helper) removePendingPods() error {
 		}
 		if !ready {
 			klog.Warningf("removing pending pod: %s", pod.Name)
-			err := r.client.CoreV1().Pods(metav1.NamespaceSystem).Delete(pod.Name, metav1.DeleteOptions{})
+			err := r.client.CoreV1().Pods(metav1.NamespaceSystem).Delete(pod.Name, &metav1.DeleteOptions{})
 			if err != nil {
 				return err
 			}
