@@ -63,7 +63,7 @@ func validateSupportedVersion(gv schema.GroupVersion, allowDeprecated bool) erro
 
 // documentMapToJoinConfiguration takes a map between GVKs and YAML documents (as returned by SplitYAMLDocuments),
 // finds a JoinConfiguration, decodes it, dynamically defaults it and then validates it prior to return.
-func documentMapToJoinConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecated bool) (*kubeadmapi.JoinConfiguration, error) {
+func documentMapToJoinConfiguration(gvkmap map[schema.GroupVersionKind][]byte, allowDeprecated bool) (*kubeadmapi.JoinConfiguration, error) {
 	joinBytes := []byte{}
 	for gvk, bytes := range gvkmap {
 		// not interested in anything other than JoinConfiguration
@@ -71,17 +71,9 @@ func documentMapToJoinConfiguration(gvkmap kubeadmapi.DocumentMap, allowDeprecat
 			continue
 		}
 
-		// check if this version is supported and possibly not deprecated
-		if err := validateSupportedVersion(gvk.GroupVersion(), allowDeprecated); err != nil {
-			return nil, err
-		}
-
 		// verify the validity of the YAML
-		err := strict.VerifyUnmarshalStrict(bytes, gvk)
-		if err != nil {
-			return nil, err
-		}
-
+		//nolint:errcheck // https://github.com/kubernetes/kubernetes/pull/81736
+		strict.VerifyUnmarshalStrict(bytes, gvk)
 		joinBytes = bytes
 	}
 
