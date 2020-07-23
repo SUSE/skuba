@@ -66,6 +66,26 @@ func IsControlPlane(node *corev1.Node) bool {
 	return isControlPlane
 }
 
+// UncordonNode makes a node scheduleable again
+func UncordonNode(client clientset.Interface, node *corev1.Node) error {
+	cordonHelper := kubectldrain.NewCordonHelper(node)
+
+	// Check if already uncordoned
+	if updateRequired := cordonHelper.UpdateIfRequired(false); !updateRequired {
+		return nil
+	}
+
+	err, patchErr := cordonHelper.PatchOrReplace(client, false)
+	if patchErr != nil {
+		return errors.Wrap(patchErr, "creating node patch")
+	}
+	if err != nil {
+		return errors.Wrap(err, "updating node status")
+	}
+
+	return nil
+}
+
 // DrainNode cordons, drains and evict given node.
 func DrainNode(client clientset.Interface, node *corev1.Node, drainTimeout time.Duration) error {
 	policyGroupVersion, err := kubectldrain.CheckEvictionSupport(client)

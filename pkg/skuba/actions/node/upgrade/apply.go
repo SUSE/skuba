@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
@@ -116,6 +117,13 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		}
 	}
 
+	const drainTimeout = 15 * time.Minute
+	node := nodeVersionInfoUpdate.Current.Node
+	fmt.Printf("Draining node %s (timeout %dmin)\n", target.Nodename, drainTimeout)
+	if err := kubernetes.DrainNode(client, node, drainTimeout); err != nil {
+		return errors.Wrapf(err, "draining node %s", target.Nodename)
+	}
+
 	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
 	if skubaUpdateWasEnabled {
@@ -194,6 +202,11 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		if err := kured.Unlock(client); err != nil {
 			return err
 		}
+	}
+
+	fmt.Printf("Uncordon node %s\n", target.Nodename)
+	if err := kubernetes.UncordonNode(client, node); err != nil {
+		return errors.Wrapf(err, "uncordon node %s", target.Nodename)
 	}
 
 	fmt.Printf("Node %s (%s) successfully upgraded\n", target.Nodename, target.Target)
