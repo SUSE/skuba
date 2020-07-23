@@ -78,11 +78,15 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		}
 	}
 
+	/*
+	 * we're not using hyperkube for this "special" 1.16 deployment
+	 *
 	// Without this, it will be impossible to greenfield an older caasp cluster:
 	// defaults have been changed in 1.17, so we *need* to have UseHyperKubeImage: set into the init configuration.
 	if kubernetesVersion.Minor() < 18 {
 		needsHyperKube = true
 	}
+	*/
 
 	return InitConfiguration{
 		ClusterName:       clusterName,
