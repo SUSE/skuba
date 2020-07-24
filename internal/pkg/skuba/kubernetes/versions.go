@@ -122,7 +122,7 @@ var (
 				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.16.2"},
 				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.3.15"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.2"},
-				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
+				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
