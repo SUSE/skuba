@@ -11,12 +11,13 @@ logger = logging.getLogger('Sonobuoy-E2E-Tests')
 
 
 class SonobuoyE2eTests:
-    def __init__(self, artifacts_dir, kubeconfig, sonobuoy_image, sonobuoy_version):
+    def __init__(self, artifacts_dir, kubeconfig, sonobuoy_image, sonobuoy_version, sonobuoy_focus):
         self.artifacts_dir = artifacts_dir if os.path.isabs(artifacts_dir) else os.path.join(os.getcwd(), artifacts_dir)
         self.default_sleep = 5
         self.kubeconfig = kubeconfig
         self.sonobuoy_image = sonobuoy_image
         self.sonobuoy_version = sonobuoy_version
+        self.sonobuoy_focus = sonobuoy_focus
 
         if not os.path.isdir(self.artifacts_dir):
             os.mkdir(self.artifacts_dir)
@@ -84,7 +85,7 @@ class SonobuoyE2eTests:
                f'-v {self.kubeconfig}:/root/.kube/config '
                f'-v {self.artifacts_dir}:/results '
                f'-i {self.sonobuoy_image}:{self.sonobuoy_version} '
-               f'./sonobuoy {sonobuoy_args}')
+               f'./sonobuoy {"--e2e-focus"+self.sonobuoy_focus if self.sonobuoy_focus else ""} {sonobuoy_args}')
         return self._run_cmd(cmd)
 
     def _start_the_tests(self, sonobuoy_args):
@@ -99,7 +100,8 @@ def run_tests(args, sonobuoy_args):
     sonobuoy_e2e = SonobuoyE2eTests(args.artifacts,
                                     args.kubeconfig,
                                     args.sonobuoy_image,
-                                    args.sonobuoy_version)
+                                    args.sonobuoy_version,
+                                    args.sonobuoy_focus)
 
     sonobuoy_e2e.run_tests(sonobuoy_args)
 
@@ -142,6 +144,8 @@ def define_parser(parser):
                             type=int,
                             default=5,
                             help='How many failures to allow in a row while checking the test status')
+    run_parser.add_argument('--sonobuoy-focus',
+                            help='focus execution in given test')
     run_parser.set_defaults(func=run_tests)
 
     collect_parser = subparsers.add_parser('collect', help='Collect the results', parents=[shared_parser])

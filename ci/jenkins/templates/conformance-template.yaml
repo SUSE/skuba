@@ -25,6 +25,9 @@
               name: SONOBUOY_VERSION 
               default: '{sonobuoy_version}'
               description: Version of sonobouy image to use
+        - string:
+              name: SONOBUOY_FOCUS
+              description: list of tests to be executed
     pipeline-scm:
         scm:
             - git:
