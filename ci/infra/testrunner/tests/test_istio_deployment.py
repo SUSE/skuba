@@ -78,7 +78,7 @@ def cleanup(kubectl):
                                 --set values.pilot.image=istio-pilot \
                                 --set values.global.proxy.image=istio-proxyv2 \
                                 --set values.global.proxy_init.image=istio-proxyv2 \
-                                | kubectl --kubeconfig=/home/manuel/manuelbuil/testrunner/test-cluster/admin.conf delete -f - || true
+                                | kubectl --kubeconfig={config} delete -f - || true
                         """.format(config=kubectl.get_kubeconfig()))
     kubectl.utils.runshellcommand(istioctl_delete)
 
