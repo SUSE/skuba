@@ -10,6 +10,9 @@ class Kubectl:
         self.kubeconfig = conf.kubectl.kubeconfig
         self.utils = Utils(self.conf)
 
+    def get_kubeconfig(self):
+        return self.kubeconfig
+
     def run_kubectl(self, command, stdin=None):
         shell_cmd = f'{self.binpath} --kubeconfig={self.kubeconfig} {command}'
         try:
