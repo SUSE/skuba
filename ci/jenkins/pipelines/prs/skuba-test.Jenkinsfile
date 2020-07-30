@@ -18,7 +18,7 @@ def branch_registry = ""
 def original_registry = ""
 
 // CaaSP Version for repo and registry branch
-def repo_version = "5"
+def repo_version = "4.5"
 
 // type of worker required by the PR
 def worker_type = 'integration'
