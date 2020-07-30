@@ -565,7 +565,7 @@ func createFakePod(podName string, nodeName string, version string) corev1.Pod {
 			Containers: []corev1.Container{
 				{
 					Name:  podName,
-					Image: "registry.suse.com/caasp/v5/" + podName + ":" + version,
+					Image: "registry.suse.com/caasp/v4.5/" + podName + ":" + version,
 				},
 			},
 			NodeName: nodeName,
