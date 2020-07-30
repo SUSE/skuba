@@ -102,7 +102,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		// This updated UseHyperKube field in-memory (unsets it).
 		// Note: The cluster cm is uploaded at the end of the kubeadm process, as usual.
 		// The whole paragraph can be removed when upgrading from 1.17 is removed.
-		if currentClusterVersion.Minor() == 17 {
+		if currentClusterVersion.Minor() == 17 && kubernetes.LatestVersion().Minor() > 17 {
 			initCfg.UseHyperKubeImage = false
 		}
 
