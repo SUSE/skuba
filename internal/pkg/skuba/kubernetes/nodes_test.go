@@ -322,7 +322,7 @@ func TestDrainNode(t *testing.T) {
 						Containers: []corev1.Container{
 							{
 								Name:  "test",
-								Image: "registry.suse.com/caasp/v5/test:1.1.1",
+								Image: "registry.suse.com/caasp/v4.5/test:1.1.1",
 							},
 						},
 					},
@@ -340,7 +340,7 @@ func TestDrainNode(t *testing.T) {
 								Containers: []corev1.Container{
 									{
 										Name:  "test",
-										Image: "registry.suse.com/caasp/v5/test:1.1.1",
+										Image: "registry.suse.com/caasp/v4.5/test:1.1.1",
 									},
 								},
 							},
