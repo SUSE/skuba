@@ -78,7 +78,7 @@ def _istio_httpbin_setup(kubectl):
                 istioctl --kubeconfig={config} manifest apply \
                          --set profile=default \
                          --set addonComponents.prometheus.enabled=false \
-                         --set hub=registry.suse.de/devel/caasp/5/containers/containers/caasp/v5 \
+                         --set hub=registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5 \
                          --set tag=1.5.4 \
                          --set values.pilot.image=istio-pilot \
                          --set values.global.proxy.image=istio-proxyv2 \
@@ -97,7 +97,7 @@ def _cleanup(kubectl):
                        istioctl --kubeconfig={config} manifest generate \
                                 --set profile=default \
                                 --set addonComponents.prometheus.enabled=false \
-                                --set hub=registry.suse.de/devel/caasp/5/containers/containers/caasp/v5 \
+                                --set hub=registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5 \
                                 --set tag=1.5.4 \
                                 --set values.pilot.image=istio-pilot \
                                 --set values.global.proxy.image=istio-proxyv2 \

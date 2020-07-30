@@ -43,8 +43,8 @@ node('caasp-team-private-integration') {
 
         if (env.REPO_BRANCH){
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/5/branches/${env.REPO_BRANCH}/containers"
-               original_registry = "registry.suse.de/devel/caasp/5/containers/containers"
+               branch_registry = "registry.suse.de/devel/caasp/4.5/branches/${env.REPO_BRANCH}/containers"
+               original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
          }
     }
 }

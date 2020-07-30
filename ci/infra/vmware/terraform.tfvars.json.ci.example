@@ -7,7 +7,7 @@
     "template_name": "SLES15-SP2-GMC-up200615-guestinfo",
     "wait_for_guest_net_routable": false,
     "firmware": "bios",
-    "stack_name": "caasp-jenkins-v5",
+    "stack_name": "caasp-jenkins-v4.5",
     "masters": 1,
     "workers": 2,
     "username": "sles",
