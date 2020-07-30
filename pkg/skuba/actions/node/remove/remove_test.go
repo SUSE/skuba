@@ -38,7 +38,7 @@ func Test_RemoveNode(t *testing.T) {
 		Data: map[string]string{"ClusterConfiguration": `
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
-kubernetesVersion: "v1.17.9"
+kubernetesVersion: "v1.17.4"
 apiServer:
   extraArgs:
     advertiseAddress: 1.2.3.4

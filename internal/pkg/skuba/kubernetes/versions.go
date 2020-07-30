@@ -111,16 +111,16 @@ var (
 				PSP:           &AddonVersion{"", 2},
 			},
 		},
-		"1.17.9": KubernetesVersion{
+		"1.17.4": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.17.9",
+				KubeletVersion:          "1.17.4",
 				ContainerRuntimeVersion: "1.16.1",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.9"},
-				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.9"},
-				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.9"},
-				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.9"},
+				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
+				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
 				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.5"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
