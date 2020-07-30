@@ -155,7 +155,7 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 
 	if currentV == skubaconstants.LastCaaSP4KubernetesVersion {
 		// on 1.17 we need to finalize the cleanup for the
-		// caasp4 to 5 migration during this stage.
+		// caasp4 to 4.5 migration during this stage.
 		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-kubelet<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 		pkgs = append(pkgs, "-kubernetes-common")
 		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-client<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
