@@ -75,10 +75,34 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 
+	// Disable skuba-update.timer before upgrade
+	if skubaUpdateWasEnabled {
+		err = target.Apply(nil, "skuba-update-timer.disable")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if a kured reboot file already exists
+	kuredRebootFilePresent := kured.RebootFileExists()
+	if kuredRebootFilePresent {
+		err := kured.RebootFileRemove()
+		if err != nil {
+			return err
+		}
+	}
+
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
 		return err
+	}
+
+	// Lock kured before upgrade
+	if !kuredWasLocked {
+		if err := kured.Lock(client); err != nil {
+			return err
+		}
 	}
 
 	var initCfgContents []byte
@@ -125,18 +149,6 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 
 	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
-
-	if skubaUpdateWasEnabled {
-		err = target.Apply(nil, "skuba-update-timer.disable")
-		if err != nil {
-			return err
-		}
-	}
-	if !kuredWasLocked {
-		if err := kured.Lock(client); err != nil {
-			return err
-		}
-	}
 
 	// Always upload crio files, regardless of the version (allows to enforce
 	// user behavior during patch updates).
@@ -200,6 +212,12 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	if !kuredWasLocked {
 		if err := kured.Unlock(client); err != nil {
+			return err
+		}
+	}
+	if kuredRebootFilePresent {
+		err := kured.RebootFileCreate()
+		if err != nil {
 			return err
 		}
 	}

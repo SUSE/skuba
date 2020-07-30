@@ -19,6 +19,7 @@ package kured
 
 import (
 	"context"
+	"os"
 
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,7 @@ import (
 
 const (
 	kuredDSName             = "kured"
+	kuredRebootSentinelFile = "/var/run/reboot-required"
 	kuredLockAnnotationJson = `{"metadata":{"annotations":{"weave.works/kured-node-lock":"{\"nodeID\":\"manual\"}"}}}`
 )
 
@@ -69,5 +71,28 @@ func Unlock(client clientset.Interface) error {
 		return errors.Wrap(err, "unable to patch daemonset with kured unlocking annotation")
 	}
 	klog.V(2).Info("successfully removed kured locking annotation")
+	return nil
+}
+
+func RebootFileExists() bool {
+	if _, err := os.Stat(kuredRebootSentinelFile); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func RebootFileCreate() error {
+	_, err := os.Create(kuredRebootSentinelFile)
+	if err != nil {
+		return errors.Wrapf(err, "could not create file %q", kuredRebootSentinelFile)
+	}
+	return nil
+}
+
+func RebootFileRemove() error {
+	err := os.Remove(kuredRebootSentinelFile)
+	if err != nil {
+		return errors.Wrapf(err, "could not remove file %q", kuredRebootSentinelFile)
+	}
 	return nil
 }
