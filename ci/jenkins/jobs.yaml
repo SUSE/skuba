@@ -23,7 +23,7 @@
               sonobuoy_version: 'v0.17'
               schedule: '1-3'
               branch: maintenance-caasp-v4 
-          - v5
+          - v4.5
       jobs:
           - '{name}/{version}/{platform}'
 
@@ -59,7 +59,7 @@
         - '{name}/{platform}/update-daily'
 
 - project:
-    name: caasp-jobs/e2e/v5
+    name: caasp-jobs/e2e/v4.5
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token

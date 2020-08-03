@@ -23,7 +23,7 @@
 Name:           skuba
 Version:        %%VERSION
 Release:        0
-Summary:        CLI tool used to deploy CaaS Platform v5
+Summary:        CLI tool used to deploy CaaS Platform v4.5
 License:        Apache-2.0
 Group:          System/Management
 URL:            https://github.com/SUSE/skuba

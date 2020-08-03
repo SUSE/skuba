@@ -18,7 +18,7 @@ def branch_registry = ""
 def original_registry = ""
 
 // CaaSP Version for repo and registry branch
-def repo_version = "5"
+def repo_version = "4.5"
 
 // type of worker required by the PR
 def worker_type = 'integration'
@@ -90,8 +90,8 @@ node('caasp-team-private-integration') {
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
                branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/5/branches/${branch_name}/containers"
-               original_registry = "registry.suse.de/devel/caasp/5/containers/containers"
+               branch_registry = "registry.suse.de/devel/caasp/4.5/branches/${branch_name}/containers"
+               original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
            }
 
         } catch (Exception e) {

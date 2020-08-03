@@ -7,7 +7,7 @@
     "template_name": "SLES15-SP2-GMC-up200615-guestinfo",
     "wait_for_guest_net_routable": false,
     "firmware": "bios",
-    "stack_name": "caasp-jenkins-v5",
+    "stack_name": "caasp-jenkins-v4.5",
     "masters": 1,
     "workers": 2,
     "username": "sles",
@@ -20,7 +20,7 @@
         "basesystem_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update/"
     },
     "repositories": {
-        "caasp_devel": "http://download.suse.de/ibs/Devel:/CaaSP:/5/SLE_15_SP2/",
+        "caasp_devel": "http://download.suse.de/ibs/Devel:/CaaSP:/4.5/SLE_15_SP2/",
         "suse_ca": "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP2",
         "sle_server_pool": "http://download.suse.de/ibs/SUSE/Products/SLE-Product-SLES/15-SP2/x86_64/product",
         "basesystem_pool": "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP2/x86_64/product",
