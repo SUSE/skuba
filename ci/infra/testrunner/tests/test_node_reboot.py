@@ -14,7 +14,6 @@ def check_node_is_ready(platform, kubectl, role, nr):
     assert node_is_ready(platform, kubectl, role, nr)
 
 
-@pytest.mark.pr
 @pytest.mark.parametrize('role,node', [('master', 1), ('worker', 0)])
 def test_hard_reboot(deployment, platform, kubectl, role, node):
     """ Reboots master and worker nodes and checks they are back ready.
