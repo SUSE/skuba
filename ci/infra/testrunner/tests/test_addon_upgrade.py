@@ -44,7 +44,6 @@ def remove_one_addon(addons_dict, skip=None):
     raise Exception('Could not remove any addon!')
 
 
-@pytest.mark.pr
 def test_addon_upgrade_apply(deployment, kubectl, skuba):
     skubaconf_dict = get_skuba_configuration_dict(kubectl)
     addons_dict = skubaconf_dict['AddonsVersion']
