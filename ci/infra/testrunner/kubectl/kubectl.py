@@ -1,5 +1,6 @@
 from utils.utils import (Utils)
 from time import sleep
+from istioctl.istioctl import (Istioctl)
 
 
 class Kubectl:
@@ -9,6 +10,7 @@ class Kubectl:
         self.binpath = conf.kubectl.binpath
         self.kubeconfig = conf.kubectl.kubeconfig
         self.utils = Utils(self.conf)
+        self.istioctl = Istioctl(self.conf)
 
     def get_kubeconfig(self):
         return self.kubeconfig

@@ -9,6 +9,15 @@
 #kubectl:
 #  path: #path to kubectl binary (defaults to /usr/bin/kubectl)
 #
+
+# Istioctl setup
+#istioctl:
+#  path: #path to istioctl binary (defaults to /usr/bin/istioctl)
+#  istio_version: #version of istio (defaults to 1.5.4)
+#  sample_path: #url path to sample manifests
+#  container_hub: # URl for the image registry
+#  (defaults to https://raw.githubusercontent.com/istio/istio/{istio_version}/samples
+
 #
 terraform:
 #  internal_net: "" # name of the internal network

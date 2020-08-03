@@ -2,6 +2,7 @@ import pytest
 
 import platforms
 from kubectl import Kubectl
+from istioctl import Istioctl
 from skuba import Skuba
 from utils import BaseConfig
 from tests.utils import (check_pods_ready, wait)
@@ -54,6 +55,7 @@ def deployment(request, bootstrap, skuba, kubectl):
     skuba.join_nodes()
     wait(check_pods_ready,
          kubectl,
+         istioctl,
          namespace="kube-system",
          wait_delay=60,
          wait_timeout=10,
@@ -85,6 +87,9 @@ def skuba(conf, target):
 def kubectl(conf):
     return Kubectl(conf)
 
+@pytest.fixture
+def istioctl(conf):
+    return Istioctl(conf)
 
 @pytest.fixture
 def platform(conf, target):

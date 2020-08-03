@@ -43,6 +43,7 @@ def node_is_upgraded(kubectl, platform, role, nr):
     # allow system pods to come up again after the upgrade
     wait(check_pods_ready,
          kubectl,
+         istioctl,
          namespace="kube-system",
          wait_delay=60,
          wait_backoff=30,

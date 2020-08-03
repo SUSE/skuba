@@ -36,6 +36,7 @@ class BaseConfig:
         obj.log = BaseConfig.Log()
         obj.packages = BaseConfig.Packages()
         obj.kubectl = BaseConfig.Kubectl()
+        obj.istioctl = BaseConfig.Istioctl()
         obj.utils = BaseConfig.Utils()
 
         # vars get the values from yaml file
@@ -100,6 +101,18 @@ class BaseConfig:
             self.cluster = "test-cluster"
             self.binpath = "/usr/bin/kubectl"
             self.kubeconfig = "$WORKSPACE/test-cluster/admin.conf"
+
+    class Istioctl:
+        def __init__(self):
+            super().__init__()
+            self.workdir = "$WORKSPACE"
+            self.cluster = "test-cluster"
+            self.binpath = "/usr/bin/istioctl"
+            self.kubeconfig = "$WORKSPACE/test-cluster/admin.conf"
+            self.istio_version = "1.5.4"
+            self.container_hub = "registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5"
+            self.sample_path = "https://raw.githubusercontent.com/istio/istio/1.5.4/samples"
+
 
     class Test:
         def __init__(self):
@@ -230,6 +243,7 @@ class BaseConfig:
         Terraform,
         Skuba,
         Kubectl,
+        Istioctl,
         VMware,
         Libvirt,
         Utils
