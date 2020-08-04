@@ -72,7 +72,7 @@ update_jenkins_jobs:
 
 .PHONY: update_pkgs
 update_pkgs:
-	sudo zypper update --allow-vendor-change -y kubernetes-client terraform terraform-provider-*
+	sudo zypper update --allow-vendor-change -y k8s-client terraform terraform-provider-*
 
 # Stages
 .PHONY: pre_deployment
