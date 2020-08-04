@@ -20,6 +20,6 @@
 package skuba
 
 const (
-	BuildType       = "staging"
-	ImageRepository = "registry.suse.de/suse/sle-15-sp2/update/products/caasp/5/containers/caasp/v5"
+	BuildType         = "staging"
+	ImageRepository   = "registry.suse.de/suse/sle-15-sp2/update/products/caasp/4.5/containers/caasp/v4.5"
 )

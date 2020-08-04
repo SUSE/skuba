@@ -1,6 +1,6 @@
 ## Introduction
 
-These terraform definitions are going to create the CaaSP v5 cluster on top of VMWare vSphere cluster.
+These terraform definitions are going to create the CaaSP v4.5 cluster on top of VMWare vSphere cluster.
 
 This code was developed and tested on VMware vSphere cluster based on VMware ESXi 6.7.20000.
 
