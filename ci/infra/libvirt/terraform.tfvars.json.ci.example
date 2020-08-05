@@ -28,7 +28,8 @@
         "ha_pool": "http://download.suse.de/ibs/SUSE/Products/SLE-Product-HA/15-SP2/x86_64/product/",
         "ha_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Product-HA/15-SP2/x86_64/update/",
         "sle_server_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Product-SLES/15-SP2/x86_64/update/",
-        "basesystem_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update/"
+        "basesystem_updates": "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update/",
+        "suse_ca": "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP2"
     },
     "packages": [
         "zypper-needs-restarting",
