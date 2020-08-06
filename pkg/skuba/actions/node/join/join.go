@@ -86,6 +86,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		"apparmor.start",
 		criSetup,
 		"cri.start",
+		"oidc.ca.upload",
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",

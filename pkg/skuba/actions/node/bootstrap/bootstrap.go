@@ -142,6 +142,7 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		"apparmor.start",
 		criSetup,
 		"cri.start",
+		"oidc.ca.upload",
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",

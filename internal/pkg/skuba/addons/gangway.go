@@ -72,8 +72,13 @@ func (gangwayCallbacks) beforeApply(client clientset.Interface, addonConfigurati
 		return errors.Wrap(err, "unable to determine if oidc gangway cert exists")
 	}
 	if !exist {
-		// generate certificate if not present
-		if err = oidc.CreateServerCert(client, skubaconstants.PkiDir(), oidc.GangwayCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.GangwayCertSecretName); err != nil {
+		// try to use local server certificate if present
+		if err := oidc.TryToUseLocalServerCert(client, oidc.GangwayServerCertAndKeyBaseFileName, oidc.GangwayCertSecretName); err == nil {
+			return nil
+		}
+
+		// sign the server certificate by cluster CA or custom OIDC CA if server certificate not present
+		if err := oidc.SignServerWithLocalCACertAndKey(client, oidc.GangwayCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.GangwayCertSecretName); err != nil {
 			return err
 		}
 	}

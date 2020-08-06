@@ -37,12 +37,13 @@ func newRootCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewVersionCmd(),
+		NewAddonCmd(),
+		NewAuthCmd(),
+		NewCertCmd(),
 		NewClusterCmd(),
 		NewCompletionCmd(),
 		NewNodeCmd(),
-		NewAuthCmd(),
-		NewAddonCmd(),
+		NewVersionCmd(),
 	)
 
 	flags.RegisterVerboseFlag(cmd.PersistentFlags())

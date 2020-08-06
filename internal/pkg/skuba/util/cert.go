@@ -23,7 +23,7 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	certutil "k8s.io/client-go/util/cert"
@@ -33,45 +33,52 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 )
 
+func certSANsToAltNAmes(sans []string) certutil.AltNames {
+	altNames := certutil.AltNames{}
+	for _, san := range sans {
+		if ip := net.ParseIP(san); ip != nil {
+			altNames.IPs = append(altNames.IPs, ip)
+		} else {
+			altNames.DNSNames = append(altNames.DNSNames, san)
+		}
+	}
+	return altNames
+}
+
+// NewServerCertAndKey creates new CSR and key by
+// passing the server common name and server SANs
+func NewServerCSRAndKey(commonName string, sans []string) (*x509.CertificateRequest, crypto.Signer, error) {
+	cfg := &pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   commonName,
+			Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
+			AltNames:     certSANsToAltNAmes(sans),
+			Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		},
+	}
+	return pkiutil.NewCSRAndKey(cfg)
+}
+
 // NewServerCertAndKey creates new certificate and key by
 // passing the certificate authority certificate and key
 // and server common name and server SANs
 func NewServerCertAndKey(
 	caCert *x509.Certificate, caKey crypto.Signer,
-	commonName string, certSANs []string,
+	commonName string, sans []string,
 ) (*x509.Certificate, crypto.Signer, error) {
 	if caCert == nil {
-		return nil, nil, errors.Errorf("invalid input")
+		return nil, nil, errors.New("invalid input")
 	}
 
-	certDNSNames := make([]string, 0)
-	certIPs := make([]net.IP, 0)
-	for _, san := range certSANs {
-		dnsOrIP := net.ParseIP(san)
-		if dnsOrIP != nil {
-			certIPs = append(certIPs, dnsOrIP)
-		} else {
-			certDNSNames = append(certDNSNames, san)
-		}
-	}
-
-	// Generate certificate
-	cert, key, err := pkiutil.NewCertAndKey(caCert, caKey, &pkiutil.CertConfig{
+	cfg := &pkiutil.CertConfig{
 		Config: certutil.Config{
 			CommonName:   commonName,
 			Organization: []string{kubeadmconstants.SystemPrivilegedGroup},
-			AltNames: certutil.AltNames{
-				DNSNames: certDNSNames,
-				IPs:      certIPs,
-			},
-			Usages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		}},
-	)
-	if err != nil {
-		return nil, nil, errors.Errorf("error when creating certificate %v", err)
+			AltNames:     certSANsToAltNAmes(sans),
+			Usages:       []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		},
 	}
-
-	return cert, key, nil
+	return pkiutil.NewCertAndKey(caCert, caKey, cfg)
 }
 
 // CreateOrUpdateCertToSecret creates or update
@@ -92,17 +99,17 @@ func CreateOrUpdateCertToSecret(
 	}
 
 	// Write certificate into secret resource
-	secret := &v1.Secret{
+	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      secretName,
 			Namespace: metav1.NamespaceSystem,
 			Labels:    map[string]string{"caasp.suse.com/skuba-addon": "true"},
 		},
-		Type: v1.SecretTypeTLS,
+		Type: corev1.SecretTypeTLS,
 		Data: map[string][]byte{
-			v1.TLSCertKey:              pkiutil.EncodeCertPEM(cert),
-			v1.TLSPrivateKeyKey:        privateKey,
-			v1.ServiceAccountRootCAKey: pkiutil.EncodeCertPEM(caCert),
+			corev1.TLSCertKey:       pkiutil.EncodeCertPEM(cert),
+			corev1.TLSPrivateKeyKey: privateKey,
+			"ca.crt":                pkiutil.EncodeCertPEM(caCert),
 		},
 	}
 
