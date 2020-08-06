@@ -80,6 +80,12 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
 		ClusterName:    initConfiguration.ClusterName,
 	}
+	// re-render all addons base manifest
+	for addonName, addon := range addons.Addons {
+		if err := addon.Write(addonConfiguration); err != nil {
+			return errors.Wrapf(err, "failed to refresh addon %s manifest", string(addonName))
+		}
+	}
 	dryRun := false
 	if err := addons.DeployAddons(clientSet, addonConfiguration, dryRun); err != nil {
 		return err
