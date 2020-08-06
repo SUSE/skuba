@@ -131,6 +131,10 @@ func kubernetesUpgradeStageOne(t *Target, data interface{}) error {
 		pkgs = append(pkgs, fmt.Sprintf("-patterns-caasp-Node-%s", skubaconstants.LastCaaSP4KubernetesVersion))
 		pkgs = append(pkgs, fmt.Sprintf("-\"kubernetes-kubeadm<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 		pkgs = append(pkgs, "-caasp-config", "-cri-o-kubeadm-criconfig")
+		// We also need to install cri-o-1.18-kubeadm-criconfig at the same time
+		// that we remove cri-o-kubeadm-criconfig, because otherwise the kubernetes-1.18-kubeadm requirements would trigger the installation of any cri-o-*-kubeadm-criconfig
+		// leading to unexpected results on late migrations to SP2 and therefore late upgrades to caasp 4.5
+		pkgs = append(pkgs, fmt.Sprintf("cri-o-%s-kubeadm-criconfig", skubaconstants.FirstCaaSP5KubernetesVersion))
 	} else {
 		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-kubeadm", currentV))
 	}
