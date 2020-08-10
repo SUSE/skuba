@@ -229,7 +229,7 @@ func versionInquirer(versions ...string) kubernetes.VersionInquirer {
 				kubernetes.Tooling:           &kubernetes.ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: kubernetes.AddonsVersion{
-				kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.7.5", ManifestVersion: 0},
+				kubernetes.Cilium: &kubernetes.AddonVersion{Version: "1.7.6", ManifestVersion: 0},
 				kubernetes.Kured:  &kubernetes.AddonVersion{Version: "1.2.0", ManifestVersion: 0},
 			},
 		}
