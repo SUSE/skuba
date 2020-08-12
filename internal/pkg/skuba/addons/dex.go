@@ -19,6 +19,7 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
@@ -33,12 +34,12 @@ func init() {
 	registerAddon(kubernetes.Dex, GenericAddOn, renderDexTemplate, nil, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
 }
 
-func GetDexImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex", imageTag)
+func GetDexImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "caasp-dex", imageTag)
 }
 
 func (renderContext renderContext) DexImage() string {
-	return GetDexImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
+	return GetDexImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
 }
 
 func renderDexTemplate(addonConfiguration AddonConfiguration) string {

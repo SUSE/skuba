@@ -90,7 +90,7 @@ func NewInitConfiguration(clusterName, cloudProvider, controlPlane, kubernetesDe
 		ControlPlane:      controlPlane,
 		PauseImage:        kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, kubernetesVersion),
 		KubernetesVersion: kubernetesVersion,
-		ImageRepository:   skuba.ImageRepository,
+		ImageRepository:   skuba.ImageRepository(kubernetesVersion),
 		EtcdImageTag:      kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, kubernetesVersion),
 		CoreDNSImageTag:   kubernetes.ComponentVersionForClusterVersion(kubernetes.CoreDNS, kubernetesVersion),
 		StrictCapDefaults: strictCapDefaults,

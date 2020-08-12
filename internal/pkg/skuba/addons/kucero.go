@@ -18,6 +18,7 @@
 package addons
 
 import (
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
@@ -28,12 +29,12 @@ func init() {
 	registerAddon(kubernetes.Kucero, GenericAddOn, renderKuceroTemplate, nil, nil, normalPriority, []getImageCallback{GetKuceroImage})
 }
 
-func GetKuceroImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "kucero", imageTag)
+func GetKuceroImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "kucero", imageTag)
 }
 
 func (renderContext renderContext) KuceroImage() string {
-	return GetKuceroImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Kucero, renderContext.config.ClusterVersion).Version)
+	return GetKuceroImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Kucero, renderContext.config.ClusterVersion).Version)
 }
 
 func renderKuceroTemplate(addonConfiguration AddonConfiguration) string {

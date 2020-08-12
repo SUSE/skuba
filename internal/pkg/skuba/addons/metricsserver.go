@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
@@ -39,12 +40,12 @@ func init() {
 	registerAddon(kubernetes.MetricsServer, GenericAddOn, renderMetricsServerTemplate, nil, metricsServerCallbacks{}, normalPriority, []getImageCallback{GetMetricsServerImage})
 }
 
-func GetMetricsServerImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "metrics-server", imageTag)
+func GetMetricsServerImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "metrics-server", imageTag)
 }
 
 func (renderContext renderContext) MetricsServerImage() string {
-	return GetMetricsServerImage(kubernetes.AddonVersionForClusterVersion(kubernetes.MetricsServer, renderContext.config.ClusterVersion).Version)
+	return GetMetricsServerImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.MetricsServer, renderContext.config.ClusterVersion).Version)
 }
 
 // CABundle returns base64 encoded Kubernetes CA certificate.

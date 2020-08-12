@@ -18,8 +18,10 @@
 package addons
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	img "github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -32,20 +34,25 @@ func TestGetKuceroImage(t *testing.T) {
 		{
 			name:     "get kucero image without revision",
 			imageTag: "1.1.1",
-			want:     img.ImageRepository + "/kucero:1.1.1",
+			want:     "kucero:1.1.1",
 		},
 		{
 			name:     "get kucero image with revision",
 			imageTag: "1.1.1-rev1",
-			want:     img.ImageRepository + "/kucero:1.1.1-rev1",
+			want:     "kucero:1.1.1-rev1",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetKuceroImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetKuceroImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetKuceroImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetKuceroImage() = %v, want %v", got, imageUri)
+				}
+			})
+		}
 	}
 }

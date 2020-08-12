@@ -21,5 +21,6 @@ package skuba
 
 const (
 	BuildType         = "release"
-	ImageRepository   = "registry.suse.com/caasp/v4.5"
+	imageRepositoryV4 = "registry.suse.com/caasp/v4"
+	imageRepository   = "registry.suse.com/caasp/v4.5"
 )
