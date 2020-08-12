@@ -41,7 +41,7 @@ func Images() error {
 			if addonVersion == nil {
 				continue
 			}
-			for _, addonImageLoc := range addon.Images(addonVersion.Version) {
+			for _, addonImageLoc := range addon.Images(version, addonVersion.Version) {
 				imagesEncountered[addonImageLoc] = true
 			}
 		}

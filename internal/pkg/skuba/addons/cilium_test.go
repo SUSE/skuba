@@ -18,6 +18,7 @@
 package addons
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -37,21 +38,26 @@ func TestGetCiliumInitImage(t *testing.T) {
 		{
 			name:     "get cilium init image without revision",
 			imageTag: "1.7.5",
-			want:     img.ImageRepository + "/cilium-init:1.7.5",
+			want:     "cilium-init:1.7.5",
 		},
 		{
 			name:     "get cilium init image with revision",
 			imageTag: "1.7.5-rev2",
-			want:     img.ImageRepository + "/cilium-init:1.7.5-rev2",
+			want:     "cilium-init:1.7.5-rev2",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetCiliumInitImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetCiliumInitImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetCiliumInitImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetCiliumInitImage() = %v, want %v", got, tt.want)
+				}
+			})
+		}
 	}
 }
 
@@ -64,21 +70,26 @@ func TestGetCiliumOperatorImage(t *testing.T) {
 		{
 			name:     "get cilium operator image without revision",
 			imageTag: "1.7.5",
-			want:     img.ImageRepository + "/cilium-operator:1.7.5",
+			want:     "cilium-operator:1.7.5",
 		},
 		{
 			name:     "get cilium operator image with revision",
 			imageTag: "1.7.5-rev2",
-			want:     img.ImageRepository + "/cilium-operator:1.7.5-rev2",
+			want:     "cilium-operator:1.7.5-rev2",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetCiliumOperatorImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetCiliumOperatorImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetCiliumOperatorImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetCiliumOperatorImage() = %v, want %v", got, imageUri)
+				}
+			})
+		}
 	}
 }
 
@@ -91,21 +102,26 @@ func TestGetCiliumImage(t *testing.T) {
 		{
 			name:     "get cilium image without revision",
 			imageTag: "1.7.5",
-			want:     img.ImageRepository + "/cilium:1.7.5",
+			want:     "cilium:1.7.5",
 		},
 		{
 			name:     "get cilium image with revision",
 			imageTag: "1.7.5-rev2",
-			want:     img.ImageRepository + "/cilium:1.7.5-rev2",
+			want:     "cilium:1.7.5-rev2",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetCiliumImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetCiliumImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetCiliumImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetCiliumImage() = %v, want %v", got, tt.want)
+				}
+			})
+		}
 	}
 }
 
@@ -125,7 +141,7 @@ func Test_renderContext_CiliumInitImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/cilium-init:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/cilium-init:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.CiliumInitImage()
@@ -158,7 +174,7 @@ func Test_renderContext_CiliumOperatorImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/cilium-operator:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/cilium-operator:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.CiliumOperatorImage()
@@ -191,7 +207,7 @@ func Test_renderContext_CiliumImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/cilium:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/cilium:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.CiliumImage()
