@@ -18,7 +18,7 @@ def branch_registry = ""
 def original_registry = ""
 
 // CaaSP Version for repo and registry branch
-def repo_version = "5"
+def repo_version = "4.5"
 
 // type of worker required by the PR
 def worker_type = 'integration'
@@ -115,7 +115,6 @@ pipeline {
         REQUESTS_CA_BUNDLE = '/var/lib/ca-certificates/ca-bundle.pem'
         LIBVIRT_URI = 'qemu+ssh://jenkins@kvm-ci.nue.caasp.suse.net/system'
         LIBVIRT_KEYFILE = credentials('libvirt-keyfile')
-        LIBVIRT_IMAGE_URI = 'https://download.suse.de/install/SLE-15-SP2-JeOS-GM/SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2'
         BRANCH_REPO = "${branch_repo}"
         BRANCH_REGISTRY = "${branch_registry}"
         ORIGINAL_REGISTRY = "${original_registry}"
