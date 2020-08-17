@@ -7,16 +7,16 @@ locals {
 }
 
 resource "aws_iam_instance_profile" "master" {
+  count = length(var.iam_profile_master) == 0 ? 1 : 0
   name  = local.aws_iam_instance_profile_master_terraform
   role  = aws_iam_role.master[count.index].name
-  count = length(var.iam_profile_master) == 0 ? 1 : 0
 }
 
 resource "aws_iam_role" "master" {
+  count       = length(var.iam_profile_master) == 0 ? 1 : 0
   name        = local.aws_iam_instance_profile_master_terraform
   description = "IAM role needed by CPI on master nodes"
   path        = "/"
-  count       = length(var.iam_profile_master) == 0 ? 1 : 0
 
   assume_role_policy = <<EOF
 {
@@ -36,9 +36,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "master" {
+  count = length(var.iam_profile_master) == 0 ? 1 : 0
   name  = local.aws_iam_instance_profile_master_terraform
   role  = aws_iam_role.master[count.index].id
-  count = length(var.iam_profile_master) == 0 ? 1 : 0
 
   policy = <<EOF
 {
@@ -112,16 +112,16 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "worker" {
+  count = length(var.iam_profile_worker) == 0 ? 1 : 0
   name  = local.aws_iam_instance_profile_worker_terraform
   role  = aws_iam_role.worker[count.index].name
-  count = length(var.iam_profile_worker) == 0 ? 1 : 0
 }
 
 resource "aws_iam_role" "worker" {
+  count       = length(var.iam_profile_worker) == 0 ? 1 : 0
   name        = local.aws_iam_instance_profile_worker_terraform
   description = "IAM role needed by CPI on worker nodes"
   path        = "/"
-  count       = length(var.iam_profile_worker) == 0 ? 1 : 0
 
   assume_role_policy = <<EOF
 {
@@ -142,9 +142,9 @@ EOF
 
 
 resource "aws_iam_role_policy" "worker" {
+  count = length(var.iam_profile_worker) == 0 ? 1 : 0
   name  = local.aws_iam_instance_profile_worker_terraform
   role  = aws_iam_role.worker[count.index].id
-  count = length(var.iam_profile_worker) == 0 ? 1 : 0
 
   policy = <<EOF
 {
