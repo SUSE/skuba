@@ -131,13 +131,13 @@ variable "master_vm_size" {
 
 variable "master_storage_account_type" {
   type        = string
-  default     = "Standard_LRS"
+  default     = "StandardSSD_LRS"
   description = "Storage account type"
 }
 
 variable "master_disk_size" {
   default     = 30
-  description = "Size of the disk size, in Gb"
+  description = "Size of the disk size, in GB"
 }
 
 variable "workers" {
@@ -159,13 +159,13 @@ variable "worker_vm_size" {
 
 variable "worker_storage_account_type" {
   type        = string
-  default     = "Standard_LRS"
+  default     = "StandardSSD_LRS"
   description = "Storage account type"
 }
 
 variable "worker_disk_size" {
   default     = 30
-  description = "Size of the disk size, in Gb"
+  description = "Size of the disk size, in GB"
 }
 
 variable "peer_virutal_network_id" {

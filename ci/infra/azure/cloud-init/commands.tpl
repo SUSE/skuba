@@ -1,1 +1,2 @@
-zypper -n install ${packages}
+  - echo "solver.onlyRequires = true" >> /etc/zypp/zypp.conf
+  - zypper -n install ${packages}
