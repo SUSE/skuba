@@ -56,7 +56,7 @@ data "template_file" "worker_cloud_init_userdata" {
     commands           = join("\n", data.template_file.worker_commands.*.rendered)
     ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
     hostname           = "${var.stack_name}-worker-${count.index}"
-    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
+    hostname_from_dhcp = var.hostname_from_dhcp == true && var.cpi_enable == false ? "yes" : "no"
   }
 }
 
