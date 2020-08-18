@@ -107,7 +107,7 @@ var (
 				Dex:           &AddonVersion{"2.23.0", 7},
 				Gangway:       &AddonVersion{"3.1.0-rev5", 5},
 				MetricsServer: &AddonVersion{"0.3.6", 0},
-				Kucero:        &AddonVersion{"1.1.1", 0},
+				Kucero:        &AddonVersion{"1.1.1", 1},
 				PSP:           &AddonVersion{"", 2},
 			},
 		},
