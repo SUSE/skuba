@@ -96,7 +96,7 @@ var (
 				ControllerManager: &ContainerImageTag{Name: "controller-manager", Tag: "v1.18.6"},
 				Scheduler:         &ContainerImageTag{Name: "scheduler", Tag: "v1.18.6"},
 				Proxy:             &ContainerImageTag{Name: "proxy", Tag: "v1.18.6"},
-				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.10"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
