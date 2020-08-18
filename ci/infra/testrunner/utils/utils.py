@@ -188,7 +188,7 @@ class Utils:
 
         if logging.DEBUG >= logger.level:
             logger.debug("Executing command\n"
-                         "    cwd: {} \n"
+                         "    cwd: {}\n"
                          "    env: {}\n"
                          "    cmd: {}".format(cwd, str(cmd_env) if cmd_env else "{}", cmd))
         else:
