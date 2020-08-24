@@ -15,8 +15,12 @@ def original_registry = ""
 // worker selection labels 
 def labels = 'e2e'
 
-// keep the cluster at the end of the job
-def keep_cluster = false
+
+// retain cluster in case of failure
+def retain_cluster = false
+
+// cleanup the cluster at the end of the job
+def cleanup_cluster = true
 
 node('caasp-team-private-integration') {
     stage('select worker') {
@@ -37,7 +41,8 @@ node('caasp-team-private-integration') {
             labels = env.WORKER_LABELS
         }
 
-        if (env.RETAIN_CLUSTER){
+        retain_cluster = Boolean.parseBoolean(env.RETAIN_CLUSTER)
+        if (retain_cluster){
             labels = labels + "&& dedicated"
         }
 
@@ -102,23 +107,23 @@ pipeline {
             }
         }}
         failure{ script{
-            if (env.RETAIN_CLUSTER) {
+            if (retain_cluster) {
                 def retention_period= env.RETENTION_PERIOD?env.RETENTION_PERIOD:24
                 try{
                     timeout(time: retention_period, unit: 'HOURS'){
                         input(message: 'Waiting '+retention_period +' hours before cleaning up cluster \n. ' +
                                        'Press <abort> to cleanup inmediately, <keep> for keeping it',
                               ok: 'keep')
-                        keep_cluster = true
+                        cleanup_cluster = false
                     }
                 }catch (err){
                     // either timeout occurred or <abort> was selected
-                    keep_cluster = false
+                    cleanup_cluster = true
                 }
             }
         }}
         cleanup{ script{
-            if(!keep_cluster){
+            if(cleanup_cluster){
                 sh(script: "make --keep-going -f ci/Makefile cleanup", label: 'Cleanup')
             }
             dir("${WORKSPACE}@tmp") {
