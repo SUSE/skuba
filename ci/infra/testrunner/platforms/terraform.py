@@ -31,12 +31,24 @@ class Terraform(Platform):
                           self.tfjson_path]
 
     def destroy(self, variables=[]):
+        self._tf_init()
+        self._generate_tfvars_file()
         cmd = "destroy -auto-approve"
 
         for var in variables:
             cmd += f" -var {var}"
 
         self._run_terraform_command(cmd)
+
+    def _tf_init(self):
+        self._run_terraform_command("version")
+        init_cmd = "init"
+        if self.conf.terraform.plugin_dir:
+            logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
+            init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
+        else:
+            init_cmd += f" -get-plugins=false"
+        self._run_terraform_command(init_cmd)
 
     def _provision_platform(self, masters=-1, workers=-1):
 
@@ -48,15 +60,8 @@ class Terraform(Platform):
         exception = None
         self._check_tf_deployed()
 
-        init_cmd = "init"
-        if self.conf.terraform.plugin_dir:
-            logger.info(f"Installing plugins from {self.conf.terraform.plugin_dir}")
-            init_cmd += f" -plugin-dir={self.conf.terraform.plugin_dir}"
-        else:
-            init_cmd += f" -get-plugins=false"
-        self._run_terraform_command(init_cmd)
+        self._tf_init()
 
-        self._run_terraform_command("version")
         self._generate_tfvars_file()
         plan_cmd = f"plan -out {self.tfout_path}"
         apply_cmd = f"apply -auto-approve {self.tfout_path}"
