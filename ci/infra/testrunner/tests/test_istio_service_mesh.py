@@ -81,6 +81,7 @@ def _cleanup(kubectl):
     kubectl.run_kubectl(f"delete -f {ISTIO_URL}/bookinfo/networking/destination-rule-all.yaml")
     kubectl.run_kubectl(f"delete -f {ISTIO_URL}/bookinfo/networking/virtual-service-reviews-v3.yaml")
     kubectl.run_kubectl(f"delete -f {ISTIO_URL}/sleep/sleep.yaml")
+    kubectl.run_kubectl(f"delete -f {ISTIO_URL}/httpbin/httpbin.yaml")
     kubectl.run_kubectl("label namespace default istio-injection-")
 
 
@@ -98,7 +99,7 @@ def _cleanup(kubectl):
     kubectl.utils.runshellcommand(istioctl_delete)
 
 
-def _test_traffic_shift(kubectl, platform, logger):
+def _test_traffic_shift(kubectl, logger):
     '''
     It tests the traffic shift feature of service mesh. There are two versions of the review service, v1 and v3. We will run three subtest:
     1 - All traffic goes to v1
@@ -149,6 +150,22 @@ def _test_traffic_shift(kubectl, platform, logger):
         assert output.find(v3_string) != -1
         time.sleep(5)
 
+def _test_mTLS(kubectl, logger):
+    '''
+    It tests that mTLS is active (default behaviour) and thus authentication is happening in the service mesh
+
+    To do so, we check that there is a client certificate in the HTTP request
+    '''
+    logger.info("Add httpbin deployment")
+    kubectl.run_kubectl(f"apply -f {ISTIO_URL}/httpbin/httpbin.yaml")
+    kubectl.run_kubectl("-n default wait --for=condition=available deploy/httpbin --timeout=3m")
+
+    sleep_pod = kubectl.run_kubectl("get pod -l app=sleep -n default -o 'jsonpath={.items..metadata.name}'")
+    httpbin_port = kubectl.run_kubectl("get service -l app=httpbin -o 'jsonpath={.items..spec.ports..port}'")
+    output = kubectl.run_kubectl("exec {pod} -c sleep -n default -- curl -s http://httpbin.default:{port}/headers".format(pod=sleep_pod, port=httpbin_port))
+
+    assert output.find("X-Forwarded-Client-Cert") != -1
+
 
 def test_istio_service_mesh(deployment, platform, skuba, kubectl):
     logger = logging.getLogger("testrunner")
@@ -156,6 +173,9 @@ def test_istio_service_mesh(deployment, platform, skuba, kubectl):
     _istio_bookinfo_setup(kubectl)
 
     logger.info("Testing the traffic shifting")
-    _test_traffic_shift(kubectl, platform, logger)
+    _test_traffic_shift(kubectl, logger)
+
+    logger.info("Testing the authentication")
+    _test_mTLS(kubectl, logger)
 
     _cleanup(kubectl)
