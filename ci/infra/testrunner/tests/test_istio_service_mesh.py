@@ -38,7 +38,7 @@ EOF
 """)
 
 ISTIO_VERSION = "1.5"
-ISTIO_VERSION_PATCH = ISTIO_VERSION + ".4"
+ISTIO_VERSION_PATCH = ISTIO_VERSION + ".9"
 ISTIO_URL = "https://raw.githubusercontent.com/istio/istio/release-" + ISTIO_VERSION + "/samples"
 
 def _istio_bookinfo_setup(kubectl):
