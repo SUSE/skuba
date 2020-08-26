@@ -73,41 +73,49 @@ spec:
 EOF
 """)
 
+ISTIO_VERSION = "1.5"
+ISTIO_VERSION_PATCH = ISTIO_VERSION + ".4"
+ISTIO_URL = "https://raw.githubusercontent.com/istio/istio/release-" + ISTIO_VERSION + "/samples"
+
 def _istio_httpbin_setup(kubectl):
     istioctl = ("""
                 istioctl --kubeconfig={config} manifest apply \
                          --set profile=default \
                          --set addonComponents.prometheus.enabled=false \
                          --set hub=registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5 \
-                         --set tag=1.5.4 \
+                         --set tag={version} \
                          --set values.pilot.image=istio-pilot \
                          --set values.global.proxy.image=istio-proxyv2 \
                          --set values.global.proxy_init.image=istio-proxyv2
-                 """.format(config=kubectl.get_kubeconfig()))
+                 """.format(config=kubectl.get_kubeconfig(), version=ISTIO_VERSION_PATCH))
 
     kubectl.utils.runshellcommand(istioctl)
     kubectl.run_kubectl("-n istio-system wait --for=condition=available deploy/istio-ingressgateway --timeout=3m")
 
-    kubectl.run_kubectl("create -f https://raw.githubusercontent.com/istio/istio/release-1.5/samples/httpbin/httpbin.yaml")
+    kubectl.run_kubectl(f"apply -f {ISTIO_URL}/httpbin/httpbin.yaml")
 
 
 def _cleanup(kubectl):
-    kubectl.run_kubectl("delete -f https://raw.githubusercontent.com/istio/istio/release-1.5/samples/httpbin/httpbin.yaml")
+    kubectl.run_kubectl(f"delete -f {ISTIO_URL}/httpbin/httpbin.yaml")
     istioctl_delete = ("""
                        istioctl --kubeconfig={config} manifest generate \
                                 --set profile=default \
                                 --set addonComponents.prometheus.enabled=false \
                                 --set hub=registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5 \
-                                --set tag=1.5.4 \
+                                --set tag={version} \
                                 --set values.pilot.image=istio-pilot \
                                 --set values.global.proxy.image=istio-proxyv2 \
                                 --set values.global.proxy_init.image=istio-proxyv2 \
                                 | kubectl --kubeconfig={config} delete -f - || true
-                        """.format(config=kubectl.get_kubeconfig()))
+                        """.format(config=kubectl.get_kubeconfig(), version=ISTIO_VERSION_PATCH))
     kubectl.utils.runshellcommand(istioctl_delete)
 
 
 def _test_non_TLS(kubectl, worker_ip, logger):
+    """
+    Verify that httpbin service can be accessed through the istio ingress
+    """
+
     logger.info("Create the istio config")
     kubectl.run_kubectl("apply -f - << EOF " + GATEWAY_HTTPBIN)
     kubectl.run_kubectl("apply -f - << EOF " + VIRTUALSERVICE_HTTPBIN)
@@ -126,6 +134,9 @@ def _test_non_TLS(kubectl, worker_ip, logger):
 
 
 def _test_TLS(kubectl, worker_ip, logger):
+    """
+    Verify that httpbin service can be accessed through the istio ingress using TLS
+    """
     # Create a temporary directory for the CA certificate
     temp_dir = tempfile.TemporaryDirectory()
 
@@ -159,7 +170,7 @@ def _test_TLS(kubectl, worker_ip, logger):
     assert "HTTP/2 200" in output
 
 
-def test_istio_deployment(deployment, platform, skuba, kubectl):
+def test_istio_ingress(deployment, platform, skuba, kubectl):
     logger = logging.getLogger("testrunner")
     logger.info("Deploying istio and httpbin")
     _istio_httpbin_setup(kubectl)
