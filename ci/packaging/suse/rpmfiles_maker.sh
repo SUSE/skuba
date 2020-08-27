@@ -5,7 +5,7 @@ set -e
 susepkg_dir=$(cd "$( dirname "$0" )" && pwd)
 tmp_dir=$(mktemp -d -t skuba_XXXX)
 rpm_files="${susepkg_dir}/obs_files"
-devel_prj="Devel:CaaSP:5"
+devel_prj="Devel:CaaSP:4.5"
 version="$1"
 tag="$2"
 closest_tag="$3"
