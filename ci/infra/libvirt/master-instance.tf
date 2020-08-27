@@ -51,7 +51,7 @@ data "template_file" "master-cloud-init" {
     username           = var.username
     ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
     hostname           = "${var.stack_name}-master-${count.index}"
-    hostname_from_dhcp = var.hostname_from_dhcp == true && var.cpi_enable == false ? "yes" : "no"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
