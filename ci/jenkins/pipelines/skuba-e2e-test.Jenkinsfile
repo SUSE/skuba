@@ -88,6 +88,11 @@ pipeline {
         }
 
         stage('Run Skuba e2e Test') {
+            // skip stage if no test selected
+            when {
+                // e2e test is defined
+                expression { return env.E2E_MAKE_TARGET_NAME }
+            }
             steps {
                 sh(script: "make -f ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
             }
