@@ -105,8 +105,6 @@ pipeline {
                 sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
                 archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             }
-        }}
-        failure{ script{
             if (retain_cluster) {
                 def retention_period= env.RETENTION_PERIOD?env.RETENTION_PERIOD:24
                 try{
