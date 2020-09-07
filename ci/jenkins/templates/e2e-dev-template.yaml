@@ -16,7 +16,7 @@
         - bool:
             name: RETAIN_CLUSTER
             default: false
-            description: Retain the cluster in case of failure
+            description: Retain the cluster when the job finishes 
         - string:
             name: RETENTION_PERIOD
             default: 24

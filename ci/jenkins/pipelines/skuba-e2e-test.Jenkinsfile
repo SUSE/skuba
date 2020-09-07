@@ -88,6 +88,11 @@ pipeline {
         }
 
         stage('Run Skuba e2e Test') {
+            // skip stage if no test selected
+            when {
+                // e2e test is defined
+                expression { return env.E2E_MAKE_TARGET_NAME }
+            }
             steps {
                 sh(script: "make -f ci/Makefile test SUITE=${E2E_MAKE_TARGET_NAME} SKIP_SETUP='deployed'", label: "${E2E_MAKE_TARGET_NAME}")
             }
@@ -105,8 +110,6 @@ pipeline {
                 sh(script: "make --keep-going -f ci/Makefile gather_logs", label: 'Gather Logs')
                 archiveArtifacts(artifacts: 'platform_logs/**/*', allowEmptyArchive: true)
             }
-        }}
-        failure{ script{
             if (retain_cluster) {
                 def retention_period= env.RETENTION_PERIOD?env.RETENTION_PERIOD:24
                 try{
