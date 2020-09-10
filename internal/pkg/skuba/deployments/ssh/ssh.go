@@ -122,6 +122,7 @@ func (t *Target) GetDeployment(nodename string, role *deployments.Role, verboseL
 		port:         t.port,
 		verboseLevel: verboseLevel,
 	}
+	res.OSRelease()
 	return &res
 }
 
