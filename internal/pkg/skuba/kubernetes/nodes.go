@@ -18,6 +18,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -26,26 +27,28 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
+	kubectldrain "k8s.io/kubectl/pkg/drain"
 	kubeadmconstants "k8s.io/kubernetes/cmd/kubeadm/app/constants"
-	kubectldrain "k8s.io/kubernetes/pkg/kubectl/drain"
 )
 
 // GetAllNodes returns the list of nodes
 func GetAllNodes(client clientset.Interface) (*corev1.NodeList, error) {
-	return client.CoreV1().Nodes().List(metav1.ListOptions{})
+	return client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 }
 
 // GetControlPlaneNodes returns the list of master nodes by matching
 // "node-role.kubernetes.io/master" label.
 func GetControlPlaneNodes(client clientset.Interface) (*corev1.NodeList, error) {
-	return client.CoreV1().Nodes().List(metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
-	})
+	return client.CoreV1().Nodes().List(
+		context.TODO(),
+		metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=", kubeadmconstants.LabelNodeRoleMaster),
+		})
 }
 
 // GetNodeWithMachineID returns the node matching machine ID.
 func GetNodeWithMachineID(client clientset.Interface, machineID string) (*corev1.Node, error) {
-	nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodes, err := client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +66,26 @@ func IsControlPlane(node *corev1.Node) bool {
 	return isControlPlane
 }
 
+// UncordonNode makes a node scheduleable again
+func UncordonNode(client clientset.Interface, node *corev1.Node) error {
+	cordonHelper := kubectldrain.NewCordonHelper(node)
+
+	// Check if already uncordoned
+	if updateRequired := cordonHelper.UpdateIfRequired(false); !updateRequired {
+		return nil
+	}
+
+	err, patchErr := cordonHelper.PatchOrReplace(client, false)
+	if patchErr != nil {
+		return errors.Wrap(patchErr, "creating node patch")
+	}
+	if err != nil {
+		return errors.Wrap(err, "updating node status")
+	}
+
+	return nil
+}
+
 // DrainNode cordons, drains and evict given node.
 func DrainNode(client clientset.Interface, node *corev1.Node, drainTimeout time.Duration) error {
 	policyGroupVersion, err := kubectldrain.CheckEvictionSupport(client)
@@ -72,7 +95,7 @@ func DrainNode(client clientset.Interface, node *corev1.Node, drainTimeout time.
 
 	newCordon := kubectldrain.NewCordonHelper(node)
 	newCordon.UpdateIfRequired(true)
-	err, patchErr := newCordon.PatchOrReplace(client)
+	err, patchErr := newCordon.PatchOrReplace(client, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to update node status")
 	}

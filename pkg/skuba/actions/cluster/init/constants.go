@@ -28,10 +28,22 @@ type ScaffoldFile struct {
 }
 
 var (
-	scaffoldFiles = []ScaffoldFile{
-		{
-			Location: skuba.CriDockerDefaultsConfFile(),
-			Content:  criDockerDefaultsConf,
+	CriScaffoldFiles = map[string][]ScaffoldFile{
+		"sysconfig": {
+			{
+				Location: skuba.CriDockerDefaultsConfFile(),
+				Content:  criDockerDefaultsConf,
+			},
+		},
+		"criconfig": {
+			{
+				Location: skuba.CriDefaultsConfFile(),
+				Content:  criDefaultsConf,
+			},
+			{
+				Location: skuba.CriConfFolderReadmeFile(),
+				Content:  CriConfFolderReadme,
+			},
 		},
 	}
 
@@ -58,6 +70,34 @@ var (
 			{
 				Location: skuba.AWSReadmeFile(),
 				Content:  awsReadme,
+			},
+		},
+		"vsphere": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.VSphereCloudConfTemplateFile(),
+				Content:  vSphereCloudConfTemplate,
+			},
+			{
+				Location: skuba.VSphereReadmeFile(),
+				Content:  vSphereReadme,
+			},
+		},
+		"azure": {
+			{
+				Location: skuba.CloudReadmeFile(),
+				Content:  cloudReadme,
+			},
+			{
+				Location: skuba.AzureCloudConfTemplateFile(),
+				Content:  azureCloudConfTemplate,
+			},
+			{
+				Location: skuba.AzureReadmeFile(),
+				Content:  azureReadme,
 			},
 		},
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,14 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 		ControlPlane:   initConfiguration.ControlPlaneEndpoint,
 		ClusterName:    initConfiguration.ClusterName,
 	}
-	if err := addons.DeployAddons(clientSet, addonConfiguration); err != nil {
+	// re-render all addons base manifest
+	for addonName, addon := range addons.Addons {
+		if err := addon.Write(addonConfiguration); err != nil {
+			return errors.Wrapf(err, "failed to refresh addon %s manifest", string(addonName))
+		}
+	}
+	dryRun := false
+	if err := addons.DeployAddons(clientSet, addonConfiguration, dryRun); err != nil {
 		return err
 	}
 
@@ -93,9 +100,9 @@ func Bootstrap(bootstrapConfiguration deployments.BootstrapConfiguration, target
 func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapConfiguration deployments.BootstrapConfiguration, target *deployments.Target) error {
 	versionToDeploy := version.MustParseSemantic(initConfiguration.KubernetesVersion)
 
-	if _, err := target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	if err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: versionToDeploy.String(),
-	}); err != nil {
+	}, "kubernetes.install-fresh-pkgs"); err != nil {
 		return err
 	}
 
@@ -108,7 +115,6 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		Group:   "kubeadm.k8s.io",
 		Version: kubeadm.GetKubeadmApisVersion(versionToDeploy),
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "could not marshal configuration")
 	}
@@ -118,9 +124,11 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		return errors.Wrap(err, "error writing init configuration")
 	}
 
-	var criConfigure string
-	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
-		criConfigure = "cri.configure"
+	var criSetup string
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
+		criSetup = "cri.configure"
+	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		criSetup = "cri.sysconfig"
 	}
 
 	// bsc#1155810: generate cluster-wide kubelet root certificate
@@ -138,8 +146,9 @@ func coreBootstrap(initConfiguration *kubeadmapi.InitConfiguration, bootstrapCon
 		"kernel.configure-parameters",
 		"firewalld.disable",
 		"apparmor.start",
-		criConfigure,
+		criSetup,
 		"cri.start",
+		"oidc.ca.upload",
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",

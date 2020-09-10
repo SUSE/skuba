@@ -18,6 +18,8 @@
 package skuba
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,7 +41,7 @@ type SkubaConfiguration struct {
 
 func GetSkubaConfiguration(client clientset.Interface) (*SkubaConfiguration, error) {
 	skubaConfiguration := &SkubaConfiguration{}
-	configMap, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(ConfigMapName, metav1.GetOptions{})
+	configMap, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Get(context.TODO(), ConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return skubaConfiguration, nil
@@ -64,12 +66,12 @@ func UpdateSkubaConfiguration(client clientset.Interface, skubaConfiguration *Sk
 		},
 		Data: map[string]string{SkubaConfigurationKeyName: string(marshaledSkubaConfiguration)},
 	}
-	if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(&configMap); err != nil {
+	if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Create(context.TODO(), &configMap, metav1.CreateOptions{}); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			return errors.Wrap(err, "unable to create configmap")
 		}
 
-		if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(&configMap); err != nil {
+		if _, err := client.CoreV1().ConfigMaps(metav1.NamespaceSystem).Update(context.TODO(), &configMap, metav1.UpdateOptions{}); err != nil {
 			return errors.Wrap(err, "unable to update configmap")
 		}
 	}

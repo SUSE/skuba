@@ -18,6 +18,7 @@
 package addons
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -34,21 +35,26 @@ func TestGetKuredImage(t *testing.T) {
 		{
 			name:     "get kured image without revision",
 			imageTag: "1.2.0",
-			want:     img.ImageRepository + "/kured:1.2.0",
+			want:     "kured:1.2.0",
 		},
 		{
 			name:     "get kured image with revision",
 			imageTag: "1.2.0-rev4",
-			want:     img.ImageRepository + "/kured:1.2.0-rev4",
+			want:     "kured:1.2.0-rev4",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetKuredImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetKuredImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetKuredImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetKuredImage() = %v, want %v", got, imageUri)
+				}
+			})
+		}
 	}
 }
 
@@ -68,7 +74,7 @@ func Test_renderContext_KuredImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/kured:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/kured:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.KuredImage()

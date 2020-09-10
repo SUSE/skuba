@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 package join
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -51,19 +52,20 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
-	_, err = target.InstallNodePattern(deployments.KubernetesBaseOSConfiguration{
+	if err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: currentClusterVersion.String(),
-	})
-	if err != nil {
+	}, "kubernetes.install-fresh-pkgs"); err != nil {
 		return err
 	}
 
-	var criConfigure string
-	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
-		criConfigure = "cri.configure"
+	var criSetup string
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err == nil {
+		criSetup = "cri.configure"
+	} else if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		criSetup = "cri.sysconfig"
 	}
 
-	_, err = client.CoreV1().Nodes().Get(target.Nodename, metav1.GetOptions{})
+	_, err = client.CoreV1().Nodes().Get(context.TODO(), target.Nodename, metav1.GetOptions{})
 	if err == nil {
 		fmt.Printf("[join] failed to join the node with name %q since a node with the same name already exists in the cluster\n", target.Nodename)
 		return err
@@ -82,8 +84,9 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		"kernel.configure-parameters",
 		"firewalld.disable",
 		"apparmor.start",
-		criConfigure,
+		criSetup,
 		"cri.start",
+		"oidc.ca.upload",
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
 		"kubelet.configure",
@@ -101,7 +104,8 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 	}
 
 	if joinConfiguration.Role == deployments.MasterRole {
-		if err := cni.CiliumUpdateConfigMap(client); err != nil {
+		ciliumVersion := kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, currentClusterVersion).Version
+		if err := cni.CiliumUpdateConfigMap(client, ciliumVersion); err != nil {
 			return err
 		}
 	}
@@ -114,7 +118,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
-	fmt.Println("[join] node successfully joined the cluster")
+	fmt.Printf("[join] node %q successfully joined the cluster\n", target.Target)
 	return nil
 }
 

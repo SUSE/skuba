@@ -26,19 +26,28 @@ import (
 
 // Print out a list of images that will use
 // This can be used as input to skopeo for mirroring in air-gapped scenarios
+// Ensure images only appear once
 func Images() error {
 	fmt.Printf("VERSION    IMAGE\n")
+
 	for _, version := range kubernetes.AvailableVersions() {
+		imagesEncountered := map[string]bool{}
 		for _, component := range kubernetes.AllComponentContainerImagesForClusterVersion(version) {
-			fmt.Printf("%-10v %v\n", version, kubernetes.ComponentContainerImageForClusterVersion(component, version))
+			imagesEncountered[kubernetes.ComponentContainerImageForClusterVersion(component, version)] = true
 		}
 
 		for addonName, addon := range addons.Addons {
 			addonVersion := kubernetes.AddonVersionForClusterVersion(addonName, version)
-			imageList := addon.Images(addonVersion.Version)
-			for _, image := range imageList {
-				fmt.Printf("%-10v %v\n", version, image)
+			if addonVersion == nil {
+				continue
 			}
+			for _, addonImageLoc := range addon.Images(version, addonVersion.Version) {
+				imagesEncountered[addonImageLoc] = true
+			}
+		}
+
+		for imagelocation := range imagesEncountered {
+			fmt.Printf("%-10v %v\n", version, imagelocation)
 		}
 	}
 	return nil

@@ -20,6 +20,7 @@ package ssh
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/SUSE/skuba/pkg/skuba"
@@ -28,33 +29,63 @@ import (
 
 func init() {
 	stateMap["cri.configure"] = criConfigure
+	stateMap["cri.sysconfig"] = criSysconfig
 	stateMap["cri.start"] = criStart
 }
 
 func criConfigure(t *Target, data interface{}) error {
-	criFiles, err := ioutil.ReadDir(skuba.CriDir())
+	criFiles, err := ioutil.ReadDir(skuba.CriConfDir())
 	if err != nil {
-		return errors.Wrap(err, "Could not read local cri directory: "+skuba.CriDir())
+		return errors.Wrap(err, "Could not read local cri directory: "+skuba.CriConfDir())
 	}
 	defer func() {
-		_, _, err := t.ssh("rm -rf /tmp/cri.d")
+		_, _, err := t.ssh("rm -rf /tmp/crio.conf.d")
 		if err != nil {
 			// If the deferred function has any return values, they are discarded when the function completes
 			// https://golang.org/ref/spec#Defer_statements
-			fmt.Println("Could not delete the cri.d config path")
+			fmt.Println("Could not delete the path /tmp/crio.conf.d")
 		}
 	}()
 
 	for _, f := range criFiles {
-		if err := t.target.UploadFile(filepath.Join(skuba.CriDir(), f.Name()), filepath.Join("/tmp/cri.d", f.Name())); err != nil {
+		if err := t.target.UploadFile(filepath.Join(skuba.CriConfDir(), f.Name()), filepath.Join("/tmp/crio.conf.d", f.Name())); err != nil {
 			return err
 		}
 	}
 
-	if _, _, err = t.ssh("mv -f /etc/sysconfig/crio /etc/sysconfig/crio.backup"); err != nil {
+	if _, _, err = t.ssh("mkdir -p /etc/crio/crio.conf.d"); err != nil {
 		return err
 	}
-	_, _, err = t.ssh("mv -f /tmp/cri.d/default_flags /etc/sysconfig/crio")
+	if _, _, err = t.ssh("cp -r /tmp/crio.conf.d/*.conf /etc/crio/crio.conf.d"); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(filepath.Join(skuba.ContainersDir(), "registries.conf")); err != nil {
+		return nil
+	}
+	defer func() {
+		_, _, err := t.ssh("rm -rf /tmp/containers")
+		if err != nil {
+			// If the deferred function has any return values, they are discarded when the function completes
+			// https://golang.org/ref/spec#Defer_statements
+			fmt.Println("Could not delete the path /tmp/containers")
+		}
+	}()
+
+	if err := t.target.UploadFile(filepath.Join(skuba.ContainersDir(), "registries.conf"), filepath.Join("/tmp/containers", "registries.conf")); err != nil {
+		return err
+	}
+
+	if _, _, err = t.ssh("mkdir -p /etc/containers"); err != nil {
+		return err
+	}
+	_, _, err = t.ssh("cp -r /tmp/containers/*.conf /etc/containers")
+	return err
+}
+
+// criSysconfig will enforce the package sysconfig configuration.
+func criSysconfig(t *Target, data interface{}) error {
+	_, _, err := t.ssh("cp -f /usr/share/fillup-templates/sysconfig.crio /etc/sysconfig/crio")
 	return err
 }
 

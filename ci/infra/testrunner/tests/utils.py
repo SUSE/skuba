@@ -1,10 +1,9 @@
-import json
 import signal
 import time
 import yaml
 
-PREVIOUS_VERSION = "1.16.2"
-CURRENT_VERSION = "1.17.4"
+PREVIOUS_VERSION = "1.17.4"
+CURRENT_VERSION = "1.18.6"
 
 
 def check_nodes_ready(kubectl):
@@ -47,29 +46,27 @@ def node_is_upgraded(kubectl, platform, role, nr):
          namespace="kube-system",
          wait_delay=60,
          wait_backoff=30,
-         wait_elapsed=60*10,
+         wait_elapsed=60 * 10,
          wait_allow=(AssertionError))
 
     cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
     return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
 
 
-def check_pods_ready(kubectl, namespace=None, pods=[], statuses=['Running', 'Succeeded']):
-    
-    ns = f'{"--namespace="+namespace if namespace else ""}' 
-    kubectl_cmd = f'get pods {" ".join(pods)} {ns} -o json'
+def check_pods_ready(kubectl, namespace=None, node=None, pods=[], statuses=['Running', 'Succeeded']):
 
-    result = json.loads(kubectl.run_kubectl(kubectl_cmd))
-    # get pods can return a list of items or a single pod
-    pod_list =  []
-    if result.get('items'):
-        pod_list = result['items']
-    else:
-        pod_list.append(result)
-    for pod in pod_list:
-        pod_status = pod['status']['phase']
-        pod_name   = pod['metadata']['name']
-        assert pod_status in statuses, f'Pod {pod_name} status {pod_status} not in expected statuses: {", ".join(statuses)}'
+    ns = f'{"--namespace="+namespace if namespace else ""}'
+    node_selector = f'{"--field-selector spec.nodeName="+node if node else ""}'
+    cmd = (f'get pods {" ".join(pods)} {ns} {node_selector} '
+           f'-o jsonpath="{{ range .items[*]}}{{@.metadata.name}}:'
+           f'{{@.status.phase}};"')
+
+    result = kubectl.run_kubectl(cmd)
+    pod_list = result.split(";")
+    for name, status in [pod.split(":") for pod in pod_list if pod != ""]:
+        assert status in statuses, (f'Pod {name} status {status}'
+                                    f'not in expected statuses: {", ".join(statuses)}')
+
 
 def wait(func, *args, **kwargs):
 
@@ -77,10 +74,10 @@ def wait(func, *args, **kwargs):
         pass
 
     timeout = kwargs.pop("wait_timeout", 0)
-    delay   = kwargs.pop("wait_delay", 0)
+    delay = kwargs.pop("wait_delay", 0)
     backoff = kwargs.pop("wait_backoff", 0)
     retries = kwargs.pop("wait_retries", 0)
-    allow   = kwargs.pop("wait_allow", ())
+    allow = kwargs.pop("wait_allow", ())
     elapsed = kwargs.pop("wait_elapsed", 0)
 
     if retries > 0 and elapsed > 0:
@@ -94,7 +91,7 @@ def wait(func, *args, **kwargs):
 
     start = int(time.time())
     attempts = 1
-    reason=""
+    reason = ""
 
     time.sleep(delay)
     while True:
@@ -109,7 +106,7 @@ def wait(func, *args, **kwargs):
         finally:
             signal.alarm(0)
 
-        if elapsed > 0 and int(time.time())-start >= elapsed:
+        if elapsed > 0 and int(time.time()) - start >= elapsed:
             reason = "maximum wait time exceeded: {}s".format(elapsed)
             break
 
@@ -121,25 +118,6 @@ def wait(func, *args, **kwargs):
         attempts = attempts + 1
 
     raise Exception("Failed waiting for function {} after {} attemps due to {}".format(func.__name__, attempts, reason))
-
-
-def setup_kubernetes_version(skuba, kubectl, kubernetes_version=None):
-    """
-    Initialize the cluster with the given kubernetes_version, bootstrap it and
-    join nodes.
-    """
-
-    skuba.cluster_init(kubernetes_version)
-    skuba.node_bootstrap()
-
-    skuba.join_nodes()
-
-    wait(check_nodes_ready,
-         kubectl,
-         wait_delay=60,
-         wait_backoff=30,
-         wait_elapsed=60*10,
-         wait_allow=(AssertionError))
 
 
 def create_skuba_config(kubectl, configmap_data, dry_run=False):

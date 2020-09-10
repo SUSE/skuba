@@ -88,7 +88,7 @@ class SonobuoyE2eTests:
         return self._run_cmd(cmd)
 
     def _start_the_tests(self, sonobuoy_args):
-        self._sonobuoy('run ' + ' '.join(sonobuoy_args) + '--wait')
+        self._sonobuoy('run ' + ' '.join(sonobuoy_args) + ' --wait')
 
 
 class SonobuoyE2eTestsError(Exception):
@@ -131,7 +131,7 @@ def define_parser(parser):
                                default=os.environ.get('KUBECONFIG'),
                                help='Path to kubeconfig file')
     shared_parser.add_argument('--sonobuoy-image',
-                               default='gcr.io/heptio-images/sonobuoy',
+                               default='sonobuoy/sonobuoy',
                                help='Set the sonobuoy image to be used')
     shared_parser.add_argument('--sonobuoy-version',
                                default='latest',

@@ -79,7 +79,7 @@ release:
 .PHONY: go-version-check
 go-version-check:
 	@[ $(GO_VERSION_MAJ) -ge 2 ] || \
-		[ $(GO_VERSION_MAJ) -eq 1 -a $(GO_VERSION_MIN) -ge 12 ] || (echo "FATAL: Go version should be >= 1.12.x" ; exit 1 ; )
+		[ $(GO_VERSION_MAJ) -eq 1 -a $(GO_VERSION_MIN) -ge 13 ] || (echo "FATAL: Go version should be >= 1.13.x" ; exit 1 ; )
 
 .PHONY: lint
 lint: deps
@@ -98,8 +98,8 @@ lint: deps
 
 .PHONY: deps
 deps:
-	test -f $(BINPATH)/golangci-lint || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(BINPATH) v1.21.0
-	test -f $(BINPATH)/shellcheck || curl -sfL "https://storage.googleapis.com/shellcheck/shellcheck-v0.4.7.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
+	test -f $(BINPATH)/golangci-lint || curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/v1.27.0/install.sh | sh -s -- -b $(BINPATH) v1.27.0
+	test -f $(BINPATH)/shellcheck || curl -sfL "https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.linux.x86_64.tar.xz" | tar -xJv --strip-components=1 -C $(BINPATH)
 
 .PHONY: pre-commit-install
 pre-commit-install:
@@ -125,7 +125,7 @@ test: test-unit test-bench
 
 .PHONY: test-unit
 test-unit:
-	$(GO) test $(GOMODFLAG) -coverprofile=coverage.out $(PROJECT_PATH)/{cmd,pkg,internal}/...
+	$(GO) test $(GOMODFLAG) -coverprofile=coverage.out ./{cmd,pkg,internal}/...
 
 .PHONY: test-unit-coverage
 test-unit-coverage: test-unit

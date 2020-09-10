@@ -18,6 +18,8 @@
 package metricsserver
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -58,6 +60,6 @@ func CreateCert(client clientset.Interface, pkiPath string) error {
 
 // IsCertExist check the metrics-server certificate secret resource exist
 func IsCertExist(client clientset.Interface) (bool, error) {
-	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(secretCertName, metav1.GetOptions{})
+	_, err := client.CoreV1().Secrets(metav1.NamespaceSystem).Get(context.TODO(), secretCertName, metav1.GetOptions{})
 	return kubernetes.DoesResourceExistWithError(err)
 }

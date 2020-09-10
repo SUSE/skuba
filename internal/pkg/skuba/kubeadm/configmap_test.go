@@ -339,25 +339,40 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 			name:                     "1.15.2 without duplicates",
 			clusterVersion:           version.MustParseSemantic("1.15.2"),
 			currentAdmissionPlugins:  []string{},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "NodeRestriction", "PodSecurityPolicy"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
 		{
 			name:                     "1.15.2 with duplicates",
 			clusterVersion:           version.MustParseSemantic("1.15.2"),
 			currentAdmissionPlugins:  []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy"},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "NodeRestriction", "PodSecurityPolicy", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "ExtendedResourceToleration"},
 		},
 		{
 			name:                     "1.16.2 without duplicates",
 			clusterVersion:           version.MustParseSemantic("1.16.2"),
 			currentAdmissionPlugins:  []string{},
-			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy"},
+			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
+		},
+		{
+			name:                    "1.18.6 without duplicates",
+			clusterVersion:          version.MustParseSemantic("1.18.6"),
+			currentAdmissionPlugins: []string{},
+			expectedAdmissionPlugins: []string{
+				"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition",
+				"Priority", "DefaultTolerationSeconds", "DefaultStorageClass",
+				"PersistentVolumeClaimResize", "MutatingAdmissionWebhook",
+				"ValidatingAdmissionWebhook", "ResourceQuota",
+				"StorageObjectInUseProtection", "RuntimeClass",
+				"CertificateApproval", "CertificateSigning", "CertificateSubjectRestriction",
+				"DefaultIngressClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
 	}
 
 	for _, tt := range scenarios {
 		tt := tt // Parallel testing
 		t.Run(tt.name, func(t *testing.T) {
+			imageRepository := skuba.ImageRepository(tt.clusterVersion)
+
 			expectedAdmissionPlugins := strings.Join(tt.expectedAdmissionPlugins, ",")
 			initCfg := kubeadmapi.InitConfiguration{}
 			if len(tt.currentAdmissionPlugins) > 0 {
@@ -374,15 +389,15 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 				t.Errorf("admission plugins %s do not match expected admission plugins %s", gotAdmissionPlugins, expectedAdmissionPlugins)
 			}
 			// Check different configuration settings
-			if initCfg.ImageRepository != skuba.ImageRepository {
-				t.Errorf("image repository %s does not match expected image repository %s", initCfg.ImageRepository, skuba.ImageRepository)
+			if initCfg.ImageRepository != imageRepository {
+				t.Errorf("image repository %s does not match expected image repository %s", initCfg.ImageRepository, imageRepository)
 			}
 			expectedClusterVersion := fmt.Sprintf("v%s", tt.clusterVersion.String())
 			if initCfg.KubernetesVersion != expectedClusterVersion {
 				t.Errorf("kubernetes version %s does not match expected kubernetes version %s", initCfg.KubernetesVersion, expectedClusterVersion)
 			}
-			if initCfg.Etcd.Local.ImageRepository != skuba.ImageRepository {
-				t.Errorf("etcd image repository %s does not match expected etcd image repository %s", initCfg.Etcd.Local.ImageRepository, skuba.ImageRepository)
+			if initCfg.Etcd.Local.ImageRepository != imageRepository {
+				t.Errorf("etcd image repository %s does not match expected etcd image repository %s", initCfg.Etcd.Local.ImageRepository, imageRepository)
 			}
 			etcdExpectedTag := kubernetes.ComponentVersionForClusterVersion(kubernetes.Etcd, tt.clusterVersion)
 			if initCfg.Etcd.Local.ImageTag != etcdExpectedTag {

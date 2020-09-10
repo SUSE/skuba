@@ -19,34 +19,27 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/dex"
-	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/oidc"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
-var gangwayClientSecret string
-
 func init() {
-	registerAddon(kubernetes.Dex, renderDexTemplate, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
+	registerAddon(kubernetes.Dex, GenericAddOn, renderDexTemplate, nil, dexCallbacks{}, normalPriority, []getImageCallback{GetDexImage})
 }
 
-func GetDexImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "caasp-dex", imageTag)
+func GetDexImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "caasp-dex", imageTag)
 }
 
 func (renderContext renderContext) DexImage() string {
-	return GetDexImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
-}
-
-func (renderContext renderContext) GangwayClientSecret() string {
-	if len(gangwayClientSecret) == 0 {
-		gangwayClientSecret = dex.GenerateClientSecret()
-	}
-	return gangwayClientSecret
+	return GetDexImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Dex, renderContext.config.ClusterVersion).Version)
 }
 
 func renderDexTemplate(addonConfiguration AddonConfiguration) string {
@@ -55,38 +48,46 @@ func renderDexTemplate(addonConfiguration AddonConfiguration) string {
 
 type dexCallbacks struct{}
 
-func (dexCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	var err error
-
-	client, err := kubernetes.GetAdminClientSet()
+func (dexCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+	// handles oidc client-secret
+	exist, err := oidc.IsSecretExist(client, oidc.ClientSecretName)
 	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
+		return errors.Wrap(err, "unable to determine if oidc client-secret exists")
 	}
-
-	// Read gangway client secret from secret resource if present
-	// in order to update global variable gangwayClientSecret.
-	gangwayClientSecret, err = gangway.GetClientSecret(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway client secret exists")
-	}
-
-	dexCertExists, err := dex.DexCertExists(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if dex certificate exists")
-	}
-	err = dex.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile())
-	if err != nil {
-		return errors.Wrap(err, "unable to create dex certificate")
-	}
-	if dexCertExists {
-		if err := dex.RestartPods(client); err != nil {
+	if !exist {
+		// generate client secret with length=12
+		// client secret is used by auth client (gangway) to authenticate to auth server (dex)
+		clientSecret, err := oidc.RandomGenerateWithLength(12)
+		if err != nil {
+			return errors.Wrap(err, "unable to generate oidc client-secret")
+		}
+		err = oidc.CreateOrUpdateToSecret(client, oidc.ClientSecretName, oidc.ClientSecretKey_Gangway, clientSecret)
+		if err != nil {
 			return err
 		}
 	}
+
+	// handles dex certificate
+	exist, err = oidc.IsSecretExist(client, oidc.DexCertSecretName)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if oidc dex cert exists")
+	}
+	if !exist {
+		// try to use local server certificate if present
+		if err := oidc.TryToUseLocalServerCert(client, oidc.DexServerCertAndKeyBaseFileName, oidc.DexCertSecretName); err == nil {
+			return nil
+		}
+
+		// sign the server certificate by cluster CA or custom OIDC CA if server certificate not present
+		if err := oidc.SignServerWithLocalCACertAndKey(client, oidc.DexCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.DexCertSecretName); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (dexCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (dexCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 
@@ -158,7 +159,8 @@ data:
       redirectURIs:
       - 'https://{{.ControlPlaneHost}}:32001/callback'
       name: 'OIDC'
-      secret: {{.GangwayClientSecret}}
+      # the secretEnv supports when dex >= 2.23.0
+      secretEnv: OIDC_GANGWAY_CLIENT_SECRET
       trustedPeers:
       - oidc-cli
     - id: oidc-cli
@@ -204,6 +206,12 @@ spec:
           - /usr/bin/caasp-dex
           - serve
           - /etc/dex/cfg/config.yaml
+        env:
+          - name: OIDC_GANGWAY_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: oidc-client-secret
+                key: gangway
         ports:
           - name: https
             containerPort: 32000

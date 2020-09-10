@@ -34,16 +34,7 @@ keys to the SSH agent on this machine, e.g:
 ssh-add ~/.ssh/id_rsa
 ```
 
-If you want to perform an HA deployment you also need to set up a load balancer,
-depending on your needs this setup can be as advanced as required.
-
-The target nodes must have some packages already preinstalled:
-
-  * cri-o
-  * kubelet
-  * kubeadm
-
-The terraform based deployments are taking care of fulfilling these requirements.
+The system running `skuba` must have `kubectl` available.
 
 ## Installation
 
@@ -55,7 +46,7 @@ go get github.com/SUSE/skuba/cmd/skuba
 
 A development build will:
 
-* Pull container images from `registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4`
+* Pull container images from `registry.suse.de/devel/caasp/4.5/containers/containers/caasp/v4.5/`
 
 To build it, run:
 
@@ -67,7 +58,7 @@ make
 
 A staging build will:
 
-* Pull container images from `registry.suse.de/suse/sle-15-sp1/update/products/casp40/containers/caasp/v4`
+* Pull container images from `registry.suse.de/suse/sle-15-sp2/update/products/caasp/4.5/containers/caasp/v4.5`
 
 To build it, run:
 
@@ -79,7 +70,7 @@ make staging
 
 A release build will:
 
-* Pull container images from `registry.suse.com/caasp/v4`
+* Pull container images from `registry.suse.com/caasp/v4.5`
 
 To build it, run:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019-2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,43 @@
 package cluster
 
 const (
-	criDockerDefaultsConf = `## Path           : System/Management
+	CriConfFolderReadme = `This folder provides CRI-O configuration for CaaSP nodes.
+All the files (except this README) will be uploaded to the /etc/crio/crio.conf.d/ folder.
+If you need any customization, please add a custom files with the name 99-custom.conf
+	`
+	criDockerDefaultsConf = `# PLEASE DON'T EDIT THIS FILE!
+# This file is managed by CaaSP skuba.
+
+## Path           : System/Management
 ## Description    : Extra cli switches for crio daemon
 ## Type           : string
 ## Default        : ""
 ## ServiceRestart : crio
 #
-CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}
+CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}`
+	criDefaultsConf = `# PLEASE DON'T EDIT THIS FILE!
+# This file is managed by CaaSP skuba.
+{{if not .StrictCapDefaults}}[crio.runtime]
+
+default_capabilities = [
+	"CHOWN",
+	"DAC_OVERRIDE",
+	"FSETID",
+	"FOWNER",
+	"NET_RAW",
+	"SETGID",
+	"SETUID",
+	"SETPCAP",
+	"NET_BIND_SERVICE",
+	"SYS_CHROOT",
+	"KILL",
+	"MKNOD",
+	"AUDIT_WRITE",
+	"SETFCAP",
+]{{end}}
+
+[crio.image]
+
+pause_image = "{{.PauseImage}}"
 `
 )

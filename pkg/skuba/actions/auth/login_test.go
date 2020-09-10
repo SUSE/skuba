@@ -44,7 +44,7 @@ func startServer() *httptest.Server {
 	mux.HandleFunc("/approval", approvalHandler())
 
 	srv := httptest.NewUnstartedServer(mux)
-	cert, _ := tls.LoadX509KeyPair("testdata/localhost.crt", "testdata/localhost.key")
+	cert, _ := tls.LoadX509KeyPair("testdata/oidc-dex.crt", "testdata/oidc-dex.key")
 	srv.TLS = &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
@@ -61,13 +61,13 @@ func Test_Login(t *testing.T) {
 		expectedErrorMsg   string
 	}{
 		{
-			name:  "secure ssl/tls",
+			name:  "secure ssl/tls with same ca of kube-apiserver and oidc dex server",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/localhost.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/oidc-dex.crt",
+				ClusterName:         "test-cluster-name",
 			},
 			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
 				url, _ := url.Parse(dexServerURL)
@@ -75,7 +75,45 @@ func Test_Login(t *testing.T) {
 				kubeConfig := clientcmdapi.NewConfig()
 				kubeConfig.Clusters[clusterName] = &clientcmdapi.Cluster{
 					Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort),
-					CertificateAuthorityData: localhostCert,
+					CertificateAuthorityData: oidcDexCert,
+				}
+				kubeConfig.Contexts[clusterName] = &clientcmdapi.Context{
+					Cluster:  clusterName,
+					AuthInfo: mockDefaultUsername,
+				}
+				kubeConfig.CurrentContext = clusterName
+				kubeConfig.AuthInfos[mockDefaultUsername] = &clientcmdapi.AuthInfo{
+					AuthProvider: &clientcmdapi.AuthProviderConfig{
+						Name: authProviderID,
+						Config: map[string]string{
+							"idp-issuer-url": dexServerURL,
+							"client-id":      clientID,
+							"client-secret":  clientSecret,
+							"id-token":       mockIDToken,
+							"refresh-token":  mockRefreshToken,
+						},
+					},
+				}
+				return kubeConfig
+			},
+		},
+		{
+			name:  "secure ssl/tls with different ca of kube-apiserver and oidc dex server",
+			srvCb: startServer,
+			cfg: LoginConfig{
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/kube-apiserver.crt",
+				OIDCDexServerCAPath: "testdata/oidc-dex.crt",
+				ClusterName:         "test-cluster-name",
+			},
+			expectedKubeConfCb: func(dexServerURL string, clusterName string) *clientcmdapi.Config {
+				url, _ := url.Parse(dexServerURL)
+
+				kubeConfig := clientcmdapi.NewConfig()
+				kubeConfig.Clusters[clusterName] = &clientcmdapi.Cluster{
+					Server:                   fmt.Sprintf("%s://%s:%s", defaultScheme, url.Hostname(), defaultAPIServerPort),
+					CertificateAuthorityData: kubeAPIServerCert,
 				}
 				kubeConfig.Contexts[clusterName] = &clientcmdapi.Context{
 					Cluster:  clusterName,
@@ -199,26 +237,38 @@ func Test_Login(t *testing.T) {
 			expectedErrorMsg: "auth failed: invalid input auth connector ID",
 		},
 		{
-			name:  "invalid root ca",
+			name:  "invalid kube-apiserver ca",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/invalid.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/invalid.crt",
+				ClusterName:         "test-cluster-name",
 			},
 			expectedErrorMsg: "auth failed: no valid certificates found in root CA file",
+		},
+		{
+			name:  "invalid dex server ca",
+			srvCb: startServer,
+			cfg: LoginConfig{
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/oidc-dex.crt",
+				OIDCDexServerCAPath: "testdata/nonexist.crt",
+				ClusterName:         "test-cluster-name",
+			},
+			expectedErrorMsg: "read oidc dex CA failed: open testdata/nonexist.crt: no such file or directory",
 		},
 		{
 			name:  "cert file not exist",
 			srvCb: startServer,
 			cfg: LoginConfig{
-				Username:    mockDefaultUsername,
-				Password:    mockDefaultPassword,
-				RootCAPath:  "testdata/nonexist.crt",
-				ClusterName: "test-cluster-name",
+				Username:            mockDefaultUsername,
+				Password:            mockDefaultPassword,
+				KubeAPIServerCAPath: "testdata/nonexist.crt",
+				ClusterName:         "test-cluster-name",
 			},
-			expectedErrorMsg: "read CA failed: open testdata/nonexist.crt: no such file or directory",
+			expectedErrorMsg: "read kube-apiserver CA failed: open testdata/nonexist.crt: no such file or directory",
 		},
 		{
 			name:  "auth failed",
@@ -239,7 +289,7 @@ func Test_Login(t *testing.T) {
 				Password:           mockDefaultPassword,
 				InsecureSkipVerify: true,
 			},
-			expectedErrorMsg: "parse url: parse http://%41:8080/: invalid URL escape \"%41\"",
+			expectedErrorMsg: "invalid URL escape \"%41\"",
 		},
 		{
 			name:  "oidc server with incorrect port number",
@@ -250,7 +300,7 @@ func Test_Login(t *testing.T) {
 				Password:    mockDefaultPassword,
 				ClusterName: "test-cluster-name",
 			},
-			expectedErrorMsg: fmt.Sprintf("auth failed: failed to query provider http://127.0.0.1:32001/ (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)"),
+			expectedErrorMsg: "auth failed: failed to query provider http://127.0.0.1:32001/ (is this the right URL? maybe missing --root-ca or --insecure, or incorrect port number?)",
 		},
 		{
 			name: "issuer scopes supported invalid",
@@ -280,7 +330,7 @@ func Test_Login(t *testing.T) {
 				InsecureSkipVerify: true,
 				ClusterName:        "test-cluster-name",
 			},
-			expectedErrorMsg: "auth failed: failed on get auth code url: Get ?access_type=offline&client_id=oidc-cli&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=audience%3Aserver%3Aclient_id%3Aoidc: unsupported protocol scheme \"\"",
+			expectedErrorMsg: "unsupported protocol scheme",
 		},
 		{
 			name: "approval body content incorrect",
@@ -319,7 +369,7 @@ func Test_Login(t *testing.T) {
 					t.Errorf("error expected on %s, but no error reported", tt.name)
 					return
 				}
-				if err.Error() != tt.expectedErrorMsg {
+				if !strings.Contains(err.Error(), tt.expectedErrorMsg) {
 					t.Errorf("got error msg %s, want %s", err.Error(), tt.expectedErrorMsg)
 					return
 				}

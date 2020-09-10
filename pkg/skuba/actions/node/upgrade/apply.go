@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package upgrade
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
-
-	"github.com/pkg/errors"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -33,6 +33,8 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kured"
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
+	"github.com/SUSE/skuba/pkg/skuba"
+	"github.com/pkg/errors"
 )
 
 func Apply(client clientset.Interface, target *deployments.Target) error {
@@ -73,10 +75,34 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 
+	// Disable skuba-update.timer before upgrade
+	if skubaUpdateWasEnabled {
+		err = target.Apply(nil, "skuba-update-timer.disable")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Check if a kured reboot file already exists
+	kuredRebootFilePresent := kured.RebootFileExists()
+	if kuredRebootFilePresent {
+		err := kured.RebootFileRemove()
+		if err != nil {
+			return err
+		}
+	}
+
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
 		return err
+	}
+
+	// Lock kured before upgrade
+	if !kuredWasLocked {
+		if err := kured.Lock(client); err != nil {
+			return err
+		}
 	}
 
 	var initCfgContents []byte
@@ -96,6 +122,15 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		if err := node.AddTargetInformationToInitConfigurationWithClusterVersion(target, initCfg, nodeVersionInfoUpdate.Update.APIServerVersion); err != nil {
 			return errors.Wrap(err, "error adding target information to init configuration")
 		}
+
+		// Upgrade 1.17 to 1.18.
+		// This updated UseHyperKube field in-memory (unsets it).
+		// Note: The cluster cm is uploaded at the end of the kubeadm process, as usual.
+		// The whole paragraph can be removed when upgrading from 1.17 is removed.
+		if currentClusterVersion.Minor() == 17 && kubernetes.LatestVersion().Minor() > 17 {
+			initCfg.UseHyperKubeImage = false
+		}
+
 		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
 			Group:   "kubeadm.k8s.io",
@@ -106,24 +141,30 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		}
 	}
 
+	const drainTimeout = 15 * time.Minute
+	node := nodeVersionInfoUpdate.Current.Node
+	fmt.Printf("Draining node %s (timeout %dmin)\n", target.Nodename, drainTimeout)
+	if err := kubernetes.DrainNode(client, node, drainTimeout); err != nil {
+		return errors.Wrapf(err, "draining node %s", target.Nodename)
+	}
+
 	fmt.Printf("Performing node %s (%s) upgrade, please wait...\n", target.Nodename, target.Target)
 
-	if skubaUpdateWasEnabled {
-		err = target.Apply(nil, "skuba-update-timer.disable")
-		if err != nil {
-			return err
-		}
+	// Always upload crio files, regardless of the version (allows to enforce
+	// user behavior during patch updates).
+	if _, err := os.Stat(skuba.CriDefaultsConfFile()); err != nil {
+		return errors.Wrap(err, "you need to migrate the local configuration of the cluster. Run: `skuba cluster upgrade localconfig`")
 	}
-	if !kuredWasLocked {
-		if err := kured.Lock(client); err != nil {
-			return err
-		}
+	err = target.Apply(nil, "cri.configure", "cri.sysconfig")
+	if err != nil {
+		return err
 	}
+
 	if nodeVersionInfoUpdate.HasMajorOrMinorUpdate() {
 		err = target.Apply(deployments.KubernetesBaseOSConfiguration{
 			UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
 			CurrentVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
-		}, "kubernetes.install-node-pattern")
+		}, "kubernetes.upgrade-stage-one")
 		if err != nil {
 			return err
 		}
@@ -139,8 +180,9 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return err
 	}
 	err = target.Apply(deployments.KubernetesBaseOSConfiguration{
-		CurrentVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
-	}, "kubernetes.install-node-pattern")
+		UpdatedVersion: nodeVersionInfoUpdate.Update.KubeletVersion.String(),
+		CurrentVersion: nodeVersionInfoUpdate.Current.KubeletVersion.String(),
+	}, "kubernetes.upgrade-stage-two")
 	if err != nil {
 		return err
 	}
@@ -153,6 +195,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		"kubelet.rootcert.upload",
 		"kubelet.servercert.create-and-upload",
 		"kubernetes.restart-services",
+		"kubernetes.enable-services",
 	)
 	if err != nil {
 		return err
@@ -171,6 +214,17 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		if err := kured.Unlock(client); err != nil {
 			return err
 		}
+	}
+	if kuredRebootFilePresent {
+		err := kured.RebootFileCreate()
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("Uncordon node %s\n", target.Nodename)
+	if err := kubernetes.UncordonNode(client, node); err != nil {
+		return errors.Wrapf(err, "uncordon node %s", target.Nodename)
 	}
 
 	fmt.Printf("Node %s (%s) successfully upgraded\n", target.Nodename, target.Target)

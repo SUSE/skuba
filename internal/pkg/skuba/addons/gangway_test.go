@@ -18,8 +18,11 @@
 package addons
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
+
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
@@ -35,21 +38,26 @@ func TestGetGangwayImage(t *testing.T) {
 		{
 			name:     "get gangway init image without revision",
 			imageTag: "3.1.0",
-			want:     img.ImageRepository + "/gangway:3.1.0",
+			want:     "gangway:3.1.0",
 		},
 		{
 			name:     "get gangway init image with revision",
 			imageTag: "3.1.0-rev2",
-			want:     img.ImageRepository + "/gangway:3.1.0-rev2",
+			want:     "gangway:3.1.0-rev2",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt // Parallel testing
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetGangwayImage(tt.imageTag); got != tt.want {
-				t.Errorf("GetGangwayImage() = %v, want %v", got, tt.want)
-			}
-		})
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetGangwayImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetGangwayImage() = %v, want %v", got, imageUri)
+				}
+			})
+		}
 	}
 }
 
@@ -69,7 +77,7 @@ func Test_renderContext_GangwayImage(t *testing.T) {
 					ClusterName:    "",
 				},
 			},
-			want: img.ImageRepository + "/gangway:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+			want: img.ImageRepository(ver) + "/gangway:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.GangwayImage()
@@ -101,7 +109,7 @@ func Test_gangwayCallbacks_beforeApply(t *testing.T) {
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			g := gangwayCallbacks{}
-			if err := g.beforeApply(tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
+			if err := g.beforeApply(fake.NewSimpleClientset(), tt.addonConfiguration, tt.skubaConfiguration); (err != nil) != tt.wantErr {
 				t.Errorf("gangwayCallbacks.beforeApply() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

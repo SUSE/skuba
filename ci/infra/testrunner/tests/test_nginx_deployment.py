@@ -3,8 +3,8 @@ import requests
 
 
 @pytest.mark.pr
-def test_nginx_deployment(deployment, kubectl):
-    workers = kubectl.skuba.num_of_nodes("worker")
+def test_nginx_deployment(deployment, platform, skuba, kubectl):
+    workers = skuba.num_of_nodes("worker")
     kubectl.run_kubectl("create deployment nginx --image=nginx:stable-alpine")
     kubectl.run_kubectl("scale deployment nginx --replicas={replicas}".format(replicas=workers))
     kubectl.run_kubectl("expose deployment nginx --port=80 --type=NodePort")
@@ -16,7 +16,7 @@ def test_nginx_deployment(deployment, kubectl):
     nodePort = kubectl.run_kubectl("get service/nginx -o jsonpath='{ .spec.ports[0].nodePort }'")
 
     wrk_idx = 0
-    ip_addresses = kubectl.skuba.platform.get_nodes_ipaddrs("worker")
+    ip_addresses = platform.get_nodes_ipaddrs("worker")
 
     url = "{protocol}://{ip}:{port}{path}".format(protocol="http", ip=str(ip_addresses[wrk_idx]), port=str(nodePort), path="/")
     r = requests.get(url)

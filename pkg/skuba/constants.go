@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"k8s.io/apimachinery/pkg/util/version"
 	"k8s.io/kubernetes/cmd/kubeadm/app/constants"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -32,6 +33,10 @@ const (
 	SUSECNIDir = "/usr/lib/cni"
 	// MaxNodeNameLength is the maximum node name length accepted by kubelet.
 	MaxNodeNameLength = 63
+	// LastCaaSP4KubernetesVersion only uses Major.Minor version of
+	// kubernetes for string matching
+	LastCaaSP4KubernetesVersion  = "1.17"
+	FirstCaaSP5KubernetesVersion = "1.18"
 )
 
 func KubeadmInitConfFile() string {
@@ -72,12 +77,28 @@ func AddonsDir() string {
 	return "addons"
 }
 
+func ContainersDir() string {
+	return filepath.Join(AddonsDir(), "containers")
+}
+
 func CriDir() string {
 	return filepath.Join(AddonsDir(), "cri")
 }
 
 func CriDockerDefaultsConfFile() string {
 	return filepath.Join(CriDir(), "default_flags")
+}
+
+func CriConfDir() string {
+	return filepath.Join(AddonsDir(), "cri/conf.d")
+}
+
+func CriDefaultsConfFile() string {
+	return filepath.Join(CriConfDir(), "01-caasp.conf")
+}
+
+func CriConfFolderReadmeFile() string {
+	return filepath.Join(CriConfDir(), "README")
 }
 
 func KubeConfigAdminFile() string {
@@ -123,6 +144,56 @@ func OpenstackConfigRuntimeFile() string {
 	return path.Join(constants.KubernetesDir, "openstack.conf")
 }
 
+// VSphereDir returns the location for the vsphere cloud integrations
+func VSphereDir() string {
+	return path.Join(CloudDir(), "vsphere")
+}
+
+// VSphereReadmeFile returns the location for the vsphere cloud integrations README.md
+func VSphereReadmeFile() string {
+	return path.Join(VSphereDir(), "README.md")
+}
+
+// VSphereCloudConfFile returns the default location of the vsphere cloud integrations .conf file
+func VSphereCloudConfFile() string {
+	return path.Join(VSphereDir(), "vsphere.conf")
+}
+
+// VSphereCloudConfTemplateFile returns the default location of the vsphere cloud integrations .conf.template file
+func VSphereCloudConfTemplateFile() string {
+	return path.Join(VSphereDir(), "vsphere.conf.template")
+}
+
+// VSphereConfigRuntimeFile returns the location the vsphere.conf is stored on nodes in the cluster
+func VSphereConfigRuntimeFile() string {
+	return path.Join(constants.KubernetesDir, "vsphere.conf")
+}
+
+// AzureDir returns the location for the azure cloud integrations
+func AzureDir() string {
+	return path.Join(CloudDir(), "azure")
+}
+
+// AzureReadmeFile returns the location for the azure cloud integrations README.md
+func AzureReadmeFile() string {
+	return path.Join(AzureDir(), "README.md")
+}
+
+// AzureCloudConfFile returns the default location of the azure cloud integrations .conf file
+func AzureCloudConfFile() string {
+	return path.Join(AzureDir(), "azure.conf")
+}
+
+// AzureCloudConfTemplateFile returns the default location of the azure cloud integrations .conf.template file
+func AzureCloudConfTemplateFile() string {
+	return path.Join(AzureDir(), "azure.conf.template")
+}
+
+// AzureConfigRuntimeFile returns the location the azure.conf is stored on nodes in the cluster
+func AzureConfigRuntimeFile() string {
+	return path.Join(constants.KubernetesDir, "azure.conf")
+}
+
 // AWSDir returns the location for the AWS cloud integrations
 func AWSDir() string {
 	return path.Join(CloudDir(), "aws")
@@ -131,4 +202,14 @@ func AWSDir() string {
 // AWSReadmeFile returns the location for the AWS cloud integrations README.md
 func AWSReadmeFile() string {
 	return path.Join(AWSDir(), "README.md")
+}
+
+//ImageRepository returns the image registry of the cluster version
+func ImageRepository(clusterVersion *version.Version) string {
+	result, _ := clusterVersion.Compare("1.18.0")
+	if result < 0 {
+		return imageRepositoryV4
+	}
+
+	return imageRepository
 }

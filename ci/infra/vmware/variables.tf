@@ -21,6 +21,16 @@ variable "vsphere_network" {
 variable "vsphere_resource_pool" {
 }
 
+variable "vsphere_hardware_version" {
+  default     = null
+  description = "Hardware version of the virtual machine."
+}
+
+variable "wait_for_guest_net_routable" {
+  default     = true
+  description = "Wait for network to be routable"
+}
+
 variable "authorized_keys" {
   type        = list(string)
   default     = []
@@ -70,11 +80,6 @@ variable "username" {
   description = "Default user for the cluster nodes created by cloud-init default configuration for all SUSE SLES systems"
 }
 
-variable "masters" {
-  default     = 1
-  description = "Number of master nodes"
-}
-
 variable "workers" {
   default     = 1
   description = "Number of worker nodes"
@@ -95,6 +100,11 @@ variable "worker_disk_size" {
   description = "Size of the root disk in GB on worker node"
 }
 
+variable "masters" {
+  default     = 1
+  description = "Number of master nodes"
+}
+
 variable "master_cpus" {
   default     = 4
   description = "Number of CPUs used on master node"
@@ -110,39 +120,12 @@ variable "master_disk_size" {
   description = "Size of the root disk in GB on master node"
 }
 
-#### To be moved to separate vsphere.tf? ####
-
-provider "vsphere" {
+variable "cpi_enable" {
+  default     = false
+  description = "Enable CPI integration with vSphere"
 }
 
-data "vsphere_resource_pool" "pool" {
-  name          = var.vsphere_resource_pool
-  datacenter_id = data.vsphere_datacenter.dc.id
+variable "hostname_from_dhcp" {
+  default     = true
+  description = "Set node's hostname from DHCP server"
 }
-
-data "vsphere_datastore" "datastore" {
-  count         = var.vsphere_datastore == "null" ||  var.vsphere_datastore == null ? 0 : 1
-  name          = var.vsphere_datastore
-  datacenter_id = data.vsphere_datacenter.dc.id
-}
-
-data "vsphere_datastore_cluster" "datastore" {
-  count         = var.vsphere_datastore_cluster == "null" ||  var.vsphere_datastore_cluster == null ? 0 : 1
-  name          = var.vsphere_datastore_cluster
-  datacenter_id = data.vsphere_datacenter.dc.id
-}
-
-data "vsphere_datacenter" "dc" {
-  name = var.vsphere_datacenter
-}
-
-data "vsphere_network" "network" {
-  name          = var.vsphere_network
-  datacenter_id = data.vsphere_datacenter.dc.id
-}
-
-data "vsphere_virtual_machine" "template" {
-  name          = var.template_name
-  datacenter_id = data.vsphere_datacenter.dc.id
-}
-

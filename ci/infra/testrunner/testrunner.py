@@ -5,14 +5,17 @@
     This script can be run from Jenkins or manually, on developer desktops or servers.
 """
 
+import io
 import logging
 import sys
 from argparse import REMAINDER, ArgumentParser
 
 import platforms
 from skuba import Skuba
+from kubectl import Kubectl
 from tests import TestDriver
 from utils import BaseConfig, Logger, Utils
+from checks import Checker
 
 __version__ = "0.0.3"
 
@@ -21,6 +24,10 @@ logger = logging.getLogger("testrunner")
 
 def info(options):
     print(Utils(options.conf).info())
+
+
+def config(options):
+    BaseConfig.print(options.conf)
 
 
 def cleanup(options):
@@ -34,17 +41,22 @@ def provision(options):
         num_worker=options.worker_count)
 
 
+def deploy(options):
+    skuba = Skuba(options.conf, options.platform)
+    skuba.cluster_deploy(
+        kubernetes_version=options.kubernetes_version,
+        cloud_provider=options.cloud_provider,
+        timeout=options.timeout,
+        registry_mirror=options.registry_mirror)
+
+
 def bootstrap(options):
     skuba = Skuba(options.conf, options.platform)
-    skuba.cluster_init(
+    skuba.cluster_bootstrap(
         kubernetes_version=options.kubernetes_version,
-        cloud_provider=options.cloud_provider
-    )
-    skuba.node_bootstrap(
         cloud_provider=options.cloud_provider,
-        timeout=options.timeout
-    ) 
-
+        timeout=options.timeout,
+        registry_mirror=options.registry_mirror)
 
 
 def cluster_status(options):
@@ -65,7 +77,7 @@ def get_logs(options):
 
 def join_node(options):
     Skuba(options.conf, options.platform).node_join(
-        role=options.role, nr=options.node)
+        role=options.role, nr=options.node, timeout=options.timeout)
 
 
 def join_nodes(options):
@@ -87,16 +99,31 @@ def node_upgrade(options):
         action=options.upgrade_action, role=options.role, nr=options.node)
 
 
+def node_check(options):
+    Checker(options.conf, options.platform).check_node(
+        role=options.role, node=options.node,
+        checks=options.checks, stage=options.stage)
+
+
+def cluster_check(options):
+    Checker(options.conf, options.platform).check_cluster(
+        checks=options.checks, stage=options.stage)
+
+
 def test(options):
     test_driver = TestDriver(options.conf, options.platform)
     test_driver.run(module=options.module, test_suite=options.test_suite, test=options.test,
                     verbose=options.verbose, collect=options.collect, skip_setup=options.skip_setup,
-                    mark=options.mark, junit=options.junit)
+                    mark=options.mark, traceback=options.traceback, junit=options.junit)
 
 
 def ssh(options):
     platforms.get_platform(options.conf, options.platform).ssh_run(
         role=options.role, nr=options.node, cmd=" ".join(options.cmd))
+
+
+def inhibit_kured(options):
+    Kubectl(options.conf).inhibit_kured()
 
 
 def main():
@@ -117,12 +144,17 @@ def main():
                         help="The platform you're targeting. Default is openstack")
     parser.add_argument("-l", "--log-level", dest="log_level", default=None, help="log level",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
+    parser.add_argument("-c", "--print-conf", dest="print_conf", action="store_true",
+                        help="prints the configuration")
 
     # Sub commands
     commands = parser.add_subparsers(help="command", dest="command")
 
     cmd_info = commands.add_parser("info", help='ip info')
     cmd_info.set_defaults(func=info)
+
+    cmd_config = commands.add_parser("config", help='prints configuration to log')
+    cmd_config.set_defaults(func=config)
 
     cmd_log = commands.add_parser("get_logs", help="gather logs from nodes")
     cmd_log.set_defaults(func=get_logs)
@@ -139,15 +171,33 @@ def main():
     cmd_provision.add_argument("-w", "--worker-count", dest="worker_count", type=int, default=-1,
                                help='number of workers nodes to be deployed. eg: -w 2')
 
-    cmd_bootstrap = commands.add_parser("bootstrap", help="bootstrap k8s cluster with \
-                        deployed nodes in your platform")
-    cmd_bootstrap.add_argument("-k", "--kubernetes-version", help="kubernetes version",
-                               dest="kubernetes_version", default=None)
-    cmd_bootstrap.add_argument("-c", "--cloud-provider", action="store_true",
-                               help="Use cloud provider integration")
-    cmd_bootstrap.add_argument("-t", "--timeout", type=int, default=180,
-                                help="timeout for waiting the master node to become ready (seconds)")
+    # common parameters for cluster bootstrap
+    bootstrap_args = ArgumentParser(add_help=False)
+    bootstrap_args.add_argument("-k", "--kubernetes-version", help="kubernetes version",
+                                dest="kubernetes_version", default=None)
+    bootstrap_args.add_argument("-c", "--cloud-provider", action="store_true",
+                                help="Use cloud provider integration")
+    bootstrap_args.add_argument("-t", "--timeout", type=int, default=300,
+                                help="timeout for waiting a node to become ready (seconds)")
+    bootstrap_args.add_argument("-m", "--registry-mirror", metavar=('R', 'M'),
+                                help="Add to the registry R a mirror M."
+                                     " If an image is available at the mirror"
+                                     " it will be preferred, otherwise the"
+                                     " image in the original registry is used."
+                                     " This argument can be used multiple"
+                                     " times, then mirrors will be tried in"
+                                     " that order."
+                                     " Example: --registry-mirror registry.example.com/path test-registry.example.com/path",
+                                nargs=2, action='append')
+
+    cmd_bootstrap = commands.add_parser(
+        "bootstrap", parents=[bootstrap_args], help="bootstrap k8s cluster")
     cmd_bootstrap.set_defaults(func=bootstrap)
+
+    cmd_deploy = commands.add_parser(
+        "deploy", parents=[bootstrap_args],
+        help="initializes, bootstrap and join all nodes k8s")
+    cmd_deploy.set_defaults(func=deploy)
 
     cmd_status = commands.add_parser("status", help="check K8s cluster status")
     cmd_status.set_defaults(func=cluster_status)
@@ -158,13 +208,20 @@ def main():
 
     # common parameters for node commands
     node_args = ArgumentParser(add_help=False)
-    node_args.add_argument("-r", "--role", dest="role", choices=["master", "worker"],
-                           help='role of the node to be added or deleted. eg: --role master')
-    node_args.add_argument("-n", "--node", dest="node", type=int,
-                           help='node to be added or deleted.  eg: -n 0')
+    node_args.add_argument(
+        "-r", "--role", dest="role", choices=["master", "worker"],
+        help='role of the node to be added or deleted. eg: --role master')
+    node_args.add_argument(
+        "-n", "--node", dest="node", type=int,
+        help='node to be added or deleted.  eg: -n 0')
+    # End of common parameters
 
-    cmd_join_node = commands.add_parser("join-node", parents=[node_args],
-                                        help="add node in k8s cluster with the given role.")
+    cmd_join_node = commands.add_parser(
+        "join-node", parents=[node_args],
+        help="add node in k8s cluster with the given role.")
+    cmd_join_node.add_argument(
+        "-t", "--timeout", type=int, default=180,
+        help="timeout for waiting the node to become ready (seconds)")
     cmd_join_node.set_defaults(func=join_node)
 
     cmd_rem_node = commands.add_parser("remove-node", parents=[node_args],
@@ -176,6 +233,14 @@ def main():
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
     cmd_node_upgrade.set_defaults(func=node_upgrade)
+
+    cmd_check_node = commands.add_parser(
+        "check-node", parents=[node_args], help="check node health")
+    cmd_check_node.add_argument("-c", "--check", dest="checks", nargs='+',
+                                help="check to be executed (multiple checks can be specified")
+    cmd_check_node.add_argument("-s", "--stage", dest="stage",
+                                help="only execute checks that apply to this stage")
+    cmd_check_node.set_defaults(func=node_check)
 
     # Start Join Nodes
     cmd_join_nodes = commands.add_parser("join-nodes",
@@ -210,20 +275,46 @@ def main():
                                 "'provisioned' For when you have already provisioned the nodes.\n"
                                 "'bootstrapped' For when you have already bootstrapped the cluster.\n"
                                 "'deployed' For when you already have a fully deployed cluster.")
+    test_args.add_argument("--traceback", default="short", choices=['long', 'short', 'line', 'no'],
+                           help="level of detail in traceback for test failure")
     cmd_test = commands.add_parser(
         "test", parents=[test_args], help="execute tests")
     cmd_test.set_defaults(func=test)
+
+    cmd_inhibit_kured = commands.add_parser(
+        "inhibit_kured", help="Prevent kured to reboot nodes")
+    cmd_inhibit_kured.set_defaults(func=inhibit_kured)
+
+    cmd_check_cluster = commands.add_parser(
+        "check-cluster", help="check cluster health")
+    cmd_check_cluster.add_argument(
+        "-c", "--check", dest="checks", nargs='+',
+        help="check to be executed (multiple checks can be specified")
+    cmd_check_cluster.add_argument(
+        "-s", "--stage", dest="stage",
+        help="only execute checks that apply to this stage")
+    cmd_check_cluster.set_defaults(func=cluster_check)
 
     options = parser.parse_args()
     try:
         conf = BaseConfig(options.yaml_path)
         Logger.config_logger(conf, level=options.log_level)
         options.conf = conf
+        if options.print_conf:
+            out = io.StringIO()
+            BaseConfig.print(conf, out=out)
+            logger.debug(f'Configuration\n{out.getvalue()}')
+
         options.func(options)
+    except SystemExit as ex:
+        if ex.code > 0:
+            logger.error(f'Command {options.command} ended with error code {ex.code}')
+            sys.exit(ex.code)
     except Exception as ex:
-        logger.error("Exception executing testrunner command '{}': {}".format(
-            options.command, ex), exc_info=True)
+        logger.error(f'Exception {ex} executing command {options.command}', exc_info=True)
         sys.exit(255)
+
+    sys.exit(0)
 
 
 if __name__ == '__main__':

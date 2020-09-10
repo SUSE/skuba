@@ -44,7 +44,6 @@ def remove_one_addon(addons_dict, skip=None):
     raise Exception('Could not remove any addon!')
 
 
-@pytest.mark.pr
 def test_addon_upgrade_apply(deployment, kubectl, skuba):
     skubaconf_dict = get_skuba_configuration_dict(kubectl)
     addons_dict = skubaconf_dict['AddonsVersion']
@@ -55,6 +54,9 @@ def test_addon_upgrade_apply(deployment, kubectl, skuba):
         kubectl, "SkubaConfiguration='{0}'".format(yaml.dump(skubaconf_dict))
     )
     assert not addons_up_to_date(skuba)
+
+    out = skuba.addon_refresh('localconfig')
+    assert out.find("Successfully refreshed addons base manifests") != -1
 
     out = skuba.addon_upgrade('apply')
     assert out.find("Successfully upgraded addons") != -1

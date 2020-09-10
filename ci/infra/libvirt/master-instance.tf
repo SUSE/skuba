@@ -14,6 +14,9 @@ data "template_file" "master_register_scc" {
 
   vars = {
     caasp_registry_code = var.caasp_registry_code
+
+    # no need to enable the SLE HA product on this kind of nodes
+    ha_registry_code = ""
   }
 }
 
@@ -37,16 +40,18 @@ data "template_file" "master_commands" {
 
 data "template_file" "master-cloud-init" {
   template = file("cloud-init/common.tpl")
+  count    = var.masters
 
   vars = {
-    authorized_keys = join("\n", formatlist("  - %s", var.authorized_keys))
-    repositories    = join("\n", data.template_file.master_repositories.*.rendered)
-    register_scc    = join("\n", data.template_file.master_register_scc.*.rendered)
-    register_rmt    = join("\n", data.template_file.master_register_rmt.*.rendered)
-    commands        = join("\n", data.template_file.master_commands.*.rendered)
-    username        = var.username
-    password        = var.password
-    ntp_servers     = join("\n", formatlist("    - %s", var.ntp_servers))
+    authorized_keys    = join("\n", formatlist("  - %s", var.authorized_keys))
+    repositories       = join("\n", data.template_file.master_repositories.*.rendered)
+    register_scc       = join("\n", data.template_file.master_register_scc.*.rendered)
+    register_rmt       = join("\n", data.template_file.master_register_rmt.*.rendered)
+    commands           = join("\n", data.template_file.master_commands.*.rendered)
+    username           = var.username
+    ntp_servers        = join("\n", formatlist("    - %s", var.ntp_servers))
+    hostname           = "${var.stack_name}-master-${count.index}"
+    hostname_from_dhcp = var.hostname_from_dhcp == true ? "yes" : "no"
   }
 }
 
@@ -63,7 +68,7 @@ resource "libvirt_cloudinit_disk" "master" {
   count     = var.masters
   name      = "${var.stack_name}-master-cloudinit-disk-${count.index}"
   pool      = var.pool
-  user_data = data.template_file.master-cloud-init.rendered
+  user_data = data.template_file.master-cloud-init[count.index].rendered
 }
 
 resource "libvirt_domain" "master" {
@@ -83,9 +88,9 @@ resource "libvirt_domain" "master" {
   }
 
   network_interface {
-    network_id     = libvirt_network.network.id
+    network_name   = var.network_name
+    network_id     = var.network_name == "" ? libvirt_network.network.0.id : null
     hostname       = "${var.stack_name}-master-${count.index}"
-    addresses      = [cidrhost(var.network_cidr, 512 + count.index)]
     wait_for_lease = true
   }
 
@@ -102,10 +107,9 @@ resource "null_resource" "master_wait_cloudinit" {
   connection {
     host = element(
       libvirt_domain.master.*.network_interface.0.addresses.0,
-      count.index,
+      count.index
     )
     user     = var.username
-    password = var.password
     type     = "ssh"
   }
 
@@ -125,17 +129,22 @@ resource "null_resource" "master_reboot" {
       user = var.username
       host = element(
         libvirt_domain.master.*.network_interface.0.addresses.0,
-        count.index,
+        count.index
       )
     }
 
     command = <<EOT
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host sudo reboot || :
-# wait for ssh ready after reboot
-until nc -zv $host 22; do sleep 5; done
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60 $user@$host /usr/bin/true
+export sshopts="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oConnectionAttempts=60"
+if ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; then
+    ssh $sshopts $user@$host sudo reboot || :
+    export delay=5
+    # wait for node reboot completed
+    while ! ssh $sshopts $user@$host 'sudo needs-restarting -r'; do
+        sleep $delay
+        delay=$((delay+1))
+        [ $delay -gt 30 ] && exit 1
+    done
+fi
 EOT
-
   }
 }
-

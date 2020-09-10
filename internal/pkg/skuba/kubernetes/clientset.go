@@ -19,15 +19,25 @@ package kubernetes
 
 import (
 	clientset "k8s.io/client-go/kubernetes"
-	kubeconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/kubeconfig"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/SUSE/skuba/pkg/skuba"
 )
 
-func GetAdminClientSet() (clientset.Interface, error) {
-	client, err := kubeconfigutil.ClientSetFromFile(skuba.KubeConfigAdminFile())
+func GetAdminClientSetWithConfig() (clientset.Interface, *rest.Config, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", skuba.KubeConfigAdminFile())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return client, nil
+	client, err := clientset.NewForConfig(config)
+	if err != nil {
+		return nil, nil, err
+	}
+	return client, config, nil
+}
+
+func GetAdminClientSet() (clientset.Interface, error) {
+	client, _, err := GetAdminClientSetWithConfig()
+	return client, err
 }

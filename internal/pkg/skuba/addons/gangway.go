@@ -19,24 +19,27 @@ package addons
 
 import (
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/version"
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/kubernetes/cmd/kubeadm/app/images"
 
-	"github.com/SUSE/skuba/internal/pkg/skuba/gangway"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
+	"github.com/SUSE/skuba/internal/pkg/skuba/oidc"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
 func init() {
-	registerAddon(kubernetes.Gangway, renderGangwayTemplate, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
+	registerAddon(kubernetes.Gangway, GenericAddOn, renderGangwayTemplate, nil, gangwayCallbacks{}, normalPriority, []getImageCallback{GetGangwayImage})
 }
 
-func GetGangwayImage(imageTag string) string {
-	return images.GetGenericImage(skubaconstants.ImageRepository, "gangway", imageTag)
+func GetGangwayImage(clusterVersion *version.Version, imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "gangway", imageTag)
 }
 
 func (renderContext renderContext) GangwayImage() string {
-	return GetGangwayImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
+	return GetGangwayImage(renderContext.config.ClusterVersion, kubernetes.AddonVersionForClusterVersion(kubernetes.Gangway, renderContext.config.ClusterVersion).Version)
 }
 
 func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {
@@ -45,50 +48,45 @@ func renderGangwayTemplate(addonConfiguration AddonConfiguration) string {
 
 type gangwayCallbacks struct{}
 
-func (gangwayCallbacks) beforeApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
-	client, err := kubernetes.GetAdminClientSet()
-	if err != nil {
-		return errors.Wrap(err, "could not get admin client set")
-	}
-
-	// Read gangway client secret from secret resource if present
-	// in order to update global variable gangwayClientSecret.
-	gangwayClientSecret, err = gangway.GetClientSecret(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway client secret exists")
-	}
-
-	gangwaySecretExists, err := gangway.GangwaySecretExists(client)
+func (gangwayCallbacks) beforeApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+	// handles gangway session key
+	exist, err := oidc.IsSecretExist(client, oidc.GangwaySecretName)
 	if err != nil {
 		return errors.Wrap(err, "unable to determine if gangway secret exists")
 	}
-	gangwayCertExists, err := gangway.GangwayCertExists(client)
-	if err != nil {
-		return errors.Wrap(err, "unable to determine if gangway cert exists")
-	}
-	if !gangwaySecretExists {
-		key, err := gangway.GenerateSessionKey()
+	if !exist {
+		// generates session key with length=32
+		sessionKey, err := oidc.RandomGenerateWithLength(32)
 		if err != nil {
 			return errors.Wrap(err, "unable to generate gangway session key")
 		}
-		err = gangway.CreateOrUpdateSessionKeyToSecret(client, key)
+		err = oidc.CreateOrUpdateToSecret(client, oidc.GangwaySecretName, oidc.GangwaySecret_SessionKey, sessionKey)
 		if err != nil {
-			return errors.Wrap(err, "unable to create/update gangway session key to secret")
-		}
-	}
-	err = gangway.CreateCert(client, skubaconstants.PkiDir(), skubaconstants.KubeadmInitConfFile())
-	if err != nil {
-		return errors.Wrap(err, "unable to create gangway certificate")
-	}
-	if gangwayCertExists {
-		if err := gangway.RestartPods(client); err != nil {
 			return err
 		}
 	}
+
+	// handles gangway certificate
+	exist, err = oidc.IsSecretExist(client, oidc.GangwayCertSecretName)
+	if err != nil {
+		return errors.Wrap(err, "unable to determine if oidc gangway cert exists")
+	}
+	if !exist {
+		// try to use local server certificate if present
+		if err := oidc.TryToUseLocalServerCert(client, oidc.GangwayServerCertAndKeyBaseFileName, oidc.GangwayCertSecretName); err == nil {
+			return nil
+		}
+
+		// sign the server certificate by cluster CA or custom OIDC CA if server certificate not present
+		if err := oidc.SignServerWithLocalCACertAndKey(client, oidc.GangwayCertCN, util.ControlPlaneHost(addonConfiguration.ControlPlane), oidc.GangwayCertSecretName); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (gangwayCallbacks) afterApply(addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
+func (gangwayCallbacks) afterApply(client clientset.Interface, addonConfiguration AddonConfiguration, skubaConfiguration *skuba.SkubaConfiguration) error {
 	return nil
 }
 
@@ -119,10 +117,9 @@ data:
     certFile: /etc/gangway/pki/tls.crt
 
     clientID: "oidc"
-    clientSecret: "{{.GangwayClientSecret}}"
     usernameClaim: "email"
     apiServerURL: "https://{{.ControlPlaneHostAndPort}}"
-    cluster_ca_path: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    clusterCAPath: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
     trustedCAPath: /etc/gangway/pki/ca.crt
     customHTMLTemplatesDir: /usr/share/caasp-gangway/web/templates/caasp
 ---
@@ -159,6 +156,11 @@ spec:
           imagePullPolicy: IfNotPresent
           command: ["gangway", "-config", "/gangway/gangway.yaml"]
           env:
+            - name: GANGWAY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oidc-client-secret
+                  key: gangway
             - name: GANGWAY_SESSION_SECURITY_KEY
               valueFrom:
                 secretKeyRef:

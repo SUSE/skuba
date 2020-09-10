@@ -18,6 +18,8 @@
 package cluster
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -30,6 +32,7 @@ type initOptions struct {
 	KubernetesVersion string
 	CloudProvider     string
 	StrictCapDefaults bool
+	CniPlugin         string
 }
 
 // NewInitCmd creates a new `skuba cluster init` cobra command
@@ -45,7 +48,8 @@ func NewInitCmd() *cobra.Command {
 				initOptions.CloudProvider,
 				initOptions.ControlPlane,
 				initOptions.KubernetesVersion,
-				initOptions.StrictCapDefaults)
+				initOptions.StrictCapDefaults,
+				initOptions.CniPlugin)
 			if err != nil {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
@@ -54,16 +58,26 @@ func NewInitCmd() *cobra.Command {
 				klog.Fatalf("init failed due to error: %s", err)
 			}
 		},
-		Args: cobra.ExactArgs(1),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return fmt.Errorf("accepts 1 arg, received %d", len(args))
+			}
+			if len(args[0]) == 0 {
+				return fmt.Errorf("Invalid cluster name: expected non empty cluster name")
+			}
+			return nil
+		},
 	}
 	cmd.Flags().StringVar(&initOptions.ControlPlane, "control-plane", "", "The control plane location (IP/FQDN) that will load balance the master nodes (required)")
 	if skuba.BuildType == "development" {
 		cmd.Flags().StringVar(&initOptions.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to bootstrap with (only in development build)")
 	}
-	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: aws, openstack")
+	cmd.Flags().StringVar(&initOptions.CloudProvider, "cloud-provider", "", "Enable cloud provider integration with the chosen cloud. Valid values: aws, azure, openstack, vsphere")
 	_ = cmd.MarkFlagRequired("control-plane")
 
 	cmd.Flags().BoolVar(&initOptions.StrictCapDefaults, "strict-capability-defaults", false, "All the containers will start with CRI-O default capabilities")
+
+	cmd.Flags().StringVar(&initOptions.CniPlugin, "cni-plugin", "cilium", "Specify the CNI plugin to be used across the cluster. Valid values: cilium")
 
 	return cmd
 }

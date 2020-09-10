@@ -28,17 +28,64 @@ import (
 	"k8s.io/kubernetes/cmd/kubeadm/app/util/pkiutil"
 )
 
-func Test_NewServerCertAndKey(t *testing.T) {
-	// generate test root CA
-	caCert, caKey, err := pkiutil.NewCertificateAuthority(&certutil.Config{
-		CommonName:   "unit-test",
-		Organization: []string{"suse.com"},
-		AltNames: certutil.AltNames{
-			DNSNames: []string{"unit.test"},
+func TestNewServerCSRAndKey(t *testing.T) {
+	tests := []struct {
+		name       string
+		commonName string
+		certSANs   []string
+	}{
+		{
+			name:       "control plane is IP address",
+			commonName: "cert-unit-test",
+			certSANs: []string{
+				"10.20.30.40",
+				"20.30.40.50",
+			},
 		},
-	})
+		{
+			name:       "control plane is FQDN",
+			commonName: "cert-unit-test",
+			certSANs: []string{
+				"dex.unittest",
+				"dex.unit.test",
+			},
+		},
+		{
+			name:       "control plane is both IP address and FQDN",
+			commonName: "cert-unit-test",
+			certSANs: []string{
+				"10.20.30.40",
+				"dex.unit.test",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := NewServerCSRAndKey(tt.commonName, tt.certSANs)
+			if err != nil {
+				t.Errorf("expected no error but got %v", err)
+				return
+			}
+		})
+	}
+}
+
+func TestNewServerCertAndKey(t *testing.T) {
+	// generate test root CA
+	caCert, caKey, err := pkiutil.NewCertificateAuthority(&pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   "unit-test",
+			Organization: []string{"suse.com"},
+			AltNames: certutil.AltNames{
+				DNSNames: []string{"unit.test"},
+			},
+		}},
+	)
 	if err != nil {
 		t.Errorf("generate root CA failed: %v", err)
+		return
 	}
 
 	tests := []struct {
@@ -136,17 +183,20 @@ func Test_NewServerCertAndKey(t *testing.T) {
 	}
 }
 
-func Test_CreateOrUpdateCertToSecret(t *testing.T) {
+func TestCreateOrUpdateCertToSecret(t *testing.T) {
 	// generate test root CA
-	caCert, caKey, err := pkiutil.NewCertificateAuthority(&certutil.Config{
-		CommonName:   "unit-test",
-		Organization: []string{"suse.com"},
-		AltNames: certutil.AltNames{
-			DNSNames: []string{"unit.test"},
-		},
-	})
+	caCert, caKey, err := pkiutil.NewCertificateAuthority(&pkiutil.CertConfig{
+		Config: certutil.Config{
+			CommonName:   "unit-test",
+			Organization: []string{"suse.com"},
+			AltNames: certutil.AltNames{
+				DNSNames: []string{"unit.test"},
+			},
+		}},
+	)
 	if err != nil {
 		t.Errorf("generate root CA failed: %v", err)
+		return
 	}
 
 	tests := []struct {

@@ -6,13 +6,6 @@ locale: en_US.UTF-8
 # set timezone
 timezone: Etc/UTC
 
-# set root password
-chpasswd:
-  list: |
-    root:linux
-    ${username}:${password}
-  expire: False
-
 ssh_authorized_keys:
 ${authorized_keys}
 
@@ -33,21 +26,18 @@ ${repositories}
     solver.onlyRequires: "true"
     download.use_deltarpm: "true"
 
-# need to remove the standard docker packages that are pre-installed on the
-# cloud image because they conflict with the kubic- ones that are pulled by
-# the kubernetes packages
 # WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registraion
-# Code is provided. In this case repositories will be added in runcmd module 
+# Code is provided. In this case repositories will be added in runcmd module
 # with SUSEConnect command after packages module is ran
 #packages:
 
-bootcmd:
-  - ip link set dev eth0 mtu 1400
-  # Hostnames from DHCP - otherwise localhost will be used
-  - /usr/bin/sed -ie "s#DHCLIENT_SET_HOSTNAME=\"no\"#DHCLIENT_SET_HOSTNAME=\"yes\"#" /etc/sysconfig/network/dhcp
-  - netconfig update -f
+# set hostname
+hostname: ${hostname}
 
 runcmd:
+  # Set node's hostname from DHCP server
+  - sed -i -e '/^DHCLIENT_SET_HOSTNAME/s/^.*$/DHCLIENT_SET_HOSTNAME=\"${hostname_from_dhcp}\"/' /etc/sysconfig/network/dhcp
+  - systemctl restart wicked
 ${register_scc}
 ${register_rmt}
 ${commands}

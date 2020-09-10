@@ -1,17 +1,17 @@
 resource "aws_instance" "nodes" {
-  ami                         = data.susepubliccloud_image_ids.sles15sp1_chost_byos.ids[0]
+  ami                         = data.susepubliccloud_image_ids.sles15sp2_chost_byos.ids[0]
   associate_public_ip_address = false
   count                       = var.workers
   instance_type               = var.worker_size
   key_name                    = aws_key_pair.kube.key_name
   source_dest_check           = false
   user_data                   = data.template_cloudinit_config.cfg.rendered
-  iam_instance_profile        = length(var.iam_profile_worker) == 0 ? local.aws_iam_policy_worker_terraform : var.iam_profile_worker
+  iam_instance_profile        = length(var.iam_profile_worker) == 0 ? local.aws_iam_instance_profile_worker_terraform : var.iam_profile_worker
   subnet_id                   = aws_subnet.private.id
 
   depends_on = [
     aws_route.private_nat_gateway,
-    aws_iam_policy.worker,
+    aws_iam_instance_profile.worker,
   ]
 
   tags = merge(

@@ -57,11 +57,6 @@ variable "username" {
   description = "Username for the cluster nodes"
 }
 
-variable "password" {
-  default     = "linux"
-  description = "Password for the cluster nodes"
-}
-
 variable "caasp_registry_code" {
   default     = ""
   description = "SUSE CaaSP Product Registration Code"
@@ -95,9 +90,15 @@ variable "network_mode" {
   description = "Network mode used by the cluster"
 }
 
-variable "lbs" {
-  default     = 1
-  description = "Number of load-balancer nodes"
+variable "network_name" {
+  default     = ""
+  description = "The virtual network name to use. If provided just use the given one (not managed by terraform), otherwise terraform creates a new virtual network resource"
+}
+
+variable "create_lb" {
+  type        = bool
+  default     = true
+  description = "Create load balancer node exposing master nodes"
 }
 
 variable "lb_memory" {
@@ -166,4 +167,9 @@ variable "worker_vcpu" {
 variable "worker_disk_size" {
   default     = "25769803776"
   description = "Disk size (in bytes)"
+}
+
+variable "hostname_from_dhcp" {
+  default     = true
+  description = "Set node's hostname from DHCP server"
 }

@@ -1,7 +1,7 @@
 # Name of the image to use
 # EXAMPLE:
-# image_name = "SLE-15-SP1-JeOS-GMC"
-image_name = ""
+# image_name = "
+image_name = "SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM"
 
 # Name of the internal network to be created
 # EXAMPLE:
@@ -77,6 +77,7 @@ repositories = {}
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
+  "zypper-needs-restarting",
   "kernel-default",
   "-kernel-default-base"
 ]
@@ -96,4 +97,7 @@ authorized_keys = [
 key_pair = ""
 
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
-ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
+ntp_servers = ["0.suse.pool.ntp.org", "1.suse.pool.ntp.org", "2.suse.pool.ntp.org", "3.suse.pool.ntp.org"]
+
+# Set node's hostname from DHCP server
+#hostname_from_dhcp = false

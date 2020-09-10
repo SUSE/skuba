@@ -322,7 +322,7 @@ func TestDrainNode(t *testing.T) {
 						Containers: []corev1.Container{
 							{
 								Name:  "test",
-								Image: "registry.suse.com/caasp/v4/test:1.1.1",
+								Image: "registry.suse.com/caasp/v4.5/test:1.1.1",
 							},
 						},
 					},
@@ -340,7 +340,7 @@ func TestDrainNode(t *testing.T) {
 								Containers: []corev1.Container{
 									{
 										Name:  "test",
-										Image: "registry.suse.com/caasp/v4/test:1.1.1",
+										Image: "registry.suse.com/caasp/v4.5/test:1.1.1",
 									},
 								},
 							},
@@ -395,5 +395,37 @@ func TestDrainNode(t *testing.T) {
 				return
 			}
 		})
+	}
+}
+
+func TestUncordonNode(t *testing.T) {
+	for _, tc := range []struct {
+		client    *fake.Clientset
+		node      *corev1.Node
+		expectNil bool
+	}{
+		{
+			client:    fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{{}}}),
+			node:      &corev1.Node{Spec: corev1.NodeSpec{Unschedulable: true}},
+			expectNil: true,
+		},
+		{
+			client:    fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{{}}}),
+			node:      &corev1.Node{Spec: corev1.NodeSpec{Unschedulable: false}},
+			expectNil: true,
+		},
+		{
+			client:    fake.NewSimpleClientset(&corev1.NodeList{Items: []corev1.Node{}}),
+			node:      &corev1.Node{Spec: corev1.NodeSpec{Unschedulable: true}},
+			expectNil: false,
+		},
+	} {
+		err := UncordonNode(tc.client, tc.node)
+		if tc.expectNil && err != nil {
+			t.Errorf("expected nil err, got %v", err)
+		}
+		if !tc.expectNil && err == nil {
+			t.Errorf("expected non nil err")
+		}
 	}
 }

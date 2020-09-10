@@ -65,7 +65,7 @@ func getComponentTestData(component Component, version *version.Version, info *K
 	case ContainerRuntime:
 		name = fmt.Sprintf("get %s version when cluster version is %s", component, version)
 		expectVersion = info.ComponentHostVersion.ContainerRuntimeVersion
-	case Hyperkube, Etcd, CoreDNS, Pause, Tooling:
+	case APIServer, ControllerManager, Scheduler, Proxy, Etcd, CoreDNS, Pause, Tooling:
 		name = fmt.Sprintf("get %s image when cluster version is %s", component, version)
 		imageName = info.ComponentContainerVersion[component].Name
 		expectVersion = info.ComponentContainerVersion[component].Tag
@@ -159,7 +159,7 @@ func TestAllComponentContainerImagesForClusterVersion(t *testing.T) {
 			sort.Slice(actual, func(i int, j int) bool {
 				return actual[i] < actual[j]
 			})
-			expect := []Component{Hyperkube, Etcd, CoreDNS, Pause, Tooling}
+			expect := []Component{APIServer, Scheduler, ControllerManager, Proxy, Etcd, CoreDNS, Pause, Tooling}
 			sort.Slice(expect, func(i int, j int) bool {
 				return expect[i] < expect[j]
 			})
@@ -194,7 +194,7 @@ func TestComponentContainerImageForClusterVersion(t *testing.T) {
 					return
 				}
 			} else {
-				expect := images.GetGenericImage(skuba.ImageRepository, tt.imageName, tt.expectVersion)
+				expect := images.GetGenericImage(skuba.ImageRepository(tt.clusterVersion), tt.imageName, tt.expectVersion)
 				if actual != expect {
 					t.Errorf("returned image (%s) does not match the expected one (%s)", actual, expect)
 					return
@@ -367,4 +367,21 @@ func TestMajorMinorVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Compiler ensures we don't remove some code that's still deprecating.
+// This ensure code _removal_ when ready to do so.
+func TestEnsureHyperKubeIsRemovedForSupportedVersions(t *testing.T) {
+	for kubernetesVersionStr := range supportedVersions {
+		kubernetesVersion := version.MustParseSemantic(kubernetesVersionStr)
+		versionComparedTo118, err := kubernetesVersion.Compare("1.18.6")
+		if err != nil {
+			t.Fatalf("our versions should always be valid semver and something bad happened: %+v", err)
+		}
+		// If we support at least a version using HyperKube (i.e. below 1.18), bail out.
+		if versionComparedTo118 == -1 {
+			return
+		}
+	}
+	t.Errorf("please, remove HyperKube booleans (usehyperkube, needshyperkube) from code and remove this test.")
 }

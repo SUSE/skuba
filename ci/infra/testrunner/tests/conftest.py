@@ -48,16 +48,17 @@ def bootstrap(request, provision, skuba):
 
 @pytest.fixture
 def deployment(request, bootstrap, skuba, kubectl):
-    if request.config.getoption("skip_setup") != 'deployed':
-        skuba.join_nodes()
+    if request.config.getoption("skip_setup") == 'deployed':
+        return
 
+    skuba.join_nodes()
     wait(check_pods_ready,
          kubectl,
          namespace="kube-system",
          wait_delay=60,
          wait_timeout=10,
          wait_backoff=60,
-         wait_elapsed=60*30,
+         wait_elapsed=60 * 30,
          wait_allow=(AssertionError))
 
 
@@ -81,8 +82,8 @@ def skuba(conf, target):
 
 
 @pytest.fixture
-def kubectl(conf, target):
-    return Kubectl(conf, target)
+def kubectl(conf):
+    return Kubectl(conf)
 
 
 @pytest.fixture
@@ -94,8 +95,11 @@ def platform(conf, target):
 @pytest.fixture
 def setup(request, platform, skuba):
     def cleanup():
-        platform.gather_logs()
-        platform.cleanup()
+        # if platform was not allocated, gather_logs may fail. Ignore.
+        try:
+            platform.gather_logs()
+        finally:
+            platform.cleanup()
 
     request.addfinalizer(cleanup)
 

@@ -1,15 +1,13 @@
 import pytest
 
-from tests.utils import PREVIOUS_VERSION, setup_kubernetes_version, node_is_ready, node_is_upgraded, wait
+from tests.utils import PREVIOUS_VERSION, node_is_ready, node_is_upgraded, wait
 
 
 @pytest.mark.disruptive
-def test_upgrade_apply_user_lock(setup, platform, kubectl, skuba):
+def test_upgrade_apply_user_lock(provision, platform, kubectl, skuba):
     """
     Starting from an outdated cluster, check what node upgrade apply reports.
     """
-
-    setup_kubernetes_version(platform, skuba, kubectl, PREVIOUS_VERSION)
 
     # lock kured
     kubectl_cmd = (

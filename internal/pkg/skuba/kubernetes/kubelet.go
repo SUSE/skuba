@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SUSE LLC.
+ * Copyright (c) 2019,2020 SUSE LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,11 @@ func GenerateKubeletRootCert() error {
 		return nil
 	}
 
-	cfg := &certutil.Config{
+	certCfg := certutil.Config{
 		CommonName: "kubelet-ca",
+	}
+	cfg := &pkiutil.CertConfig{
+		Config: certCfg,
 	}
 	caCert, caKey, err := pkiutil.NewCertificateAuthority(cfg)
 	if err != nil {
@@ -98,6 +101,7 @@ func disarmKubeletJobSpec(node *v1.Node, clusterVersion *version.Version) batchv
 	return batchv1.JobSpec{
 		Template: v1.PodTemplateSpec{
 			Spec: v1.PodSpec{
+				ServiceAccountName: "kube-disarm",
 				Containers: []v1.Container{
 					{
 						Name:  disarmKubeletJobName(node),

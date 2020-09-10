@@ -19,6 +19,7 @@ package upgrade
 
 import (
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -30,6 +31,7 @@ import (
 	skubaconfig "github.com/SUSE/skuba/internal/pkg/skuba/skuba"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
+	"github.com/SUSE/skuba/pkg/skuba"
 )
 
 func Plan(client clientset.Interface) error {
@@ -86,9 +88,17 @@ func plan(client clientset.Interface, availableVersions []*version.Version, clus
 			if nodeVersionInfo.EqualsClusterVersion(currentClusterVersion) {
 				fmt.Printf("  - %s: up to date", nodeName)
 			} else if !nodeVersionInfo.ToleratesClusterVersion(currentClusterVersion) {
-				fmt.Printf("  - %s; current version: %s (upgrade required)", nodeName, nodeVersionInfo.String())
+				if nodeVersionInfo.IsControlPlane() {
+					fmt.Printf("  - %s; current kubelet package version: %s, kube-apiserver container version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
+				} else {
+					fmt.Printf("  - %s; current kubelet package version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String())
+				}
 			} else {
-				fmt.Printf("  - %s; current version: %s (upgrade suggested)", nodeName, nodeVersionInfo.String())
+				if nodeVersionInfo.IsControlPlane() {
+					fmt.Printf("  - %s; current kubelet package version: %s, kube-apiserver container version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
+				} else {
+					fmt.Printf("  - %s; current kubelet package version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String())
+				}
 			}
 			if nodeVersionInfo.Unschedulable() {
 				fmt.Println("; unschedulable, ignored")
@@ -99,6 +109,8 @@ func plan(client clientset.Interface, availableVersions []*version.Version, clus
 	} else {
 		fmt.Printf("All nodes match the current cluster version: %s.\n", currentClusterVersion.String())
 	}
+
+	checkOldCriFormat()
 
 	planPrePlatformUpgrade(currentClusterVersion, nextClusterVersion, currentAddonVersionInfoUpdate)
 	hasPlatformUpgrade := len(upgradePath) > 0
@@ -209,4 +221,12 @@ func checkUpdatedAddonsFromClusterVersion(currentClusterVersion *version.Version
 		}
 	}
 	return nil
+}
+
+// checkOldCriFormat displays a message if the current cri-o configuration is
+// deemed to be outdated.
+func checkOldCriFormat() {
+	if _, err := os.Stat(skuba.CriDockerDefaultsConfFile()); err == nil {
+		fmt.Printf("\nLocal configuration has to be upgraded: cri-o is using an old format.\n")
+	}
 }

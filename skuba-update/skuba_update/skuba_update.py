@@ -43,7 +43,6 @@ ZYPPER_REBOOT_NEEDED_PATH = '/var/run/reboot-needed'
 REBOOT_REQUIRED_PATH = '/var/run/reboot-required'
 
 # Exit codes as defined by zypper.
-
 ZYPPER_EXIT_INF_UPDATE_NEEDED = 100
 ZYPPER_EXIT_INF_SEC_UPDATE_NEEDED = 101
 ZYPPER_EXIT_INF_REBOOT_NEEDED = 102
@@ -68,9 +67,8 @@ def main():
 
     # Check that we have the proper zypper version.
     if not check_version('zypper', REQUIRED_ZYPPER_VERSION):
-        raise Exception('zypper version {0} or higher is required'.format(
-            '.'.join([str(x) for x in REQUIRED_ZYPPER_VERSION])
-        ))
+        version = '.'.join([str(x) for x in REQUIRED_ZYPPER_VERSION])
+        raise Exception(f"zypper version {version} or higher is required")
 
     if os.geteuid() != 0:
         raise Exception('root privileges are required to run this tool')
@@ -92,25 +90,19 @@ def parse_args():
 
     annotate_only_msg = \
         'Do not install any update, just annotate there are available updates'
-    version_msg = '%(prog)s {0}'.format(version())
 
     parser = argparse.ArgumentParser(description='Updates a CaaSP node')
     parser.add_argument(
         '--annotate-only', action='store_true', help=annotate_only_msg
     )
     parser.add_argument(
-        '--version', action='version', version=version_msg
+        "--version",
+        action="version",
+        version="%(prog)s {0}".format(
+            pkg_resources.require("skuba-update")[0].version),
     )
 
     return parser.parse_args()
-
-
-def version():
-    """
-    Returns the version of the current skuba-update
-    """
-
-    return pkg_resources.require('skuba-update')[0].version
 
 
 def update():
@@ -118,10 +110,10 @@ def update():
     Performs an update operation.
     """
 
-    code = run_zypper_patch()
-    if is_restart_needed(code):
-        code = run_zypper_patch()
-    return code
+    returncode = run_zypper_patch()
+    if zypper_needs_transaction_restart(returncode):
+        returncode = run_zypper_patch()
+    return returncode
 
 
 def annotate_node():
@@ -244,7 +236,8 @@ def restart_services():
     for service in result.output.splitlines():
         cmd = run_command(['systemctl', 'restart', service], needsOutput=False)
         if cmd.returncode != 0:
-            log('Warning! Service \'{0}\' restart returned non zero exit code')
+            log((f"Warning! Service '{service}' restart returned non zero "
+                 "exit code"))
 
 
 def is_zypper_error(code):
@@ -256,10 +249,10 @@ def is_zypper_error(code):
     return code != 0 and code < ZYPPER_EXIT_INF_UPDATE_NEEDED
 
 
-def is_restart_needed(code):
+def zypper_needs_transaction_restart(code):
     """
-    Returns true of the given code is defined by zypper to mean that restart is
-    needed (zypper itself has been updated).
+    Returns true if the given return code by zypper means a restart
+    of zypper is needed (zypper itself has been updated).
     """
 
     return code == ZYPPER_EXIT_INF_RESTART_NEEDED
@@ -300,10 +293,8 @@ def log(message):
     program.
     """
 
-    print('{0} [skuba-update] {1}'.format(
-        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        message)
-    )
+    datestr = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"{datestr} [skuba-update] {message}")
 
 
 def run_zypper_command(command, needsOutput=False):
@@ -315,7 +306,8 @@ def run_zypper_command(command, needsOutput=False):
 
     process = run_command(zypperCommand, needsOutput)
     if is_zypper_error(process.returncode):
-        raise Exception('"{0}" failed'.format(' '.join(zypperCommand)))
+        zypper_cmd_str = ' '.join(zypperCommand)
+        raise Exception(f'"{zypper_cmd_str}" failed')
     if needsOutput:
         return process
     return process.returncode
@@ -323,8 +315,8 @@ def run_zypper_command(command, needsOutput=False):
 
 def run_zypper_patch():
     """
-    Run patch updates without --with-optional. --with-optional can cause
-    conflicts with K8s upgrade scenario.
+    Install patch updates (zypper patch) without '--with-optional' flag.
+    --with-optional can cause conflicts with K8s upgrade scenario.
     """
     return run_zypper_command([
         '--non-interactive', '--non-interactive-include-reboot-patches',
@@ -346,7 +338,8 @@ def run_command(command, needsOutput=True, added_env={}):
     command_type = namedtuple(
         'command', ['output', 'error', 'returncode']
     )
-    log('running \'{0}\''.format(' '.join(command)))
+    cmd_str = ' '.join(command)
+    log(f'running "{cmd_str}"')
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE if needsOutput else None,
@@ -384,7 +377,7 @@ def check_version(call, version_waterline):
         if version_info is None:
             raise Exception
     except Exception:
-        message = 'Could not parse {0} version'.format(call)
+        message = f"Could not parse {call} version"
         raise Exception(message)
     return version_info >= version_waterline
 
@@ -412,7 +405,7 @@ def node_name_from_machine_id():
             if node['status']['nodeInfo']['machineID'] == machine_id:
                 return node['metadata']['name']
     except KeyError as e:
-        raise Exception('Unexpected format for node name: {}'.format(e))
+        raise Exception(f"Unexpected format for node name: {e}")
 
     raise Exception('Node name could not be determined via machine-id')
 
@@ -424,7 +417,7 @@ def annotate(resource, resource_name, key, value):
 
     ret = run_command([
         'kubectl', 'annotate', '--overwrite', resource, resource_name,
-        '{}={}'.format(key, value)],
+        f"{key}={value}"],
         added_env={'KUBECONFIG': KUBECONFIG_PATH}
     )
 

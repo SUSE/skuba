@@ -7,7 +7,7 @@ libvirt_uri = ""
 # Note this value will be appended to the libvirt_uri as a 'keyfile' query: <libvirt_uri>?keyfile=<libvirt_keyfile>
 # EXAMPLE:
 # libvirt_keyfile = "~/.ssh/custom_id"
-libvirt_uri = ""
+libvirt_keyfile = ""
 
 # URL of the image to use
 # EXAMPLE:
@@ -20,8 +20,8 @@ stack_name = "my-caasp-cluster"
 # CIDR of the network
 network_cidr = "10.17.0.0/22"
 
-# Number of lb nodes
-lbs = 1
+# Enable creation of LB node
+create_lb = true
 
 # Number of master nodes
 masters = 1
@@ -35,10 +35,6 @@ dns_domain = "caasp.local"
 # Username for the cluster nodes
 # EXAMPLE:
 username = "sles"
-
-# Password for the cluster nodes
-# EXAMPLE:
-password = "linux"
 
 # define the repositories to use
 # EXAMPLE:
@@ -59,6 +55,7 @@ lb_repositories = {}
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
 packages = [
+  "zypper-needs-restarting",
   "kernel-default",
   "-kernel-default-base"
 ]
@@ -73,4 +70,7 @@ authorized_keys = [
 ]
 
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
-ntp_servers = ["0.novell.pool.ntp.org", "1.novell.pool.ntp.org", "2.novell.pool.ntp.org", "3.novell.pool.ntp.org"]
+ntp_servers = ["0.suse.pool.ntp.org", "1.suse.pool.ntp.org", "2.suse.pool.ntp.org", "3.suse.pool.ntp.org"]
+
+# Set node's hostname from DHCP server
+#hostname_from_dhcp = false
