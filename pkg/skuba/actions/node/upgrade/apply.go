@@ -48,9 +48,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
-	if strings.Contains(target.Cache.OsRelease["VERSION_ID"], "15.1") && !strings.Contains(latestVersion, "1.17") {
-		fmt.Printf("Node OS migration/upgrade required first.\n\n")
-	}
+
 	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, target.Nodename)
 	if err != nil {
 		return err
@@ -60,6 +58,11 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Printf("Current Node version: %s\n", nodeVersionInfoUpdate.Current.KubeletVersion.String())
 	fmt.Println()
+	target.IsSUSEOS()
+	if strings.Contains(target.Cache.OsRelease["VERSION_ID"], "15.1") {
+		fmt.Println("You are still running 15.1, and the upgrade to this branch expects running on SP2,\n please upgrade to the latest skuba for SP1, and migrate to SP2 before doing this.\n")
+		os.Exit(1)
+	}
 
 	if nodeVersionInfoUpdate.IsUpdated() {
 		fmt.Printf("Node %s is up to date\n", target.Nodename)
