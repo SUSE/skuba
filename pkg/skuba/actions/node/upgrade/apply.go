@@ -48,6 +48,9 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	currentVersion := currentClusterVersion.String()
 	latestVersion := kubernetes.LatestVersion().String()
+	if strings.Contains(target.Cache.OsRelease["VERSION_ID"], "15.1") && !strings.Contains(latestVersion, "1.17") {
+		fmt.Printf("Node OS migration/upgrade required first.\n\n")
+	}
 	nodeVersionInfoUpdate, err := upgradenode.UpdateStatus(client, target.Nodename)
 	if err != nil {
 		return err
