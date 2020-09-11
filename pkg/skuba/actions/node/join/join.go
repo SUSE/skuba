@@ -52,6 +52,15 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 
+	clusterTooOld, err := currentClusterVersion.Compare("1.18.0")
+	if err != nil {
+		return err
+	}
+	if clusterTooOld < 0 {
+		err := fmt.Errorf("[join] failed to join the node as the cluster is not yet ready for SP2 nodes")
+		return err
+	}
+
 	if err := target.Apply(deployments.KubernetesBaseOSConfiguration{
 		CurrentVersion: currentClusterVersion.String(),
 	}, "kubernetes.install-fresh-pkgs"); err != nil {
