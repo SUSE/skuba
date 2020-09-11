@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -33,6 +34,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/upgrade/addon"
 	upgradecluster "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/cluster"
+	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
 type NodeVersionInfoUpdate struct {
@@ -95,6 +97,16 @@ func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client cli
 // If all preconditions are met for the given node, no error will be returned.
 func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interface, currentClusterVersion *version.Version) error {
 	errorMessages := []string{}
+	if strings.HasPrefix(nviu.Update.KubeletVersion.String(), skubaconstants.LastCaaSP4KubernetesVersion) {
+		errorMessages = append(errorMessages, fmt.Sprintf("Cannot use this version of skuba to upgrade to kubernetes version %s. Please use a skuba version below 2.0.0 instead.", skubaconstants.LastCaaSP4KubernetesVersion))
+	}
+	isKubeletTooOld, err := nviu.Update.KubeletVersion.Compare("1.17.0")
+	if err != nil {
+		return err
+	}
+	if isKubeletTooOld < 0 {
+		errorMessages = append(errorMessages, fmt.Sprintf("Make sure your node is at least to version %s before upgrading", skubaconstants.LastCaaSP4KubernetesVersion))
+	}
 	isFirstControlPlaneNodeToBeUpgraded, err := nviu.IsFirstControlPlaneNodeToBeUpgraded(client)
 	if err != nil {
 		return err
