@@ -1,0 +1,57 @@
+- job-template:
+    name: '{name}/{platform}/trigger-upgrade-from-4-2-daily'
+    project-type: pipeline
+    number-to-keep: 30
+    days-to-keep: 30
+    schedule: '3-5'
+    triggers:
+        - timed: 'H H({schedule}) * * *'
+    parameters:
+        - string:
+            name: BRANCH
+            default: '{branch}'
+            description: The branch to checkout
+        - string:
+            name: PLATFORM
+            default: '{platform}'
+            description: The platform to perform the tests on
+        - string:
+            name: DOWNSTREAM_JOB
+            description: Job to be triggered downstream
+            default: '{name}/{platform}/upgrade-from-4-2-daily'  
+        - string:
+            name: WORKER_TEMPLATE
+            description: Template for worker
+            default: 'maintenance-caasp-v4.2'
+        - bool:
+            name: RETAIN_WORKER
+            default: false
+            description: Retain worker at the end of the job
+        - bool:
+            name: RETAIN_CLUSTER
+            default: false
+            description: Retain cluster at the end of the job
+        - string:
+            name: RETENTION_PERIOD
+            default: 24
+            description: Retention period for worker (in hours)  
+        - string:
+            name: INITIAL_VERSION
+            description: 'Initial version of skuba to deploy'
+            default: 'maintenance-caasp-v4.2'
+        - string:
+            name: TARGET_VERSION
+            description: 'version of skuba to migrate to'
+            default: 'master'
+    pipeline-scm:
+        scm:
+            - git:
+                url: 'https://github.com/{repo-owner}/{repo-name}.git'
+                credentials-id: '{repo-credentials}'
+                refspec: '+refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*'
+                branches:
+                    - '$BRANCH'
+                browser: auto
+                suppress-automatic-scm-triggering: true
+        script-path: ci/jenkins/pipelines/skuba-trigger-upgrade-from-4.2.Jenkinsfile
+
