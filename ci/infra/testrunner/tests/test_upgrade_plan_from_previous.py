@@ -10,7 +10,7 @@ def test_upgrade_plan_from_previous(deployment, skuba, kubectl, platform):
     """
 
     # cluster upgrade plan
-    out = skuba.cluster_upgrade_plan()
+    out = skuba.cluster_upgrade(action="plan")
     assert out.find("Current Kubernetes cluster version: {pv}".format(
         pv=PREVIOUS_VERSION)) != -1
     assert out.find("Latest Kubernetes version: {cv}".format(

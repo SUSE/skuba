@@ -168,6 +168,7 @@ class Skuba:
         except Exception as ex:
             raise Exception("Error executing cmd {}".format(cmd)) from ex
 
+
     @step
     def node_upgrade(self, action, role, nr, ignore_errors=False):
         self._verify_bootstrap_dependency()
@@ -192,9 +193,13 @@ class Skuba:
         return self._run_skuba(cmd, ignore_errors=ignore_errors)
 
     @step
-    def cluster_upgrade_plan(self):
+    def cluster_upgrade(self, action):
         self._verify_bootstrap_dependency()
-        return self._run_skuba("cluster upgrade plan")
+
+        if action not in ["plan", "localconfig"]:
+            raise ValueError(f'Invalid cluster upgrade action: {action}')
+
+        return self._run_skuba(f'cluster upgrade {action}')
 
     @step
     def cluster_status(self):
