@@ -1,11 +1,11 @@
 variable "aws_region" {
-  type = string
+  type        = string
   # default     = "eu-north-1"
   description = "Name of the AWS region to be used"
 }
 
 variable "aws_availability_zones" {
-  type = list(string)
+  type        = list(string)
   # default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
   description = "List of Availability Zones (e.g. `['us-east-1a', 'us-east-1b', 'us-east-1c']`)"
 }
@@ -23,6 +23,7 @@ variable "cidr_block" {
 }
 
 variable "stack_name" {
+  type        = string
   default     = "k8s"
   description = "Identifier to make all your resources unique and avoid clashes with other users of this terraform project"
 }
@@ -40,6 +41,7 @@ variable "authorized_keys" {
 }
 
 variable "key_pair" {
+  type        = string
   default     = ""
   description = "SSH key stored in openstack to create the nodes with"
 }
@@ -79,26 +81,31 @@ variable "packages" {
 }
 
 variable "username" {
+  type        = string
   default     = "sles"
   description = "Username for the cluster nodes"
 }
 
 variable "password" {
+  type        = string
   default     = "linux"
   description = "Password for the cluster nodes"
 }
 
 variable "caasp_registry_code" {
+  type        = string
   default     = ""
   description = "SUSE CaaSP Product Registration Code"
 }
 
 variable "rmt_server_name" {
+  type        = string
   default     = ""
   description = "SUSE Repository Mirroring Server Name"
 }
 
 variable "suma_server_name" {
+  type        = string
   default     = ""
   description = "SUSE Manager Server Name"
 }
@@ -110,41 +117,49 @@ variable "peer_vpc_ids" {
 }
 
 variable "masters" {
+  type        = number
   default     = 1
   description = "Number of master nodes"
 }
 
 variable "master_instance_type" {
+  type        = string
   default     = "t2.medium"
   description = "Instance type of the master nodes"
 }
 
 variable "master_volume_size" {
+  type        = number
   default     = 20
   description = "Size of the EBS volume, in GB"
 }
 
 variable "iam_profile_master" {
+  type        = string
   default     = ""
   description = "IAM profile associated with the master nodes"
 }
 
 variable "workers" {
+  type        = number
   default     = 2
   description = "Number of worker nodes"
 }
 
 variable "worker_instance_type" {
+  type        = string
   default     = "t2.medium"
   description = "Instance type of the worker nodes"
 }
 
 variable "worker_volume_size" {
+  type        = number
   default     = 20
   description = "Size of the EBS volume, in GB"
 }
 
 variable "iam_profile_worker" {
+  type        = string
   default     = ""
   description = "IAM profile associated with the worker nodes"
 }

@@ -28,6 +28,15 @@ resource "aws_security_group" "elb" {
     description = "kubernetes API server"
   }
 
+  # Allow access to dex (32000) and gangway (32001)
+  ingress {
+    from_port   = 32000
+    to_port     = 32001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "dex and gangway"
+  }
+
   tags = merge(
     local.tags,
     {

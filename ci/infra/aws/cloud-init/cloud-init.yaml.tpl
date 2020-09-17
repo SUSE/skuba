@@ -20,6 +20,14 @@ locale: en_US.UTF-8
 # set timezone
 timezone: Etc/UTC
 
+users:
+  - name: ${username}
+    ssh-authorized-keys:
+      ${authorized_keys}
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
 # Inject the public keys
 ssh_authorized_keys:
 ${authorized_keys}

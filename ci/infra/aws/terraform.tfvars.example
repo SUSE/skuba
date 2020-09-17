@@ -126,15 +126,16 @@ repositories = {
 
 # Minimum required packages. Do not remove them.
 # Feel free to add more packages
-packages = [
-  "zypper-needs-restarting",
-  "kernel-default",
-  "-kernel-default-base",
-  "ca-certificates-suse",
-  "gdb",
-  "systemd-coredump",
-  "lz4"
-]
+packages = []
+# packages = [
+#   "zypper-needs-restarting",
+#   "kernel-default",
+#   "-kernel-default-base",
+#   "ca-certificates-suse",
+#   "gdb",
+#   "systemd-coredump",
+#   "lz4"
+# ]
 
 # ssh keys to inject into all the nodes
 # EXAMPLE:
@@ -150,7 +151,13 @@ authorized_keys = [
 # key_pair = ""
 
 # IMPORTANT: Replace these ntp servers with ones from your infrastructure
-ntp_servers = ["TIME.google.com", "TIME1.google.com", "TIME2.google.com", "TIME3.google.com", "TIME4.google.com"]
+ntp_servers = [
+  "TIME.google.com",
+  "TIME1.google.com",
+  "TIME2.google.com",
+  "TIME3.google.com",
+  "TIME4.google.com"
+]
 
 # DNS servers for the nodes
 # dns_nameservers = [

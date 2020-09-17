@@ -140,7 +140,6 @@ resource "aws_iam_role" "worker" {
 EOF
 }
 
-
 resource "aws_iam_role_policy" "worker" {
   count = length(var.iam_profile_worker) == 0 ? 1 : 0
   name  = local.aws_iam_instance_profile_worker_terraform
