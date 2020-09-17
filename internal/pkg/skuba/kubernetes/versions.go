@@ -102,7 +102,7 @@ var (
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
 			AddonsVersion: AddonsVersion{
-				Cilium:        &AddonVersion{"1.7.6", 4500},
+				Cilium:        &AddonVersion{"1.7.6-rev3", 4500},
 				Kured:         &AddonVersion{"1.4.3", 4500},
 				Dex:           &AddonVersion{"2.23.0", 4500},
 				Gangway:       &AddonVersion{"3.1.0-rev5", 4500},
