@@ -23,9 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"github.com/pkg/errors"
 	clientset "k8s.io/client-go/kubernetes"
-	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubeadm"
@@ -34,7 +33,6 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/node"
 	upgradenode "github.com/SUSE/skuba/internal/pkg/skuba/upgrade/node"
 	"github.com/SUSE/skuba/pkg/skuba"
-	"github.com/pkg/errors"
 )
 
 func Apply(client clientset.Interface, target *deployments.Target) error {
@@ -131,11 +129,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			initCfg.UseHyperKubeImage = false
 		}
 
-		kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
-		initCfgContents, err = kubeadmconfigutil.MarshalInitConfigurationToBytes(initCfg, schema.GroupVersion{
-			Group:   "kubeadm.k8s.io",
-			Version: kubeadm.GetKubeadmApisVersion(nodeVersionInfoUpdate.Update.APIServerVersion),
-		})
+		initCfgContents, err = kubeadm.UpdateClusterConfigurationWithClusterVersion(initCfg, nodeVersionInfoUpdate.Update.APIServerVersion)
 		if err != nil {
 			return err
 		}
@@ -193,7 +187,6 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 	err = target.Apply(nil,
 		"kubelet.rootcert.upload",
-		"kubelet.servercert.create-and-upload",
 		"kubernetes.restart-services",
 		"kubernetes.enable-services",
 	)
