@@ -10,6 +10,10 @@
             default: 'master'
             description: The branch to checkout
         - string:
+            name: JENKINSFILE_BRANCH
+            default: 'master'
+            description: The branch to checkout the jenkinsfile from
+        - string:
               name: PLATFORM
               default: 'vmware'
               description: The platform to perform the tests on
@@ -48,7 +52,7 @@
                 credentials-id: '{repo-credentials}'
                 refspec: '+refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*'
                 branches:
-                    - '$BRANCH'
+                    - '$JENKINSFILE_BRANCH'
                 browser: auto
                 suppress-automatic-scm-triggering: true
         script-path: ci/jenkins/pipelines/skuba-e2e-test.Jenkinsfile

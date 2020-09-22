@@ -69,6 +69,15 @@ pipeline {
    }
 
    stages {
+        stage('Change git branch to target') {
+            steps{
+                checkout([$class: 'GitSCM',
+                branches: [[name: env.BRANCH]],
+                extensions: [[$class: 'WipeWorkspace']],
+                userRemoteConfigs: [[url: env.GIT_URL, refspec: "+refs/heads/*:refs/remotes/origin/* +refs/pull/*/head:refs/remotes/origin/pr/*"]]
+])
+            }
+        }
         stage('Getting Ready For Cluster Deployment') { steps {
             sh(script: "make -f ci/Makefile pre_deployment", label: 'Pre Deployment')
             sh(script: "make -f Makefile install", label: 'Build Skuba')
