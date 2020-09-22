@@ -63,6 +63,8 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		return nil
 	}
 
+	// Refreshing cache info about target OS
+	target.IsSUSEOS()
 	// Check if the node is upgradeable (matches preconditions)
 	if err := nodeVersionInfoUpdate.NodeUpgradeableCheck(client, currentClusterVersion); err != nil {
 		fmt.Println()
