@@ -40,6 +40,7 @@ import (
 func init() {
 	stateMap["kubelet.rootcert.upload"] = kubeletUploadRootCert
 	stateMap["kubelet.servercert.create-and-upload"] = kubeletCreateAndUploadServerCert
+	stateMap["kubelet.update.config"] = kubeletUpdateConfig
 	stateMap["kubelet.configure"] = kubeletConfigure
 	stateMap["kubelet.enable"] = kubeletEnable
 }
@@ -137,6 +138,22 @@ func kubeletCreateAndUploadServerCert(t *Target, data interface{}) error {
 	}
 
 	return nil
+}
+
+func kubeletUpdateConfig(t *Target, data interface{}) error {
+	// If the cluster is deployed prior to Kubernetes version 1.17,
+	// the kubelet client cert and key is embedded in /etc/kubernetes/kubelet.conf with base64 encoded.
+	// however, it should points to the /var/lib/kubelet/pki/kubelet-client-current.pem for kubelet client cert rotation automatically.
+	// and, the kubeadm did not take care to update the kubelet.conf during kubeadm upgrade.
+	//
+	// Therefore, we let skuba to help on this to update the /etc/kubernetes/kubelet.conf from base64-encoded data to
+	// point to the file /var/lib/kubelet/pki/kubelet-client-current.pem
+	_, _, err := t.ssh("sed", "-i", "\"s|client-certificate-data: .*|client-certificate: /var/lib/kubelet/pki/kubelet-client-current.pem|\"", "/etc/kubernetes/kubelet.conf")
+	if err != nil {
+		return err
+	}
+	_, _, err = t.ssh("sed", "-i", "\"s|client-key-data: .*|client-key: /var/lib/kubelet/pki/kubelet-client-current.pem|\"", "/etc/kubernetes/kubelet.conf")
+	return err
 }
 
 func kubeletConfigure(t *Target, data interface{}) error {
