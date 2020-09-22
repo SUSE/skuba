@@ -45,7 +45,8 @@ def deploy(options):
     skuba.cluster_deploy(
         kubernetes_version=options.kubernetes_version,
         cloud_provider=options.cloud_provider,
-        timeout=options.timeout)
+        timeout=options.timeout,
+        registry_mirror=options.registry_mirror)
 
 
 def bootstrap(options):
@@ -53,7 +54,8 @@ def bootstrap(options):
     skuba.cluster_bootstrap(
         kubernetes_version=options.kubernetes_version,
         cloud_provider=options.cloud_provider,
-        timeout=options.timeout)
+        timeout=options.timeout,
+        registry_mirror=options.registry_mirror)
 
 
 def cluster_status(options):
@@ -171,6 +173,16 @@ def main():
                                help="Use cloud provider integration")
     bootstrap_args.add_argument("-t", "--timeout", type=int, default=300,
                                 help="timeout for waiting a node to become ready (seconds)")
+    bootstrap_args.add_argument("-m", "--registry-mirror", metavar=('R', 'M'),
+                                help="Add to the registry R a mirror M."
+                                     " If an image is available at the mirror"
+                                     " it will be preferred, otherwise the"
+                                     " image in the original registry is used."
+                                     " This argument can be used multiple"
+                                     " times, then mirrors will be tried in"
+                                     " that order."
+                                     " Example: --registry-mirror registry.example.com/path test-registry.example.com/path",
+                                nargs=2, action='append')
 
     cmd_bootstrap = commands.add_parser("bootstrap", parents=[bootstrap_args],
                         help="bootstrap k8s cluster")
