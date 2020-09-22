@@ -64,7 +64,14 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	}
 
 	// Refreshing cache info about target OS
-	target.IsSUSEOS()
+	isSUSE, err := target.IsSUSEOS()
+	if err != nil {
+		return err
+	}
+	// Check if target node OS is valid
+	if !isSUSE {
+		return fmt.Errorf("Invalid target node OS: %s", nodeVersionInfoUpdate.Current.Node.Status.NodeInfo.OSImage)
+	}
 	// Check if the node is upgradeable (matches preconditions)
 	if err := nodeVersionInfoUpdate.NodeUpgradeableCheck(client, currentClusterVersion); err != nil {
 		fmt.Println()
