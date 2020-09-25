@@ -111,6 +111,10 @@ func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interfac
 	if err != nil {
 		return err
 	}
+	//Check if node OS SP compatible with kubernetes.latestVersion
+	if strings.Contains(nviu.Current.Node.Status.NodeInfo.OSImage, "SUSE Linux Enterprise Server 15 SP1") {
+		errorMessages = append(errorMessages, fmt.Sprintf("You are still running 15 SP1 on your node. Please upgrade to kubernetes version %s on SP1 first, and migrate to SP2 before triggering this upgrade.", skubaconstants.LastCaaSP4KubernetesVersion))
+	}
 	if isFirstControlPlaneNodeToBeUpgraded {
 		// First check if all schedulable workers will tolerate the version we are upgrading to. If they don't, they need to be upgraded first.
 		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(client, nviu.Update.APIServerVersion)
