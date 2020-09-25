@@ -44,5 +44,5 @@
                     - '$BRANCH'
                 browser: auto
                 suppress-automatic-scm-triggering: true
-        script-path: ci/jenkins/pipelines/skuba-trigger-upgrade-from-4.2.Jenkinsfile
+        script-path: ci/jenkins/pipelines/skuba-upgrade-from-4.2.Jenkinsfile
 
