@@ -112,8 +112,14 @@ class Terraform(Platform):
 
         role_key = "ip_" + role + "s"
         if self.state["version"] == 3:
+            # check if output actually contains the role's values
+            if not self.state["modules"][0]["outputs"][role_key]:
+                return []
             return list(self.state["modules"][0]["outputs"][role_key]["value"].values())
         elif self.state["version"] == 4:
+            # check if output actually contains the role's values
+            if not self.state["outputs"][role_key]:
+                return []
             return list(self.state["outputs"][role_key]["value"].values())
 
     @step
