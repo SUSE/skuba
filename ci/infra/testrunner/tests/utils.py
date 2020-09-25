@@ -6,6 +6,9 @@ PREVIOUS_VERSION = "1.17.4"
 CURRENT_VERSION = "1.18.6"
 
 
+def check_node_is_ready(platform, kubectl, role, nr):
+    assert node_is_ready(platform, kubectl, role, nr)
+
 def check_nodes_ready(kubectl):
     # Retrieve the node name and the Ready condition (True, or False)
     cmd = ("get nodes -o jsonpath='{ range .items[*]}{@.metadata.name}{\":\"}"
@@ -51,6 +54,12 @@ def node_is_upgraded(kubectl, platform, role, nr):
 
     cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
     return kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
+
+
+def check_node_version(platform, kubectl, role, node, version):
+    node_name = platform.get_nodes_names(role)[node]
+    cmd = "get nodes {} -o jsonpath='{{.status.nodeInfo.kubeletVersion}}'".format(node_name)
+    assert kubectl.run_kubectl(cmd).find(CURRENT_VERSION) != -1
 
 
 def check_pods_ready(kubectl, namespace=None, node=None, pods=[], statuses=['Running', 'Succeeded']):

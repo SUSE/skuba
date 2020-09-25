@@ -60,6 +60,7 @@
 
 - project:
     name: caasp-jobs/e2e/v4.5
+    branch: master
     repo-name: skuba
     repo-owner: SUSE
     repo-credentials: github-token
@@ -81,6 +82,8 @@
     jobs:
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
+        - '{name}/{platform}/trigger-upgrade-from-4-2-daily'
+        - '{name}/{platform}/upgrade-from-4-2-daily'
 
 - project:
     name: caasp-jobs/dev

@@ -3,15 +3,11 @@ import time
 
 import pytest
 
-from tests.utils import (check_pods_ready, node_is_ready, wait)
+from tests.utils import (check_pods_ready, check_node_is_ready, wait)
 
 from timeout_decorator import timeout
 
 logger = logging.getLogger("testrunner")
-
-
-def check_node_is_ready(platform, kubectl, role, nr):
-    assert node_is_ready(platform, kubectl, role, nr)
 
 
 @pytest.mark.pr
