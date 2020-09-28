@@ -3,7 +3,7 @@ def worker_host
 def keep_worker = false
 
 pipeline {
-    agent { node {label 'caasp-team-private-experimental && openstack' }}
+    agent { node {label 'caasp-team-private-integration && e2e' }}
 
     environment {
         OPENRC = credentials('ecp-openrc')
