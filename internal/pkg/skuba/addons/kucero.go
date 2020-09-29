@@ -231,8 +231,6 @@ spec:
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
-      nodeSelector:
-        node-role.kubernetes.io/master: ""
       hostPID: true
       restartPolicy: Always
       containers:
@@ -253,29 +251,21 @@ spec:
             - --ca-cert-path=/var/lib/kubelet/pki/kubelet-ca.crt
             - --ca-key-path=/var/lib/kubelet/pki/kubelet-ca.key
           volumeMounts:
+            - mountPath: /etc/kubernetes/kubelet.conf
+              name: kubelet-conf
             - mountPath: /var/lib/kubelet/pki/kubelet-ca.crt
               name: ca-crt
               readOnly: true
             - mountPath: /var/lib/kubelet/pki/kubelet-ca.key
               name: ca-key
               readOnly: true
-          livenessProbe:
-            httpGet:
-              path: /metrics
-              port: 8080
-            # The initial delay for the liveness probe is intentionally large to
-            # avoid an endless kill & restart cycle if in the event that the initial
-            # bootstrapping takes longer than expected.
-            initialDelaySeconds: 120
-            failureThreshold: 10
-            periodSeconds: 60
-          readinessProbe:
-            httpGet:
-              path: /metrics
-              port: 8080
-            initialDelaySeconds: 5
-            periodSeconds: 60
+            - mountPath: /var/lib/kubelet/config.yaml
+              name: kubelet-config-yaml
       volumes:
+        - name: kubelet-conf
+          hostPath:
+            path: /etc/kubernetes/kubelet.conf
+            type: File
         - name: ca-crt
           hostPath:
             path: /var/lib/kubelet/pki/kubelet-ca.crt
@@ -283,6 +273,10 @@ spec:
         - name: ca-key
           hostPath:
             path: /var/lib/kubelet/pki/kubelet-ca.key
+            type: FileOrCreate
+        - name: kubelet-config-yaml
+          hostPath:
+            path: /var/lib/kubelet/config.yaml
             type: File
 `
 )
