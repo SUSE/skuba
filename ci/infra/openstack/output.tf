@@ -10,7 +10,7 @@ output "ip_masters" {
 output "ip_workers" {
   value = zipmap(
     concat(
-      openstack_compute_instance_v2.worker.*.name, [ for i in range(length(openstack_compute_instance_v2.master), var.workers) : format("worker-%d (not provisioned)", i ) ]),
+      openstack_compute_instance_v2.worker.*.name, [ for i in range(length(openstack_compute_instance_v2.worker), var.workers) : format("worker-%d (not provisioned)", i ) ]),
     concat(
       openstack_networking_floatingip_v2.worker_ext.*.address,  [ for _ in range(length(openstack_networking_floatingip_v2.worker_ext.*.address), var.workers) : "" ])
   )
