@@ -25,6 +25,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
 	kubeadmconfigutil "k8s.io/kubernetes/cmd/kubeadm/app/util/config"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -104,7 +105,9 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
+		klog.Warningln("====== Error getting Kured Lock starting retry sequence ======")
 		for i := 0; i < 5; i++ {
+			klog.Warningf("Retry#%d: in 30s\n", i+1)
 			if err == nil {
 				break
 			}
@@ -112,6 +115,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 			kuredWasLocked, err = kured.LockExists(client)
 		}
 		if err != nil {
+			klog.Warningf("Getting Kured Lock retries failed")
 			return err
 		}
 	}
