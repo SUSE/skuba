@@ -11,3 +11,5 @@ pipeline {
         }
     }
 }
+
+// vim: et:ai:filetype=groovy
