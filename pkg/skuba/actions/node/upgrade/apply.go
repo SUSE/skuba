@@ -104,7 +104,16 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
-		return err
+		for i := 0; i < 5; i++ {
+			if err == nil {
+				break
+			}
+			time.Sleep(30 * time.Second)
+			kuredWasLocked, err = kured.LockExists(client)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	// Lock kured before upgrade
