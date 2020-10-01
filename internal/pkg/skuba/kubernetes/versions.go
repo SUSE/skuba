@@ -103,12 +103,12 @@ var (
 			},
 			AddonsVersion: AddonsVersion{
 				Cilium:        &AddonVersion{"1.7.6-rev3", 4501},
-				Kured:         &AddonVersion{"1.4.3", 4501},
-				Dex:           &AddonVersion{"2.23.0", 4501},
-				Gangway:       &AddonVersion{"3.1.0-rev5", 4501},
-				MetricsServer: &AddonVersion{"0.3.6", 4501},
+				Kured:         &AddonVersion{"1.4.3", 4500},
+				Dex:           &AddonVersion{"2.23.0", 4500},
+				Gangway:       &AddonVersion{"3.1.0-rev5", 4500},
+				MetricsServer: &AddonVersion{"0.3.6", 4500},
 				Kucero:        &AddonVersion{"1.3.0", 4501},
-				PSP:           &AddonVersion{"", 4501},
+				PSP:           &AddonVersion{"", 4500},
 			},
 		},
 		"1.17.4": KubernetesVersion{
