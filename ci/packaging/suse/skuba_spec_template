@@ -29,7 +29,6 @@ Group:          System/Management
 URL:            https://github.com/SUSE/skuba
 Source0:        %{name}.tar.gz
 Source1:        vendor.tar.gz
-Patch0:         0001-Patch-out-load-balancer.patch
 BuildRequires:  git
 BuildRequires:  go-go-md2man
 BuildRequires:  golang-packaging
@@ -71,7 +70,6 @@ including patches requiring reboot.
 %prep
 %setup -q -n %{name}
 %setup -D -a 1 -n %{name}
-%patch0 -p1
 
 %build
 # TAG and CLOSEST_TAG envvars are populated so the Makefile will read this information
@@ -110,6 +108,10 @@ popd
 install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/openstack
 install -d -m 0755 ci/infra/openstack/cloud-init %{buildroot}/%{_datadir}/caasp/terraform/openstack/cloud-init
 for file in ci/infra/openstack/*.*; do
+  # CI file has specific CI settings
+  if [[ $file =~ terraform.tfvars.json.ci.example$ ]];then
+    continue
+  fi
   install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/openstack/
 done
 for file in ci/infra/openstack/cloud-init/*.*; do
@@ -120,6 +122,10 @@ done
 install -d -m 0755 %{buildroot}/%{_datadir}/caasp/terraform/vmware
 install -d -m 0755 ci/infra/vmware/cloud-init %{buildroot}/%{_datadir}/caasp/terraform/vmware/cloud-init
 for file in ci/infra/vmware/*.*; do
+  # CI file has specific CI settings
+  if [[ $file =~ terraform.tfvars.json.ci.example$ ]];then
+    continue
+  fi
     # Load balancer is not supported by us, so the code will be stripped.
     if [[ $file =~ lb-instance.tf$ ]]; then
         continue
@@ -133,6 +139,8 @@ for file in ci/infra/vmware/cloud-init/*.*; do
     fi
     install -p -m 0644 $file %{buildroot}/%{_datadir}/caasp/terraform/vmware/cloud-init
 done
+# Remove specific Load Balancer code which is not supported
+sed '/^#[[:space:]]*LOAD_BALANCER/,/^#[[:space:]]*END_LOAD_BALANCER/d' -i %{buildroot}/%{_datadir}/caasp/terraform/vmware/output.tf
 
 # Copy bare-metal files
 install -d -m 0755 %{buildroot}/%{_datadir}/caasp/autoyast/bare-metal
