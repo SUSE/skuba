@@ -105,7 +105,7 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 	// Check if a lock on kured already exists
 	kuredWasLocked, err := kured.LockExists(client)
 	if err != nil {
-		klog.Warningln("====== Error getting Kured Lock starting retry sequence ======")
+		klog.Warningln("=== Error getting Kured Lock starting retry sequence ===")
 		for i := 0; i < 5; i++ {
 			klog.Warningf("Retry#%d: in 30s\n", i+1)
 			if err == nil {
