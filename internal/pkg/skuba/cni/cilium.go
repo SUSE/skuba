@@ -126,6 +126,7 @@ func CreateCiliumSecret(client clientset.Interface, ciliumVersion string) error 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ciliumSecretName,
 			Namespace: metav1.NamespaceSystem,
+			Labels:    map[string]string{"caasp.suse.com/skuba-addon": "true"},
 		},
 		Data: secretData,
 	}
