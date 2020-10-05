@@ -1,6 +1,7 @@
 module github.com/SUSE/skuba
 
 require (
+	github.com/blang/semver v3.5.0+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/pmezard/go-difflib v1.0.0
@@ -43,3 +44,5 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.17.5
 	vbom.ml/util => github.com/fvbommel/util v0.0.0-20160121211510-db5cfe13f5cc
 )
+
+go 1.13
