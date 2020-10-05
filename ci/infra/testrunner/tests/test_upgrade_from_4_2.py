@@ -37,8 +37,8 @@ def test_upgrade_from_4_2(deployment, platform, skuba, kubectl):
     reg_code = os.environ['REG_CODE']
     assert reg_code is not None
 
-    result = kubectl.run_kubectl("get pods -n kube-system -o wide")
-    #result = platform.ssh_run("master", 0, f'kubectl exec -ti -n kube-system etcd-master01 -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list')
+    etcds = kubectl.run_kubectl('kubectl get pods -nkube-system --no-headers -o custom-columns=":metadata.name" | grep etcd')
+    result = platform.ssh_run("master", 0, f'kubectl exec -ti -n kube-system {etcds[0]} -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key member list')
     logger.warning(result)
 
     for role in ("master", "worker"):
