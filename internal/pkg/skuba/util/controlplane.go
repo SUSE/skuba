@@ -34,6 +34,20 @@ func ControlPlaneHost(cp string) string {
 	return controlPlane
 }
 
+// ControlPlanePort parses a control plane address of the form "host:port", "ipv4:port", "[ipv6]:port" into port;
+// ":port" can be eventually omitted.
+// If the port is empty, a default control plane port 6443 returns.
+func ControlPlanePort(cp string) string {
+	_, controlPlanePort, err := kubeadmutil.ParseHostPort(cp)
+	if err != nil {
+		return ""
+	}
+	if controlPlanePort == "" {
+		controlPlanePort = "6443"
+	}
+	return controlPlanePort
+}
+
 // ControlPlaneHostAndPort parses a control plane address of the form "host:port", "ipv4:port", "[ipv6]:port" into host and port;
 // ":port" can be eventually omitted.
 // If the port is empty, a default control plane port 6443 added.
