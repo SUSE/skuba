@@ -277,7 +277,11 @@ spec:
               key: custom-cni-conf
               name: cilium-config
               optional: true
-        image: {{.CiliumImage}}
+        - name: KUBERNETES_SERVICE_HOST
+          value: {{.ControlPlaneHost}}
+        - name: KUBERNETES_SERVICE_PORT
+          value: "{{.ControlPlanePort}}"
+        image: "{{.CiliumImage}}"
         imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:

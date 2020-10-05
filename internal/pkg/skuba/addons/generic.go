@@ -42,6 +42,10 @@ func (renderContext renderContext) ControlPlaneHost() string {
 	return util.ControlPlaneHost(renderContext.config.ControlPlane)
 }
 
+func (renderContext renderContext) ControlPlanePort() string {
+	return util.ControlPlanePort(renderContext.config.ControlPlane)
+}
+
 func (renderContext renderContext) ControlPlaneHostAndPort() string {
 	return util.ControlPlaneHostAndPort(renderContext.config.ControlPlane)
 }
