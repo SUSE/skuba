@@ -170,7 +170,7 @@ class Skuba:
 
 
     @step
-    def node_upgrade(self, action, role, nr, ignore_errors=False):
+    def node_upgrade(self, action, role, nr, ignore_errors=False, timeout=300):
         self._verify_bootstrap_dependency()
 
         if role not in ("master", "worker"):
@@ -180,8 +180,8 @@ class Skuba:
             raise ValueError("Error: there is no {}-{} \
                               node in the cluster".format(role, nr))
 
+        node_names = self.platform.get_nodes_names(role)
         if action == "plan":
-            node_names = self.platform.get_nodes_names(role)
             cmd = f'node upgrade plan {node_names[nr]}'
         elif action == "apply":
             ip_addrs = self.platform.get_nodes_ipaddrs(role)
@@ -190,7 +190,14 @@ class Skuba:
         else:
             raise ValueError("Invalid action '{}'".format(action))
 
-        return self._run_skuba(cmd, ignore_errors=ignore_errors)
+        result=None
+        try:
+            result = self._run_skuba(cmd, ignore_errors=ignore_errors)
+            self.checker.check_node(role, nr, stage="joined", timeout=timeout)
+            return result
+        except Exception as ex:
+            raise Exception(f'Error upgrading node {node_names[nr]}') from ex
+
 
     @step
     def cluster_upgrade(self, action):

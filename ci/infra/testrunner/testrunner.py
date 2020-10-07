@@ -96,7 +96,8 @@ def remove_node(options):
 
 def node_upgrade(options):
     Skuba(options.conf, options.platform).node_upgrade(
-        action=options.upgrade_action, role=options.role, nr=options.node)
+        action=options.upgrade_action, role=options.role,
+        nr=options.node, timeout=options.timeout)
 
 
 def node_check(options):
@@ -234,6 +235,8 @@ def main():
                                            help="upgrade kubernetes version in node")
     cmd_node_upgrade.add_argument("-a", "--action", dest="upgrade_action",
                                   help="action: plan or apply upgrade", choices=["plan", "apply"])
+    cmd_node_upgrade.add_argument("-t", "--timeout", type=int, default=180,
+                                help="timeout for waiting the nodes to become ready after upgrade (seconds)")
     cmd_node_upgrade.set_defaults(func=node_upgrade)
 
     cmd_check_node = commands.add_parser(
