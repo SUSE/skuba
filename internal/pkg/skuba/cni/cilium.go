@@ -219,13 +219,14 @@ func CreateOrUpdateCiliumConfigMap(client clientset.Interface, ciliumVersion str
 		fallthrough
 	case strings.HasPrefix(ciliumVersion, "1.7"):
 		ciliumConfigMapData = map[string]string{
-			"bpf-ct-global-tcp-max":    "524288",
-			"bpf-ct-global-any-max":    "262144",
-			"debug":                    "false",
-			"enable-ipv4":              "true",
-			"enable-ipv6":              "false",
-			"identity-allocation-mode": "crd",
-			"preallocate-bpf-maps":     "false",
+			"bpf-ct-global-tcp-max":     "524288",
+			"bpf-ct-global-any-max":     "262144",
+			"debug":                     "false",
+			"enable-ipv4":               "true",
+			"enable-ipv6":               "false",
+			"identity-allocation-mode":  "crd",
+			"preallocate-bpf-maps":      "false",
+			"sidecar-istio-proxy-image": "istio-proxy",
 		}
 
 		needsEtcdConfig, err := NeedsEtcdToCrdMigration(client, ciliumVersion)
