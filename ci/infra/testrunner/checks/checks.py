@@ -150,7 +150,7 @@ def check_apiserver_healthz(conf, platform, role, node):
     return output.find("ok") > -1
 
 
-@check(description="etcd health check", scope="node", roles=['master'])
+@check(description="etcd health check", scope="node", roles=['master'], stages=["joined"])
 def check_etcd_health(conf, platform, role, node):
     platform = platforms.get_platform(conf, platform)
     cmd = ('sudo curl -Ls --cacert /etc/kubernetes/pki/etcd/ca.crt '
