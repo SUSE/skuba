@@ -38,7 +38,7 @@ def test_upgrade_from_4_2(deployment, platform, skuba, kubectl):
         num_nodes = platform.get_num_nodes(role)
         for node in range(0, num_nodes):
             migrate_node(platform, kubectl, role, node, reg_code)
-            result = skuba.node_upgrade("apply", role, node)
+            result = skuba.node_upgrade("apply", role, node, timeout=300)
             assert result.find("successfully upgraded") != -1
 
             # check node version is update
