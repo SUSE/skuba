@@ -31,7 +31,11 @@ import (
 )
 
 func init() {
-	registerAddon(kubernetes.Cilium, renderCiliumTemplate, renderCiliumPreflightTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumOperatorImage, GetCiliumImage})
+	registerAddon(kubernetes.Cilium, renderCiliumTemplate, renderCiliumPreflightTemplate, ciliumCallbacks{}, normalPriority, []getImageCallback{GetCiliumInitImage, GetCiliumOperatorImage, GetCiliumImage})
+}
+
+func GetCiliumInitImage(imageTag string) string {
+	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium-init", imageTag)
 }
 
 func GetCiliumOperatorImage(imageTag string) string {
@@ -40,6 +44,10 @@ func GetCiliumOperatorImage(imageTag string) string {
 
 func GetCiliumImage(imageTag string) string {
 	return images.GetGenericImage(skubaconstants.ImageRepository, "cilium", imageTag)
+}
+
+func (renderContext renderContext) CiliumInitImage() string {
+	return GetCiliumInitImage(kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, renderContext.config.ClusterVersion).Version)
 }
 
 func (renderContext renderContext) CiliumOperatorImage() string {
