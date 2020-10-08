@@ -4,7 +4,7 @@ import pytest
 from tests.utils import (check_node_is_ready, check_node_version, CURRENT_VERSION, wait)
 
 # Migrates a node to the upgrate option speficied in the option
-def migrate_node(platform, kubectl, role, node, regcode, option=1):
+def migrate_node(platform, checker, kubectl, role, node, regcode, option=1):
     platform.ssh_run(role, node, f'sudo SUSEConnect -r {regcode}')
     platform.ssh_run(role, node, "sudo SUSEConnect -p sle-module-containers/15.1/x86_64")
     platform.ssh_run(role, node, f'sudo SUSEConnect -p caasp/4.0/x86_64 -r {regcode}')
@@ -26,7 +26,9 @@ def migrate_node(platform, kubectl, role, node, regcode, option=1):
         wait_elapsed=180,
         wait_allow=(RuntimeError))
 
-def test_upgrade_from_4_2(deployment, platform, skuba, kubectl):
+    checker.check_node(role, node, stage="joined", timeout=60)
+
+def test_upgrade_from_4_2(deployment, platform, checker, skuba, kubectl):
 
     skuba.cluster_upgrade(action="localconfig")
 
@@ -37,7 +39,7 @@ def test_upgrade_from_4_2(deployment, platform, skuba, kubectl):
     for role in ("master", "worker"):
         num_nodes = platform.get_num_nodes(role)
         for node in range(0, num_nodes):
-            migrate_node(platform, kubectl, role, node, reg_code)
+            migrate_node(platform, checker, kubectl, role, node, reg_code)
             result = skuba.node_upgrade("apply", role, node, timeout=300)
             assert result.find("successfully upgraded") != -1
 

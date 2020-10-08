@@ -1,6 +1,7 @@
 import pytest
 
 import platforms
+from checks import Checker
 from kubectl import Kubectl
 from skuba import Skuba
 from utils import BaseConfig
@@ -91,6 +92,10 @@ def platform(conf, target):
     platform = platforms.get_platform(conf, target)
     return platform
 
+@pytest.fixture
+def checker(conf, target):
+    checker = Checker(conf, target)
+    return checker
 
 @pytest.fixture
 def setup(request, platform, skuba):
