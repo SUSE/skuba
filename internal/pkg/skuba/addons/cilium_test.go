@@ -29,6 +29,38 @@ import (
 	img "github.com/SUSE/skuba/pkg/skuba"
 )
 
+func TestGetCiliumInitImage(t *testing.T) {
+	tests := []struct {
+		name     string
+		imageTag string
+		want     string
+	}{
+		{
+			name:     "get cilium init image without revision",
+			imageTag: "1.7.6",
+			want:     "cilium-init:1.7.6",
+		},
+		{
+			name:     "get cilium init image with revision",
+			imageTag: "1.7.6-rev2",
+			want:     "cilium-init:1.7.6-rev2",
+		},
+	}
+
+	for _, ver := range kubernetes.AvailableVersions() {
+		for _, tt := range tests {
+			tt := tt // Parallel testing
+			t.Run(tt.name, func(t *testing.T) {
+				imageUri := fmt.Sprintf("%s/%s", img.ImageRepository(ver), tt.want)
+
+				if got := GetCiliumInitImage(ver, tt.imageTag); got != imageUri {
+					t.Errorf("GetCiliumInitImage() = %v, want %v", got, tt.want)
+				}
+			})
+		}
+	}
+}
+
 func TestGetCiliumOperatorImage(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -90,6 +122,39 @@ func TestGetCiliumImage(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func Test_renderContext_CiliumInitImage(t *testing.T) {
+	type test struct {
+		name          string
+		renderContext renderContext
+		want          string
+	}
+	for _, ver := range kubernetes.AvailableVersions() {
+		tt := test{
+			name: "render Cilium Init Image URL when cluster version is " + ver.String(),
+			renderContext: renderContext{
+				config: AddonConfiguration{
+					ClusterVersion: ver,
+					ControlPlane:   "",
+					ClusterName:    "",
+				},
+			},
+			want: img.ImageRepository(ver) + "/cilium-init:([[:digit:]]{1,}.){2}[[:digit:]]{1,}(-rev[:digit:]{1,})?",
+		}
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.renderContext.CiliumInitImage()
+			matched, err := regexp.Match(tt.want, []byte(got))
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			if !matched {
+				t.Errorf("renderContext.CiliumInitImage() = %v, want %v", got, tt.want)
+				return
+			}
+		})
 	}
 }
 
