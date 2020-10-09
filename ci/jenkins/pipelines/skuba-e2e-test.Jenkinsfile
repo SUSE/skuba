@@ -12,6 +12,10 @@ def branch_registry = ""
 // original (non-branched) registry, only needed when branch_registry is in use
 def original_registry = ""
 
+// CaaSP Version for repo and registry branch
+def repo_version = "4.5"
+def repo_sle_version = "SLE_15_SP2" 
+
 // worker selection labels 
 def labels = 'e2e'
 
@@ -47,9 +51,13 @@ node('caasp-team-private-integration') {
         }
 
         if (env.REPO_BRANCH){
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/4.5:/Branches:/${env.REPO_BRANCH}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/4.5/branches/${env.REPO_BRANCH}/containers"
-               original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
+               if (env.BRANCH.startsWith('maintenance')){
+                    repo_version = "4.0"
+                    repo_sle_version = "SLE_15_SP1"
+               }
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${env.REPO_BRANCH}/${repo_sle_version}"
+               branch_registry = "registry.suse.de/devel/caasp/${repo_version}/branches/${env.REPO_BRANCH}/containers"
+               original_registry = "registry.suse.de/devel/caasp/${repo_version}/containers/containers"
          }
     }
 }

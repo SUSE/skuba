@@ -19,6 +19,7 @@ def original_registry = ""
 
 // CaaSP Version for repo and registry branch
 def repo_version = "4.5"
+def repo_sle_version = "SLE_15_SP2" 
 
 // type of worker required by the PR
 def worker_type = 'integration'
@@ -89,10 +90,14 @@ node('caasp-team-private-integration') {
            }
            if (pr_repo_label != null) {
                def branch_name = pr_repo_label.name.split(":")[1]
-               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/SLE_15_SP2"
-               branch_registry = "registry.suse.de/devel/caasp/4.5/branches/${branch_name}/containers"
-               original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
-           }
+               if (env.CHANGE_TARGET.startsWith('maintenance')){
+                    repo_version = "4.0"
+                    repo_sle_version = "SLE_15_SP1"
+               }
+               branch_repo = "http://download.suse.de/ibs/Devel:/CaaSP:/${repo_version}:/Branches:/${branch_name}/${repo_sle_version}"
+               branch_registry = "registry.suse.de/devel/caasp/${repo_version}/branches/${branch_name}/containers"
+               original_registry = "registry.suse.de/devel/caasp/${repo_version}/containers/containers"
+          }
 
         } catch (Exception e) {
             echo "Error retrieving labels for PR ${e.getMessage()}"
