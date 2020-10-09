@@ -17,6 +17,10 @@ def branch_registry = ""
 // original (non-branched) registry, only needed when branch_registry is in use
 def original_registry = ""
 
+
+// kubernetes version to deploy. A blank value uses the default version for the skuba
+def kubernetes_version = ""
+
 // CaaSP Version for repo and registry branch
 def repo_version = "4.5"
 
@@ -94,6 +98,14 @@ node('caasp-team-private-integration') {
                original_registry = "registry.suse.de/devel/caasp/4.5/containers/containers"
            }
 
+           //check if the PR requires an specific kubernetes version 
+           def pr_kubernetes_label = pr.labels.find {
+               it.name.startsWith("ci-kubernetes:")
+           }
+           if (pr_kubernetes_label != null) {
+               kubernetes_version = pr_kubernetes_label.name.split(":")[1]
+           }
+
         } catch (Exception e) {
             echo "Error retrieving labels for PR ${e.getMessage()}"
             currentBuild.result = 'ABORTED'
@@ -119,6 +131,7 @@ pipeline {
         BRANCH_REPO = "${branch_repo}"
         BRANCH_REGISTRY = "${branch_registry}"
         ORIGINAL_REGISTRY = "${original_registry}"
+        KUBERNETES_VERSION = "${kubernetes_version}"
    }
 
     stages {
