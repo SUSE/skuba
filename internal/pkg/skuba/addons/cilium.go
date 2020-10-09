@@ -69,8 +69,6 @@ func (renderContext renderContext) CiliumImage() string {
 func renderCiliumTemplate(addonConfiguration AddonConfiguration) string {
 	ciliumVersion := kubernetes.AddonVersionForClusterVersion(kubernetes.Cilium, addonConfiguration.ClusterVersion).Version
 	switch {
-	case strings.HasPrefix(ciliumVersion, "1.5"):
-		return cilium_manifests.Manifestv15
 	case strings.HasPrefix(ciliumVersion, "1.6"):
 		return cilium_manifests.Manifestv16
 	case strings.HasPrefix(ciliumVersion, "1.7"):
