@@ -30,6 +30,7 @@ import (
 	"github.com/SUSE/skuba/internal/pkg/skuba/cni"
 	"github.com/SUSE/skuba/internal/pkg/skuba/kubernetes"
 	"github.com/SUSE/skuba/internal/pkg/skuba/skuba"
+	"github.com/SUSE/skuba/internal/pkg/skuba/util"
 	skubaconstants "github.com/SUSE/skuba/pkg/skuba"
 )
 
@@ -38,6 +39,10 @@ func init() {
 }
 
 func GetCiliumInitImage(clusterVersion *version.Version, imageTag string) string {
+	// A separate cilium-init image exists only for Cilium < 1.6.
+	if util.VersionCompare(imageTag, ">=1.6.0") {
+		return ""
+	}
 	return images.GetGenericImage(skubaconstants.ImageRepository(clusterVersion), "cilium-init", imageTag)
 }
 

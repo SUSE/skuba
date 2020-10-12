@@ -94,6 +94,12 @@ func TestVersionCompare(t *testing.T) {
 			constraint: "<=1.5.0",
 			exp:        false,
 		},
+		{
+			name:       "greater, with rev",
+			version:    "1.6.6-rev5",
+			constraint: ">1.6.0",
+			exp:        true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

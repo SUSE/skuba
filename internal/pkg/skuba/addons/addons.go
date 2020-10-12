@@ -483,7 +483,10 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 func (addon Addon) Images(clusterVersion *version.Version, imageTag string) []string {
 	images := []string{}
 	for _, cb := range addon.getImageCallbacks {
-		images = append(images, cb(clusterVersion, imageTag))
+		image := cb(clusterVersion, imageTag)
+		if image != "" {
+			images = append(images, image)
+		}
 	}
 	return images
 }
