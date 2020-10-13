@@ -58,7 +58,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 	if clusterTooOld < 0 {
-		err := fmt.Errorf("[join] failed to join the node as the cluster is not yet ready for SP2 nodes")
+		err := fmt.Errorf("[join] failed to join the node as the cluster is not yet ready for SLES 15 SP2 nodes (version too old)")
 		return err
 	}
 
@@ -67,7 +67,7 @@ func Join(client clientset.Interface, joinConfiguration deployments.JoinConfigur
 		return err
 	}
 	if strings.Contains(target.Cache.OsRelease["VERSION_ID"], "15.1") {
-		err := fmt.Errorf("[join] SP1 nodes cannot join a SP2 cluster")
+		err := fmt.Errorf("[join] SLES 15 SP1 nodes cannot join a CaaSP 4.5 (for SLES 15 SP2) cluster")
 		return err
 	}
 

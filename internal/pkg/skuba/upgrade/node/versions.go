@@ -98,14 +98,14 @@ func (nviu NodeVersionInfoUpdate) IsFirstControlPlaneNodeToBeUpgraded(client cli
 func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interface, currentClusterVersion *version.Version) error {
 	errorMessages := []string{}
 	if strings.HasPrefix(nviu.Update.KubeletVersion.String(), skubaconstants.LastCaaSP4KubernetesVersion) {
-		errorMessages = append(errorMessages, fmt.Sprintf("Cannot use this version of skuba to upgrade to kubernetes version %s. Please use a skuba version below 2.0.0 instead.", skubaconstants.LastCaaSP4KubernetesVersion))
+		errorMessages = append(errorMessages, fmt.Sprintf("Cannot use this version of skuba to upgrade to kubernetes version %s. Please use a skuba from CaaSP 4 on SLES 15 SP1 instead (version below 2.0.0).", skubaconstants.LastCaaSP4KubernetesVersion))
 	}
 	isKubeletTooOld, err := nviu.Update.KubeletVersion.Compare("1.17.0")
 	if err != nil {
 		return err
 	}
 	if isKubeletTooOld < 0 {
-		errorMessages = append(errorMessages, fmt.Sprintf("Make sure your node is at least to version %s before upgrading", skubaconstants.LastCaaSP4KubernetesVersion))
+		errorMessages = append(errorMessages, fmt.Sprintf("Make sure your node is at least at version %s before trying an upgrade with this version of skuba for CaaSP 4.5 on SLES 15 SP2", skubaconstants.LastCaaSP4KubernetesVersion))
 	}
 	isFirstControlPlaneNodeToBeUpgraded, err := nviu.IsFirstControlPlaneNodeToBeUpgraded(client)
 	if err != nil {
