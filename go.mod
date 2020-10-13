@@ -1,6 +1,7 @@
 module github.com/SUSE/skuba
 
 require (
+	github.com/blang/semver v3.5.0+incompatible
 	github.com/coreos/go-oidc v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
