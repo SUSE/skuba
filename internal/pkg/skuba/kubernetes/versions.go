@@ -86,17 +86,17 @@ type ClusterAddonsKnownVersions = func(clusterVersion *version.Version) AddonsVe
 
 var (
 	supportedVersions = KubernetesVersions{
-		"1.17.4": KubernetesVersion{
+		"1.17.12": KubernetesVersion{
 			ComponentHostVersion: ComponentHostVersion{
-				KubeletVersion:          "1.17.4",
+				KubeletVersion:          "1.17.12",
 				ContainerRuntimeVersion: "1.16.1",
 			},
 			ComponentContainerVersion: ComponentContainerVersion{
-				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
-				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
-				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
-				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.4"},
-				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				APIServer:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.12"},
+				ControllerManager: &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.12"},
+				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.12"},
+				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.12"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.13"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.5"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
