@@ -1,40 +1,81 @@
 #!/bin/bash
+##########################################
+# generate skuba tar.gz and specfile
+##########################################
 
+##########################################
+# Housekeeping
 set -e
-
-susepkg_dir=$(cd "$( dirname "$0" )" && pwd)
 tmp_dir=$(mktemp -d -t skuba_XXXX)
-rpm_files="${susepkg_dir}/obs_files"
-devel_prj="Devel:CaaSP:5"
-version="$1"
-tag="$2"
-closest_tag="$3"
-
 log()   { (>&2 echo ">>> $*") ; }
 clean() { log "Cleaning temporary directory ${tmp_dir}"; rm -rf "${tmp_dir}"; }
+trap clean ERR
+susepkg_dir=$(cd "$( dirname "$0" )" && pwd)
+rpm_files="${susepkg_dir}/obs_files"
+devel_prj="Devel:CaaSP:5"
 
-if [ $# -ne 3 ]; then
+##########################################
+# CLI args
+if (( $# != 3 )); then
     log "usage: <version> <tag> <closest-tag>"
     exit 1
 fi
+version="$1"     # pretty version string for display 
+tag="$2"         # can be ugly refs/tags/xxx or specific commit hash
+closest_tag="$3" # usually $tag, but might be commit
 
-trap clean ERR
+##########################################
+# env vars which come from GitHub Actions
+TARBALL_PATH=${TARBALL_PATH:-${tmp_dir}/skuba.tar.gz}
+TEMPLATE_PATH=${TEMPLATE_PATH:-${susepkg_dir}/skuba_spec_template}
+SPECFILE_PATH=${SPECFILE_PATH:-${tmp_dir}/skuba.spec}
 
-rm -rf "${rpm_files}"
-mkdir -p "${rpm_files}"
-git archive --prefix=skuba/ -o "${tmp_dir}/skuba.tar.gz" HEAD
-sed -e "s|%%VERSION|${version}|;s|%%TAG|${tag}|;s|%%CLOSEST_TAG|${closest_tag}|" "${susepkg_dir}/skuba_spec_template" \
-    > "${tmp_dir}/skuba.spec"
-make CHANGES="${tmp_dir}/skuba.changes.append" suse-changelog
-cp "${tmp_dir}"/* "${rpm_files}"
-log "Find files for RPM package in ${rpm_files}"
+##########################################
+# other global stuff
 
-ibs_user=$(osc config https://api.suse.de user | awk '$0=$NF' || echo -n '')
-if [[ -n "$ibs_user" ]]
-then
+function main {
+    gen_tar
+    gen_spec
+    if [[ "${GITHUB_ACTIONS:-}" != "true" ]]
+    then
+        # GitHub Actions calls this script directly
+        make CHANGES="${tmp_dir}/skuba.changes.append" suse-changelog
+
+        # Assemble for OBS / manual use later 
+        rm -rf "${rpm_files}"
+        mkdir -p "${rpm_files}"
+        cp "${tmp_dir}"/* "${rpm_files}"
+        log "Find files for RPM package in ${rpm_files}"
+
+        ibs_user=$(osc config https://api.suse.de user | awk '$0=$NF' \
+                   || echo -n '')
+        if [[ -n "$ibs_user" ]]
+        then
+            do_ibs_update "$ibs_user"
+        fi
+    fi
+}
+
+# generate tarball
+function gen_tar {
+    log "Generating tarball at '$TARBALL_PATH'"
+    git archive --prefix=skuba/ -o "$TARBALL_PATH" "$tag"
+}
+
+# generate specfile
+function gen_spec {
+    log "Generating specfile at '$SPECFILE_PATH'"
+    sed -e "
+      s|%%VERSION|${version}|;
+      s|%%TAG|${tag}|;
+      s|%%CLOSEST_TAG|${closest_tag}|
+      " "$TEMPLATE_PATH" > "$SPECFILE_PATH"
+}
+
+function do_ibs_update {
     log "Found IBS config; updating IBS"
-    ibs_user=${ibs_user//\'}
-    branch_project="home:${ibs_user}:caasp_auto_release"
+    user=${1//\'}
+    branch_project="home:${user}:caasp_auto_release"
     branch_name="skuba_$tag"
     work_dir="$tmp_dir/ibs_skuba"
     log "Creating IBS branch"
@@ -56,6 +97,8 @@ then
     )
     osc -A 'https://api.suse.de' ci "$work_dir" \
       -m "$(<"$rpm_files/skuba.changes.append")"
-fi
+}
+
+main
 
 clean

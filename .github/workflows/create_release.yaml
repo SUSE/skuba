@@ -1,0 +1,136 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+name: Release Skuba
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_PATH: artifacts/
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          # fetch-depth: 0 is necessary to get all history, which we need
+          fetch-depth: 0
+
+      - name: Set Scriptdir After Checkout
+        run: |
+          SCRIPTDIR=$GITHUB_WORKSPACE/ci/packaging/suse
+          echo "SCRIPTDIR=$SCRIPTDIR" >> $GITHUB_ENV
+
+      - name: env debug
+        run: |
+          env | sort
+
+      - name: Prep Artifacts Dir
+        run: |
+          mkdir -vp $ARTIFACT_PATH
+
+      - name: Identify Previous Release Tag
+        id: release_tag
+        run: |
+          PREV_TAG=$(git describe --abbrev=0 --tags "${{ github.ref }}^")
+          echo "PREV_TAG=$PREV_TAG" >> $GITHUB_ENV
+          echo "::set-output name=tag::$PREV_TAG"
+
+      - name: Set Pretty Tag
+        id: pretty_tag
+        run: |
+          PRETTY_TAG='${{ github.ref }}' # fix broken YAML hilighting with '
+          PRETTY_TAG=${PRETTY_TAG##*/}   # make "refs/tags/x" just "x"
+          echo "PRETTY_TAG=$PRETTY_TAG" >> $GITHUB_ENV
+          echo "::set-output name=tag::$PRETTY_TAG"
+
+      - name: Generate changelog
+        id: gen_changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # token provided by Actions
+          CHANGELOG_PATH: "${{ env.ARTIFACT_PATH }}/skuba.changes.append"
+          RELEASE_BODY: "changes.md"
+          CURRENT_TAG: ${{ github.ref }}
+        run: |
+          "$SCRIPTDIR"/changelog_maker.sh "$CHANGELOG_PATH"
+
+          echo "full changes are:'$( <$CHANGELOG_PATH )'"
+          echo "release body is:'$(  <$RELEASE_BODY   )'"
+          echo "::set-output name=changelog_path::$CHANGELOG_PATH"
+          echo "::set-output name=obs_path::$RELEASE_BODY"
+
+      - name: Generate Release Tarball and Spec
+        id: gen_release_files
+        env:
+          TARBALL_PATH: ${{ env.ARTIFACT_PATH }}/skuba.tar.gz
+          PUB_NAME: skuba-${{ env.PRETTY_TAG }}.tar.gz # cosmetic for release
+          SPECFILE_PATH: ${{ env.ARTIFACT_PATH }}/skuba.spec
+          TEMPLATE_PATH: ${{ env.SCRIPTDIR }}/skuba_spec_template
+        run: |
+          "$SCRIPTDIR"/rpmfiles_maker.sh \
+            "${PRETTY_TAG#v}"   \
+            "$PRETTY_TAG" \
+            "$PRETTY_TAG"
+
+          echo "::set-output name=tar_path::$TARBALL_PATH"
+          echo "::set-output name=tar_name::$( basename $TARBALL_PATH )"
+          echo "::set-output name=tar_pubname::$PUB_NAME"
+          echo "::set-output name=spec_path::$SPECFILE_PATH"
+
+      - name: Generate OBS Files
+        id: gen_obs_files
+        run: |
+          TARBALL_PATH=obs.tar.gz
+          ( cd "$ARTIFACT_PATH" && tar cvzf - * ) > "$TARBALL_PATH"
+
+          echo "::set-output name=path::$TARBALL_PATH"
+          echo "::set-output name=name::$( basename $TARBALL_PATH )"
+
+      ##########################################
+      - name: Save generated artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: generated_files
+          path: |
+            ${{ steps.gen_changelog.outputs.obs_path }}
+            ${{ steps.gen_changelog.outputs.changelog_path }}
+            ${{ steps.gen_release_files.outputs.tar_path }}
+            ${{ steps.gen_release_files.outputs.spec_path }}
+            ${{ steps.gen_obs_files.outputs.path }}
+
+      ##########################################
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # token provided by Actions
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body_path: changes.md
+          draft: false
+          prerelease: false
+
+      - name: Add skuba tar file to release
+        id: release_skuba_tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.gen_release_files.outputs.tar_path }}
+          asset_name: ${{ steps.gen_release_files.outputs.tar_pubname }}
+          asset_content_type: application/gzip
+
+      - name: Add OBS tar file to release
+        id: release_obs_tar
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.gen_obs_files.outputs.path }}
+          asset_name: ${{ steps.gen_obs_files.outputs.name }}
+          asset_content_type: application/gzip
