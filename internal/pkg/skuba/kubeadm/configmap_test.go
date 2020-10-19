@@ -354,8 +354,8 @@ func TestUpdateClusterConfigurationWithClusterVersion(t *testing.T) {
 			expectedAdmissionPlugins: []string{"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition", "Priority", "DefaultTolerationSeconds", "DefaultStorageClass", "PersistentVolumeClaimResize", "MutatingAdmissionWebhook", "ValidatingAdmissionWebhook", "ResourceQuota", "StorageObjectInUseProtection", "RuntimeClass", "NodeRestriction", "PodSecurityPolicy", "ExtendedResourceToleration"},
 		},
 		{
-			name:                    "1.18.6 without duplicates",
-			clusterVersion:          version.MustParseSemantic("1.18.6"),
+			name:                    "1.18.10 without duplicates",
+			clusterVersion:          version.MustParseSemantic("1.18.10"),
 			currentAdmissionPlugins: []string{},
 			expectedAdmissionPlugins: []string{
 				"NamespaceLifecycle", "LimitRanger", "ServiceAccount", "TaintNodesByCondition",
