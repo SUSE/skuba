@@ -3,7 +3,7 @@ import time
 import yaml
 
 PREVIOUS_VERSION = "1.17.4"
-CURRENT_VERSION = "1.17.12"
+CURRENT_VERSION = "1.17.13"
 
 
 def check_nodes_ready(kubectl):
