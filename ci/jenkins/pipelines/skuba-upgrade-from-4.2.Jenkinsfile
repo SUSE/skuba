@@ -60,7 +60,7 @@ pipeline {
  
                 timeout(180){
                     waitUntil { script {
-                        sh(script: "ssh -i ${JENKINS_ID} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T jenkins@${WORKER_HOST} true", returnStatus: true) == 0
+                        sh(script: "ssh -i ${JENKINS_ID} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T jenkins@${WORKER_HOST} sudo systemctl is-active --quiet swarm-client", returnStatus: true) == 0
                     }}
                 }
             }
