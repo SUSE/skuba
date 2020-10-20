@@ -3,7 +3,7 @@ import time
 import yaml
 
 PREVIOUS_VERSION = "1.17.4"
-CURRENT_VERSION = "1.18.6"
+CURRENT_VERSION = "1.18.10"
 
 
 def check_node_is_ready(platform, kubectl, role, nr):
