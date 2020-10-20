@@ -56,7 +56,7 @@ pipeline {
                 echo 'rebooting ${WORKER_HOST} ...'
                 sh "ssh -i ${JENKINS_ID} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T jenkins@${WORKER_HOST} sudo reboot &"
                
-                sleep 60
+                sleep 120
  
                 timeout(180){
                     waitUntil { script {
