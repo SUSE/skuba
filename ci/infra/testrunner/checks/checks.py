@@ -84,12 +84,15 @@ class Checker:
         self.utils.setup_ssh()
         self.platform = platform
 
-    def _filter_checks(self, checks, scope=None, stage=None):
+    def _filter_checks(self, checks, scope=None, stage=None, role=None):
         _filtered = checks
         if scope:
             _filtered = [c for c in _filtered if scope == c.scope]
         if stage:
             _filtered = [c for c in _filtered if stage in c.stages]
+        if role:
+            _filtered = [c for c in _filtered if role in c.roles]
+
         return _filtered
 
     def _filter_by_name(self, names):
@@ -118,7 +121,7 @@ class Checker:
         else:
             if not stage:
                 raise ValueError("stage must be specified")
-            checks = self._filter_checks(_checks, stage=stage, scope="node")
+            checks = self._filter_checks(_checks, stage=stage, scope="node", role=role)
 
         start = int(time.time())
         for check in checks:
@@ -150,7 +153,7 @@ def check_apiserver_healthz(conf, platform, role, node):
     return output.find("ok") > -1
 
 
-@check(description="etcd health check", scope="node", roles=['master'])
+@check(description="etcd health check", scope="node", roles=['master'], stages=["joined"])
 def check_etcd_health(conf, platform, role, node):
     platform = platforms.get_platform(conf, platform)
     cmd = ('sudo curl -Ls --cacert /etc/kubernetes/pki/etcd/ca.crt '
