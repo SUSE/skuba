@@ -96,7 +96,7 @@ var (
 				ControllerManager: &ContainerImageTag{Name: "kube-controller-manager", Tag: "v1.18.10"},
 				Scheduler:         &ContainerImageTag{Name: "kube-scheduler", Tag: "v1.18.10"},
 				Proxy:             &ContainerImageTag{Name: "kube-proxy", Tag: "v1.18.10"},
-				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.3"},
+				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.13"},
 				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.2"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
