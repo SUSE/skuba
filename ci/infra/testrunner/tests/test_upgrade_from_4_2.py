@@ -12,6 +12,12 @@ def migrate_node(platform, checker, kubectl, role, node, regcode, option=1):
     platform.ssh_run(role, node, (f'sudo zypper migration --migration {option}'
                                   ' --no-recommends --non-interactive'
                                   ' --auto-agree-with-licenses --allow-vendor-change'))
+
+    # update to latest kubernetes package version, if any
+    k8s_major, k8s_minor, _ =  CURRENT_VERSION.split('.')
+    platform.ssh_run(role, node, 'sudo zypper ar http://download.suse.de/ibs/Devel:/CaaSP:/4.5/SLE_15_SP2/ CaasP_Devel')
+    platform.ssh_run(role, node, ('sudo zypper update --allow-vendor-change -y'
+                                  f' kubernetes-{k8s_major}.{k8s_minor}-kubeadm'))
     #:FIXME use kured for controlled reboot.
     platform.ssh_run(role, node, "sudo reboot &")
 
