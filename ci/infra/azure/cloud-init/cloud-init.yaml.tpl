@@ -13,7 +13,7 @@ ${authorized_keys}
 # WARNING!!! Do not use cloud-init packages module when SUSE CaaSP Registration
 # Code is provided. In this case, repositories will be added in runcmd module
 # with SUSEConnect command after packages module is ran
-#packages:
+# packages:
 
 bootcmd:
   - ip link set dev eth0 mtu 1500
