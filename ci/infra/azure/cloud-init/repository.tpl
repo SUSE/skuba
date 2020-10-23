@@ -1,2 +1,3 @@
-  - zypper --refresh ${repository_url} ${repository_name}
+  - zypper addrepo --refresh ${repository_url} ${repository_name}
   - zypper --gpg-auto-import-keys refresh
+  - while [ $(ps aux | grep zypper | grep -v grep | wc -l) != 0 ]; do sleep 5; done;
