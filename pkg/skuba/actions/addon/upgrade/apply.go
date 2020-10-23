@@ -48,7 +48,7 @@ func Apply(client clientset.Interface) error {
 	fmt.Println()
 
 	if !allNodesMatchClusterVersion {
-		return errors.Errorf("[apply] Not all nodes match clusterVersion %s", currentVersion)
+		fmt.Printf("[apply] Not all nodes match clusterVersion %s\n", currentVersion)
 	}
 
 	clusterConfiguration, err := kubeadm.GetClusterConfiguration(client)
