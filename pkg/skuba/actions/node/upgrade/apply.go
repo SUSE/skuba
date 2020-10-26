@@ -19,6 +19,7 @@ package upgrade
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -185,6 +186,10 @@ func Apply(client clientset.Interface, target *deployments.Target) error {
 		if err != nil {
 			return err
 		}
+		err = downloadAdminConf(target)
+		if err != nil {
+			return err
+		}
 	} else if err := target.Apply(nil, "kubeadm.upgrade.node"); err != nil {
 		return err
 	}
@@ -260,5 +265,17 @@ func fillTargetWithNodeNameAndRole(client clientset.Interface, target *deploymen
 	}
 	target.Role = &role
 
+	return nil
+}
+
+func downloadAdminConf(target *deployments.Target) error {
+	fmt.Printf("Downloading admin.conf from upgrade node %q\n", target.Target)
+	secretData, err := target.DownloadFileContents("/etc/kubernetes/admin.conf")
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile("admin.conf", []byte(secretData), 0600); err != nil {
+		return err
+	}
 	return nil
 }
