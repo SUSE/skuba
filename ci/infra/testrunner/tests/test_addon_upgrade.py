@@ -56,6 +56,9 @@ def test_addon_upgrade_apply(deployment, kubectl, skuba):
     )
     assert not addons_up_to_date(skuba)
 
+    out = skuba.addon_refresh('localconfig')
+    assert out.find("Successfully refreshed addons base manifests") != -1
+
     out = skuba.addon_upgrade('apply')
     assert out.find("Successfully upgraded addons") != -1
     assert addons_up_to_date(skuba)
