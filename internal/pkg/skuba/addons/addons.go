@@ -322,6 +322,10 @@ func (addon Addon) kustomizePath(rootDir string) string {
 }
 
 func (addon Addon) compareLocalBaseManifest(addonConfiguration AddonConfiguration) (bool, error) {
+	if f, err := os.Stat(addon.legacyManifestPath(addon.addonDir())); !os.IsNotExist(err) && !f.IsDir() {
+		return false, nil
+	}
+
 	localManifest, err := ioutil.ReadFile(addon.manifestPath(addon.addonDir()))
 	if err != nil {
 		return false, errors.Wrapf(err, "unable to read %s addon rendered template", addon.Addon)

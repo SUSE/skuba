@@ -46,6 +46,9 @@ func AddonsBaseManifest(client clientset.Interface) error {
 		ClusterName:    clusterConfiguration.ClusterName,
 	}
 	for addonName, addon := range addons.Addons {
+		if !addon.IsPresentForClusterVersion(currentClusterVersion) {
+			continue
+		}
 		if err := addon.Write(addonConfiguration); err != nil {
 			return errors.Wrapf(err, "failed to refresh addon %s manifest", string(addonName))
 		}
