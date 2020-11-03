@@ -97,7 +97,7 @@ var (
 				Scheduler:         &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.13"},
 				Proxy:             &ContainerImageTag{Name: "hyperkube", Tag: "v1.17.13"},
 				Etcd:              &ContainerImageTag{Name: "etcd", Tag: "3.4.13"},
-				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.5"},
+				CoreDNS:           &ContainerImageTag{Name: "coredns", Tag: "1.6.7"},
 				Pause:             &ContainerImageTag{Name: "pause", Tag: "3.1"},
 				Tooling:           &ContainerImageTag{Name: "skuba-tooling", Tag: "0.1.0"},
 			},
