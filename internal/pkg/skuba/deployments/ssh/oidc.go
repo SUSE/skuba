@@ -18,6 +18,7 @@
 package ssh
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/SUSE/skuba/internal/pkg/skuba/deployments"
@@ -47,7 +48,12 @@ func oidcCAUpload(t *Target, data interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), oidc.CACertFileName), remoteOIDCCAFilePath); err != nil {
+	caCertPath := filepath.Join(skuba.PkiDir(), oidc.CACertFileName)
+	f, err := os.Stat(caCertPath)
+	if err != nil {
+		return err
+	}
+	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), oidc.CACertFileName), remoteOIDCCAFilePath, f.Mode()); err != nil {
 		return err
 	}
 	return nil
