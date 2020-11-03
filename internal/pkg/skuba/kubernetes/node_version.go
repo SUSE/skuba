@@ -259,7 +259,7 @@ func AllControlPlanesMatchVersionWithVersioningInfo(allNodesVersioningInfo NodeV
 		if !nodeInfo.IsControlPlane() {
 			continue
 		}
-		if !nodeInfo.ToleratesClusterVersion(clusterVersion) {
+		if !nodeInfo.EqualsClusterVersion(clusterVersion) {
 			return false
 		}
 	}
