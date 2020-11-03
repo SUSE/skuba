@@ -132,7 +132,6 @@ var (
 				Dex:           &AddonVersion{"2.16.0-rev6", 7},
 				Gangway:       &AddonVersion{"3.1.0-rev4", 6},
 				MetricsServer: &AddonVersion{"0.3.6", 1},
-				Kucero:        &AddonVersion{"1.3.0", 0},
 				PSP:           &AddonVersion{"", 4},
 			},
 		},
