@@ -35,8 +35,31 @@ func (t *Target) UploadFileContents(targetPath, contents string, perm os.FileMod
 	if _, _, err := t.silentSsh("mkdir", "-p", dir); err != nil {
 		return err
 	}
-	_, _, err := t.silentSshWithStdin(encodedContents, "base64", "-d", "-w0", fmt.Sprintf("> %s", targetPath))
+	_, _, err := t.silentSshWithStdin(encodedContents, "umask", osFileModeToUmaskSymbolMode(perm), "&&", "base64", "-d", "-w0", fmt.Sprintf("> %s", targetPath))
 	return err
+}
+
+func osFileModeToUmaskSymbolMode(perm os.FileMode) string {
+	permS := perm.String()
+	mask := ""
+	umask := ""
+
+	for i := 1; i < len(permS); i++ {
+		if permS[i] != '-' {
+			mask = mask + string(permS[i])
+		}
+		switch i {
+		case 3:
+			umask = fmt.Sprintf("u=%s,", mask)
+			mask = ""
+		case 6:
+			umask = umask + fmt.Sprintf("g=%s,", mask)
+			mask = ""
+		case 9:
+			umask = umask + fmt.Sprintf("o=%s", mask)
+		}
+	}
+	return umask
 }
 
 // DownloadFileContents gets the content of a file in a target system
