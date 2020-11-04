@@ -37,19 +37,23 @@ func init() {
 	stateMap["kubeadm.upgrade.node"] = kubeadmUpgradeNode
 }
 
-var remoteKubeadmInitConfFile = filepath.Join("/tmp/", skubaconstants.KubeadmInitConfFile())
-
 func kubeadmInit(t *Target, data interface{}) error {
 	bootstrapConfiguration, ok := data.(deployments.BootstrapConfiguration)
 	if !ok {
 		return errors.New("couldn't access bootstrap configuration")
 	}
 
-	if err := t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile); err != nil {
+	tempDir, _, err := t.ssh("mktemp", "-d")
+	if err != nil {
+		return err
+	}
+	remoteKubeadmInitConfFile := filepath.Join(tempDir, skubaconstants.KubeadmInitConfFile())
+	err = t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile)
+	if err != nil {
 		return err
 	}
 	defer func() {
-		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		_, _, err := t.ssh("rm", "-r", tempDir)
 		if err != nil {
 			// If the deferred function has any return values, they are discarded when the function completes
 			// https://golang.org/ref/spec#Defer_statements
@@ -62,7 +66,7 @@ func kubeadmInit(t *Target, data interface{}) error {
 	if len(ignorePreflightErrorsVal) > 0 {
 		ignorePreflightErrors = "--ignore-preflight-errors=" + ignorePreflightErrorsVal
 	}
-	_, _, err := t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors, "-v", t.verboseLevel)
+	_, _, err = t.ssh("kubeadm", "init", "--config", remoteKubeadmInitConfFile, "--skip-token-print", ignorePreflightErrors, "-v", t.verboseLevel)
 	return err
 }
 
@@ -81,11 +85,17 @@ func kubeadmJoin(t *Target, data interface{}) error {
 		return errors.Wrap(err, "unable to configure path")
 	}
 
-	if err := t.target.UploadFile(configPath, remoteKubeadmInitConfFile); err != nil {
+	tempDir, _, err := t.ssh("mktemp", "-d")
+	if err != nil {
+		return err
+	}
+	remoteKubeadmInitConfFile := filepath.Join(tempDir, skubaconstants.KubeadmInitConfFile())
+	err = t.target.UploadFile(configPath, remoteKubeadmInitConfFile)
+	if err != nil {
 		return err
 	}
 	defer func() {
-		_, _, err := t.ssh("rm", remoteKubeadmInitConfFile)
+		_, _, err := t.ssh("rm", "-r", remoteKubeadmInitConfFile)
 		if err != nil {
 			// If the deferred function has any return values, they are discarded when the function completes
 			// https://golang.org/ref/spec#Defer_statements
