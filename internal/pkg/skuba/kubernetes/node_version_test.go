@@ -462,18 +462,18 @@ func TestToleratesFromClusterVersion(t *testing.T) {
 			expectReturn:     false,
 		},
 		{
-			name:             "master node (kubelet) patch version is one less than as cluster version",
+			name:             "master node patch version is one less than as cluster version",
 			isMaster:         true,
-			apiServerVersion: clusterVersion,
+			apiServerVersion: patchLess,
 			kubeletVersion:   patchLess,
 			expectReturn:     true,
 		},
 		{
-			name:             "master node (kubelet) patch version is one greater than as cluster version",
+			name:             "master node patch version is one greater than as cluster version",
 			isMaster:         true,
-			apiServerVersion: clusterVersion,
+			apiServerVersion: patchMore,
 			kubeletVersion:   patchMore,
-			expectReturn:     false,
+			expectReturn:     true,
 		},
 		{
 			name:           "worker node version is same as cluster version",
@@ -498,7 +498,7 @@ func TestToleratesFromClusterVersion(t *testing.T) {
 		{
 			name:           "worker node patch version is one greater than cluster version",
 			kubeletVersion: patchMore,
-			expectReturn:   false,
+			expectReturn:   true,
 		},
 	}
 
