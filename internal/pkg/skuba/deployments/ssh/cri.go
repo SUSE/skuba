@@ -47,7 +47,7 @@ func criConfigure(t *Target, data interface{}) error {
 	}()
 
 	for _, f := range criFiles {
-		if err := t.target.UploadFile(filepath.Join(skuba.CriConfDir(), f.Name()), filepath.Join("/tmp/crio.conf.d", f.Name())); err != nil {
+		if err := t.target.UploadFile(filepath.Join(skuba.CriConfDir(), f.Name()), filepath.Join("/tmp/crio.conf.d", f.Name()), f.Mode()); err != nil {
 			return err
 		}
 	}
@@ -71,7 +71,7 @@ func criSysconfig(t *Target, data interface{}) error {
 	}()
 
 	for _, f := range criFiles {
-		if err := t.target.UploadFile(filepath.Join(skuba.CriDir(), f.Name()), filepath.Join("/tmp/cri.d", f.Name())); err != nil {
+		if err := t.target.UploadFile(filepath.Join(skuba.CriDir(), f.Name()), filepath.Join("/tmp/cri.d", f.Name()), f.Mode()); err != nil {
 			return err
 		}
 	}

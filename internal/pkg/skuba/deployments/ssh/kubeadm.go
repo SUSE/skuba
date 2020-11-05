@@ -19,6 +19,7 @@ package ssh
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -47,8 +48,12 @@ func kubeadmInit(t *Target, data interface{}) error {
 	if err != nil {
 		return err
 	}
+	f, err := os.Stat(skubaconstants.KubeadmInitConfFile())
+	if err != nil {
+		return err
+	}
 	remoteKubeadmInitConfFile := filepath.Join(tempDir, skubaconstants.KubeadmInitConfFile())
-	err = t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile)
+	err = t.target.UploadFile(skubaconstants.KubeadmInitConfFile(), remoteKubeadmInitConfFile, f.Mode())
 	if err != nil {
 		return err
 	}
@@ -89,8 +94,12 @@ func kubeadmJoin(t *Target, data interface{}) error {
 	if err != nil {
 		return err
 	}
+	f, err := os.Stat(configPath)
+	if err != nil {
+		return err
+	}
 	remoteKubeadmInitConfFile := filepath.Join(tempDir, skubaconstants.KubeadmInitConfFile())
-	err = t.target.UploadFile(configPath, remoteKubeadmInitConfFile)
+	err = t.target.UploadFile(configPath, remoteKubeadmInitConfFile, f.Mode())
 	if err != nil {
 		return err
 	}
@@ -124,7 +133,7 @@ func kubeadmUpgradeApply(t *Target, data interface{}) error {
 	}
 
 	remoteKubeadmUpgradeConfFile := filepath.Join("/tmp/", skubaconstants.KubeadmUpgradeConfFile())
-	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents); err != nil {
+	if err := t.target.UploadFileContents(remoteKubeadmUpgradeConfFile, upgradeConfiguration.KubeadmConfigContents, 0644); err != nil {
 		return err
 	}
 	defer func() {

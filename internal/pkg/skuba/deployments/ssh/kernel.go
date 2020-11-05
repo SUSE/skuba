@@ -97,12 +97,12 @@ func loadModule(t *Target, module string) error {
 	if _, _, err := t.ssh(fmt.Sprintf("modprobe %s", module)); err != nil {
 		return err
 	}
-	return t.UploadFileContents(fmt.Sprintf("/etc/modules-load.d/skuba-%s.conf", module), module)
+	return t.UploadFileContents(fmt.Sprintf("/etc/modules-load.d/skuba-%s.conf", module), module, 0644)
 }
 
 func configureParameter(t *Target, name, attribute, value string) error {
 	if _, _, err := t.ssh(fmt.Sprintf("sysctl -w %s=%s", attribute, value)); err != nil {
 		return err
 	}
-	return t.UploadFileContents(fmt.Sprintf("/etc/sysctl.d/90-skuba-%s.conf", name), fmt.Sprintf("%s=%s", attribute, value))
+	return t.UploadFileContents(fmt.Sprintf("/etc/sysctl.d/90-skuba-%s.conf", name), fmt.Sprintf("%s=%s", attribute, value), 0644)
 }

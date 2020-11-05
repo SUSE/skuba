@@ -20,6 +20,7 @@ package ssh
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 	"path"
 
 	"k8s.io/klog"
@@ -27,11 +28,14 @@ import (
 
 // UploadFileContents creates a file with the content sent
 // into a target system's specific path.
-func (t *Target) UploadFileContents(targetPath, contents string) error {
+func (t *Target) UploadFileContents(targetPath, contents string, perm os.FileMode) error {
 	klog.V(1).Infof("uploading to remote file %q with contents", targetPath)
 	dir, _ := path.Split(targetPath)
 	encodedContents := base64.StdEncoding.EncodeToString([]byte(contents))
 	if _, _, err := t.silentSsh("mkdir", "-p", dir); err != nil {
+		return err
+	}
+	if _, _, err := t.silentSsh("install", "-m", fmt.Sprintf("%04o", perm), "/dev/null", targetPath); err != nil {
 		return err
 	}
 	_, _, err := t.silentSshWithStdin(encodedContents, "base64", "-d", "-w0", fmt.Sprintf("> %s", targetPath))

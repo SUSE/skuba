@@ -20,13 +20,14 @@ package deployments
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"k8s.io/klog"
 )
 
 type Actionable interface {
 	Apply(data interface{}, states ...string) error
-	UploadFileContents(targetPath, contents string) error
+	UploadFileContents(targetPath, contents string, perm os.FileMode) error
 	DownloadFileContents(sourcePath string) (string, error)
 	IsServiceEnabled(serviceName string) (bool, error)
 }
@@ -55,16 +56,16 @@ func (t *Target) Apply(data interface{}, states ...string) error {
 	return t.Actionable.Apply(data, filteredStates...)
 }
 
-func (t *Target) UploadFile(sourcePath, targetPath string) error {
+func (t *Target) UploadFile(sourcePath, targetPath string, perm os.FileMode) error {
 	klog.V(1).Infof("uploading local file %q to remote file %q", sourcePath, targetPath)
 	if contents, err := ioutil.ReadFile(sourcePath); err == nil {
-		return t.UploadFileContents(targetPath, string(contents))
+		return t.UploadFileContents(targetPath, string(contents), perm)
 	}
 	return fmt.Errorf("could not find file %s", sourcePath)
 }
 
-func (t *Target) UploadFileContents(targetPath, contents string) error {
-	return t.Actionable.UploadFileContents(targetPath, contents)
+func (t *Target) UploadFileContents(targetPath, contents string, perm os.FileMode) error {
+	return t.Actionable.UploadFileContents(targetPath, contents, perm)
 }
 
 func (t *Target) DownloadFileContents(sourcePath string) (string, error) {
