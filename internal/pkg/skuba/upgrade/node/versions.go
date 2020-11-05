@@ -98,6 +98,19 @@ func (nviu NodeVersionInfoUpdate) NodeUpgradeableCheck(client clientset.Interfac
 	if err != nil {
 		return err
 	}
+
+	// Explain user to downgrade kubelet package when it was installed ahead kube-apiserver.
+	if nviu.Current.IsControlPlane() {
+		if nviu.Current.KubeletVersion.Major() > nviu.Current.APIServerVersion.Major() ||
+			(nviu.Current.KubeletVersion.Major() == nviu.Current.APIServerVersion.Major() &&
+				nviu.Current.KubeletVersion.Minor() > nviu.Current.APIServerVersion.Minor()) ||
+			(nviu.Current.KubeletVersion.Major() == nviu.Current.APIServerVersion.Major() &&
+				nviu.Current.KubeletVersion.Minor() == nviu.Current.APIServerVersion.Minor() &&
+				nviu.Current.KubeletVersion.Patch() > nviu.Current.APIServerVersion.Patch()) {
+			errorMessages = append(errorMessages, fmt.Sprintf("Kubelet is in higher version than kube-apiserver, please downgrade kubelet package to version %s", currentClusterVersion))
+		}
+	}
+
 	if isFirstControlPlaneNodeToBeUpgraded {
 		// First check if all schedulable workers will tolerate the version we are upgrading to. If they don't, they need to be upgraded first.
 		upgradeable, err := kubernetes.AllWorkerNodesTolerateVersion(client, nviu.Update.APIServerVersion)
