@@ -19,6 +19,7 @@ package ssh
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -50,7 +51,16 @@ func init() {
 func kubernetesUploadSecrets(errorHandling KubernetesUploadSecretsErrorBehavior) Runner {
 	return func(t *Target, data interface{}) error {
 		for _, file := range deployments.Secrets {
-			if err := t.target.UploadFile(file, filepath.Join(constants.KubernetesDir, file)); err != nil {
+			f, err := os.Stat(file)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return nil
+				}
+				if errorHandling == KubernetesUploadSecretsFailOnError {
+					return err
+				}
+			}
+			if err := t.target.UploadFile(file, filepath.Join(constants.KubernetesDir, file), f.Mode()); err != nil {
 				if errorHandling == KubernetesUploadSecretsFailOnError {
 					return err
 				}

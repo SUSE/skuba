@@ -46,15 +46,23 @@ func init() {
 
 func kubeletUploadRootCert(t *Target, data interface{}) error {
 	// Upload root ca cert
-	if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), kubernetes.KubeletCACertName), filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCACertName)); err != nil {
+	caCertPath := filepath.Join(skuba.PkiDir(), kubernetes.KubeletCACertName)
+	f, err := os.Stat(caCertPath)
+	if err != nil {
 		return err
 	}
+	if err := t.target.UploadFile(caCertPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCACertName), f.Mode()); err != nil {
+		return err
+	}
+
 	// Upload root ca key on control plane node only
 	if *t.target.Role == deployments.MasterRole {
-		if err := t.target.UploadFile(filepath.Join(skuba.PkiDir(), kubernetes.KubeletCAKeyName), filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCAKeyName)); err != nil {
+		caKeyPath := filepath.Join(skuba.PkiDir(), kubernetes.KubeletCAKeyName)
+		f, err = os.Stat(caKeyPath)
+		if err != nil {
 			return err
 		}
-		if _, _, err := t.silentSsh("chmod", "0400", filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCAKeyName)); err != nil {
+		if err := t.target.UploadFile(caKeyPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletCAKeyName), f.Mode()); err != nil {
 			return err
 		}
 	}
@@ -118,13 +126,18 @@ func kubeletCreateAndUploadServerCert(t *Target, data interface{}) error {
 
 	// Upload server certificate and key
 	certPath, keyPath := pkiutil.PathsForCertAndKey(skuba.PkiDir(), host)
-	if err := t.target.UploadFile(certPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerCertName)); err != nil {
+	f, err := os.Stat(certPath)
+	if err != nil {
 		return err
 	}
-	if err := t.target.UploadFile(keyPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerKeyName)); err != nil {
+	if err := t.target.UploadFile(certPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerCertName), f.Mode()); err != nil {
 		return err
 	}
-	if _, _, err := t.silentSsh("chmod", "0400", filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerKeyName)); err != nil {
+	f, err = os.Stat(keyPath)
+	if err != nil {
+		return err
+	}
+	if err := t.target.UploadFile(keyPath, filepath.Join(kubernetes.KubeletCertAndKeyDir, kubernetes.KubeletServerKeyName), f.Mode()); err != nil {
 		return err
 	}
 
@@ -145,17 +158,17 @@ func kubeletConfigure(t *Target, data interface{}) error {
 		return err
 	}
 	if isSUSE {
-		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
+		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service", assets.KubeletService, 0644); err != nil {
 			return err
 		}
-		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService); err != nil {
+		if err := t.UploadFileContents("/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService, 0644); err != nil {
 			return err
 		}
 	} else {
-		if err := t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService); err != nil {
+		if err := t.UploadFileContents("/lib/systemd/system/kubelet.service", assets.KubeletService, 0644); err != nil {
 			return err
 		}
-		if err := t.UploadFileContents("/etc/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService); err != nil {
+		if err := t.UploadFileContents("/etc/systemd/system/kubelet.service.d/10-kubeadm.conf", assets.KubeadmService, 0644); err != nil {
 			return err
 		}
 	}
@@ -202,14 +215,12 @@ func getCloudProvider() (string, error) {
 func uploadCloudProvider(t *Target, cloudProvider string) error {
 	cloudConfigFile := cloudProvider + ".conf"
 	cloudConfigFilePath := filepath.Join(skuba.CloudDir(), cloudProvider, cloudConfigFile)
-	if _, err := os.Stat(cloudConfigFilePath); os.IsNotExist(err) {
+	f, err := os.Stat(cloudConfigFilePath)
+	if os.IsNotExist(err) {
 		return err
 	}
 	cloudConfigRuntimeFilePath := filepath.Join(constants.KubernetesDir, cloudConfigFile)
-	if err := t.target.UploadFile(cloudConfigFilePath, cloudConfigRuntimeFilePath); err != nil {
-		return err
-	}
-	if _, _, err := t.ssh("chmod", "0400", cloudConfigRuntimeFilePath); err != nil {
+	if err := t.target.UploadFile(cloudConfigFilePath, cloudConfigRuntimeFilePath, f.Mode()); err != nil {
 		return err
 	}
 	return nil
