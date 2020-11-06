@@ -49,7 +49,6 @@ pipeline {
             steps {
                 sh(script: "ci/tasks/sonobuoy_e2e.py run --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION} --mode=certified-conformance", label: 'Run Conformance')
                 sh(script: "ci/tasks/sonobuoy_e2e.py collect --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION}", label: 'Collect Results')
-                sh(script: "ci/tasks/sonobuoy_e2e.py cleanup --kubeconfig ${WORKSPACE}/test-cluster/admin.conf --sonobuoy-version ${SONOBUOY_VERSION}", label: 'Cleanup Cluster')
             }
         }
 
