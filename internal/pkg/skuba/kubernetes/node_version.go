@@ -119,14 +119,22 @@ func (nvi NodeVersionInfo) DriftsFromClusterVersion(clusterVersion *version.Vers
 
 func (nvi NodeVersionInfo) ToleratesClusterVersion(clusterVersion *version.Version) bool {
 	if nvi.IsControlPlane() {
+		// When worker checks for tolerates cluster version, the API servers should ALL have been
+		// upgraded at the same version. No drift should be allowed.
 		if nvi.APIServerVersion.Major() != clusterVersion.Major() ||
-			nvi.APIServerVersion.Minor() != clusterVersion.Minor() {
+			(nvi.APIServerVersion.Major() == clusterVersion.Major() &&
+				nvi.APIServerVersion.Minor() != clusterVersion.Minor()) ||
+			(nvi.APIServerVersion.Major() == clusterVersion.Major() &&
+				nvi.APIServerVersion.Minor() == clusterVersion.Minor() &&
+				nvi.APIServerVersion.Patch() != clusterVersion.Patch()) {
 			return false
 		}
 	}
 
-	return nvi.KubeletVersion.Minor() == clusterVersion.Minor() ||
-		nvi.KubeletVersion.Minor()+1 == clusterVersion.Minor()
+	return (nvi.KubeletVersion.Major() == clusterVersion.Major() &&
+		nvi.KubeletVersion.Minor() == clusterVersion.Minor()) ||
+		(nvi.KubeletVersion.Major() == clusterVersion.Major() &&
+			nvi.KubeletVersion.Minor()+1 == clusterVersion.Minor())
 }
 
 // AllNodesVersioningInfo returns the version info for all nodes in the cluster
