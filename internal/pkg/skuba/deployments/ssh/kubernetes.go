@@ -176,12 +176,12 @@ func kubernetesUpgradeStageTwo(t *Target, data interface{}) error {
 		pkgs = append(pkgs, fmt.Sprintf("-\"cri-o<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 		pkgs = append(pkgs, fmt.Sprintf("-\"cri-tools<%s\"", skubaconstants.FirstCaaSP5KubernetesVersion))
 	} else {
-		pkgs = append(pkgs, fmt.Sprintf("-kubernetes-%s-*", currentV))
+		pkgs = append(pkgs, fmt.Sprintf("-kubernetes%s-*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-o-%s*", currentV))
 		pkgs = append(pkgs, fmt.Sprintf("-cri-tools-%s*", currentV))
 	}
 
-	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", nextV))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes%s-client", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", nextV))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", nextV))
