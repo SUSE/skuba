@@ -1,10 +1,21 @@
 import os
-import pytest
 
 from tests.utils import (check_node_is_ready, check_node_version, CURRENT_VERSION, wait)
 
+
 # Migrates a node to the upgrate option speficied in the option
 def migrate_node(platform, checker, kubectl, role, node, regcode, option=1):
+    # first check if node is up
+    wait(platform.ssh_run,
+         role,
+         node,
+         "true",
+         wait_delay=60,
+         wait_timeout=10,
+         wait_backoff=30,
+         wait_elapsed=180,
+         wait_allow=(RuntimeError)
+    )
     platform.ssh_run(role, node, f'sudo SUSEConnect -r {regcode}')
     platform.ssh_run(role, node, "sudo SUSEConnect -p sle-module-containers/15.1/x86_64")
     platform.ssh_run(role, node, f'sudo SUSEConnect -p caasp/4.0/x86_64 -r {regcode}')
