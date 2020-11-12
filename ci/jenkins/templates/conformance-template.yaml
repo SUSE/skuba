@@ -5,7 +5,7 @@
     days-to-keep: 30
     branch: master
     schedule: '3-5'
-    sonobuoy_version: 'v0.18.2'
+    sonobuoy_version: 'v0.18.5'
     wrappers:
       - timeout:
           timeout: 180
