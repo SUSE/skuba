@@ -65,7 +65,11 @@ pipeline {
                 }
             }
         }
-        
+
+        stage('Inhibit kured reboots') { steps {
+            sh(script: 'make -f ci/Makefile inhibit_kured')
+            }
+        }
         stage('upgrade skuba') { 
             steps {
                 sh(script: "sudo zypper in -y --no-recommends go1.13")
