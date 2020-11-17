@@ -12,7 +12,6 @@ resource "azurerm_subnet" "bastionhost" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.resource_group.name
   virtual_network_name = azurerm_virtual_network.virtual_network.name
-  # address_prefixes     = [var.bastionhost_subnet_cidr]
   address_prefix       = var.bastionhost_subnet_cidr
 }
 
@@ -20,7 +19,6 @@ resource "azurerm_subnet" "nodes" {
   name                 = "${var.stack_name}-nodes"
   resource_group_name  = azurerm_resource_group.resource_group.name
   virtual_network_name = azurerm_virtual_network.virtual_network.name
-  # address_prefixes     = [var.private_subnet_cidr]
   address_prefix       = var.private_subnet_cidr
 }
 
