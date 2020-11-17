@@ -38,11 +38,6 @@ resource "azurerm_linux_virtual_machine" "master" {
   admin_password                  = var.password
   disable_password_authentication = (var.password == "") ? true : false
   custom_data                     = data.template_cloudinit_config.cfg.rendered
-  timeouts {
-    create = "90m"
-    update = "60m"
-    delete = "60m"
-  }
   os_disk {
     name                 = "${var.stack_name}-master-${count.index}-disk"
     caching              = "ReadOnly"
