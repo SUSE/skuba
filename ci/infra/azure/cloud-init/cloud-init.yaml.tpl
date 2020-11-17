@@ -3,7 +3,7 @@
 # Set locale
 locale: en_US.UTF-8
 
-# set timezone
+# Set timezone
 timezone: Etc/UTC
 
 # Inject the public keys
