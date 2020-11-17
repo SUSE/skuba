@@ -6,11 +6,6 @@ provider "azurerm" {
 resource "azurerm_resource_group" "resource_group" {
   name     = "${var.stack_name}-resource-group"
   location = var.azure_location
-  timeouts {
-    create = "90m"
-    update = "60m"
-    delete = "60m"
-  }
 }
 
 data "azurerm_platform_image" "sles_chost_byos" {
