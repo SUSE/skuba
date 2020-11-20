@@ -285,3 +285,14 @@ func AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo NodeVe
 	}
 	return true
 }
+
+// AllNodesTolerateVersionWithVersioningInfo returns if all nodes tolerate a specific kubernetes version
+// This can be used to determine e.g. if an upgrade is ongoing
+func AllNodesTolerateClusterVersionWithVersioningInfo(allNodesVersioningInfo NodeVersionInfoMap, clusterVersion *version.Version) bool {
+	for _, version := range allNodesVersioningInfo {
+		if !version.ToleratesClusterVersion(clusterVersion) {
+			return false
+		}
+	}
+	return true
+}
