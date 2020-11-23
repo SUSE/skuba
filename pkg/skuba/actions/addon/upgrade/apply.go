@@ -65,7 +65,7 @@ func Apply(client clientset.Interface) error {
 	if err != nil {
 		return err
 	}
-	allNodesMatchClusterVersion := kubernetes.AllNodesMatchClusterVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion)
+	allNodesMatchClusterVersion := kubernetes.AllNodesTolerateClusterVersionWithVersioningInfo(allNodesVersioningInfo, currentClusterVersion)
 	fmt.Printf("Current Kubernetes cluster version: %s\n", currentVersion)
 	fmt.Printf("Latest Kubernetes version: %s\n", latestVersion)
 	fmt.Println()
