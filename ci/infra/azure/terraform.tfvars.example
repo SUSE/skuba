@@ -30,6 +30,7 @@ stack_name = "my-sles-cluster"
 dnsdomain = "my-sles-cluster.example.com"
 
 # Enables creation of bastion host
+# https://docs.microsoft.com/en-us/azure/bastion/bastion-overview
 # EXAMPLE:
 # create_bastionhost = false
 
@@ -65,11 +66,11 @@ dnsdomain = "my-sles-cluster.example.com"
 # EXAMPLE:
 # worker_disk_size = 30
 
-# define the repositories to use
+# Optional: Define the repositories to use
 # EXAMPLE:
 # repositories = {
-#   repository1 = "http://example.my.repo.com/repository1/"
-#   repository2 = "http://example.my.repo.com/repository2/"
+#   repository1 = "http://repo.example.com/repository1/"
+#   repository2 = "http://repo.example.com/repository2/"
 # }
 
 # Minimum required packages. Do not remove them.

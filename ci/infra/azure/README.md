@@ -141,7 +141,7 @@ inside of the desired node.
 
 It's recommended to use Chrome or Chromium during this process.
 
-You can ssh into the first bootstrapped master node to download the kubeconfig 
+You can ssh into the first bootstrapped master node to download the kubeconfig
 file to operate the cluster without having to go through the bastion host.
 
 Caveats of Azure Bastion:

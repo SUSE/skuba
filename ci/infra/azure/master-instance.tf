@@ -3,6 +3,7 @@ resource "azurerm_network_interface" "master" {
   name                = "${var.stack_name}-master-${count.index}-nic"
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
+  depends_on          = [azurerm_subnet.nodes,]
 
   ip_configuration {
     name                          = "internal"
@@ -16,6 +17,7 @@ resource "azurerm_network_interface_security_group_association" "master" {
   count                     = var.masters
   network_interface_id      = element(azurerm_network_interface.master.*.id, count.index)
   network_security_group_id = azurerm_network_security_group.master.id
+  depends_on                = [azurerm_network_interface.master, azurerm_network_security_group.master, azurerm_linux_virtual_machine.master,]
 }
 
 resource "azurerm_linux_virtual_machine" "master" {
@@ -25,7 +27,8 @@ resource "azurerm_linux_virtual_machine" "master" {
   location              = azurerm_resource_group.resource_group.location
   zone                  = var.enable_zone ? var.azure_availability_zones[count.index % length(var.azure_availability_zones)] : null
   size                  = var.master_vm_size
-  network_interface_ids = [element(azurerm_network_interface.master.*.id, count.index)]
+  network_interface_ids = [element(azurerm_network_interface.master.*.id, count.index),]
+  depends_on            = [azurerm_network_interface.master,]
 
   admin_username = var.username
   admin_ssh_key {
@@ -34,8 +37,9 @@ resource "azurerm_linux_virtual_machine" "master" {
   }
   admin_password                  = var.password
   disable_password_authentication = (var.password == "") ? true : false
-
+  custom_data                     = data.template_cloudinit_config.cfg.rendered
   os_disk {
+    name                 = "${var.stack_name}-master-${count.index}-disk"
     caching              = "ReadOnly"
     storage_account_type = var.master_storage_account_type
     disk_size_gb         = var.master_disk_size
@@ -63,21 +67,6 @@ resource "azurerm_linux_virtual_machine" "master" {
   }
 }
 
-resource "azurerm_virtual_machine_extension" "master" {
-  count                = var.masters
-  name                 = "${var.stack_name}-master-${count.index}-vm-extension"
-  virtual_machine_id   = element(azurerm_linux_virtual_machine.master.*.id, count.index)
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
-
-  settings = <<SETTINGS
-    {
-        "script": "${base64encode(data.template_file.cloud-init.rendered)}"
-    }
-SETTINGS
-}
-
 locals {
   master_principal_ids = var.cpi_enable ? azurerm_linux_virtual_machine.master.*.identity.0.principal_id : []
 }
@@ -88,5 +77,5 @@ resource "azurerm_role_assignment" "master" {
   role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
   principal_id       = local.master_principal_ids[count.index]
 
-  depends_on = [azurerm_linux_virtual_machine.master]
+  depends_on = [azurerm_linux_virtual_machine.master,]
 }
