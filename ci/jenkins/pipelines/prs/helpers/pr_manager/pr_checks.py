@@ -1,6 +1,9 @@
 import sys
 import re
+import os
+import subprocess
 
+WORKSPACE = os.getenv('WORKSPACE')
 
 class PrChecks:
     def __init__(self, org, repo):
@@ -24,6 +27,51 @@ class PrChecks:
 
         print(f'PR-{pr_number} is from a fork.')
 
+    def check_pr_manifest_change(self):
+        """
+        Checks if the given PR has updated any Addon and that its respective manifest
+        has been bumped.
+
+        The Regular expression will match:
+        1: + or - symbol
+        2: Addon Name
+        3: Version
+        4: Manifest
+
+        :return:
+        """
+
+        added_changes = []
+        removed_changes = []
+        p = re.compile('(-|\+)([A-Za-z]+):&AddonVersion{"(.+)",([0-9]+)},')
+
+        cmd = f'git diff --no-ext-diff --unified=0 origin/master -- {WORKSPACE}/internal/pkg/skuba/kubernetes/versions.go | grep "AddonVersion"'
+
+        try:
+            results = subprocess.run(cmd, shell=True, 
+                universal_newlines=True, check=True, stdout=subprocess.PIPE)
+        except subprocess.CalledProcessError as err:
+            print(err)
+            return
+
+        for line in results.stdout.splitlines():
+            line = line.replace('\t', '').replace(' ', '')
+            matches = p.match(line)
+            if matches[1] == "-":
+                removed_changes.append({"name": matches[2], "version": matches[3], "manifest": matches[4]})
+            else:
+                added_changes.append({"name": matches[2], "version": matches[3], "manifest": matches[4]})
+        
+        error = False
+        for r in removed_changes:
+            for a in added_changes:
+                if r["name"] == a["name"] and (r["version"] == a["version"] or  r["manifest"] == a["manifest"]):
+                    error = True
+                    print(f'Error in Addon {r["name"]} please double check the manifest number')
+
+        if error:
+            sys.exit(1)
+       
     def check_pr_from_collaborator(self, change_author):
         collaborator = self.repo.has_in_collaborators(change_author)
 
