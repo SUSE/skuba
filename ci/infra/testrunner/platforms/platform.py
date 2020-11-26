@@ -1,5 +1,6 @@
 import logging
 import os
+import tempfile
 
 import requests
 from timeout_decorator import timeout
@@ -155,3 +156,28 @@ class Platform:
 
     def setup_cloud_provider(self):
         raise ValueError("Cloud provider is not supported for this platform")
+
+    def configure_crio_mirror_dockerhub(self):
+        """Due to dockerhub setting rate limits we have a local mirror but we need to configure crio to use it"""
+        # only continue with this if the env var DOCKERHUB_MIRROR is set, this is done by jenkins and
+        # it checks that the machine is up and the port is up, otherwise dont set anything
+
+        if os.environ.get("DOCKERHUB_MIRROR", False):
+            logger.info("Found dockerhub mirror at {}, reconfiguring crio".format(os.environ["DOCKERHUB_MIRROR"]))
+            with tempfile.NamedTemporaryFile() as f:
+                f.write(f"""unqualified-search-registries = ["docker.io"]
+[[registry]]
+prefix = "docker.io"
+insecure = false
+blocked = false
+location = "docker.io"
+[[registry.mirror]]
+location = "{os.environ["DOCKERHUB_MIRROR"]}:5000"
+insecure = true""".encode())
+                f.flush()  # otherwise file is empty
+                for node in self.get_nodes_ipaddrs("worker"):
+                    self.utils.scp_file_to_remote(node, f.name, f.name)
+                    self.utils.ssh_run(node, f"sudo cp {f.name} /etc/containers/registries.conf")
+                    self.utils.ssh_run(node, "sudo systemctl restart crio")
+        else:
+            logger.info("No mirror set on DOCKERHUB_MIRROR env var")

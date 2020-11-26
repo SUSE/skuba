@@ -127,6 +127,10 @@ def inhibit_kured(options):
     Kubectl(options.conf).inhibit_kured()
 
 
+def crio_mirror(options):
+    platforms.get_platform(options.conf, options.platform).configure_crio_mirror_dockerhub()
+
+
 def main():
     help_str = """
     This script is meant to be run manually on test servers, developer desktops, or Jenkins.
@@ -263,6 +267,9 @@ def main():
     ssh_args.add_argument("-c", "--cmd", dest="cmd", nargs=REMAINDER, help="remote command and its arguments. e.g ls -al. Must be last argument for ssh command")
     cmd_ssh = commands.add_parser("ssh", parents=[node_args, ssh_args], help="Execute command in node via ssh.")
     cmd_ssh.set_defaults(func=ssh)
+
+    crio_mirror_command = commands.add_parser("crio_mirror", help="Set mirror registry for CI testing in the workers")
+    crio_mirror_command.set_defaults(func=crio_mirror)
 
     test_args = ArgumentParser(add_help=False)
     test_args.add_argument("-f", "--filter", dest="mark", help="Filter the tests based on markers")

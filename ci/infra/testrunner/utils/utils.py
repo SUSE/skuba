@@ -154,6 +154,18 @@ class Utils:
                f" {self.ssh_user()}@{ip_address}:{remote_file_path} {local_file_path}")
         self.runshellcommand(cmd)
 
+    def scp_file_to_remote(self, ip_address, remote_file_path, local_file_path):
+        """
+        Copies a local file from the given path to the give ip
+        :param ip_address: (str) IP address of the node to copy to
+        :param local_file_path: (str) Path of the file to be copied
+        :param remote_file_path: (str) Path where to store the file in remote
+        :return:
+        """
+        cmd = (f"scp {Constant.SSH_OPTS} -i {self.conf.utils.ssh_key}"
+               f" {local_file_path} {self.ssh_user()}@{ip_address}:{remote_file_path}")
+        self.runshellcommand(cmd)
+
     def rsync(self, ip_address, remote_dir_path, local_dir_path):
         """
         Copies a remote dir from the given ip to the give path
