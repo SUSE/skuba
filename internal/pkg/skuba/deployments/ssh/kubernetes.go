@@ -104,7 +104,7 @@ func kubernetesFreshInstallAllPkgs(t *Target, data interface{}) error {
 	// Version specific
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubeadm", current))
 	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-kubelet", current))
-	pkgs = append(pkgs, fmt.Sprintf("+kubernetes-%s-client", current))
+	pkgs = append(pkgs, fmt.Sprintf("+kubernetes%s-client", current))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-o-%s*", current))
 	pkgs = append(pkgs, fmt.Sprintf("+cri-tools-%s*", current))
 
