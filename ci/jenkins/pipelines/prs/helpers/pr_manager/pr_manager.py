@@ -50,6 +50,9 @@ def check_pr(args):
             pr_checks.check_pr_details(CHANGE_ID)
         if args.collab_check:
             pr_checks.check_pr_from_collaborator(CHANGE_AUTHOR)
+        if args.manifest_check:
+            pr_checks.check_pr_manifest_change()
+
     else:
         print('No CHANGE_ID was set assuming this is not a PR. Skipping checks...')
 
@@ -122,6 +125,7 @@ def parse_args():
     checks_parser.add_argument('--is-fork', action='store_true')
     checks_parser.add_argument('--check-pr-details', action='store_true')
     checks_parser.add_argument('--collab-check', action='store_true')
+    checks_parser.add_argument('--manifest-check', action='store_true')
     checks_parser.set_defaults(func=check_pr)
 
     # Parse merge-prs command

@@ -223,6 +223,20 @@ pipeline {
 
         } } }
 
+        stage('Addon update Check') { steps { script {
+            pr_context = 'jenkins/skuba-validate-addon-update'
+            sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'pending'", label: "Sending pending status")
+
+            try{
+                sh(script: "${PR_MANAGER} check-pr --manifest-check")
+                echo "No Addon issues detected"
+                sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'success'", label: "Sending success status")
+            } catch(err) {
+                sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'failure'", label: "Sending failed status")
+                error(message: "Unhandled error when checking for addons changes: ${err}")
+            }
+        }}}
+
         stage('Setting in-progress status for pr-test') { steps { script {
             pr_context = 'jenkins/skuba-test'
             sh(script: "${PR_MANAGER} update-pr-status ${pr_context} 'pending'", label: "Sending pending status")
