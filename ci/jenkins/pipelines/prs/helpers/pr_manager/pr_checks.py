@@ -43,7 +43,7 @@ class PrChecks:
 
         added_changes = []
         removed_changes = []
-        p = re.compile('(-|\+)([A-Za-z]+):&AddonVersion{"(.+)",([0-9]+)},')
+        p = re.compile('(-|\+)([A-Za-z]+):&AddonVersion{"(.*)",([0-9]+)},')
 
         cmd = f'git diff --no-ext-diff --unified=0 origin/master -- {WORKSPACE}/internal/pkg/skuba/kubernetes/versions.go | grep "AddonVersion"'
 
@@ -65,7 +65,7 @@ class PrChecks:
         error = False
         for r in removed_changes:
             for a in added_changes:
-                if r["name"] == a["name"] and (r["version"] == a["version"] or  r["manifest"] == a["manifest"]):
+                if r["name"] == a["name"] and ((r["version"] == a["version"] and r["version"] != "") or  r["manifest"] == a["manifest"]):
                     error = True
                     print(f'Error in Addon {r["name"]} please double check the manifest number')
 
