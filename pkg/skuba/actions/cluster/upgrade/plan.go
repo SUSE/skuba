@@ -89,15 +89,15 @@ func plan(client clientset.Interface, availableVersions []*version.Version, clus
 				fmt.Printf("  - %s: up to date", nodeName)
 			} else if !nodeVersionInfo.ToleratesClusterVersion(currentClusterVersion) {
 				if nodeVersionInfo.IsControlPlane() {
-					fmt.Printf("  - %s; current kubelet package version: %s, kube-apiserver container version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
+					fmt.Printf("  - %s; current running kubelet version: %s, kube-apiserver container version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
 				} else {
-					fmt.Printf("  - %s; current kubelet package version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String())
+					fmt.Printf("  - %s; current running kubelet version: %s (upgrade required)", nodeName, nodeVersionInfo.KubeletVersion.String())
 				}
 			} else {
 				if nodeVersionInfo.IsControlPlane() {
-					fmt.Printf("  - %s; current kubelet package version: %s, kube-apiserver container version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
+					fmt.Printf("  - %s; current running kubelet version: %s, kube-apiserver container version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String(), nodeVersionInfo.APIServerVersion.String())
 				} else {
-					fmt.Printf("  - %s; current kubelet package version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String())
+					fmt.Printf("  - %s; current running kubelet version: %s (upgrade suggested)", nodeName, nodeVersionInfo.KubeletVersion.String())
 				}
 			}
 			if nodeVersionInfo.Unschedulable() {
