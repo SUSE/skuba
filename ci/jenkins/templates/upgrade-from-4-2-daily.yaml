@@ -3,6 +3,9 @@
     project-type: pipeline
     number-to-keep: 30
     days-to-keep: 30
+    schedule: '3-5'
+    triggers:
+        - timed: 'H H({schedule}) * * *'
     parameters:
         - string:
             name: BRANCH
@@ -13,19 +16,13 @@
             default: '{platform}'
             description: The platform to perform the tests on
         - string:
-            name: WORKER_LABEL
-            description: LABEL of the worker to execute the job in
-        - string:
-            name: WORKER_HOST
-            description: Host name or ip address of worker
-        - string:
-            name: INITIAL_VERSION
-            description: 'Initial version of skuba to deploy'
-            default: 'maintenance-caasp-v4'
-        - string:
-            name: TARGET_VERSION
-            description: 'version of skuba to migrate to'
-            default: 'master'
+            name: WORKER_TEMPLATE
+            description: Template for worker
+            default: 'maintenance-caasp-v4.2'
+        - bool:
+            name: RETAIN_WORKER
+            default: false
+            description: Retain worker at the end of the job
         - bool:
             name: RETAIN_CLUSTER
             default: false
@@ -33,7 +30,15 @@
         - string:
             name: RETENTION_PERIOD
             default: 24
-            description: Retention period for cluster (in hours)  
+            description: Retention period for worker (in hours)  
+        - string:
+            name: INITIAL_VERSION
+            description: 'Initial version of skuba to deploy'
+            default: 'maintenance-caasp-v4.2'
+        - string:
+            name: TARGET_VERSION
+            description: 'version of skuba to migrate to'
+            default: 'master'
     pipeline-scm:
         scm:
             - git:
