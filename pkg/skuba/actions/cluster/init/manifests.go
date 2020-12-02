@@ -34,8 +34,10 @@ If you need any customization, please add a custom files with the name 99-custom
 CRIO_OPTIONS=--pause-image={{.PauseImage}}{{if not .StrictCapDefaults}} --default-capabilities="CHOWN,DAC_OVERRIDE,FSETID,FOWNER,NET_RAW,SETGID,SETUID,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,MKNOD,AUDIT_WRITE,SETFCAP"{{end}}`
 	criDefaultsConf = `# PLEASE DON'T EDIT THIS FILE!
 # This file is managed by CaaSP skuba.
-{{if not .StrictCapDefaults}}[crio.runtime]
 
+[crio.runtime]
+
+{{if not .StrictCapDefaults}}
 default_capabilities = [
 	"CHOWN",
 	"DAC_OVERRIDE",
@@ -51,7 +53,10 @@ default_capabilities = [
 	"MKNOD",
 	"AUDIT_WRITE",
 	"SETFCAP",
-]{{end}}
+]
+{{else}}
+pids_limit = 32768
+{{end}}
 
 [crio.image]
 
