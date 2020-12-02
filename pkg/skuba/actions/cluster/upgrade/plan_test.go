@@ -86,7 +86,7 @@ Latest Kubernetes version: 1.16.0
 
 Some nodes do not match the current cluster version (1.16.0):
   - control-plane-0: up to date
-  - worker-0; current kubelet package version: 1.14.0 (upgrade required)
+  - worker-0; current running kubelet version: 1.14.0 (upgrade required)
 
 Addons at the current cluster version 1.16.0 are up to date.
 `,
@@ -106,7 +106,7 @@ Latest Kubernetes version: 1.16.0
 
 Some nodes do not match the current cluster version (1.16.0):
   - control-plane-0: up to date
-  - worker-unschedulable-0; current kubelet package version: 1.14.0 (upgrade required); unschedulable, ignored
+  - worker-unschedulable-0; current running kubelet version: 1.14.0 (upgrade required); unschedulable, ignored
 
 Addons at the current cluster version 1.16.0 are up to date.
 `,
@@ -127,7 +127,7 @@ Latest Kubernetes version: 1.16.1
 
 Some nodes do not match the current cluster version (1.16.1):
   - control-plane-0: up to date
-  - worker-0; current kubelet package version: 1.16.0 (upgrade suggested)
+  - worker-0; current running kubelet version: 1.16.0 (upgrade suggested)
 
 Addons at the current cluster version 1.16.1 are up to date.
 `,
@@ -148,7 +148,7 @@ Latest Kubernetes version: 1.16.0
 
 Some nodes do not match the current cluster version (1.16.0):
   - control-plane-0: up to date
-  - worker-0; current kubelet package version: 1.15.0 (upgrade suggested)
+  - worker-0; current running kubelet version: 1.15.0 (upgrade suggested)
 
 Addons at the current cluster version 1.16.0 are up to date.
 `,
@@ -261,7 +261,7 @@ Latest Kubernetes version: 1.17.0
 
 Some nodes do not match the current cluster version (1.17.0):
   - control-plane-0: up to date
-  - worker-0; current kubelet package version: 1.16.0 (upgrade suggested)
+  - worker-0; current running kubelet version: 1.16.0 (upgrade suggested)
 
 Addon upgrades for 1.17.0:
   - cilium: 1.0.1 -> 1.0.2
