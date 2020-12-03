@@ -19,7 +19,7 @@ def migrate_node(platform, checker, kubectl, role, node, regcode, option=1):
     platform.ssh_run(role, node, ('sudo zypper update --allow-vendor-change -y'
                                   f' kubernetes-{k8s_major}.{k8s_minor}-kubeadm'))
     #:FIXME use kured for controlled reboot.
-    platform.ssh_run(role, node, "sudo reboot &")
+    platform.ssh_run(role, node, "nohup sudo reboot &>/dev/null & exit")
 
     # wait the node become live
     wait(platform.ssh_run,
