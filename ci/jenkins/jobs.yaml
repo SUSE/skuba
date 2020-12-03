@@ -81,7 +81,6 @@
     jobs:
         - '{name}/{platform}/{test}-daily'
         - '{name}/{platform}/update-daily'
-        - '{name}/{platform}/trigger-upgrade-from-4-2-daily'
         - '{name}/{platform}/upgrade-from-4-2-daily'
 
 - project:
