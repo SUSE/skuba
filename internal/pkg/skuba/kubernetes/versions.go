@@ -37,7 +37,6 @@ const (
 	Dex           Addon = "dex"
 	Gangway       Addon = "gangway"
 	MetricsServer Addon = "metrics-server"
-	Kucero        Addon = "kucero"
 	PSP           Addon = "psp"
 
 	Kubelet          Component = "kubelet"
