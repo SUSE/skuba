@@ -36,13 +36,18 @@ func TestGetCiliumInitImage(t *testing.T) {
 	}{
 		{
 			name:     "get cilium init image without revision",
-			imageTag: "1.6.6",
-			want:     img.ImageRepository + "/cilium-init:1.6.6",
+			imageTag: "1.5.3",
+			want:     img.ImageRepository + "/cilium-init:1.5.3",
 		},
 		{
 			name:     "get cilium init image with revision",
-			imageTag: "1.6.6-rev2",
-			want:     img.ImageRepository + "/cilium-init:1.6.6-rev2",
+			imageTag: "1.5.3-rev1",
+			want:     img.ImageRepository + "/cilium-init:1.5.3-rev1",
+		},
+		{
+			name:     "get newer cilium version which does not ship cilium-init image",
+			imageTag: "1.6.6",
+			want:     "",
 		},
 	}
 	for _, tt := range tests {
@@ -129,6 +134,11 @@ func Test_renderContext_CiliumInitImage(t *testing.T) {
 		}
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.renderContext.CiliumInitImage()
+			// Skip empty results, which mean that Cilium >= 1.6 is checked and thus
+			// the cilium-init image is not shipped.
+			if got == "" {
+				return
+			}
 			matched, err := regexp.Match(tt.want, []byte(got))
 			if err != nil {
 				t.Error(err)

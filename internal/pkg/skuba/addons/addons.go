@@ -470,7 +470,10 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 func (addon Addon) Images(imageTag string) []string {
 	images := []string{}
 	for _, cb := range addon.getImageCallbacks {
-		images = append(images, cb(imageTag))
+		image := cb(imageTag)
+		if image != "" {
+			images = append(images, image)
+		}
 	}
 	return images
 }
