@@ -375,7 +375,7 @@ func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, rootDir
 		"-f", preflightManifestPath,
 	}
 	if dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+		kubectlArgs = append(kubectlArgs, "--server-dry-run")
 	}
 	cmd := exec.Command("kubectl", kubectlArgs...)
 	var stderr bytes.Buffer
@@ -441,7 +441,7 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		"-k", addon.addonDir(),
 	}
 	if dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+		kubectlArgs = append(kubectlArgs, "--server-dry-run")
 	}
 	cmd := exec.Command("kubectl", kubectlArgs...)
 	var stderr bytes.Buffer
