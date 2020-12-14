@@ -112,8 +112,8 @@ func TestCheckLocalAddonsBaseManifests(t *testing.T) {
 
 	// pre-check
 	_, err = CheckLocalAddonsBaseManifests(addonConfiguration)
-	if err == nil {
-		t.Error("expected got error but no error reported")
+	if err != nil {
+		t.Errorf("expected no error but an error reported: %v", err)
 		return
 	}
 

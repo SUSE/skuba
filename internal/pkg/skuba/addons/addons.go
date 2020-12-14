@@ -328,7 +328,7 @@ func (addon Addon) compareLocalBaseManifest(addonConfiguration AddonConfiguratio
 
 	localManifest, err := ioutil.ReadFile(addon.manifestPath(addon.addonDir()))
 	if err != nil {
-		return false, errors.Wrapf(err, "unable to read %s addon rendered template", addon.Addon)
+		return false, nil
 	}
 
 	addonManifest, err := addon.Render(addonConfiguration)
