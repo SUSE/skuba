@@ -392,7 +392,11 @@ func (addon Addon) applyPreflight(addonConfiguration AddonConfiguration, rootDir
 		"-f", preflightManifestPath,
 	}
 	if dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+		flag, err := kubectlServerSideDryRunFlag()
+		if err != nil {
+			return true, err
+		}
+		kubectlArgs = append(kubectlArgs, flag)
 	}
 	cmd := exec.Command("kubectl", kubectlArgs...)
 	var stderr bytes.Buffer
@@ -458,7 +462,11 @@ func (addon Addon) Apply(client clientset.Interface, addonConfiguration AddonCon
 		"-k", addon.addonDir(),
 	}
 	if dryRun {
-		kubectlArgs = append(kubectlArgs, "--dry-run=server")
+		flag, err := kubectlServerSideDryRunFlag()
+		if err != nil {
+			return err
+		}
+		kubectlArgs = append(kubectlArgs, flag)
 	}
 	cmd := exec.Command("kubectl", kubectlArgs...)
 	var stderr bytes.Buffer
@@ -525,4 +533,25 @@ func updateSkubaConfigMapWithAddonVersion(client clientset.Interface, addon kube
 	}
 	skubaConfiguration.AddonsVersion[addon] = addonVersion
 	return skuba.UpdateSkubaConfiguration(client, skubaConfiguration)
+}
+
+func kubectlServerSideDryRunFlag() (string, error) {
+	// If k8s client version < v1.18.0, the server-side dry-run flag is `--server-dry-run`
+	// If k8s client version >= v1.18.0, the server-side dry-run flag is `--dry-run=server`
+	cmd := exec.Command("kubectl", "version", "--client", "--short")
+	combinedOutput, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	var clientVersion string
+	_, err = fmt.Sscanf(string(combinedOutput), "Client Version: %s", &clientVersion)
+	if err != nil {
+		return "", err
+	}
+
+	if version.MustParseSemantic(clientVersion).LessThan(version.MustParseSemantic("v1.18.0")) {
+		return "--server-dry-run", nil
+	}
+	return "--dry-run=server", nil
 }
