@@ -1,6 +1,7 @@
 - job-template:
     name: '{name}/{platform}/upgrade-from-4-2-daily'
     project-type: pipeline
+    disabled: true
     number-to-keep: 30
     days-to-keep: 30
     schedule: '3-5'

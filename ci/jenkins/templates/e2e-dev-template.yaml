@@ -1,6 +1,7 @@
 - job-template:
     name: '{name}/e2e-test'
     project-type: pipeline
+    disabled: true
     number-to-keep: 30
     days-to-keep: 30
     concurrent: true
