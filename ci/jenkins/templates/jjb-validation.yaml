@@ -1,6 +1,7 @@
 - job-template:
     name: '{name}/jjb-validation'
     project-type: multibranch
+    disabled: true
     periodic-folder-trigger: 5m
     number-to-keep: 30
     days-to-keep: 30
