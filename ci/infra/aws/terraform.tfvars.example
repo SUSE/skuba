@@ -1,34 +1,50 @@
-# prefix for resources
-stack_name = "my-k8s"
+# AWS region
+# A list of region names can be found here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+# https://aws.amazon.com/about-aws/global-infrastructure/
+#   aws ec2 describe-regions --all-regions
+# aws_region = "eu-central-1"
+aws_region = "ap-northeast-2"
 
-# Number of master nodes
-masters = 1
+# AWS availability zone
+# You can get AZ name with the following command:
+#    aws ec2 describe-availability-zones --region region-name
+#
+# More information here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#using-regions-availability-zones-describe
+# aws_availability_zones = [ "eu-central-1a", "eu-central-1b", "eu-central-1c" ]
+# aws_availability_zones = [ "us-west-1a", "us-west-1b", "us-west-1c" ]
+# aws_availability_zones = [ "ap-northeast-2a", "ap-northeast-2b", "ap-northeast-2c" ]
+aws_availability_zones = [ "ap-northeast-2a", "ap-northeast-2c" ]
 
-# Number of worker nodes
-workers = 2
+# Enable Resource Group
+#enable_resource_group = true
+
+# CIDR blocks for vpc
+cidr_block = "10.1.0.0/16"
+
+# Identifier to make all your resources unique and avoid clashes with other users of this terraform project
+# stack_name = "my-sles-cluster"
+stack_name = "sles-101"
 
 # Extra tags to add to all the resources
-#tags = {
-#  "key": "value"
-#}
-
-# a SSH public key for accessing the machines
-authorized_keys = [
-  "ssh-rsa AAAAB3NzaC1yc2EA...",
-]
-
-## To register CaaSP product please use ONLY ONE of the following method
-# - register against SUSE Customer Service, with SUSE CaaSP Product Registration Code
-# - register against local SUSE Repository Mirroring Server
-#
-# SUSE CaaSP Product Registration Code:
-#caasp_registry_code = ""
-#
-# SUSE Repository Mirroring Server Name (FQDN):
-#rmt_server_name = "rmt.example.com"
+tags = {
+  "stack_name": "sles-101"
+  #  "key": "value"
+}
 
 # List of VPC IDs to join via VPC peer link
-#peer_vpc_ids = ["vpc-id1", "vpc-id2"]
+# peer_vpc_ids = ["vpc-id1", "vpc-id2"]
+
+# Number of master nodes
+# masters = 1
+masters = 1
+
+# Size of the master nodes
+# EXAMPLE:
+# master_instance_type = "t2.medium"
+master_instance_type = "t2.medium"
+
+# "Size of the EBS volume, in GB"
+master_volume_size = 20
 
 # Name of the IAM profile to associate to control plane nodes.
 # Leave empty to have terraform create one.
@@ -36,6 +52,19 @@ authorized_keys = [
 #
 # Note well: you must  have the right set of permissions.
 # iam_profile_master = "caasp-k8s-master-vm-profile"
+# iam_profile_master = "sles-101_cpi_master"
+
+# Number of worker nodes
+# workers = 3
+workers = 2
+
+# Size of the worker nodes
+# EXAMPLE:
+# worker_instance_type = "t2.medium"
+worker_instance_type = "t2.medium"
+
+# "Size of the EBS volume, in GB"
+worker_volume_size = 20
 
 # Name of the IAM profile to associate to worker nodes
 # Leave empty to have terraform create one.
@@ -43,9 +72,104 @@ authorized_keys = [
 #
 # Note well: you must  have the right set of permissions.
 # iam_profile_worker = "caasp-k8s-worker-vm-profile"
+# iam_profile_worker = "sles-101_cpi_worker"
 
-# Use specific Availibility Zone
-#availability_zones_filter= {
-#    name   = "zone-name"
-#    values = ["eu-west-3c"]
-#}
+# # Username for the cluster nodes
+# # EXAMPLE:
+# # username = "sles"
+# username = "sles"
+
+# # Password for the cluster nodes
+# # EXAMPLE:
+# # password = "linux"
+# password = "linux"
+
+# Optional: Define the repositories to use
+# EXAMPLE:
+# repositories = {
+#   repository1 = "http://repo.example.com/repository1/"
+#   repository2 = "http://repo.example.com/repository2/"
+# }
+repositories = {
+  devel_languages_go     = "http://download.opensuse.org/repositories/devel:/languages:/go/openSUSE_Leap_15.2/"
+  devel_languages_python = "http://download.opensuse.org/repositories/devel:/languages:/python/openSUSE_Leap_15.2/"
+  devel_languages_rust   = "http://download.opensuse.org/repositories/devel:/languages:/rust/openSUSE_Leap_15.2/"
+}
+# lb_repositories = {}
+
+# repositories = {
+#   sle15sp2_pool = "http://download.suse.de/ibs/SUSE:/SLE-15-SP2:/GA/standard/"
+#   sle15sp2_update = "http://download.suse.de/ibs/SUSE:/SLE-15-SP2:/Update/standard/"
+#   sle15_pool = "http://download.suse.de/ibs/SUSE:/SLE-15:/GA/standard/"
+#   sle15_update = "http://download.suse.de/ibs/SUSE:/SLE-15:/Update/standard/"
+#   caasp = "http://download.suse.de/ibs/SUSE:/SLE-15-SP2:/Update:/Products:/CAASP:/4.5/standard"
+#   sle15_debuginfo_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15/x86_64/product_debug/"
+#   sle15sp2_debuginfo_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP2/x86_64/product_debug/"
+# }
+
+# repositories = {
+#   caasp_devel             = "http://download.suse.de/ibs/Devel:/CaaSP:/4.5/SLE_15_SP2/"
+#   suse_ca                 = "http://download.suse.de/ibs/SUSE:/CA/SLE_15_SP2/"
+#   sle_server_pool         = "http://download.suse.de/ibs/SUSE/Products/SLE-Product-SLES/15-SP2/x86_64/product/"
+#   basesystem_pool         = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP2/x86_64/product/"
+#   containers_pool         = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Containers/15-SP2/x86_64/product/"
+#   serverapps_pool         = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Server-Applications/15-SP2/x86_64/product/"
+#   sle_server_updates      = "http://download.suse.de/ibs/SUSE/Updates/SLE-Product-SLES/15-SP2/x86_64/update/"
+#   basesystem_updates      = "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Basesystem/15-SP2/x86_64/update/"
+#   containers_updates      = "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Containers/15-SP2/x86_64/update/"
+#   serverapps_updates      = "http://download.suse.de/ibs/SUSE/Updates/SLE-Module-Server-Applications/15-SP2/x86_64/update/"
+#   sle15sp2_pool           = "http://download.suse.de/ibs/SUSE:/SLE-15-SP2:/GA/standard/"
+#   sle15sp2_update         = "http://download.suse.de/ibs/SUSE:/SLE-15-SP2:/Update/standard/"
+#   sle15_debuginfo_pool    = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15/x86_64/product_debug/"
+#   sle15sp2_debuginfo_pool = "http://download.suse.de/ibs/SUSE/Products/SLE-Module-Basesystem/15-SP2/x86_64/product_debug/"
+# }
+
+# Minimum required packages. Do not remove them.
+# Feel free to add more packages
+packages = []
+# packages = [
+#   "zypper-needs-restarting",
+#   "kernel-default",
+#   "-kernel-default-base",
+#   "ca-certificates-suse",
+#   "gdb",
+#   "systemd-coredump",
+#   "lz4"
+# ]
+
+# ssh keys to inject into all the nodes
+# EXAMPLE:
+# authorized_keys = [
+#  "ssh-rsa <key-content>"
+# ]
+authorized_keys = [
+]
+
+# ssh key to launch the nodes with
+# EXAMPLE:
+# key_pair = "my_keypair"
+# key_pair = ""
+
+# IMPORTANT: Replace these ntp servers with ones from your infrastructure
+ntp_servers = [
+  "TIME.google.com",
+  "TIME1.google.com",
+  "TIME2.google.com",
+  "TIME3.google.com",
+  "TIME4.google.com"
+]
+
+# DNS servers for the nodes
+# dns_nameservers = [
+#     "172.28.0.2",
+#     "8.8.8.8",
+#     "8.8.4.4",
+#     "1.1.1.1",
+#     "1.0.0.1",
+#     "168.95.1.1",
+#     "168.95.192.1"
+# ]
+dns_nameservers = [
+  "8.8.8.8",
+  "8.8.4.4"
+]
