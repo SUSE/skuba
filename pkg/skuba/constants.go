@@ -32,6 +32,7 @@ const (
 	SUSECNIDir = "/usr/lib/cni"
 	// MaxNodeNameLength is the maximum node name length accepted by kubelet.
 	MaxNodeNameLength = 63
+	CGroupDriver      = "systemd"
 )
 
 func KubeadmInitConfFile() string {

@@ -43,6 +43,7 @@ nodeRegistration:
     cni-bin-dir: /usr/lib/cni
     hostname-override: worker-0
     pod-infra-container-image: registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4/pause:3.1
+    cgroup-driver: systemd
   name: worker-0
 `
 
@@ -162,6 +163,7 @@ func Test_documentMapToJoinConfiguration(t *testing.T) {
 						"cni-bin-dir":               "/usr/lib/cni",
 						"hostname-override":         "worker-0",
 						"pod-infra-container-image": "registry.suse.de/devel/caasp/4.0/containers/containers/caasp/v4/pause:3.1",
+						"cgroup-driver":             "systemd",
 					},
 				},
 				CACertPath: "/etc/kubernetes/pki/ca.crt",
