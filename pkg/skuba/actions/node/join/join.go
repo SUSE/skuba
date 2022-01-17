@@ -177,7 +177,6 @@ func addTargetInformationToJoinConfiguration(target *deployments.Target, role de
 	joinConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	joinConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, clusterVersion)
-	joinConfiguration.NodeRegistration.KubeletExtraArgs["cgroup-driver"] = skuba.CGroupDriver
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return errors.Wrap(err, "unable to get os info")
