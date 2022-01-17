@@ -34,7 +34,6 @@ func AddTargetInformationToInitConfigurationWithClusterVersion(target *deploymen
 	initConfiguration.NodeRegistration.CRISocket = skuba.CRISocket
 	initConfiguration.NodeRegistration.KubeletExtraArgs["hostname-override"] = target.Nodename
 	initConfiguration.NodeRegistration.KubeletExtraArgs["pod-infra-container-image"] = kubernetes.ComponentContainerImageForClusterVersion(kubernetes.Pause, clusterVersion)
-	initConfiguration.NodeRegistration.KubeletExtraArgs["cgroup-driver"] = skuba.CGroupDriver
 	isSUSE, err := target.IsSUSEOS()
 	if err != nil {
 		return err
