@@ -7,8 +7,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	k8s.io/api v0.18.10
 	k8s.io/apimachinery v0.18.10
@@ -16,7 +16,7 @@ require (
 	k8s.io/cluster-bootstrap v0.18.10
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.18.10
-	k8s.io/kubernetes v1.18.10
+	k8s.io/kubernetes v1.18.19
 	sigs.k8s.io/yaml v1.2.0
 )
 
